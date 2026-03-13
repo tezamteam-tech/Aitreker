@@ -378,6 +378,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         clearToken();
       }
 
+      // 5. Dev preview fallback — when NOT in Telegram (Figma Make, browser)
+      // Creates a demo user on the server for testing purposes.
+      const inTelegram = isTelegramClient() || (typeof window !== 'undefined' && !!(window as any).Telegram?.WebApp);
+      if (!inTelegram) {
+        console.log('[Auth] Not in Telegram — trying dev preview auth');
+        setAuthPhase('connecting');
+        try {
+          const res = await withRetry(() => api.authDevPreview(), 'dev_preview', handleRetry);
+          if (res.token) {
+            setAuthPhase('authenticating');
+            if (res.deviceToken) setDeviceToken(res.deviceToken);
+            await fetchMe();
+            setAuthPhase(null);
+            return;
+          }
+        } catch (err) {
+          console.warn('[Auth] Dev preview auth failed:', err);
+        }
+      }
+
       // No auth method worked
       setAuthPhase(null);
       if (!initData && isTelegramClient()) {

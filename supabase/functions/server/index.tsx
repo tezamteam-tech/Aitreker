@@ -567,6 +567,91 @@ app.get(`${PREFIX}/health`, async (c) => {
   });
 });
 
+// ---- POST /auth/dev-preview ----
+// Development/preview auth — creates a demo user without Telegram initData verification.
+// Used for testing in Figma Make preview, browser, or any environment without Telegram SDK.
+// NOT for production use inside Telegram.
+app.post(`${PREFIX}/auth/dev-preview`, async (c) => {
+  await triggerSeed();
+
+  try {
+    const DEV_TG_ID = "9999999";
+    const DEV_USER_KEY = `become:user:tg:${DEV_TG_ID}`;
+
+    let userId: any = await kv.get(DEV_USER_KEY);
+    let user: any = null;
+
+    if (userId) {
+      user = await kv.get(`become:user:${userId}`);
+    }
+
+    const now = new Date().toISOString();
+
+    if (!user) {
+      userId = generateId("user");
+      const referralCode = generateId("ref").replace("ref_", "").slice(0, 10);
+      const subExpiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
+
+      user = {
+        id: userId,
+        telegramId: 9999999,
+        firstName: "Preview",
+        lastName: "User",
+        username: "preview_user",
+        photoUrl: null,
+        language: "en",
+        tone: "supportive",
+        selectedGoal: null,
+        xp: 0,
+        dailyReminderTime: "10:00",
+        utcOffset: 0,
+        activeProgramId: null,
+        subscriptionExpiresAt: subExpiresAt,
+        referralCode,
+        referralCount: 0,
+        referredBy: null,
+        createdAt: now,
+        updatedAt: now,
+      };
+
+      const wallet = {
+        id: generateId("wallet"),
+        userId: userId,
+        starsBalance: 100,
+        tonBalance: 0,
+      };
+
+      await kv.set(`become:user:${userId}`, user);
+      await kv.set(DEV_USER_KEY, userId);
+      await kv.set(`become:wallet:${userId}`, wallet);
+      await kv.set(`become:referral:${referralCode}`, userId);
+      console.log(`[Auth] Dev preview: created new user ${userId}`);
+    } else {
+      user.updatedAt = now;
+      await kv.set(`become:user:${userId}`, user);
+      console.log(`[Auth] Dev preview: returning existing user ${userId}`);
+    }
+
+    const token = generateToken();
+    const expiresAt = new Date(Date.now() + SESSION_TTL).toISOString();
+    await kv.set(`become:session:${token}`, {
+      userId,
+      telegramId: DEV_TG_ID,
+      expiresAt,
+    });
+
+    const deviceToken = await generateDeviceToken(userId as string, DEV_TG_ID);
+
+    return c.json({ user, token, deviceToken });
+  } catch (err) {
+    console.log("Dev preview auth error:", err);
+    return c.json(
+      { message: `Dev preview auth error: ${err}`, code: "INTERNAL_ERROR", status: 500 },
+      500
+    );
+  }
+});
+
 // ---- Referral helpers (used by /auth/telegram for inline referral processing) ----
 
 /**
