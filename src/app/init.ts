@@ -59,6 +59,20 @@ function computeAndSetHeaderOffset(): void {
   } catch {}
 }
 
+// ---- SDK Readiness Signal ----
+// AuthProvider MUST await this before attempting login.
+// Resolves when Telegram SDK is loaded and configured (or fails gracefully).
+let _sdkReadyResolve: (() => void) | null = null;
+let _sdkReady = false;
+
+export const sdkReadyPromise: Promise<void> = new Promise((resolve) => {
+  _sdkReadyResolve = resolve;
+});
+
+export function isSdkReady(): boolean {
+  return _sdkReady;
+}
+
 /**
  * Initializes the application and configures its dependencies.
  *
@@ -73,6 +87,9 @@ export function init(debug: boolean): void {
 
     if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
       const wa = window.Telegram.WebApp;
+
+      // Log Telegram environment info for debugging
+      console.log(`[ProperFood] TG SDK found: platform=${wa.platform}, version=${wa.version}, initData.length=${wa.initData?.length || 0}`);
 
       // CRITICAL ORDER — per Telegram Bot API docs:
       // requestFullscreen() MUST be called BEFORE ready().
@@ -143,8 +160,28 @@ export function init(debug: boolean): void {
       }
 
       console.log(`[ProperFood] WebApp.ready() called. Platform: ${wa.platform}, Version: ${wa.version}`);
+    } else {
+      console.warn('[ProperFood] Telegram SDK loaded but window.Telegram.WebApp is NOT available');
     }
+
+    // Signal SDK readiness to AuthProvider
+    _sdkReady = true;
+    _sdkReadyResolve?.();
+  }).catch((err) => {
+    console.error('[ProperFood] Telegram SDK load failed:', err);
+    // Still resolve — auth will handle the absence of SDK gracefully
+    _sdkReady = true;
+    _sdkReadyResolve?.();
   });
+
+  // Safety timeout: if SDK takes >3s, resolve anyway so auth doesn't hang
+  setTimeout(() => {
+    if (!_sdkReady) {
+      console.warn('[ProperFood] SDK readiness timeout (3s) — resolving anyway');
+      _sdkReady = true;
+      _sdkReadyResolve?.();
+    }
+  }, 3000);
 
   // 2. Eruda debugger (if requested)
   if (debug) {
@@ -158,5 +195,5 @@ export function init(debug: boolean): void {
       });
   }
 
-  console.log('[ProperFood] Initialization complete');
+  console.log('[ProperFood] Initialization complete (SDK loading async)');
 }

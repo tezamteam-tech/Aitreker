@@ -31,8 +31,10 @@ import {
   getBotAuthToken,
   getStartParam,
   isTelegramClient,
+  isTelegramEnvironment,
   getTelegramUser,
 } from './telegram';
+import { sdkReadyPromise } from '../init';
 
 // ---- Offline-first user cache (with 24h TTL per doc spec) ----
 const USER_CACHE_KEY = 'pfai_cached_user';
@@ -301,6 +303,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setRetryAttempt(0);
 
     try {
+      // ★ CRITICAL: Wait for Telegram SDK to be loaded before checking initData.
+      // Without this, getInitData() may return '' even inside Telegram because
+      // the SDK script hasn't finished loading yet (race condition).
+      console.log('[Auth] Waiting for Telegram SDK readiness...');
+      await sdkReadyPromise;
+      console.log('[Auth] SDK ready. Checking auth sources...');
+
+      // Diagnostic: log what's available
+      const wa = typeof window !== 'undefined' ? (window as any).Telegram?.WebApp : null;
+      console.log(`[Auth] Diagnostics: TG.WebApp=${!!wa}, initData.length=${wa?.initData?.length || 0}, platform=${wa?.platform || 'N/A'}, version=${wa?.version || 'N/A'}`);
+      if (wa?.initDataUnsafe?.user) {
+        console.log(`[Auth] TG User: id=${wa.initDataUnsafe.user.id}, name=${wa.initDataUnsafe.user.first_name}`);
+      }
+
       // 1. Try bot_auth token from URL
       const botAuth = getBotAuthToken();
       if (botAuth) {
@@ -319,12 +335,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      // 2. Try Telegram initData
+      // 2. Try Telegram initData (primary auth for Mini App inside Telegram)
       setAuthPhase('connecting');
       setRetryAttempt(0);
       const initData = getInitData();
       if (initData) {
-        console.log('[Auth] Attempting initData login');
+        console.log(`[Auth] Attempting initData login (length=${initData.length})`);
         try {
           const startParam = getStartParam();
           const res = await withRetry(
@@ -342,6 +358,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } catch (err) {
           console.warn('[Auth] initData login failed:', err);
         }
+      } else {
+        console.warn('[Auth] No initData available — Mini App may not be opened through Telegram');
       }
 
       // 3. Try device token refresh
@@ -378,33 +396,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         clearToken();
       }
 
-      // 5. Dev preview fallback — when NOT in Telegram (Figma Make, browser)
-      // Creates a demo user on the server for testing purposes.
-      const inTelegram = isTelegramClient() || (typeof window !== 'undefined' && !!(window as any).Telegram?.WebApp);
-      if (!inTelegram) {
-        console.log('[Auth] Not in Telegram — trying dev preview auth');
-        setAuthPhase('connecting');
-        try {
-          const res = await withRetry(() => api.authDevPreview(), 'dev_preview', handleRetry);
-          if (res.token) {
-            setAuthPhase('authenticating');
-            if (res.deviceToken) setDeviceToken(res.deviceToken);
-            await fetchMe();
-            setAuthPhase(null);
-            return;
-          }
-        } catch (err) {
-          console.warn('[Auth] Dev preview auth failed:', err);
-        }
-      }
-
       // No auth method worked
       setAuthPhase(null);
-      if (!initData && isTelegramClient()) {
+      const hasInitData = !!initData;
+      const hasTgSdk = !!wa;
+      if (!hasInitData && hasTgSdk) {
+        // SDK loaded but initData is empty — might be wrong URL or not opened as Mini App
         setNoInitDataWarning(true);
+        console.warn('[Auth] TG SDK present but initData is EMPTY. Possible causes:\n  1. App URL not registered in BotFather as web_app_url\n  2. App opened in TG in-app browser (not as Mini App)\n  3. URL mismatch between registered and current URL');
       }
 
-      console.log('[Auth] No auth method succeeded');
+      const errMsg = !hasTgSdk
+        ? 'Telegram SDK not available — open via @ProperFoodAI_bot'
+        : !hasInitData
+        ? 'Telegram SDK loaded but no initData — check bot configuration'
+        : 'Authentication failed';
+      setAuthError(errMsg);
+      console.log(`[Auth] No auth method succeeded. SDK=${hasTgSdk}, initData=${hasInitData}, botAuth=${!!botAuth}, deviceToken=${!!deviceToken}, sessionToken=${!!existingToken}`);
     } catch (err: any) {
       console.error('[Auth] Login error:', err);
       setAuthError(err?.message || 'Authentication failed');

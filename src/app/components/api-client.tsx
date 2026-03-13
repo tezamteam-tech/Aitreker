@@ -168,13 +168,6 @@ export const api = {
     return res;
   },
 
-  // Dev preview auth — for testing outside Telegram (Figma Make, browser)
-  async authDevPreview(): Promise<AuthResponse> {
-    const res = await request<AuthResponse>('POST', '/auth/dev-preview', {});
-    setToken(res.token);
-    return res;
-  },
-
   // Get current user
   async me(): Promise<User> {
     return request('GET', '/me');

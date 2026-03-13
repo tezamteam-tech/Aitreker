@@ -35,15 +35,18 @@ export async function validateInitData(initData: string): Promise<TelegramAuthRe
   }
 
   if (!initData || initData.trim() === "") {
+    console.log("[TG Auth] initData is empty or undefined");
     return { valid: false };
   }
+
+  console.log(`[TG Auth] Validating initData (length=${initData.length}, botToken length=${botToken.length})`);
 
   try {
     const params = new URLSearchParams(initData);
     const hash = params.get("hash");
 
     if (!hash) {
-      console.log("No hash found in initData");
+      console.log("[TG Auth] No hash found in initData");
       return { valid: false };
     }
 
@@ -52,6 +55,8 @@ export async function validateInitData(initData: string): Promise<TelegramAuthRe
     const entries = Array.from(params.entries());
     entries.sort(([a], [b]) => a.localeCompare(b));
     const dataCheckString = entries.map(([k, v]) => `${k}=${v}`).join("\n");
+
+    console.log(`[TG Auth] Fields: ${entries.map(([k]) => k).join(', ')} | hash length=${hash.length}`);
 
     // Create secret key: HMAC-SHA256("WebAppData", BOT_TOKEN)
     const encoder = new TextEncoder();
@@ -83,21 +88,23 @@ export async function validateInitData(initData: string): Promise<TelegramAuthRe
       .join("");
 
     if (computedHash !== hash) {
-      console.log("Hash mismatch: initData validation failed");
+      console.log(`[TG Auth] Hash mismatch! computed=${computedHash.substring(0, 16)}... vs received=${hash.substring(0, 16)}...`);
+      console.log(`[TG Auth] Bot token starts with: ${botToken.substring(0, 8)}...`);
       return { valid: false };
     }
 
     // Parse user data
     const userStr = params.get("user");
     if (!userStr) {
-      console.log("No user field in initData");
+      console.log("[TG Auth] No user field in initData");
       return { valid: false };
     }
 
     const user: TelegramUserData = JSON.parse(userStr);
+    console.log(`[TG Auth] Valid! User: id=${user.id}, name=${user.first_name}`);
     return { valid: true, user };
   } catch (err) {
-    console.log("Error validating initData:", err);
+    console.log("[TG Auth] Error validating initData:", err);
     return { valid: false };
   }
 }

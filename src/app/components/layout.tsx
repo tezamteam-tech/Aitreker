@@ -397,7 +397,18 @@ function AuthSplash() {
 // ---- "Open from Telegram" Error Screen ----
 
 function TelegramRequiredScreen({ onRetry }: { onRetry: () => void }) {
+  const { authError } = useAuth();
   const lang = typeof navigator !== 'undefined' && navigator.language?.startsWith('ru') ? 'ru' : 'en';
+
+  // Diagnostic info for debugging
+  const wa = typeof window !== 'undefined' ? (window as any).Telegram?.WebApp : null;
+  const diagInfo = {
+    sdk: !!wa,
+    initDataLen: wa?.initData?.length || 0,
+    platform: wa?.platform || 'N/A',
+    version: wa?.version || 'N/A',
+    url: typeof window !== 'undefined' ? window.location.href.substring(0, 80) : 'N/A',
+  };
 
   return (
     <div className="fixed inset-0 z-[999] flex flex-col items-center justify-center bg-background px-6">
@@ -422,6 +433,13 @@ function TelegramRequiredScreen({ onRetry }: { onRetry: () => void }) {
             : 'Proper Food AI is a Telegram Mini App. Open @ProperFoodAI_bot in Telegram and tap the menu button.'}
         </p>
 
+        {/* Auth error detail */}
+        {authError && (
+          <p className="text-red-400/80 text-xs mt-1 px-3 py-2 rounded-xl bg-red-500/10 border border-red-500/20">
+            {authError}
+          </p>
+        )}
+
         <a
           href="https://t.me/ProperFoodAI_bot"
           className="mt-4 inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-[#0088cc] text-white font-semibold text-sm"
@@ -439,6 +457,13 @@ function TelegramRequiredScreen({ onRetry }: { onRetry: () => void }) {
         >
           {lang === 'ru' ? 'Повторить попытку' : 'Retry authentication'}
         </button>
+
+        {/* Diagnostics (always visible for debugging) */}
+        <div className="mt-4 text-left text-[0.625rem] text-muted-foreground/50 font-mono leading-relaxed">
+          <p>SDK: {diagInfo.sdk ? '✓' : '✗'} | initData: {diagInfo.initDataLen} chars</p>
+          <p>Platform: {diagInfo.platform} | Version: {diagInfo.version}</p>
+          <p className="break-all">URL: {diagInfo.url}</p>
+        </div>
       </motion.div>
     </div>
   );
