@@ -70,8 +70,8 @@
   --tg-content-safe-area-inset-top: 0px;
   --tg-content-safe-area-inset-bottom: 0px;
 
-  /* Combined safe area (computed by JS) */
-  --safe-area-top: 0px;
+  /* Combined safe area (computed by JS; 16px default for browser preview) */
+  --safe-area-top: 16px;
   --safe-area-bottom: 0px;
   --app-tg-header-offset: 0px;
 
@@ -167,7 +167,7 @@
   --sidebar-border: rgba(255, 255, 255, 0.08);
   --sidebar-ring: rgba(108, 92, 231, 0.5);
 
-  /* ── Glass Design System (Dark) ── */
+  /* ── Glass Design System (Dark) ─�� */
   --glass-bg:          rgba(255, 255, 255, 0.04);
   --glass-bg-card:     rgba(255, 255, 255, 0.06);
   --glass-bg-row:      rgba(255, 255, 255, 0.03);

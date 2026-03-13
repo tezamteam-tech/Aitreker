@@ -382,7 +382,7 @@ export function WalletPage() {
         <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-80 h-80 rounded-full bg-yellow-500/8 blur-[120px]" />
       </div>
 
-      <div className="relative z-10 px-5 pb-6" style={{ paddingTop: 'var(--safe-area-top, 56px)' }}>
+      <div className="relative z-10 px-5 pb-6">
         {/* Header */}
         <PageHeader title={lang === 'ru' ? 'Кошелёк' : 'Wallet'} />
 

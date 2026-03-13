@@ -569,7 +569,7 @@ export function DayViewPage() {
       </AnimatePresence>
 
       {/* Main content — visible during "tasks" phase */}
-      <div className={`relative z-10 px-5 pb-8 ${phase !== 'tasks' ? 'opacity-0 pointer-events-none' : ''}`} style={{ paddingTop: 'var(--safe-area-top, 56px)' }}>
+      <div className={`relative z-10 px-5 pb-8 ${phase !== 'tasks' ? 'opacity-0 pointer-events-none' : ''}`} >
         {/* Top bar */}
         <PageHeader
           title={day.title}

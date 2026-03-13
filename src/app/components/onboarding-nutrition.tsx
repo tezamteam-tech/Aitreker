@@ -27,8 +27,6 @@ import {
   hapticSuccess,
   hapticSelection,
   expandApp,
-  isTelegramEnvironment,
-  isTelegramClient,
 } from './telegram';
 import { api } from './api-client';
 import { calculateCalories } from './calorie-calculator';
@@ -69,34 +67,12 @@ export function OnboardingNutritionPage() {
     goal: null,
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [authAttempted, setAuthAttempted] = useState(false);
   const [language] = useState(detectLanguage);
 
   const { login, isAuthenticated, isLoading: authLoading, user } = useAuth();
   const navigate = useNavigate();
 
-  const wasOnboarded = typeof window !== 'undefined' && localStorage.getItem('nutrition_onboarded') === 'true';
-
   useEffect(() => { expandApp(); }, []);
-
-  // If already onboarded, redirect
-  useEffect(() => {
-    if (wasOnboarded) {
-      navigate('/home', { replace: true });
-    }
-  }, [wasOnboarded, navigate]);
-
-  // Try auto-auth on mount
-  useEffect(() => {
-    if (!authAttempted) {
-      setAuthAttempted(true);
-      if (isTelegramEnvironment() || isTelegramClient()) {
-        login().catch((err) => {
-          console.warn('[NutritionOnboarding] Auto-login failed:', err);
-        });
-      }
-    }
-  }, [authAttempted, login]);
 
   const canProceed = useCallback((): boolean => {
     switch (step) {
@@ -195,7 +171,7 @@ export function OnboardingNutritionPage() {
   }, [canProceed, isAuthenticated, login, data, navigate]);
 
   // ---- Splash for returning users ----
-  if (wasOnboarded && authLoading) {
+  if (authLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">

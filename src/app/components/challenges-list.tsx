@@ -175,7 +175,7 @@ export function ChallengesListPage() {
         )}
       </AnimatePresence>
 
-      <div className="relative z-10 px-5 pb-6" style={{ paddingTop: 'var(--safe-area-top, 56px)' }}>
+      <div className="relative z-10 px-5 pb-6" >
         {/* Header */}
         <PageHeader
           title={t('ch_title')}

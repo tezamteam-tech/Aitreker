@@ -189,7 +189,7 @@ export function StrategicGoalCreatePage() {
         <div className="absolute bottom-1/3 -left-20 w-56 h-56 rounded-full bg-[#00cec9]/8 blur-[100px]" />
       </div>
 
-      <div className="relative z-10 px-5 pb-6" style={{ paddingTop: 'var(--safe-area-top, 56px)' }}>
+      <div className="relative z-10 px-5 pb-6" >
         {/* Header */}
         <PageHeader title={t('sg_create')} />
 

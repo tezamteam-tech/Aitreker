@@ -1,14 +1,14 @@
-import { hapticFeedback, getStartParam, showBackButton, hideBackButton, onBackButtonPressed, isTelegramClient, isTelegramEnvironment } from './telegram';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useAuth, AuthProvider } from './auth-context';
-import { useEffect, useRef, useCallback, useState } from 'react';
 import { useNavigate, useLocation, Outlet } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
-import { Crown } from 'lucide-react';
+import { Crown, Smartphone } from 'lucide-react';
 import { useTranslation } from './i18n';
-import { setupSafeArea, listenSafeAreaChanges } from './telegram';
+import { hapticFeedback, getStartParam, showBackButton, hideBackButton, onBackButtonPressed, isTelegramClient, isTelegramEnvironment, setupSafeArea, listenSafeAreaChanges } from './telegram';
 import { useTelegramFullscreen } from './use-telegram-fullscreen';
 import { BottomSheetProvider, useAnyBottomSheetOpen } from './bottom-sheet-context';
 import { ThemeSync } from './theme-sync';
+import { api } from './api-client';
 import svgPaths from '../../imports/svg-hg8um85cbx';
 import patternSvgPaths from '../../imports/svg-769x92ozth';
 
@@ -281,12 +281,204 @@ function GlassTabBar({ keyboardVisible }: { keyboardVisible: boolean }) {
   );
 }
 
+// ---- Splash / Loading Screen ----
+
+function AuthSplash() {
+  return (
+    <div className="fixed inset-0 z-[999] flex flex-col items-center justify-center bg-background">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3 }}
+        className="flex flex-col items-center gap-4"
+      >
+        {/* App icon / logo */}
+        <div className="relative w-16 h-16">
+          <div
+            className="absolute inset-0 rounded-[22px] bg-gradient-to-br from-[#00b894] to-[#00cec9]"
+            style={{ boxShadow: '0 8px 32px rgba(0,184,148,0.3)' }}
+          />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-white text-2xl">🥗</span>
+          </div>
+        </div>
+
+        {/* Spinner */}
+        <div className="relative w-8 h-8 mt-4">
+          <div
+            className="absolute inset-0 rounded-full border-2 border-transparent animate-spin"
+            style={{
+              borderTopColor: '#00b894',
+              borderRightColor: 'rgba(0,184,148,0.3)',
+              animationDuration: '0.8s',
+            }}
+          />
+        </div>
+
+        <p className="text-muted-foreground text-sm mt-1">Loading…</p>
+      </motion.div>
+    </div>
+  );
+}
+
+// ---- "Open from Telegram" Error Screen ----
+
+function TelegramRequiredScreen({ onRetry }: { onRetry: () => void }) {
+  const lang = typeof navigator !== 'undefined' && navigator.language?.startsWith('ru') ? 'ru' : 'en';
+
+  return (
+    <div className="fixed inset-0 z-[999] flex flex-col items-center justify-center bg-background px-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col items-center gap-4 max-w-sm text-center"
+      >
+        <div
+          className="w-20 h-20 rounded-3xl bg-gradient-to-br from-[#0088cc]/20 to-[#0088cc]/5 flex items-center justify-center border border-[#0088cc]/20"
+        >
+          <Smartphone className="w-10 h-10 text-[#0088cc]" />
+        </div>
+
+        <h1 className="text-foreground text-xl font-bold mt-2">
+          {lang === 'ru' ? 'Откройте через Telegram' : 'Open via Telegram'}
+        </h1>
+
+        <p className="text-muted-foreground text-sm leading-relaxed">
+          {lang === 'ru'
+            ? 'Proper Food AI — это Telegram Mini App. Откройте бота @ProperFoodAI_bot в Telegram и нажмите кнопку меню.'
+            : 'Proper Food AI is a Telegram Mini App. Open @ProperFoodAI_bot in Telegram and tap the menu button.'}
+        </p>
+
+        <a
+          href="https://t.me/ProperFoodAI_bot"
+          className="mt-4 inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-[#0088cc] text-white font-semibold text-sm"
+          style={{ boxShadow: '0 4px 16px rgba(0,136,204,0.3)' }}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.94 8.13l-1.97 9.3c-.15.67-.54.83-1.1.52l-3.03-2.24-1.46 1.41c-.16.16-.3.3-.61.3l.22-3.07 5.57-5.03c.24-.22-.05-.33-.38-.13l-6.88 4.33-2.97-.93c-.64-.2-.66-.64.14-.95l11.6-4.47c.54-.2 1.01.13.87.96z" />
+          </svg>
+          {lang === 'ru' ? 'Открыть в Telegram' : 'Open in Telegram'}
+        </a>
+
+        <button
+          onClick={onRetry}
+          className="mt-2 text-muted-foreground text-xs underline underline-offset-2"
+        >
+          {lang === 'ru' ? 'Повторить попытку' : 'Retry authentication'}
+        </button>
+      </motion.div>
+    </div>
+  );
+}
+
+// ---- Auth Gate: renders splash → error → or children ----
+
+function AuthGate({ children }: { children: ReactNode }) {
+  const { isLoading, isAuthenticated, authError, noInitDataWarning, login } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const deepLinkProcessed = useRef(false);
+
+  // After auth completes, process deep links and onboarding redirect
+  useEffect(() => {
+    if (isLoading || deepLinkProcessed.current) return;
+    if (!isAuthenticated) return;
+
+    deepLinkProcessed.current = true;
+
+    // Process start_param deep link
+    const startParam = getStartParam();
+    if (startParam) {
+      const isInitialPage = location.pathname === '/' || location.pathname === '/home';
+      if (isInitialPage) {
+        let target = '';
+        if (startParam.startsWith('challenge_')) {
+          target = `/challenges/${startParam.replace('challenge_', '')}`;
+        } else if (startParam === 'strategic_goals' || startParam === 'goals') {
+          target = '/goals';
+        } else if (startParam.startsWith('strategic_goal_')) {
+          target = `/strategic-goal/${startParam.replace('strategic_goal_', '')}`;
+        } else if (startParam === 'coach') {
+          target = '/coach';
+        } else if (startParam === 'nutrition_coach' || startParam === 'nutri_coach') {
+          target = '/nutrition-coach';
+        } else if (startParam === 'journal') {
+          target = '/journal';
+        } else if (startParam === 'focus') {
+          target = '/focus';
+        } else if (startParam === 'bonuses') {
+          target = '/bonuses';
+        } else if (startParam === 'wallet') {
+          target = '/wallet';
+        } else if (startParam === 'profile') {
+          target = '/profile';
+        } else if (startParam === 'challenges') {
+          target = '/challenges';
+        } else if (startParam === 'upgrade' || startParam === 'premium') {
+          target = '/upgrade';
+        } else if (startParam === 'weight' || startParam === 'weight_tracking') {
+          target = '/weight';
+        } else if (startParam === 'referrals') {
+          target = '/referrals';
+        } else if (startParam === 'home') {
+          target = '/home';
+        }
+        // Handle referral deep links: startapp=ref_XXXXXX
+        else if (startParam.startsWith('ref_')) {
+          const refCode = startParam.replace('ref_', '');
+          if (refCode) {
+            // Fire-and-forget referral registration
+            api.registerReferral(refCode).catch((err) => {
+              console.warn('[AuthGate] Referral registration failed (non-critical):', err);
+            });
+          }
+          target = '/home';
+        }
+
+        if (target) {
+          navigate(target, { replace: true });
+          return;
+        }
+      }
+    }
+
+    // If on the onboarding page and already onboarded → redirect to /home
+    if (location.pathname === '/') {
+      const wasOnboarded = localStorage.getItem('nutrition_onboarded') === 'true';
+      if (wasOnboarded) {
+        navigate('/home', { replace: true });
+      }
+    }
+  }, [isLoading, isAuthenticated, navigate, location.pathname]);
+
+  // Show splash while authenticating
+  if (isLoading) {
+    return <AuthSplash />;
+  }
+
+  // Auth failed and not in Telegram — show "Open from Telegram" screen
+  // But allow onboarding page to render (it handles its own auth attempt)
+  if (!isAuthenticated && location.pathname !== '/') {
+    // Not on onboarding and not authenticated — check if we should show TG required screen
+    const inTelegram = isTelegramClient() || isTelegramEnvironment();
+    if (!inTelegram) {
+      return <TelegramRequiredScreen onRetry={login} />;
+    }
+
+    // In Telegram but auth failed — show error with retry
+    if (authError || noInitDataWarning) {
+      return <TelegramRequiredScreen onRetry={login} />;
+    }
+  }
+
+  return <>{children}</>;
+}
+
 // ---- App Layout (root route component) ----
 
 export function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const prevLocation = useRef(location.pathname);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Keyboard detection — hides tab bar when keyboard is open
@@ -327,50 +519,6 @@ export function AppLayout() {
       hideBackButton();
     }
   }, [location.pathname, navigate]);
-
-  // Handle start_param deep links
-  useEffect(() => {
-    const startParam = getStartParam();
-    if (!startParam) return;
-
-    const isInitialPage = location.pathname === '/' || location.pathname === '/home';
-    if (!isInitialPage) return;
-
-    if (startParam.startsWith('challenge_')) {
-      const id = startParam.replace('challenge_', '');
-      navigate(`/challenges/${id}`, { replace: true });
-    } else if (startParam === 'strategic_goals' || startParam === 'goals') {
-      navigate('/goals', { replace: true });
-    } else if (startParam.startsWith('strategic_goal_')) {
-      const id = startParam.replace('strategic_goal_', '');
-      navigate(`/strategic-goal/${id}`, { replace: true });
-    } else if (startParam === 'coach') {
-      navigate('/coach', { replace: true });
-    } else if (startParam === 'nutrition_coach' || startParam === 'nutri_coach') {
-      navigate('/nutrition-coach', { replace: true });
-    } else if (startParam === 'journal') {
-      navigate('/journal', { replace: true });
-    } else if (startParam === 'focus') {
-      navigate('/focus', { replace: true });
-    } else if (startParam === 'bonuses') {
-      navigate('/bonuses', { replace: true });
-    } else if (startParam === 'wallet') {
-      navigate('/wallet', { replace: true });
-    } else if (startParam === 'profile') {
-      navigate('/profile', { replace: true });
-    } else if (startParam === 'challenges') {
-      navigate('/challenges', { replace: true });
-    } else if (startParam === 'upgrade' || startParam === 'premium') {
-      navigate('/upgrade', { replace: true });
-    } else if (startParam === 'weight' || startParam === 'weight_tracking') {
-      navigate('/weight', { replace: true });
-    }
-  }, []);
-
-  // Track previous location for transitions
-  useEffect(() => {
-    prevLocation.current = location.pathname;
-  }, [location.pathname]);
 
   // Determine if tab bar should have extra bottom padding
   const hasTabBar = !HIDE_TAB_PAGES.includes(location.pathname);
@@ -469,7 +617,9 @@ export function AppLayout() {
             </div>
 
             <div className="relative z-[1]">
-              <Outlet />
+              <AuthGate>
+                <Outlet />
+              </AuthGate>
             </div>
           </div>
 

@@ -106,7 +106,7 @@ export function JournalInsightsPage() {
         <div className="absolute bottom-1/4 -left-16 w-48 h-48 rounded-full bg-[#00cec9]/8 blur-[80px]" />
       </div>
 
-      <div className="relative z-10 px-5 pb-6" style={{ paddingTop: 'var(--safe-area-top, 56px)' }}>
+      <div className="relative z-10 px-5 pb-6" >
         {/* Header */}
         <PageHeader title={t('insights_title')} />
 

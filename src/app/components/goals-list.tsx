@@ -397,7 +397,7 @@ export function GoalsListPage() {
         <div className="absolute bottom-1/3 -left-16 w-48 h-48 rounded-full bg-[#6c5ce7]/8 blur-[80px]" />
       </div>
 
-      <div className="relative z-10 px-5 pb-6" style={{ paddingTop: 'var(--safe-area-top, 56px)' }}>
+      <div className="relative z-10 px-5 pb-6" >
         {/* Header */}
         <PageHeader
           title={t('goals_title')}

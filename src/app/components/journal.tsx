@@ -231,7 +231,7 @@ export function JournalPage() {
         <div className="absolute bottom-1/3 -left-16 w-48 h-48 rounded-full bg-[#fd79a8]/8 blur-[80px]" />
       </div>
 
-      <div className="relative z-10 px-5 pb-6" style={{ paddingTop: 'var(--safe-area-top, 56px)' }}>
+      <div className="relative z-10 px-5 pb-6" >
         {/* Header */}
         <PageHeader
           title={t('journal_title')}

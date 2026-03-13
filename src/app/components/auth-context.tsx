@@ -249,14 +249,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (loginAttempted.current) return;
     loginAttempted.current = true;
 
-    const timer = setTimeout(() => {
-      login().catch((err) => {
-        console.warn('[Auth] Auto-login failed:', err);
-        setIsLoading(false);
-      });
-    }, 100);
-
-    return () => clearTimeout(timer);
+    // Start login immediately — AuthGate shows splash screen while in progress
+    login().catch((err) => {
+      console.warn('[Auth] Auto-login failed:', err);
+      setIsLoading(false);
+    });
   }, [login]);
 
   const value: AuthContextValue = {

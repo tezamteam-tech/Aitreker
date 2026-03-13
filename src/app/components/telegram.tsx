@@ -315,8 +315,13 @@ export function setupSafeArea(): void {
       document.documentElement.style.setProperty('--tg-content-safe-area-inset-bottom', `${csai.bottom}px`);
     }
 
-    // Combined raw inset reported by TG
-    const topInset = (sai?.top || 0) + (csai?.top || 0);
+    // TG provides two inset values:
+    //   safeAreaInset    – device-level (notch, Dynamic Island, status bar)
+    //   contentSafeAreaInset – TG-level (header bar rendered by Telegram)
+    // They can overlap on some builds. Use max() to avoid doubling.
+    const saiTop = sai?.top || 0;
+    const csaiTop = csai?.top || 0;
+    const topInset = Math.max(saiTop, csaiTop, saiTop + csaiTop > 120 ? Math.max(saiTop, csaiTop) : saiTop + csaiTop);
     const inFullscreen = wa.isFullscreen === true;
     const android = isAndroidPlatform();
     const ios = isIOSPlatform();
@@ -324,30 +329,26 @@ export function setupSafeArea(): void {
     let safeTop: number;
 
     if ((inFullscreen || _fullscreenRequested) && android) {
-      // Android fullscreen (or fullscreen requested but wa.isFullscreen hasn't
-      // flipped yet — common on cold start where the SDK lags behind the visual state):
-      // TG overlays status bar + close-button row on the WebView.
-      // SDK often reports 0, so we enforce a safe minimum:
-      //   status bar ≈ 28px + TG header row ≈ 56px + buffer ≈ 12px → 96px
-      safeTop = Math.max(topInset, 96);
+      // Android fullscreen: WebView extends behind status bar + TG header.
+      // SDK often reports 0 initially. Enforce minimum:
+      //   status bar ≈ 28px + TG close-button row ≈ 44px + buffer → 88px
+      safeTop = Math.max(topInset, 88);
     } else if (inFullscreen && ios) {
-      // iOS: insets are reported correctly. Keep at least 44px (Dynamic Island / notch).
-      safeTop = Math.max(topInset, 44);
+      // iOS fullscreen: Dynamic Island/notch (≈59px) + TG header overlay.
+      // Enforce at least 54px.
+      safeTop = Math.max(topInset, 54);
     } else {
-      // Non-fullscreen: on most Android TG builds the close-button is a separate
-      // UI layer ABOVE the WebView, but contentSafeAreaInset may still report
-      // an overlap. Use the actual inset if non-zero, otherwise 56px fallback
-      // so the PageHeader title is comfortably below any TG chrome.
-      safeTop = topInset > 0 ? topInset : 56;
+      // Non-fullscreen: TG renders its native header ABOVE the WebView,
+      // so the WebView content area is already below TG chrome.
+      // A small padding (12px) provides breathing room.
+      // If TG reports a non-zero inset, respect it.
+      safeTop = topInset > 0 ? topInset : 12;
     }
-
-    // TG reports inflated insets on both platforms — trim 48px to match visual reality
-    safeTop = Math.max(safeTop - 48, 0);
 
     document.documentElement.style.setProperty('--safe-area-top', `${safeTop}px`);
     document.documentElement.style.setProperty('--tg-is-fullscreen', inFullscreen ? '1' : '0');
 
-    console.log(`[TG SafeArea] sai.top=${sai?.top ?? '?'} csai.top=${csai?.top ?? '?'} topInset=${topInset} fullscreen=${inFullscreen} fsRequested=${_fullscreenRequested} android=${android} ios=${ios} → safeTop=${safeTop}px`);
+    console.log(`[TG SafeArea] sai.top=${saiTop} csai.top=${csaiTop} topInset=${topInset} fullscreen=${inFullscreen} fsRequested=${_fullscreenRequested} android=${android} ios=${ios} → safeTop=${safeTop}px`);
   } catch (err) {
     console.warn('[TG SafeArea] Error:', err);
   }

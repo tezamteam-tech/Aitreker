@@ -209,7 +209,7 @@ export function CoachChatPage() {
       </div>
 
       {/* Header */}
-      <div className="relative z-10 px-5 shrink-0" style={{ paddingTop: 'var(--safe-area-top, 56px)', paddingBottom: '0.5rem' }}>
+      <div className="relative z-10 px-5 shrink-0" style={{ paddingBottom: '0.5rem' }}>
         <PageHeader
           title={t('coach_chat_title')}
           mb="mb-0"

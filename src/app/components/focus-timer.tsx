@@ -271,7 +271,7 @@ export function FocusTimerPage() {
         <div className="absolute bottom-1/4 -right-20 w-60 h-60 rounded-full bg-[#00cec9]/8 blur-[100px]" />
       </div>
 
-      <div className="relative z-10 px-5 pb-6" style={{ paddingTop: 'var(--safe-area-top, 56px)' }}>
+      <div className="relative z-10 px-5 pb-6" >
         {/* Header */}
         <PageHeader
           title={t('focus_title')}

@@ -248,7 +248,7 @@ export function PlanBuilderPage() {
         <div className="absolute top-1/2 -left-20 w-40 h-40 rounded-full bg-[#00cec9]/10 blur-[80px]" />
       </div>
 
-      <div className="relative z-10 px-5 pb-6" style={{ paddingTop: 'var(--safe-area-top, 56px)' }}>
+      <div className="relative z-10 px-5 pb-6" >
         {/* Header */}
         <PageHeader
           title={t('pb_title')}
