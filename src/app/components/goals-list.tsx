@@ -125,7 +125,7 @@ export function GoalsListPage() {
     if (!iso) return '';
     const d = new Date(iso);
     const day = d.getDate();
-    const month = d.toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', { month: 'short' });
+    const month = d.toLocaleDateString(t('locale_code'), { month: 'short' });
     return `${day} ${month}`;
   };
 
@@ -512,7 +512,7 @@ export function GoalsListPage() {
                       <span style={{ fontWeight: 700 }}>{overallDone}</span>
                       <span className="text-white/30">/{overallTotal}</span>
                       <span className="text-white/25 ml-1" style={{ fontSize: '0.6875rem' }}>
-                        {lang === 'ru' ? 'задач' : 'tasks'}
+                        {t('gl_tasks')}
                       </span>
                     </p>
                   </div>
@@ -826,7 +826,7 @@ export function GoalsListPage() {
                                 </p>
                                 {hasDue && (
                                   <span className="shrink-0 px-2 py-0.5 rounded-full bg-[#e17055]/15 text-[#e17055]" style={{ fontSize: '0.625rem', fontWeight: 700 }}>
-                                    {sg.dueSoon} {lang === 'ru' ? 'сег.' : 'due'}
+                                    {sg.dueSoon} {t('gl_due')}
                                   </span>
                                 )}
                               </div>
@@ -1034,7 +1034,7 @@ export function GoalsListPage() {
                                   {!compact && goal.targetDate && (
                                     <span className="flex items-center gap-1 text-white/20" style={{ fontSize: '0.6875rem' }}>
                                       <Calendar className="w-3 h-3" />
-                                      {new Date(goal.targetDate).toLocaleDateString()}
+                                      {new Date(goal.targetDate).toLocaleDateString(t('locale_code'))}
                                     </span>
                                   )}
                                 </div>

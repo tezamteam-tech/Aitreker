@@ -82,7 +82,7 @@ const TOPUP_TON_AMOUNTS = [0.5, 1, 2.5, 5, 10];
 export function WalletPage() {
   const { user, subscriptionActive, subscriptionDaysLeft, refreshSubscription } = useAuth();
   const navigate = useNavigate();
-  const { t, lang } = useTranslation();
+  const { t } = useTranslation();
 
   const [wallet, setWallet] = useState({ starsBalance: 0, tonBalance: 0, starsReserved: 0, tonReserved: 0 });
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
@@ -249,7 +249,7 @@ export function WalletPage() {
   // ---- Helpers ----
   const formatDate = (iso: string) => {
     const d = new Date(iso);
-    return d.toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', {
+    return d.toLocaleDateString(t('locale_code'), {
       day: 'numeric', month: 'short', year: 'numeric',
     });
   };
@@ -323,12 +323,12 @@ export function WalletPage() {
 
   const formatPaymentLabel = (p: PaymentRecord) => {
     if (p.type === 'topup' || p.payload?.startsWith('topup_')) {
-      return lang === 'ru' ? 'Пополнение' : 'Top-up';
+      return t('wl_topup_label');
     }
     if (p.daysAdded > 0) {
-      return `+${p.daysAdded} ${lang === 'ru' ? 'дней' : 'days'}`;
+      return `+${p.daysAdded} ${t('wl_days')}`;
     }
-    return lang === 'ru' ? 'Платёж' : 'Payment';
+    return t('wl_payment_label');
   };
 
   // ---- "Sent to chat" card ----
@@ -342,16 +342,12 @@ export function WalletPage() {
         <Send className="w-5 h-5 text-green-400" />
       </div>
       <p className="text-green-400" style={{ fontSize: '0.9375rem', fontWeight: 700 }}>
-        {lang === 'ru' ? 'Отправлено в чат!' : 'Sent to chat!'}
+        {t('wl_sent_to_chat')}
       </p>
       <p className="text-white/40 mt-1.5" style={{ fontSize: '0.75rem' }}>
         {type === 'topup'
-          ? (lang === 'ru'
-            ? 'Откройте чат с ботом для оплаты. После оплаты баланс обновится автоматически.'
-            : 'Open the bot chat to pay. Your balance will update automatically after payment.')
-          : (lang === 'ru'
-            ? 'Откройте чат с ботом для оплаты. Подписка активируется автоматически.'
-            : 'Open the bot chat to pay. Subscription will activate automatically.')}
+          ? (t('wl_topup_chat_hint'))
+          : (t('wl_subscription_chat_hint'))}
       </p>
       <div className="flex gap-2 mt-3">
         <button
@@ -363,7 +359,7 @@ export function WalletPage() {
           style={{ fontSize: '0.8125rem', fontWeight: 600 }}
         >
           <MessageCircle className="w-4 h-4" />
-          {lang === 'ru' ? 'Перейти в чат' : 'Go to chat'}
+          {t('wl_go_to_chat')}
         </button>
         <button
           onClick={onReset}
@@ -384,7 +380,7 @@ export function WalletPage() {
 
       <div className="relative z-10 px-5 pb-6">
         {/* Header */}
-        <PageHeader title={lang === 'ru' ? 'Кошелёк' : 'Wallet'} />
+        <PageHeader title={t('wl_title')} />
 
         {/* Balances */}
         <motion.div
@@ -408,13 +404,13 @@ export function WalletPage() {
               <div className="flex items-center gap-1 mt-1.5">
                 <Lock className="w-3 h-3 text-yellow-400/40" />
                 <span className="text-yellow-400/40" style={{ fontSize: '0.6875rem', fontWeight: 500 }}>
-                  {wallet.starsReserved} {lang === 'ru' ? 'в резерве' : 'reserved'}
+                  {wallet.starsReserved} {t('wl_reserved')}
                 </span>
               </div>
             )}
             {(wallet.starsReserved || 0) > 0 && (
               <p className="text-white/25 mt-0.5" style={{ fontSize: '0.625rem' }}>
-                {lang === 'ru' ? 'Доступно' : 'Available'}: {wallet.starsBalance - (wallet.starsReserved || 0)}
+                {t('wl_available')}: {wallet.starsBalance - (wallet.starsReserved || 0)}
               </p>
             )}
           </GlassCard>
@@ -434,13 +430,13 @@ export function WalletPage() {
               <div className="flex items-center gap-1 mt-1.5">
                 <Lock className="w-3 h-3 text-blue-400/40" />
                 <span className="text-blue-400/40" style={{ fontSize: '0.6875rem', fontWeight: 500 }}>
-                  {wallet.tonReserved} {lang === 'ru' ? 'в резерве' : 'reserved'}
+                  {wallet.tonReserved} {t('wl_reserved')}
                 </span>
               </div>
             )}
             {(wallet.tonReserved || 0) > 0 && (
               <p className="text-white/25 mt-0.5" style={{ fontSize: '0.625rem' }}>
-                {lang === 'ru' ? 'Доступно' : 'Available'}: {(wallet.tonBalance - (wallet.tonReserved || 0)).toFixed(1)}
+                {t('wl_available')}: {(wallet.tonBalance - (wallet.tonReserved || 0)).toFixed(1)}
               </p>
             )}
           </GlassCard>
@@ -463,7 +459,7 @@ export function WalletPage() {
             style={{ fontSize: '0.8125rem', fontWeight: 600 }}
           >
             <Plus className="w-4 h-4" />
-            {lang === 'ru' ? 'Пополнить' : 'Top Up'}
+            {t('wl_top_up')}
           </button>
           <button
             onClick={() => { hapticFeedback('medium'); setPurchaseStatus(null); setActiveTab(activeTab === 'subscribe' ? 'overview' : 'subscribe'); }}
@@ -476,8 +472,8 @@ export function WalletPage() {
           >
             <Crown className="w-4 h-4" />
             {subscriptionActive
-              ? (lang === 'ru' ? 'Продлить' : 'Extend')
-              : (lang === 'ru' ? 'Подписка' : 'Subscribe')}
+              ? (t('wl_extend'))
+              : (t('wl_subscribe'))}
           </button>
         </motion.div>
 
@@ -494,7 +490,7 @@ export function WalletPage() {
               <GlassCard padding="md">
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-white/50" style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.05em' }}>
-                    {lang === 'ru' ? 'ПОПОЛНЕНИЕ БАЛАНСА' : 'TOP UP BALANCE'}
+                    {t('wl_top_up_balance')}
                   </p>
                   <button onClick={() => setActiveTab('overview')} className="p-1">
                     <X className="w-4 h-4 text-white/30" />
@@ -563,7 +559,7 @@ export function WalletPage() {
                         type="number"
                         value={customTopupAmount}
                         onChange={(e) => setCustomTopupAmount(e.target.value)}
-                        placeholder={lang === 'ru' ? 'Другая сумма...' : 'Custom amount...'}
+                        placeholder={t('wl_custom_amount')}
                         className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-2.5 text-white placeholder-white/20 outline-none focus:border-white/20"
                         style={{ fontSize: '0.875rem' }}
                         min={topupCurrency === 'stars' ? 1 : 0.1}
@@ -578,7 +574,7 @@ export function WalletPage() {
                     {topupStatus === 'failed' && (
                       <div className="mb-3 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-center">
                         <span className="text-red-400" style={{ fontSize: '0.8125rem' }}>
-                          {lang === 'ru' ? 'Ошибка. Попробуйте снова.' : 'Error. Try again.'}
+                          {t('wl_error')}
                         </span>
                       </div>
                     )}
@@ -600,12 +596,8 @@ export function WalletPage() {
                         <>
                           <Send className="w-4 h-4" />
                           {topupCurrency === 'stars'
-                            ? (lang === 'ru'
-                              ? `Отправить инвойс (${getEffectiveAmount()} ★)`
-                              : `Send invoice (${getEffectiveAmount()} ★)`)
-                            : (lang === 'ru'
-                              ? `Получить реквизиты (${getEffectiveAmount()} TON)`
-                              : `Get details (${getEffectiveAmount()} TON)`)}
+                            ? (t('wl_send_invoice', { amount: getEffectiveAmount() }))
+                            : (t('wl_get_details', { amount: getEffectiveAmount() }))}
                         </>
                       )}
                     </button>
@@ -613,8 +605,8 @@ export function WalletPage() {
                     <div className="mt-3 flex items-center justify-center gap-1.5 text-white/15" style={{ fontSize: '0.6875rem' }}>
                       <MessageCircle className="w-3 h-3" />
                       {topupCurrency === 'stars'
-                        ? (lang === 'ru' ? 'Инвойс придёт в чат с ботом' : 'Invoice will be sent to bot chat')
-                        : (lang === 'ru' ? 'Реквизиты придут в чат с ботом' : 'Details will be sent to bot chat')}
+                        ? (t('wl_invoice_chat'))
+                        : (t('wl_details_chat'))}
                     </div>
                   </>
                 )}
@@ -635,8 +627,8 @@ export function WalletPage() {
                 <div className="flex items-center justify-between mb-3">
                   <p className="text-white/50" style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.05em' }}>
                     {subscriptionActive
-                      ? (lang === 'ru' ? 'ПРОДЛЕНИЕ ПОДПИСКИ' : 'EXTEND SUBSCRIPTION')
-                      : (lang === 'ru' ? 'КУПИТЬ ПОДПИСКУ' : 'BUY SUBSCRIPTION')}
+                      ? (t('wl_extend_subscription'))
+                      : (t('wl_buy_subscription'))}
                   </p>
                   <button onClick={() => setActiveTab('overview')} className="p-1">
                     <X className="w-4 h-4 text-white/30" />
@@ -656,10 +648,10 @@ export function WalletPage() {
                       {PLANS.map((plan) => {
                         const isSelected = selectedPlan === plan.id;
                         const label = plan.months === 1
-                          ? (lang === 'ru' ? '1 месяц' : '1 month')
+                          ? (t('wl_1_month'))
                           : plan.months === 2
-                          ? (lang === 'ru' ? '2 месяца' : '2 months')
-                          : (lang === 'ru' ? '3 месяца' : '3 months');
+                          ? (t('wl_2_months'))
+                          : (t('wl_3_months'));
 
                         return (
                           <button
@@ -699,7 +691,7 @@ export function WalletPage() {
 
                     {/* Payment method */}
                     <p className="text-white/30 mb-2" style={{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.04em' }}>
-                      {lang === 'ru' ? 'СПОСОБ ОПЛАТЫ' : 'PAYMENT METHOD'}
+                      {t('wl_payment_method')}
                     </p>
 
                     <div className="space-y-2 mb-4">
@@ -725,7 +717,7 @@ export function WalletPage() {
                         </div>
                         {canAffordStars && (
                           <span className="text-green-400 shrink-0" style={{ fontSize: '0.5625rem', fontWeight: 600 }}>
-                            {lang === 'ru' ? 'Хватает' : 'Enough'}
+                            {t('wl_enough')}
                           </span>
                         )}
                       </button>
@@ -752,7 +744,7 @@ export function WalletPage() {
                         </div>
                         {canAffordTon && (
                           <span className="text-green-400 shrink-0" style={{ fontSize: '0.5625rem', fontWeight: 600 }}>
-                            {lang === 'ru' ? 'Хватает' : 'Enough'}
+                            {t('wl_enough')}
                           </span>
                         )}
                       </button>
@@ -764,28 +756,28 @@ export function WalletPage() {
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="mb-3 p-3 rounded-xl bg-green-500/10 border border-green-500/20 text-center">
                           <Check className="w-5 h-5 text-green-400 mx-auto mb-1" />
                           <span className="text-green-400" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
-                            {lang === 'ru' ? 'Подписка активирована!' : 'Subscription activated!'}
+                            {t('wl_subscription_activated')}
                           </span>
                         </motion.div>
                       )}
                       {purchaseStatus === 'insufficient' && (
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="mb-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center">
                           <span className="text-amber-400" style={{ fontSize: '0.8125rem' }}>
-                            {lang === 'ru' ? 'Недостаточно средств на балансе' : 'Insufficient balance'}
+                            {t('wl_insufficient_balance')}
                           </span>
                           <button
                             onClick={() => { setActiveTab('topup'); setPurchaseStatus(null); }}
                             className="block mx-auto mt-2 px-4 py-1.5 rounded-lg bg-amber-500/20 text-amber-400"
                             style={{ fontSize: '0.75rem', fontWeight: 600 }}
                           >
-                            {lang === 'ru' ? 'Пополнить баланс' : 'Top Up Balance'}
+                            {t('wl_top_up_balance')}
                           </button>
                         </motion.div>
                       )}
                       {purchaseStatus === 'failed' && (
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="mb-3 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-center">
                           <span className="text-red-400" style={{ fontSize: '0.8125rem' }}>
-                            {lang === 'ru' ? 'Ошибка. Попробуйте снова.' : 'Error. Try again.'}
+                            {t('wl_error')}
                           </span>
                         </motion.div>
                       )}
@@ -811,7 +803,7 @@ export function WalletPage() {
                               ) : (
                                 <>
                                   <CreditCard className="w-4 h-4" />
-                                  {lang === 'ru' ? `С баланса (${price} ${unit})` : `From balance (${price} ${unit})`}
+                                  {t('wl_from_balance', { price, unit })}
                                 </>
                               )}
                             </button>
@@ -827,7 +819,7 @@ export function WalletPage() {
                               ) : (
                                 <>
                                   <Send className="w-4 h-4" />
-                                  {lang === 'ru' ? `Инвойс на ${selectedPlanData.stars} ★` : `Invoice for ${selectedPlanData.stars} ★`}
+                                  {t('wl_invoice', { stars: selectedPlanData.stars })}
                                 </>
                               )}
                             </button>
@@ -838,13 +830,13 @@ export function WalletPage() {
                               style={{ fontSize: '0.9375rem' }}
                             >
                               <Plus className="w-4 h-4" />
-                              {lang === 'ru' ? 'Пополнить TON-баланс' : 'Top up TON balance'}
+                              {t('wl_top_up_ton')}
                             </button>
                           )}
 
                           {!canAfford && payMethod === 'stars' && (
                             <p className="text-center text-white/20 mt-2" style={{ fontSize: '0.6875rem' }}>
-                              {lang === 'ru' ? 'Инвойс придёт в чат с ботом' : 'Invoice will be sent to bot chat'}
+                              {t('wl_invoice_chat')}
                             </p>
                           )}
                         </>
@@ -853,7 +845,7 @@ export function WalletPage() {
 
                     <div className="mt-3 flex items-center justify-center gap-1.5 text-white/15" style={{ fontSize: '0.6875rem' }}>
                       <Shield className="w-3 h-3" />
-                      {lang === 'ru' ? 'Безопасная оплата' : 'Secure payment'}
+                      {t('wl_secure_payment')}
                     </div>
                   </>
                 )}
@@ -883,15 +875,13 @@ export function WalletPage() {
                 <div className="flex-1 min-w-0">
                   <p className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
                     {subscriptionActive
-                      ? (lang === 'ru' ? 'Premium активна' : 'Premium Active')
-                      : (lang === 'ru' ? 'Бесплатный план' : 'Free Plan')}
+                      ? (t('wl_premium_active'))
+                      : (t('wl_free_plan'))}
                   </p>
                   <p className={`mt-0.5 ${subscriptionActive ? 'text-white/30' : 'text-amber-400/70'}`} style={{ fontSize: '0.75rem' }}>
                     {subscriptionActive
-                      ? (lang === 'ru'
-                        ? `${subscriptionDaysLeft} ${subscriptionDaysLeft === 1 ? 'день' : subscriptionDaysLeft < 5 ? 'дня' : 'дней'} осталось`
-                        : `${subscriptionDaysLeft} days remaining`)
-                      : (lang === 'ru' ? 'Подключи Premium для AI-функций' : 'Upgrade to unlock AI features')}
+                      ? (t('wl_days_left', { days: subscriptionDaysLeft }))
+                      : (t('wl_upgrade_ai'))}
                   </p>
                 </div>
                 {subscriptionActive && subscriptionDaysLeft > 0 && (
@@ -899,7 +889,7 @@ export function WalletPage() {
                     <span className={`font-bold ${subscriptionDaysLeft <= 5 ? 'text-amber-400' : 'text-[#a29bfe]'}`} style={{ fontSize: '1.5rem', fontWeight: 700 }}>
                       {subscriptionDaysLeft}
                     </span>
-                    <p className="text-white/20" style={{ fontSize: '0.625rem' }}>{lang === 'ru' ? 'дней' : 'days'}</p>
+                    <p className="text-white/20" style={{ fontSize: '0.625rem' }}>{t('wl_days')}</p>
                   </div>
                 )}
               </div>
@@ -934,10 +924,10 @@ export function WalletPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
-                    {lang === 'ru' ? 'Бесплатные дни' : 'Free days'}
+                    {t('wl_free_days')}
                   </p>
                   <p className="text-white/30 mt-0.5" style={{ fontSize: '0.75rem' }}>
-                    {lang === 'ru' ? 'Бонусы, рефералы и подписки' : 'Bonuses, referrals & socials'}
+                    {t('wl_bonuses_referrals')}
                   </p>
                 </div>
                 <ChevronRight className="w-5 h-5 text-white/20 shrink-0" />
@@ -956,7 +946,7 @@ export function WalletPage() {
             <div className="flex items-center gap-2">
               <Receipt className="w-4 h-4 text-white/30" />
               <span className="text-white/40" style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.05em' }}>
-                {lang === 'ru' ? 'ИСТОРИЯ ОПЕРАЦИЙ' : 'TRANSACTION HISTORY'}
+                {t('wl_transaction_history')}
               </span>
             </div>
           </div>

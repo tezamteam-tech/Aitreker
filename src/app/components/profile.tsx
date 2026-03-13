@@ -818,15 +818,14 @@ export function ProfilePage() {
                             return;
                           }
 
-                          const lang = user?.language || 'en';
-                          const isRu = lang === 'ru';
+                          const localeCode = t('locale_code');
 
                           // Type labels for export
                           const typeLabels: Record<string, string> = {
-                            quick: isRu ? 'Заметка' : 'Quick Note',
-                            voice: isRu ? 'Голосовая заметка' : 'Voice Note',
-                            reflection: isRu ? 'Рефлексия' : 'Reflection',
-                            journal: isRu ? 'Журнал' : 'Journal Entry',
+                            quick: t('exp_quick'),
+                            voice: t('exp_voice'),
+                            reflection: t('exp_reflection'),
+                            journal: t('exp_journal'),
                           };
 
                           // Sort by date (newest first)
@@ -838,7 +837,7 @@ export function ProfilePage() {
                           const groups = new Map<string, typeof sorted>();
                           for (const note of sorted) {
                             const dateKey = new Date(note.createdAt).toLocaleDateString(
-                              isRu ? 'ru-RU' : 'en-US',
+                              localeCode,
                               { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
                             );
                             if (!groups.has(dateKey)) groups.set(dateKey, []);
@@ -848,10 +847,10 @@ export function ProfilePage() {
                           // Build text file
                           const lines: string[] = [];
                           lines.push('═══════════════════════════════════════');
-                          lines.push(isRu ? '  Proper Food — Экспорт журнала' : '  Proper Food — Journal Export');
+                          lines.push(`  ${t('exp_title')}`);
                           lines.push(`  ${user?.firstName || ''} ${user?.lastName || ''}`.trim());
-                          lines.push(`  ${isRu ? 'Экспортировано' : 'Exported'}: ${new Date().toLocaleString(isRu ? 'ru-RU' : 'en-US')}`);
-                          lines.push(`  ${isRu ? 'Всего записей' : 'Total entries'}: ${notes.length}`);
+                          lines.push(`  ${t('exp_exported')}: ${new Date().toLocaleString(localeCode)}`);
+                          lines.push(`  ${t('exp_total_entries')}: ${notes.length}`);
                           lines.push('═══════════════════════════════════════');
                           lines.push('');
 
@@ -861,16 +860,16 @@ export function ProfilePage() {
 
                             for (const note of dateNotes) {
                               const time = new Date(note.createdAt).toLocaleTimeString(
-                                isRu ? 'ru-RU' : 'en-US',
+                                localeCode,
                                 { hour: '2-digit', minute: '2-digit' }
                               );
                               const typeLabel = typeLabels[note.type] || note.type;
                               const isVoice = note.type === 'voice';
 
-                              lines.push(`[${time}] ${typeLabel}${isVoice ? ` (${isRu ? 'расшифровка' : 'transcription'})` : ''}`);
+                              lines.push(`[${time}] ${typeLabel}${isVoice ? ` (${t('exp_transcription')})` : ''}`);
 
                               if (note.relatedDayNumber != null) {
-                                lines.push(`  ${isRu ? 'День программы' : 'Program Day'}: ${note.relatedDayNumber}`);
+                                lines.push(`  ${t('exp_program_day')}: ${note.relatedDayNumber}`);
                               }
 
                               if (note.contentText) {
@@ -891,8 +890,8 @@ export function ProfilePage() {
                             if (conversations && conversations.length > 0) {
                               lines.push('');
                               lines.push('═══════════════════════════════════════');
-                              lines.push(isRu ? '  AI-Коуч — История диалогов' : '  AI Coach — Conversation History');
-                              lines.push(`  ${isRu ? 'Всего диалогов' : 'Total conversations'}: ${conversations.length}`);
+                              lines.push(`  ${t('exp_coach_history')}`);
+                              lines.push(`  ${t('exp_total_convos')}: ${conversations.length}`);
                               lines.push('═══════════════════════════════════════');
                               lines.push('');
 
@@ -906,18 +905,18 @@ export function ProfilePage() {
                                   const full = await api.coachChatGet(convo.id);
                                   if (full.messages && full.messages.length > 0) {
                                     const convoDate = new Date(full.createdAt).toLocaleDateString(
-                                      isRu ? 'ru-RU' : 'en-US',
+                                      localeCode,
                                       { year: 'numeric', month: 'long', day: 'numeric' }
                                     );
-                                    lines.push(`── ${isRu ? 'Диалог' : 'Conversation'} · ${convoDate} ──`);
+                                    lines.push(`── ${t('exp_conversation')} · ${convoDate} ──`);
                                     lines.push('');
 
                                     for (const msg of full.messages) {
                                       const role = msg.role === 'user'
-                                        ? (isRu ? 'Вы' : 'You')
-                                        : (isRu ? 'AI-Коуч' : 'AI Coach');
+                                        ? t('exp_you')
+                                        : t('exp_coach');
                                       const msgTime = new Date(msg.ts).toLocaleTimeString(
-                                        isRu ? 'ru-RU' : 'en-US',
+                                        localeCode,
                                         { hour: '2-digit', minute: '2-digit' }
                                       );
                                       lines.push(`[${msgTime}] ${role}:`);
@@ -939,7 +938,7 @@ export function ProfilePage() {
 
                           lines.push('');
                           lines.push('───────────────────────────────────────');
-                          lines.push(isRu ? 'Сгенерировано приложением Proper Food AI' : 'Generated by Proper Food AI');
+                          lines.push(t('exp_footer'));
                           lines.push(BOT_MENTION);
 
                           const text = lines.join('\n');

@@ -50,7 +50,7 @@ type Tab = 'stats' | 'users' | 'broadcast';
 
 export function AdminPage() {
   const navigate = useNavigate();
-  const { t, lang } = useTranslation();
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<Tab>('stats');
 
   return (
@@ -61,7 +61,7 @@ export function AdminPage() {
           <div className="flex items-center gap-2">
             <Shield className="w-4 h-4 text-[#a29bfe]" />
             <h1 className="text-white/90" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
-              Admin Panel
+              {t('adm_title')}
             </h1>
           </div>
         </div>
@@ -69,9 +69,9 @@ export function AdminPage() {
         {/* Tabs */}
         <div className="px-5 pb-3 flex gap-2">
           {([
-            { id: 'stats' as Tab, icon: BarChart3, label: lang === 'ru' ? 'Статистика' : 'Stats' },
-            { id: 'users' as Tab, icon: Users, label: lang === 'ru' ? 'Пользователи' : 'Users' },
-            { id: 'broadcast' as Tab, icon: Megaphone, label: lang === 'ru' ? 'Рассылка' : 'Broadcast' },
+            { id: 'stats' as Tab, icon: BarChart3, label: t('adm_tab_stats') },
+            { id: 'users' as Tab, icon: Users, label: t('adm_tab_users') },
+            { id: 'broadcast' as Tab, icon: Megaphone, label: t('adm_tab_broadcast') },
           ]).map(tab => (
             <button
               key={tab.id}
@@ -102,7 +102,7 @@ export function AdminPage() {
 
 // ---- Stats Section ----
 function StatsSection() {
-  const { lang } = useTranslation();
+  const { t } = useTranslation();
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -124,11 +124,11 @@ function StatsSection() {
   if (!stats) return null;
 
   const cards = [
-    { label: lang === 'ru' ? 'Всего юзеров' : 'Total Users', value: stats.totalUsers, icon: Users, color: '#a29bfe' },
-    { label: lang === 'ru' ? 'Подписчики' : 'Subscribers', value: stats.activeSubscribers, icon: Crown, color: '#6c5ce7' },
-    { label: lang === 'ru' ? 'Без подписки' : 'Expired', value: stats.expiredSubscribers, icon: Clock, color: '#e17055' },
-    { label: lang === 'ru' ? 'Новые сегодня' : 'New Today', value: stats.newToday, icon: UserPlus, color: '#00cec9' },
-    { label: lang === 'ru' ? 'Рефералы' : 'Referrals', value: stats.totalReferrals, icon: Users, color: '#fdcb6e' },
+    { label: t('adm_total_users'), value: stats.totalUsers, icon: Users, color: '#a29bfe' },
+    { label: t('adm_subscribers'), value: stats.activeSubscribers, icon: Crown, color: '#6c5ce7' },
+    { label: t('adm_expired'), value: stats.expiredSubscribers, icon: Clock, color: '#e17055' },
+    { label: t('adm_new_today'), value: stats.newToday, icon: UserPlus, color: '#00cec9' },
+    { label: t('adm_referrals'), value: stats.totalReferrals, icon: Users, color: '#fdcb6e' },
   ];
 
   return (
@@ -155,7 +155,7 @@ function StatsSection() {
 
 // ---- Users Section ----
 function UsersSection() {
-  const { lang } = useTranslation();
+  const { t } = useTranslation();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -340,7 +340,7 @@ function UsersSection() {
           type="text"
           value={search}
           onChange={(e) => handleSearch(e.target.value)}
-          placeholder={lang === 'ru' ? 'Поиск по имени, телефону, ID...' : 'Search by name, phone, ID...'}
+          placeholder={t('adm_search_placeholder')}
           className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.06] text-white placeholder-white/30 outline-none focus:border-[#6c5ce7]/30"
           style={{ fontSize: '0.875rem' }}
         />
@@ -359,13 +359,13 @@ function UsersSection() {
             }`}
             style={{ fontSize: '0.75rem', fontWeight: 500 }}
           >
-            {f === 'all' ? (lang === 'ru' ? 'Все' : 'All')
-              : f === 'active' ? (lang === 'ru' ? 'Активные' : 'Active')
-              : (lang === 'ru' ? 'Истёкшие' : 'Expired')}
+            {f === 'all' ? t('adm_filter_all')
+              : f === 'active' ? t('adm_filter_active')
+              : t('adm_filter_expired')}
           </button>
         ))}
         <span className="ml-auto text-white/20 self-center" style={{ fontSize: '0.75rem' }}>
-          {total} {lang === 'ru' ? 'чел.' : 'users'}
+          {total} {t('adm_users_count')}
         </span>
       </div>
 
@@ -415,11 +415,11 @@ function UsersSection() {
                     <div className="text-right shrink-0 ml-2">
                       {user.isSubscriptionActive ? (
                         <span className="text-green-400" style={{ fontSize: '0.6875rem' }}>
-                          {lang === 'ru' ? 'Активна' : 'Active'}
+                          {t('adm_sub_active')}
                         </span>
                       ) : (
                         <span className="text-red-400/60" style={{ fontSize: '0.6875rem' }}>
-                          {lang === 'ru' ? 'Истекла' : 'Expired'}
+                          {t('adm_sub_expired')}
                         </span>
                       )}
                       {user.subscriptionExpiresAt && (
@@ -508,23 +508,23 @@ function UsersSection() {
               <div className="space-y-2 mb-4">
                 <InfoRow label="Telegram ID" value={selectedUser.telegramId} />
                 {selectedUser.telegramUsername && <InfoRow label="Username" value={`@${selectedUser.telegramUsername}`} />}
-                {selectedUser.phoneNumber && <InfoRow label={lang === 'ru' ? 'Телефон' : 'Phone'} value={selectedUser.phoneNumber} />}
-                <InfoRow label={lang === 'ru' ? 'Язык' : 'Language'} value={selectedUser.language?.toUpperCase() || '—'} />
+                {selectedUser.phoneNumber && <InfoRow label={t('adm_phone')} value={selectedUser.phoneNumber} />}
+                <InfoRow label={t('adm_language')} value={selectedUser.language?.toUpperCase() || '—'} />
                 <InfoRow label="XP" value={String(selectedUser.xp)} />
-                <InfoRow label={lang === 'ru' ? 'Рефералы' : 'Referrals'} value={String(selectedUser.referralCount)} />
+                <InfoRow label={t('adm_referrals')} value={String(selectedUser.referralCount)} />
                 <InfoRow
-                  label={lang === 'ru' ? 'Подписка' : 'Subscription'}
+                  label={t('adm_subscription')}
                   value={selectedUser.isSubscriptionActive
-                    ? `${lang === 'ru' ? 'Активна до' : 'Active until'} ${new Date(selectedUser.subscriptionExpiresAt!).toLocaleDateString()}`
-                    : (lang === 'ru' ? 'Истекла' : 'Expired')}
+                    ? `${t('adm_active_until')} ${new Date(selectedUser.subscriptionExpiresAt!).toLocaleDateString()}`
+                    : t('adm_sub_expired')}
                   color={selectedUser.isSubscriptionActive ? '#00cec9' : '#e17055'}
                 />
                 <InfoRow
-                  label={lang === 'ru' ? 'Регистрация' : 'Registered'}
+                  label={t('adm_registered')}
                   value={new Date(selectedUser.createdAt).toLocaleDateString()}
                 />
                 <InfoRow
-                  label={lang === 'ru' ? 'Оплачено' : 'Total Paid'}
+                  label={t('adm_total_paid')}
                   value={selectedUser.totalPaid ? `★ ${selectedUser.totalPaid}` : '—'}
                   color={selectedUser.totalPaid ? '#fdcb6e' : undefined}
                 />
@@ -535,7 +535,7 @@ function UsersSection() {
                 <div className="flex items-center gap-2 mb-2">
                   <Wallet className="w-3.5 h-3.5 text-[#a29bfe]" />
                   <span className="text-white/40" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
-                    {lang === 'ru' ? 'КОШЕЛЁК' : 'WALLET'}
+                    {t('adm_wallet')}
                   </span>
                 </div>
                 {userWallet ? (
@@ -571,7 +571,7 @@ function UsersSection() {
                 <div className="flex items-center gap-2 mb-2">
                   <Crown className="w-3.5 h-3.5 text-[#6c5ce7]" />
                   <span className="text-white/40" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
-                    {lang === 'ru' ? 'ПОДПИСКА' : 'SUBSCRIPTION'}
+                    {t('adm_section_sub')}
                   </span>
                 </div>
                 <div className="space-y-2">
@@ -593,7 +593,7 @@ function UsersSection() {
                       </button>
                     </div>
                     <span className="text-white/30 shrink-0" style={{ fontSize: '0.75rem' }}>
-                      {lang === 'ru' ? 'дней' : 'days'}
+                      {t('adm_days')}
                     </span>
                     <button
                       onClick={() => handleGrantSubscription(selectedUser.id, grantDays)}
@@ -602,7 +602,7 @@ function UsersSection() {
                       style={{ fontSize: '0.8125rem', fontWeight: 600 }}
                     >
                       {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                      {lang === 'ru' ? 'Выдать' : 'Grant'}
+                      {t('adm_grant')}
                     </button>
                   </div>
 
@@ -614,7 +614,7 @@ function UsersSection() {
                     style={{ fontSize: '0.8125rem', fontWeight: 600 }}
                   >
                     <X className="w-4 h-4" />
-                    {lang === 'ru' ? 'Отключить подписку' : 'Revoke Subscription'}
+                    {t('adm_revoke')}
                   </button>
                 </div>
               </div>
@@ -624,7 +624,7 @@ function UsersSection() {
                 <div className="flex items-center gap-2 mb-2">
                   <Bell className="w-3.5 h-3.5 text-[#a29bfe]" />
                   <span className="text-white/40" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
-                    {lang === 'ru' ? 'УВЕДОМЛЕНИЯ' : 'NOTIFICATIONS'}
+                    {t('adm_section_notif')}
                   </span>
                 </div>
                 <div className="space-y-2">
@@ -667,7 +667,7 @@ function UsersSection() {
                     <textarea
                       value={notifText}
                       onChange={(e) => setNotifText(e.target.value)}
-                      placeholder={lang === 'ru' ? 'Текст уведомления (HTML)...\n<b>жирный</b> <i>курсив</i>' : 'Notification text (HTML)...\n<b>bold</b> <i>italic</i>'}
+                      placeholder={t('adm_notif_placeholder_en')}
                       className="w-full h-20 bg-white/[0.04] rounded-lg p-2.5 text-white placeholder-white/20 outline-none resize-none border border-white/[0.06] focus:border-[#6c5ce7]/30"
                       style={{ fontSize: '0.8125rem' }}
                     />
@@ -679,13 +679,13 @@ function UsersSection() {
                     style={{ fontSize: '0.8125rem', fontWeight: 600 }}
                   >
                     {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                    {lang === 'ru' ? 'Отправить' : 'Send'}
+                    {t('adm_send')}
                   </button>
 
                   {/* Notification Status */}
                   {notifStatus && (
                     <div className="text-sm" style={{ color: notifStatus === 'sent' ? '#00cec9' : '#e17055' }}>
-                      {notifStatus === 'sent' ? (lang === 'ru' ? 'Уведомление отправлено' : 'Notification sent') : (lang === 'ru' ? 'Ошибка' : 'Error')}
+                      {notifStatus === 'sent' ? t('adm_notif_sent') : t('adm_error')}
                       {notifError && <span className="ml-1">({notifError})</span>}
                     </div>
                   )}
@@ -697,7 +697,7 @@ function UsersSection() {
                 <div className="flex items-center gap-2 mb-2">
                   <Wallet className="w-3.5 h-3.5 text-[#a29bfe]" />
                   <span className="text-white/40" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
-                    {lang === 'ru' ? 'ПОПОЛНИТЬ КОШЕЛЁК' : 'CREDIT WALLET'}
+                    {t('adm_section_credit')}
                   </span>
                 </div>
                 <div className="space-y-2">
@@ -728,7 +728,7 @@ function UsersSection() {
                       style={{ fontSize: '0.8125rem', fontWeight: 600 }}
                     >
                       {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wallet className="w-4 h-4" />}
-                      {lang === 'ru' ? 'Пополнить' : 'Credit'}
+                      {t('adm_credit')}
                     </button>
                   </div>
 
@@ -746,7 +746,7 @@ function UsersSection() {
                 <div className="flex items-center gap-2 mb-2">
                   <Trash2 className="w-3.5 h-3.5 text-[#e17055]" />
                   <span className="text-white/40" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
-                    {lang === 'ru' ? 'УДАЛЕНИЕ' : 'DELETE'}
+                    {t('adm_section_delete')}
                   </span>
                 </div>
                 <div className="space-y-2">
@@ -759,14 +759,14 @@ function UsersSection() {
                       style={{ fontSize: '0.8125rem', fontWeight: 600 }}
                     >
                       {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                      {lang === 'ru' ? 'Удалить пользователя' : 'Delete User'}
+                      {t('adm_delete_user')}
                     </button>
                   </div>
 
                   {/* Delete Confirmation */}
                   {deleteConfirm && (
                     <div className="text-sm" style={{ color: '#e17055' }}>
-                      {lang === 'ru' ? 'Вы уверены, что хотите удалить этого пользователя?' : 'Are you sure you want to delete this user?'}
+                      {t('adm_delete_confirm')}
                       <div className="flex items-center gap-2 mt-1">
                         <button
                           onClick={() => handleDeleteUser(selectedUser.id)}
@@ -775,14 +775,14 @@ function UsersSection() {
                           style={{ fontSize: '0.8125rem', fontWeight: 600 }}
                         >
                           {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                          {lang === 'ru' ? 'Да, удалить' : 'Yes, delete'}
+                          {t('adm_delete_yes')}
                         </button>
                         <button
                           onClick={() => setDeleteConfirm(false)}
                           className="py-1 px-2 rounded bg-white/[0.04] border border-white/[0.06] text-white/40 flex items-center justify-center gap-1.5"
                           style={{ fontSize: '0.8125rem', fontWeight: 600 }}
                         >
-                          {lang === 'ru' ? 'Отмена' : 'Cancel'}
+                          {t('adm_cancel')}
                         </button>
                       </div>
                     </div>
@@ -791,7 +791,7 @@ function UsersSection() {
                   {/* Delete Status */}
                   {deleteStatus && (
                     <div className="text-sm" style={{ color: deleteStatus === 'OK' ? '#00cec9' : '#e17055' }}>
-                      {deleteStatus === 'OK' ? (lang === 'ru' ? 'Пользователь удалён' : 'User deleted') : (lang === 'ru' ? 'Ошибка' : 'Error')}
+                      {deleteStatus === 'OK' ? t('adm_user_deleted') : t('adm_error')}
                     </div>
                   )}
                 </div>
@@ -816,7 +816,7 @@ function InfoRow({ label, value, color }: { label: string; value: string; color?
 
 // ---- Broadcast Section ----
 function BroadcastSection() {
-  const { lang } = useTranslation();
+  const { t } = useTranslation();
   const [text, setText] = useState('');
   const [audience, setAudience] = useState<'all' | 'subscribers' | 'non_subscribers'>('all');
   const [mediaType, setMediaType] = useState<'none' | 'photo' | 'photos' | 'video'>('none');
@@ -894,13 +894,13 @@ function BroadcastSection() {
       {/* Audience Selector */}
       <GlassCard className="p-4">
         <div className="text-white/40 mb-2" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
-          {lang === 'ru' ? 'АУДИТОРИЯ' : 'AUDIENCE'}
+          {t('adm_audience')}
         </div>
         <div className="flex gap-2 flex-wrap">
           {([
-            { id: 'all' as const, label: lang === 'ru' ? 'Все' : 'All', icon: Users },
-            { id: 'subscribers' as const, label: lang === 'ru' ? 'Подписчики' : 'Subscribers', icon: Crown },
-            { id: 'non_subscribers' as const, label: lang === 'ru' ? 'Без подписки' : 'No sub', icon: Clock },
+            { id: 'all' as const, label: t('adm_aud_all'), icon: Users },
+            { id: 'subscribers' as const, label: t('adm_aud_subscribers'), icon: Crown },
+            { id: 'non_subscribers' as const, label: t('adm_aud_no_sub'), icon: Clock },
           ]).map(a => (
             <button
               key={a.id}
@@ -922,7 +922,7 @@ function BroadcastSection() {
       {/* Message Text with Rich Editor */}
       <GlassCard className="p-4">
         <div className="text-white/40 mb-2" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
-          {lang === 'ru' ? 'ТЕКСТ СООБЩЕНИЯ' : 'MESSAGE TEXT'}
+          {t('adm_message_text')}
         </div>
         {/* Formatting Toolbar */}
         <div className="flex items-center gap-1 mb-2 flex-wrap">
@@ -981,9 +981,7 @@ function BroadcastSection() {
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder={lang === 'ru'
-            ? 'Текст рассылки...'
-            : 'Broadcast text...'}
+          placeholder={t('adm_broadcast_placeholder')}
           className="w-full h-32 bg-white/[0.04] rounded-xl p-3 text-white placeholder-white/20 outline-none resize-none border border-white/[0.06] focus:border-[#6c5ce7]/30"
           style={{ fontSize: '0.875rem' }}
         />
@@ -992,14 +990,14 @@ function BroadcastSection() {
       {/* Media */}
       <GlassCard className="p-4">
         <div className="text-white/40 mb-2" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
-          {lang === 'ru' ? 'МЕДИА (ОПЦИОНАЛЬНО)' : 'MEDIA (OPTIONAL)'}
+          {t('adm_media')}
         </div>
         <div className="flex gap-2 mb-3">
           {([
-            { id: 'none' as const, label: lang === 'ru' ? 'Нет' : 'None' },
-            { id: 'photo' as const, label: lang === 'ru' ? 'Фото' : 'Photo', icon: Image },
-            { id: 'photos' as const, label: lang === 'ru' ? 'Несколько фото' : 'Photos', icon: Image },
-            { id: 'video' as const, label: lang === 'ru' ? 'Видео' : 'Video', icon: Video },
+            { id: 'none' as const, label: t('adm_media_none') },
+            { id: 'photo' as const, label: t('adm_media_photo'), icon: Image },
+            { id: 'photos' as const, label: t('adm_media_photos'), icon: Image },
+            { id: 'video' as const, label: t('adm_media_video'), icon: Video },
           ]).map(m => (
             <button
               key={m.id}
@@ -1030,7 +1028,7 @@ function BroadcastSection() {
                   type="text"
                   value={url}
                   onChange={(e) => updateMediaUrl(idx, e.target.value)}
-                  placeholder={`URL ${mediaType === 'video' ? (lang === 'ru' ? 'видео' : 'video') : (lang === 'ru' ? 'фото' : 'photo')} ${idx + 1}`}
+                  placeholder={`URL ${mediaType === 'video' ? t('adm_url_video') : t('adm_url_photo')} ${idx + 1}`}
                   className="flex-1 px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.06] text-white placeholder-white/20 outline-none"
                   style={{ fontSize: '0.8125rem' }}
                 />
@@ -1048,7 +1046,7 @@ function BroadcastSection() {
                 style={{ fontSize: '0.8125rem' }}
               >
                 <Plus className="w-3.5 h-3.5" />
-                {lang === 'ru' ? 'Добавить фото' : 'Add photo'}
+                {t('adm_add_photo')}
               </button>
             )}
             <input
@@ -1065,7 +1063,7 @@ function BroadcastSection() {
               style={{ fontSize: '0.8125rem' }}
             >
               <Upload className="w-3.5 h-3.5" />
-              {lang === 'ru' ? 'Загрузить' : 'Upload'}
+              {t('adm_upload')}
             </button>
             {uploading && (
               <Loader2 className="w-4 h-4 text-[#a29bfe] animate-spin" />
@@ -1079,14 +1077,14 @@ function BroadcastSection() {
         <GlassCard className="p-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-white/40" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
-              {lang === 'ru' ? 'ПРЕВЬЮ' : 'PREVIEW'}
+              {t('adm_preview')}
             </span>
             <button
               onClick={() => setPreview(!preview)}
               className="text-[#a29bfe]"
               style={{ fontSize: '0.75rem' }}
             >
-              {preview ? (lang === 'ru' ? 'Скрыть' : 'Hide') : (lang === 'ru' ? 'Показать' : 'Show')}
+              {preview ? t('adm_hide') : t('adm_show')}
             </button>
           </div>
           {preview && (
@@ -1111,7 +1109,7 @@ function BroadcastSection() {
         ) : (
           <>
             <Send className="w-4 h-4" />
-            {lang === 'ru' ? 'Отправить рассылку' : 'Send Broadcast'}
+            {t('adm_send_broadcast')}
           </>
         )}
       </button>
@@ -1129,17 +1127,15 @@ function BroadcastSection() {
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 text-green-400" style={{ fontSize: '0.875rem', fontWeight: 600 }}>
                     <Check className="w-4 h-4" />
-                    {lang === 'ru' ? 'Рассылка отправлена!' : 'Broadcast sent!'}
+                    {t('adm_broadcast_sent')}
                   </div>
                   <div className="text-white/40" style={{ fontSize: '0.8125rem' }}>
-                    {lang === 'ru'
-                      ? `Отправлено: ${result.sent} / ${result.total}, ошибок: ${result.failed}`
-                      : `Sent: ${result.sent} / ${result.total}, failed: ${result.failed}`}
+                    {t('adm_broadcast_result', { sent: result.sent, total: result.total, failed: result.failed })}
                   </div>
                 </div>
               ) : (
                 <div className="text-red-400" style={{ fontSize: '0.875rem' }}>
-                  {lang === 'ru' ? 'Ошибка: ' : 'Error: '}{result.error || 'Unknown'}
+                  {t('adm_error')}: {result.error || 'Unknown'}
                 </div>
               )}
             </GlassCard>

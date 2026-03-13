@@ -30,6 +30,7 @@ import {
 } from './telegram';
 import { api } from './api-client';
 import { calculateCalories } from './calorie-calculator';
+import { useTranslation } from './i18n';
 
 // ---- Types ----
 type Gender = 'male' | 'female';
@@ -48,13 +49,6 @@ interface OnboardingData {
 // ---- Step definitions ----
 const TOTAL_STEPS = 6;
 
-function detectLanguage(): string {
-  if (typeof navigator !== 'undefined' && navigator.language?.startsWith('ru')) return 'ru';
-  return 'en';
-}
-
-
-
 export function OnboardingNutritionPage() {
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1); // 1 = forward, -1 = back
@@ -67,7 +61,7 @@ export function OnboardingNutritionPage() {
     goal: null,
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [language] = useState(detectLanguage);
+  const { t, lang } = useTranslation();
 
   const { login, isAuthenticated, isLoading: authLoading, user } = useAuth();
   const navigate = useNavigate();
@@ -269,63 +263,63 @@ export function OnboardingNutritionPage() {
                 <GenderStep
                   value={data.gender}
                   onChange={(g) => { hapticSelection(); setData((d) => ({ ...d, gender: g })); }}
-                  lang={language}
+                  lang={lang}
                 />
               )}
               {step === 1 && (
                 <NumberInputStep
                   icon={<User className="w-5 h-5 text-[#a29bfe]" />}
-                  title={language === 'ru' ? 'Сколько вам лет?' : 'How old are you?'}
-                  subtitle={language === 'ru' ? 'Возраст влияет на расчёт калорий' : 'Age affects calorie calculation'}
+                  title={t('obn_age_title')}
+                  subtitle={t('obn_age_desc')}
                   value={data.age}
                   onChange={(v) => setData((d) => ({ ...d, age: v }))}
-                  unit={language === 'ru' ? 'лет' : 'years'}
+                  unit={t('obn_age_unit')}
                   min={10}
                   max={120}
                   placeholder="25"
-                  lang={language}
+                  lang={lang}
                 />
               )}
               {step === 2 && (
                 <NumberInputStep
                   icon={<Ruler className="w-5 h-5 text-[#00cec9]" />}
-                  title={language === 'ru' ? 'Ваш рост' : 'Your height'}
-                  subtitle={language === 'ru' ? 'Укажите рост в сантиметрах' : 'Enter your height in centimeters'}
+                  title={t('obn_height_title')}
+                  subtitle={t('obn_height_desc')}
                   value={data.height}
                   onChange={(v) => setData((d) => ({ ...d, height: v }))}
-                  unit={language === 'ru' ? 'см' : 'cm'}
+                  unit={t('obn_height_unit')}
                   min={100}
                   max={250}
                   placeholder="175"
-                  lang={language}
+                  lang={lang}
                 />
               )}
               {step === 3 && (
                 <NumberInputStep
                   icon={<Weight className="w-5 h-5 text-[#e17055]" />}
-                  title={language === 'ru' ? 'Ваш вес' : 'Your weight'}
-                  subtitle={language === 'ru' ? 'Укажите вес в килограммах' : 'Enter your weight in kilograms'}
+                  title={t('obn_weight_title')}
+                  subtitle={t('obn_weight_desc')}
                   value={data.weight}
                   onChange={(v) => setData((d) => ({ ...d, weight: v }))}
-                  unit={language === 'ru' ? 'кг' : 'kg'}
+                  unit={t('obn_weight_unit')}
                   min={30}
                   max={300}
                   placeholder="70"
-                  lang={language}
+                  lang={lang}
                 />
               )}
               {step === 4 && (
                 <ActivityStep
                   value={data.activityLevel}
                   onChange={(a) => { hapticSelection(); setData((d) => ({ ...d, activityLevel: a })); }}
-                  lang={language}
+                  lang={lang}
                 />
               )}
               {step === 5 && (
                 <GoalStep
                   value={data.goal}
                   onChange={(g) => { hapticSelection(); setData((d) => ({ ...d, goal: g })); }}
-                  lang={language}
+                  lang={lang}
                 />
               )}
             </motion.div>
@@ -376,11 +370,11 @@ export function OnboardingNutritionPage() {
               ) : step === TOTAL_STEPS - 1 ? (
                 <>
                   <Sparkles className="w-5 h-5" />
-                  {language === 'ru' ? 'Начать' : 'Get Started'}
+                  {t('obn_get_started')}
                 </>
               ) : (
                 <>
-                  {language === 'ru' ? 'Далее' : 'Continue'}
+                  {step === 0 ? t('obn_get_started') : t('obn_continue')}
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
@@ -397,9 +391,10 @@ export function OnboardingNutritionPage() {
 // =============================================
 
 function GenderStep({ value, onChange, lang }: { value: Gender | null; onChange: (g: Gender) => void; lang: string }) {
+  const { t } = useTranslation();
   const options: Array<{ id: Gender; emoji: string; label: string }> = [
-    { id: 'male', emoji: '\u{1F468}', label: lang === 'ru' ? 'Мужской' : 'Male' },
-    { id: 'female', emoji: '\u{1F469}', label: lang === 'ru' ? 'Женский' : 'Female' },
+    { id: 'male', emoji: '\u{1F468}', label: t('obn_male') },
+    { id: 'female', emoji: '\u{1F469}', label: t('obn_female') },
   ];
 
   return (
@@ -409,10 +404,10 @@ function GenderStep({ value, onChange, lang }: { value: Gender | null; onChange:
           <User className="w-6 h-6 text-[#a29bfe]" />
         </div>
         <h1 className="text-foreground mb-2" style={{ fontSize: '1.625rem', fontWeight: 700, lineHeight: 1.2 }}>
-          {lang === 'ru' ? 'Ваш пол' : 'Your gender'}
+          {t('obn_gender_title')}
         </h1>
         <p className="text-muted-foreground" style={{ fontSize: '0.9375rem', lineHeight: 1.5 }}>
-          {lang === 'ru' ? 'Для точного расчёта калорий и метаболизма' : 'For accurate calorie and metabolism calculation'}
+          {t('obn_gender_desc')}
         </p>
       </div>
 
@@ -477,6 +472,7 @@ function NumberInputStep({
 }) {
   const numVal = Number(value);
   const isValid = value === '' || (numVal >= min && numVal <= max);
+  const { t } = useTranslation();
 
   return (
     <div className="flex flex-col">
@@ -528,7 +524,7 @@ function NumberInputStep({
             className="text-red-400/70 mt-3"
             style={{ fontSize: '0.8125rem' }}
           >
-            {lang === 'ru' ? `Допустимо: ${min}–${max}` : `Valid range: ${min}–${max}`}
+            {t('obn_valid_range', { min, max })}
           </motion.p>
         )}
       </div>
@@ -545,30 +541,31 @@ function ActivityStep({
   onChange: (a: ActivityLevel) => void;
   lang: string;
 }) {
+  const { t } = useTranslation();
   const options: Array<{ id: ActivityLevel; emoji: string; label: string; desc: string }> = [
     {
       id: 'low',
       emoji: '\u{1F6CB}\uFE0F',
-      label: lang === 'ru' ? 'Низкая' : 'Low',
-      desc: lang === 'ru' ? 'Сидячий образ жизни, мало движения' : 'Sedentary lifestyle, minimal movement',
+      label: t('obn_activity_low'),
+      desc: t('obn_activity_low_desc'),
     },
     {
       id: 'medium',
       emoji: '\u{1F6B6}',
-      label: lang === 'ru' ? 'Средняя' : 'Medium',
-      desc: lang === 'ru' ? '2-3 тренировки в неделю' : '2-3 workouts per week',
+      label: t('obn_activity_medium'),
+      desc: t('obn_activity_medium_desc'),
     },
     {
       id: 'high',
       emoji: '\u{1F3CB}\uFE0F',
-      label: lang === 'ru' ? 'Высокая' : 'High',
-      desc: lang === 'ru' ? '4-5 тренировок в неделю' : '4-5 workouts per week',
+      label: t('obn_activity_high'),
+      desc: t('obn_activity_high_desc'),
     },
     {
       id: 'athlete',
       emoji: '\u{1F3C6}',
-      label: lang === 'ru' ? 'Атлет' : 'Athlete',
-      desc: lang === 'ru' ? 'Ежедневные интенсивные тренировки' : 'Daily intense training',
+      label: t('obn_activity_athlete'),
+      desc: t('obn_activity_athlete_desc'),
     },
   ];
 
@@ -579,10 +576,10 @@ function ActivityStep({
           <Flame className="w-6 h-6 text-[#00cec9]" />
         </div>
         <h1 className="text-foreground mb-2" style={{ fontSize: '1.625rem', fontWeight: 700, lineHeight: 1.2 }}>
-          {lang === 'ru' ? 'Уровень активности' : 'Activity level'}
+          {t('obn_activity_title')}
         </h1>
         <p className="text-muted-foreground" style={{ fontSize: '0.9375rem', lineHeight: 1.5 }}>
-          {lang === 'ru' ? 'Как часто вы занимаетесь спортом?' : 'How often do you exercise?'}
+          {t('obn_activity_desc')}
         </p>
       </div>
 
@@ -641,26 +638,27 @@ function GoalStep({
   onChange: (g: Goal) => void;
   lang: string;
 }) {
+  const { t } = useTranslation();
   const options: Array<{ id: Goal; emoji: string; label: string; desc: string; color: string }> = [
     {
       id: 'lose_weight',
       emoji: '\u{1F525}',
-      label: lang === 'ru' ? 'Похудеть' : 'Lose weight',
-      desc: lang === 'ru' ? 'Снизить вес и процент жира' : 'Reduce weight and body fat',
+      label: t('obn_goal_lose'),
+      desc: t('obn_goal_lose_desc'),
       color: '#e17055',
     },
     {
       id: 'maintain_weight',
       emoji: '\u{2696}\uFE0F',
-      label: lang === 'ru' ? 'Поддержать вес' : 'Maintain weight',
-      desc: lang === 'ru' ? 'Сохранить текущую форму' : 'Keep your current shape',
+      label: t('obn_goal_maintain'),
+      desc: t('obn_goal_maintain_desc'),
       color: '#00cec9',
     },
     {
       id: 'gain_muscle',
       emoji: '\u{1F4AA}',
-      label: lang === 'ru' ? 'Набрать мышцы' : 'Gain muscle',
-      desc: lang === 'ru' ? 'Увеличить мышечную массу' : 'Build muscle mass',
+      label: t('obn_goal_gain'),
+      desc: t('obn_goal_gain_desc'),
       color: '#6c5ce7',
     },
   ];
@@ -672,10 +670,10 @@ function GoalStep({
           <Target className="w-6 h-6 text-[#e17055]" />
         </div>
         <h1 className="text-foreground mb-2" style={{ fontSize: '1.625rem', fontWeight: 700, lineHeight: 1.2 }}>
-          {lang === 'ru' ? 'Ваша цель' : 'Your goal'}
+          {t('obn_goal_title')}
         </h1>
         <p className="text-muted-foreground" style={{ fontSize: '0.9375rem', lineHeight: 1.5 }}>
-          {lang === 'ru' ? 'Чего вы хотите достичь?' : 'What do you want to achieve?'}
+          {t('obn_goal_question')}
         </p>
       </div>
 

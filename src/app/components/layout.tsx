@@ -50,41 +50,27 @@ const TABS: TabDef[] = [
   { key: 'profile', path: '/profile', labelKey: 'nav_profile', iconPaths: svgPaths.p1a7a4780 },
 ];
 
-// Pages where the tab bar should be hidden
-const HIDE_TAB_PAGES = [
-  '/', // onboarding
-  '/coach',
-  '/nutrition-coach',
-  '/upgrade',
-  '/weight',
-];
+// Main tab paths — tab bar is ONLY shown on these
+const TAB_PATHS = new Set([
+  '/home',
+  '/calories',
+  '/meal-plan',
+  '/workout-plan',
+  '/profile',
+]);
 
-// Pages where the Telegram BackButton should be shown (deeper/non-tab pages)
-const BACK_BUTTON_PAGES = [
-  '/day/',
-  '/challenges/',
-  '/challenge/',
-  '/plan-builder',
-  '/plan-history',
-  '/journal/insights',
-  '/coach',
-  '/nutrition-coach',
-  '/goals',
-  '/goal/',
-  '/strategic-goal/',
-  '/bonuses',
-  '/wallet',
-  '/admin',
-  '/referrals',
-  '/calories/scan',
-  '/calories/add',
-  '/profile/',
-  '/upgrade',
-  '/weight',
-];
+// Pages where we explicitly don't show tab bar or back button (onboarding flow)
+const ONBOARDING_PATHS = new Set(['/', '/onboarding-legacy']);
+
+function isTabPage(pathname: string): boolean {
+  return TAB_PATHS.has(pathname);
+}
 
 function shouldShowBackButton(pathname: string): boolean {
-  return BACK_BUTTON_PAGES.some(p => pathname.startsWith(p));
+  // Show back button on all pages that are NOT tabs and NOT onboarding
+  if (ONBOARDING_PATHS.has(pathname)) return false;
+  if (isTabPage(pathname)) return false;
+  return true;
 }
 
 function getActiveTab(pathname: string): string | null {
@@ -179,7 +165,7 @@ function GlassTabBar({ keyboardVisible }: { keyboardVisible: boolean }) {
   const anySheetOpen = useAnyBottomSheetOpen();
 
   // Hide tab bar on certain pages
-  const hideTabBar = HIDE_TAB_PAGES.includes(location.pathname);
+  const hideTabBar = !isTabPage(location.pathname);
   if (hideTabBar) return null;
 
   return (
@@ -214,7 +200,7 @@ function GlassTabBar({ keyboardVisible }: { keyboardVisible: boolean }) {
                 style={{ boxShadow: '0 4px 16px rgba(108,92,231,0.3)' }}
               >
                 <Crown className="w-3 h-3 text-[#ffd700]" />
-                <span className="text-white text-[0.6875rem] font-medium">Go Premium</span>
+                <span className="text-white text-[0.6875rem] font-medium">{t('hn_go_premium')}</span>
               </motion.button>
             )}
 
@@ -307,31 +293,28 @@ function useTelegramSplashColors() {
 function AuthSplash() {
   const tgColors = useTelegramSplashColors();
   const { authPhase, retryAttempt, isCachedSession } = useAuth();
-  const lang = typeof navigator !== 'undefined' && navigator.language?.startsWith('ru') ? 'ru' : 'en';
+  const { t } = useTranslation();
 
-  // Use Telegram themeParams as inline overrides for instant color match,
-  // falling back to CSS variables (bg-background, text-foreground) once theme.css loads.
   const bgStyle = tgColors?.bg ? { backgroundColor: tgColors.bg } : undefined;
+  const textStyle = tgColors?.text ? { color: tgColors.text } : undefined;
   const hintStyle = tgColors?.hint ? { color: tgColors.hint } : undefined;
 
   // Progress label based on auth phase
   const getProgressLabel = (): string => {
     if (isCachedSession) {
-      return lang === 'ru' ? 'Синхронизация...' : 'Syncing...';
+      return t('splash_syncing');
     }
     switch (authPhase) {
       case 'restoring':
-        return lang === 'ru' ? 'Восстановление...' : 'Restoring session...';
+        return t('splash_restoring');
       case 'connecting':
-        return lang === 'ru' ? 'Подключение...' : 'Connecting...';
+        return t('splash_connecting');
       case 'retrying':
-        return lang === 'ru'
-          ? `Повторная попытка ${retryAttempt}/3...`
-          : `Retrying ${retryAttempt}/3...`;
+        return t('splash_retrying', { attempt: retryAttempt });
       case 'authenticating':
-        return lang === 'ru' ? 'Авторизация...' : 'Authenticating...';
+        return t('splash_auth');
       default:
-        return lang === 'ru' ? 'Загрузка...' : 'Loading...';
+        return t('splash_loading');
     }
   };
 
@@ -362,33 +345,28 @@ function AuthSplash() {
 
         {/* Spinner — color shifts to amber during retries */}
         <div className="relative w-8 h-8 mt-4">
-          <div
-            className="absolute inset-0 rounded-full border-2 border-transparent animate-spin"
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+            className="w-full h-full rounded-full"
             style={{
-              borderTopColor: isRetrying ? '#f0a500' : '#00b894',
-              borderRightColor: isRetrying ? 'rgba(240,165,0,0.3)' : 'rgba(0,184,148,0.3)',
-              animationDuration: isRetrying ? '0.5s' : '0.8s',
+              border: `2px solid ${isRetrying ? 'rgba(251,191,36,0.15)' : 'rgba(108,92,231,0.15)'}`,
+              borderTopColor: isRetrying ? '#fbbf24' : '#6c5ce7',
             }}
           />
+          {isRetrying && (
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-amber-500"
+            />
+          )}
         </div>
 
-        {/* Progress label with animated transition */}
-        <AnimatePresence mode="wait">
-          <motion.p
-            key={authPhase ?? 'done'}
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.15 }}
-            className="text-muted-foreground text-sm mt-1 flex items-center gap-1.5"
-            style={hintStyle}
-          >
-            {isRetrying && (
-              <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-            )}
-            {getProgressLabel()}
-          </motion.p>
-        </AnimatePresence>
+        {/* Progress label */}
+        <p className="text-muted-foreground text-xs font-medium" style={hintStyle}>
+          {getProgressLabel()}
+        </p>
       </motion.div>
     </div>
   );
@@ -398,7 +376,7 @@ function AuthSplash() {
 
 function TelegramRequiredScreen({ onRetry }: { onRetry: () => void }) {
   const { authError } = useAuth();
-  const lang = typeof navigator !== 'undefined' && navigator.language?.startsWith('ru') ? 'ru' : 'en';
+  const { t } = useTranslation();
 
   // Diagnostic info for debugging
   const wa = typeof window !== 'undefined' ? (window as any).Telegram?.WebApp : null;
@@ -424,13 +402,11 @@ function TelegramRequiredScreen({ onRetry }: { onRetry: () => void }) {
         </div>
 
         <h1 className="text-foreground text-xl font-bold mt-2">
-          {lang === 'ru' ? 'Откройте через Telegram' : 'Open via Telegram'}
+          {t('splash_open_tg')}
         </h1>
 
         <p className="text-muted-foreground text-sm leading-relaxed">
-          {lang === 'ru'
-            ? 'Proper Food AI — это Telegram Mini App. Откройте бота @ProperFoodAI_bot в Telegram и нажмите кнопку меню.'
-            : 'Proper Food AI is a Telegram Mini App. Open @ProperFoodAI_bot in Telegram and tap the menu button.'}
+          {t('splash_open_tg_desc')}
         </p>
 
         {/* Auth error detail */}
@@ -448,14 +424,14 @@ function TelegramRequiredScreen({ onRetry }: { onRetry: () => void }) {
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.94 8.13l-1.97 9.3c-.15.67-.54.83-1.1.52l-3.03-2.24-1.46 1.41c-.16.16-.3.3-.61.3l.22-3.07 5.57-5.03c.24-.22-.05-.33-.38-.13l-6.88 4.33-2.97-.93c-.64-.2-.66-.64.14-.95l11.6-4.47c.54-.2 1.01.13.87.96z" />
           </svg>
-          {lang === 'ru' ? 'Открыть в Telegram' : 'Open in Telegram'}
+          {t('splash_open_tg_btn')}
         </a>
 
         <button
           onClick={onRetry}
           className="mt-2 text-muted-foreground text-xs underline underline-offset-2"
         >
-          {lang === 'ru' ? 'Повторить попытку' : 'Retry authentication'}
+          {t('splash_retry_btn')}
         </button>
 
         {/* Diagnostics (always visible for debugging) */}
@@ -628,7 +604,7 @@ export function AppLayout() {
   }, [location.pathname, navigate]);
 
   // Determine if tab bar should have extra bottom padding
-  const hasTabBar = !HIDE_TAB_PAGES.includes(location.pathname);
+  const hasTabBar = isTabPage(location.pathname);
 
   return (
     <AuthProvider>

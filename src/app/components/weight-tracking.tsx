@@ -59,6 +59,7 @@ interface ChartDataPoint {
 
 // ---- Custom Tooltip ----
 function CustomTooltip({ active, payload, label }: any) {
+  const { t } = useTranslation();
   if (!active || !payload?.length) return null;
   return (
     <div
@@ -69,7 +70,7 @@ function CustomTooltip({ active, payload, label }: any) {
       }}
     >
       <p className="text-white/50 text-xs mb-0.5">{payload[0]?.payload?.dateLabel}</p>
-      <p className="text-white font-semibold text-sm">{payload[0]?.value} kg</p>
+      <p className="text-white font-semibold text-sm">{payload[0]?.value} {t('unit_kg')}</p>
     </div>
   );
 }
@@ -189,6 +190,7 @@ export function WeightTrackingPage() {
         cutoff = new Date(0);
     }
 
+    const locale = t('locale_code');
     return entries
       .filter((e) => new Date(e.date) >= cutoff)
       .reverse()
@@ -196,11 +198,11 @@ export function WeightTrackingPage() {
         const d = new Date(e.date);
         return {
           date: e.date,
-          dateLabel: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          dateLabel: d.toLocaleDateString(locale, { month: 'short', day: 'numeric' }),
           weight: e.weight,
         };
       });
-  }, [entries, timeRange]);
+  }, [entries, timeRange, t]);
 
   // Stats
   const stats = useMemo(() => {
@@ -259,12 +261,12 @@ export function WeightTrackingPage() {
     { key: '7d', label: '7D' },
     { key: '30d', label: '30D' },
     { key: '90d', label: '90D' },
-    { key: 'all', label: 'All' },
+    { key: 'all', label: t('wt_all') },
   ];
 
   return (
     <div className="min-h-screen pb-6">
-      <PageHeader title={t('weight_title') || 'Weight Tracking'} />
+      <PageHeader title={t('weight_title')} />
 
       <div className="px-4 space-y-4">
 
@@ -273,10 +275,10 @@ export function WeightTrackingPage() {
           <GlassCard className="p-5">
             <div className="flex items-start justify-between mb-3">
               <div>
-                <p className="text-muted-foreground text-xs mb-1">{t('weight_current') || 'Current Weight'}</p>
+                <p className="text-muted-foreground text-xs mb-1">{t('weight_current')}</p>
                 <div className="flex items-baseline gap-2">
                   <h2 className="text-3xl text-foreground font-semibold">{stats.current}</h2>
-                  <span className="text-lg text-muted-foreground">kg</span>
+                  <span className="text-lg text-muted-foreground">{t('unit_kg')}</span>
                 </div>
               </div>
               <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full ${
@@ -300,7 +302,7 @@ export function WeightTrackingPage() {
                     ? 'text-[#ff6b6b]'
                     : 'text-white/40'
                 }`}>
-                  {stats.trend === 'down' ? 'Losing' : stats.trend === 'up' ? 'Gaining' : 'Stable'}
+                  {stats.trend === 'down' ? t('wt_trend_losing') : stats.trend === 'up' ? t('wt_trend_gaining') : t('wt_trend_stable')}
                 </span>
               </div>
             </div>
@@ -308,23 +310,23 @@ export function WeightTrackingPage() {
             {/* Quick Stats Grid */}
             <div className="grid grid-cols-3 gap-3">
               <div className="text-center p-2.5 rounded-xl" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
-                <p className="text-xs text-muted-foreground mb-1">{t('weight_week') || 'Week'}</p>
+                <p className="text-xs text-muted-foreground mb-1">{t('weight_week')}</p>
                 <p className={`font-semibold text-sm ${
                   stats.weeklyChange !== null
                     ? stats.weeklyChange < 0 ? 'text-[#00cec9]' : stats.weeklyChange > 0 ? 'text-[#ff6b6b]' : 'text-foreground/60'
                     : 'text-muted-foreground'
                 }`}>
                   {stats.weeklyChange !== null
-                    ? `${stats.weeklyChange > 0 ? '+' : ''}${stats.weeklyChange.toFixed(1)} kg`
+                    ? `${stats.weeklyChange > 0 ? '+' : ''}${stats.weeklyChange.toFixed(1)} ${t('unit_kg')}`
                     : '—'}
                 </p>
               </div>
               <div className="text-center p-2.5 rounded-xl" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
-                <p className="text-xs text-muted-foreground mb-1">{t('weight_avg') || 'Average'}</p>
-                <p className="text-foreground/80 font-semibold text-sm">{stats.avg} kg</p>
+                <p className="text-xs text-muted-foreground mb-1">{t('weight_avg')}</p>
+                <p className="text-foreground/80 font-semibold text-sm">{stats.avg} {t('unit_kg')}</p>
               </div>
               <div className="text-center p-2.5 rounded-xl" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
-                <p className="text-xs text-muted-foreground mb-1">{t('weight_entries') || 'Entries'}</p>
+                <p className="text-xs text-muted-foreground mb-1">{t('weight_entries')}</p>
                 <p className="text-foreground/80 font-semibold text-sm">{stats.entryCount}</p>
               </div>
             </div>
@@ -336,7 +338,7 @@ export function WeightTrackingPage() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Activity className="w-4 h-4 text-[#a29bfe]" />
-              <h3 className="text-foreground font-medium text-sm">{t('weight_trend') || 'Weight Trend'}</h3>
+              <h3 className="text-foreground font-medium text-sm">{t('weight_trend')}</h3>
             </div>
 
             {/* Time Range Selector */}
@@ -396,7 +398,7 @@ export function WeightTrackingPage() {
                       strokeDasharray="6 4"
                       strokeWidth={1}
                       label={{
-                        value: `Goal: ${goalWeight}kg`,
+                        value: `${t('wt_goal_label')}: ${goalWeight}${t('unit_kg')}`,
                         position: 'right',
                         fill: 'rgba(0,206,201,0.6)',
                         fontSize: 10,
@@ -419,9 +421,9 @@ export function WeightTrackingPage() {
             <div className="h-[200px] flex items-center justify-center">
               <div className="text-center">
                 <Scale className="w-10 h-10 text-[#6c5ce7]/30 mx-auto mb-3" />
-                <p className="text-white/40 text-sm">{chartData[0].weight} kg</p>
+                <p className="text-white/40 text-sm">{chartData[0].weight} {t('unit_kg')}</p>
                 <p className="text-white/20 text-xs mt-1">
-                  {t('weight_need_more') || 'Log more entries to see the trend'}
+                  {t('weight_need_more')}
                 </p>
               </div>
             </div>
@@ -430,10 +432,10 @@ export function WeightTrackingPage() {
               <div className="text-center">
                 <Scale className="w-10 h-10 text-white/10 mx-auto mb-3" />
                 <p className="text-white/30 text-sm">
-                  {t('weight_no_data') || 'No weight data yet'}
+                  {t('weight_no_data')}
                 </p>
                 <p className="text-white/20 text-xs mt-1">
-                  {t('weight_log_first') || 'Log your first weight below'}
+                  {t('weight_log_first')}
                 </p>
               </div>
             </div>
@@ -444,11 +446,11 @@ export function WeightTrackingPage() {
             <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/[0.06]">
               <div className="flex items-center gap-1.5">
                 <div className="w-2 h-2 rounded-full bg-[#00cec9]" />
-                <span className="text-xs text-white/40">Min: {stats.min} kg</span>
+                <span className="text-xs text-white/40">{t('wt_min')}: {stats.min} {t('unit_kg')}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <div className="w-2 h-2 rounded-full bg-[#ff6b6b]" />
-                <span className="text-xs text-white/40">Max: {stats.max} kg</span>
+                <span className="text-xs text-white/40">{t('wt_max')}: {stats.max} {t('unit_kg')}</span>
               </div>
             </div>
           )}
@@ -458,7 +460,7 @@ export function WeightTrackingPage() {
         <GlassCard className="p-5">
           <div className="flex items-center gap-2 mb-4">
             <Scale className="w-5 h-5 text-[#6c5ce7]" />
-            <h3 className="text-white font-medium">{t('weight_log_title') || 'Log Weight'}</h3>
+            <h3 className="text-white font-medium">{t('weight_log_title')}</h3>
           </div>
 
           {/* Weight Input with +/- buttons */}
@@ -484,7 +486,7 @@ export function WeightTrackingPage() {
                 style={{ appearance: 'textfield' }}
                 placeholder="0.0"
               />
-              <p className="text-center text-white/30 text-xs mt-0.5">kg</p>
+              <p className="text-center text-white/30 text-xs mt-0.5">{t('unit_kg')}</p>
             </div>
 
             <motion.button
@@ -501,7 +503,7 @@ export function WeightTrackingPage() {
             type="text"
             value={logNote}
             onChange={(e) => setLogNote(e.target.value)}
-            placeholder={t('weight_note_placeholder') || 'Add a note (optional)'}
+            placeholder={t('weight_note_placeholder')}
             className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/[0.08] text-white/80 text-sm placeholder:text-white/20 outline-none focus:border-[#6c5ce7]/40 mb-4"
           />
 
@@ -517,10 +519,10 @@ export function WeightTrackingPage() {
             } disabled:opacity-40`}
           >
             {saving
-              ? t('saving') || 'Saving...'
+              ? t('saving')
               : justSaved
-              ? (t('weight_saved') || 'Saved!')
-              : (t('weight_log_btn') || 'Log Weight')}
+              ? t('weight_saved')
+              : t('weight_log_btn')}
           </motion.button>
         </GlassCard>
 
@@ -534,7 +536,7 @@ export function WeightTrackingPage() {
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-[#fd79a8]" />
                 <h3 className="text-white font-medium text-sm">
-                  {t('weight_history') || 'History'}
+                  {t('weight_history')}
                 </h3>
                 <span className="text-white/30 text-xs">({entries.length})</span>
               </div>
@@ -573,7 +575,7 @@ export function WeightTrackingPage() {
                             </div>
                             <div>
                               <div className="flex items-center gap-2">
-                                <p className="text-white text-sm font-medium">{entry.weight} kg</p>
+                                <p className="text-white text-sm font-medium">{entry.weight} {t('unit_kg')}</p>
                                 {diff !== null && diff !== 0 && (
                                   <span className={`text-xs ${diff < 0 ? 'text-[#00cec9]' : 'text-[#ff6b6b]'}`}>
                                     {diff > 0 ? '+' : ''}{diff.toFixed(1)}
@@ -581,7 +583,7 @@ export function WeightTrackingPage() {
                                 )}
                               </div>
                               <p className="text-white/30 text-xs">
-                                {d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                {d.toLocaleDateString(t('locale_code'), { month: 'short', day: 'numeric', year: 'numeric' })}
                                 {entry.note ? ` - ${entry.note}` : ''}
                               </p>
                             </div>

@@ -124,14 +124,14 @@ export function ChallengeCreatePage() {
     } catch (err: any) {
       console.error('[ChallengeCreate] Error:', err);
       if (err?.code === 'INSUFFICIENT_FUNDS') {
-        setCreateError(lang === 'ru' ? 'Недостаточно средств на балансе' : 'Insufficient balance');
+        setCreateError(t('cc_insufficient_balance'));
       } else {
-        setCreateError(err?.message || (lang === 'ru' ? 'Ошибка создания' : 'Creation failed'));
+        setCreateError(err?.message || t('cc_creation_failed'));
       }
     } finally {
       setIsSaving(false);
     }
-  }, [type, title, depositAmount, currency, durationDays, rulesText, visibility, lang]);
+  }, [type, title, depositAmount, currency, durationDays, rulesText, visibility, t]);
 
   const inviteLink = created
     ? buildBotLink(`challenge_${created.id}`)
@@ -195,9 +195,7 @@ export function ChallengeCreatePage() {
             style={{ fontSize: '0.9375rem' }}
           >
             {created.depositAmount > 0
-              ? (lang === 'ru'
-                ? `${created.depositAmount} ${created.currency === 'stars' ? 'Stars' : 'TON'} заморожено на вашем балансе`
-                : `${created.depositAmount} ${created.currency === 'stars' ? 'Stars' : 'TON'} frozen in your balance`)
+              ? t('cc_deposit_frozen_msg', { amount: created.depositAmount, currency: created.currency === 'stars' ? 'Stars' : 'TON' })
               : t('cc_commitment_set')}
           </motion.p>
 
@@ -491,17 +489,17 @@ export function ChallengeCreatePage() {
           {/* Available balance hint */}
           <div className="flex items-center justify-between mt-2 px-1">
             <span className="text-white/25" style={{ fontSize: '0.6875rem' }}>
-              {lang === 'ru' ? 'Доступно' : 'Available'}: {currency === 'stars' ? `${availableStars} Stars` : `${availableTon.toFixed(1)} TON`}
+              {t('cc_available_label')}: {currency === 'stars' ? `${availableStars} Stars` : `${availableTon.toFixed(1)} TON`}
             </span>
             {depositNum > 0 && !hasEnoughFunds && (
               <span className="text-red-400/70" style={{ fontSize: '0.6875rem', fontWeight: 500 }}>
-                {lang === 'ru' ? 'Недостаточно средств' : 'Not enough funds'}
+                {t('cc_not_enough')}
               </span>
             )}
           </div>
           {depositNum > 0 && hasEnoughFunds && (
             <p className="text-white/20 mt-1.5 px-1" style={{ fontSize: '0.6875rem' }}>
-              {lang === 'ru' ? 'Депозит замораживается на балансе до конца челленджа' : 'Deposit is frozen in your balance until challenge ends'}
+              {t('cc_deposit_frozen_info')}
             </p>
           )}
         </motion.div>
@@ -579,12 +577,8 @@ export function ChallengeCreatePage() {
               <div className="flex-1 min-w-0">
                 <p className={`${hasEnoughFunds ? 'text-white/40' : 'text-red-400/70'}`} style={{ fontSize: '0.75rem', lineHeight: 1.4 }}>
                   {hasEnoughFunds
-                    ? (lang === 'ru'
-                      ? `${depositNum} ${currency === 'stars' ? 'Stars' : 'TON'} будет заморожено с вашего баланса`
-                      : `${depositNum} ${currency === 'stars' ? 'Stars' : 'TON'} will be frozen from your balance`)
-                    : (lang === 'ru'
-                      ? `Недостаточно средств. Пополните кошелёк`
-                      : `Insufficient funds. Top up your wallet`)}
+                    ? t('cc_will_be_frozen', { amount: depositNum, currency: currency === 'stars' ? 'Stars' : 'TON' })
+                    : t('cc_insufficient_wallet')}
                 </p>
               </div>
             </GlassCard>

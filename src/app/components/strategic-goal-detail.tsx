@@ -487,7 +487,7 @@ export function StrategicGoalDetailPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-white/50 truncate" style={{ fontSize: '0.8125rem' }}>{rev.summary}</p>
-                        <p className="text-white/20" style={{ fontSize: '0.625rem' }}>{fmtFull(rev.createdAt, lang)}</p>
+                        <p className="text-white/20" style={{ fontSize: '0.625rem' }}>{fmtFull(rev.createdAt, t('locale_code'))}</p>
                       </div>
                     </GlassCard>
                   ))}
@@ -547,7 +547,7 @@ export function StrategicGoalDetailPage() {
                 </GlassCard>
               )}
 
-              <p className="text-white/15 text-center mt-4" style={{ fontSize: '0.625rem' }}>{fmtFull(latestReview.createdAt, lang)}</p>
+              <p className="text-white/15 text-center mt-4" style={{ fontSize: '0.625rem' }}>{fmtFull(latestReview.createdAt, t('locale_code'))}</p>
             </motion.div>
           </motion.div>
         )}
@@ -735,7 +735,7 @@ function TaskRow({ task, index, total, today, t, lang, completing, reorderMode, 
               {t(task.frequency === 'monthly' ? 'sg_monthly' : 'sg_weekly')}
             </span>
             <span className="text-white/20" style={{ fontSize: '0.6875rem' }}>
-              {t('sg_next_due', { date: fmtShort(task.nextDueDate, lang) })}
+              {t('sg_next_due', { date: fmtShort(task.nextDueDate, t('locale_code')) })}
             </span>
             {task.completedCount > 0 && (
               <span className="text-emerald-400/40" style={{ fontSize: '0.6875rem' }}>✓ {task.completedCount}</span>
@@ -747,13 +747,13 @@ function TaskRow({ task, index, total, today, t, lang, completing, reorderMode, 
   );
 }
 
-function fmtShort(iso: string, lang: string): string {
-  try { return new Date(iso).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', { day: 'numeric', month: 'short' }); }
+function fmtShort(iso: string, locale: string): string {
+  try { return new Date(iso).toLocaleDateString(locale, { day: 'numeric', month: 'short' }); }
   catch { return iso; }
 }
 
-function fmtFull(iso: string, lang: string): string {
-  try { return new Date(iso).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+function fmtFull(iso: string, locale: string): string {
+  try { return new Date(iso).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
   catch { return iso; }
 }
 

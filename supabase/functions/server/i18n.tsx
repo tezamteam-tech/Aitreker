@@ -372,6 +372,120 @@ const translations: Record<string, Record<Lang, string>> = {
     en: "\u{1F3C3} Complete Tasks",
     ru: "\u{1F3C3} Выполнить",
   },
+
+  // === Nutrition-specific notifications ===
+  notif_food_logged: {
+    en: "Food logged: {food} ({calories} cal)",
+    ru: "Еда записана: {food} ({calories} ккал)",
+  },
+  notif_daily_calories_title: {
+    en: "Daily Nutrition Summary",
+    ru: "Итоги питания за день",
+  },
+  notif_daily_calories_body: {
+    en: "You consumed {consumed} / {target} cal today.",
+    ru: "Ты потребил {consumed} / {target} ккал сегодня.",
+  },
+  notif_daily_calories_over: {
+    en: "You're {amount} cal over your target. Consider a lighter dinner!",
+    ru: "Ты превысил норму на {amount} ккал. Подумай о лёгком ужине!",
+  },
+  notif_daily_calories_under: {
+    en: "You're {amount} cal under your target. Don't forget to eat!",
+    ru: "До нормы ещё {amount} ккал. Не забудь поесть!",
+  },
+  notif_daily_calories_perfect: {
+    en: "Great job! You hit your calorie target today!",
+    ru: "Отлично! Ты уложился в норму калорий сегодня!",
+  },
+  notif_meal_reminder_title: {
+    en: "Time to eat!",
+    ru: "Время поесть!",
+  },
+  notif_meal_reminder_breakfast: {
+    en: "Don't skip breakfast — it's the most important meal!",
+    ru: "Не пропускай завтрак — это самый важный приём пищи!",
+  },
+  notif_meal_reminder_lunch: {
+    en: "Lunch time! Fuel up for the rest of the day.",
+    ru: "Время обеда! Зарядись на остаток дня.",
+  },
+  notif_meal_reminder_dinner: {
+    en: "Dinner time! Keep it balanced.",
+    ru: "Время ужина! Ешь сбалансированно.",
+  },
+  notif_weight_logged: {
+    en: "Weight logged: {weight} kg",
+    ru: "Вес записан: {weight} кг",
+  },
+  notif_weight_trend: {
+    en: "Your weight trend this week: {trend}",
+    ru: "Динамика веса за неделю: {trend}",
+  },
+  notif_weight_trend_down: {
+    en: "down {amount} kg — great progress!",
+    ru: "минус {amount} кг — отличный прогресс!",
+  },
+  notif_weight_trend_up: {
+    en: "up {amount} kg — stay on track!",
+    ru: "плюс {amount} кг — держись курса!",
+  },
+  notif_weight_trend_stable: {
+    en: "stable — consistency is key!",
+    ru: "стабильно — постоянство это главное!",
+  },
+  notif_workout_reminder_title: {
+    en: "Workout Time!",
+    ru: "Время тренировки!",
+  },
+  notif_workout_reminder_body: {
+    en: "Your workout plan for today is ready. Let's go!",
+    ru: "План тренировки на сегодня готов. Вперёд!",
+  },
+  notif_scan_food_tip: {
+    en: "Tip: Scan your meals with AI to track calories automatically!",
+    ru: "Совет: Сканируй еду через AI для автоматического подсчёта калорий!",
+  },
+
+  // === Nutrition daily digest additions ===
+  notif_nutrition_digest_title: {
+    en: "Your Nutrition Digest",
+    ru: "Дайджест по питанию",
+  },
+  notif_nutrition_digest_greeting: {
+    en: "Good morning, {name}! Here's your nutrition plan for today.",
+    ru: "Доброе утро, {name}! Вот твой план питания на сегодня.",
+  },
+  notif_nutrition_digest_target: {
+    en: "Daily target: {calories} cal | P: {protein}g | C: {carbs}g | F: {fat}g",
+    ru: "Норма на день: {calories} ккал | Б: {protein}г | У: {carbs}г | Ж: {fat}г",
+  },
+
+  // === Bot command responses ===
+  cmd_today_nutrition: {
+    en: "Today's nutrition:\nConsumed: {consumed} / {target} cal\nProtein: {protein}g | Carbs: {carbs}g | Fat: {fat}g",
+    ru: "Питание на сегодня:\nПотреблено: {consumed} / {target} ккал\nБелки: {protein}г | Углеводы: {carbs}г | Жиры: {fat}г",
+  },
+  cmd_weight_status: {
+    en: "Current weight: {weight} kg\nGoal: {goal}\nTrend: {trend}",
+    ru: "Текущий вес: {weight} кг\nЦель: {goal}\nТренд: {trend}",
+  },
+  btn_scan_food: {
+    en: "\u{1F4F7} Scan Food",
+    ru: "\u{1F4F7} Сканировать еду",
+  },
+  btn_log_weight: {
+    en: "\u{2696}\u{FE0F} Log Weight",
+    ru: "\u{2696}\u{FE0F} Записать вес",
+  },
+  btn_meal_plan: {
+    en: "\u{1F37D}\u{FE0F} Meal Plan",
+    ru: "\u{1F37D}\u{FE0F} План питания",
+  },
+  btn_nutrition: {
+    en: "\u{1F34E} Nutrition",
+    ru: "\u{1F34E} Питание",
+  },
 };
 
 /**

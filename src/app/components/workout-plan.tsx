@@ -67,18 +67,18 @@ interface SavedPlan {
 }
 
 // ---- Workout type config ----
-const WORKOUT_TYPE_CONFIG: Record<WorkoutType, { icon: React.ElementType; color: string; label: string; labelRu: string }> = {
-  strength: { icon: Dumbbell, color: '#6c5ce7', label: 'Strength', labelRu: 'Силовая' },
-  cardio: { icon: Heart, color: '#fd79a8', label: 'Cardio', labelRu: 'Кардио' },
-  flexibility: { icon: Zap, color: '#00cec9', label: 'Flexibility', labelRu: 'Растяжка' },
-  hiit: { icon: Flame, color: '#e17055', label: 'HIIT', labelRu: 'ВИИТ' },
-  rest: { icon: Target, color: '#74b9ff', label: 'Rest Day', labelRu: 'Отдых' },
+const WORKOUT_TYPE_CONFIG: Record<WorkoutType, { icon: React.ElementType; color: string; key: string }> = {
+  strength: { icon: Dumbbell, color: '#6c5ce7', key: 'wp_type_strength' },
+  cardio: { icon: Heart, color: '#fd79a8', key: 'wp_type_cardio' },
+  flexibility: { icon: Zap, color: '#00cec9', key: 'wp_type_flexibility' },
+  hiit: { icon: Flame, color: '#e17055', key: 'wp_type_hiit' },
+  rest: { icon: Target, color: '#74b9ff', key: 'wp_type_rest' },
 };
 
-const PLAN_OPTIONS: { length: PlanLength; label: string; labelRu: string; desc: string; descRu: string; color: string }[] = [
-  { length: 7, label: '1 Week', labelRu: '1 Неделя', desc: 'Quick starter plan', descRu: 'Быстрый старт', color: '#00cec9' },
-  { length: 30, label: '1 Month', labelRu: '1 Месяц', desc: 'Full monthly program', descRu: 'Полный месяц', color: '#6c5ce7' },
-  { length: 100, label: '100 Days', labelRu: '100 Дней', desc: 'Transformation challenge', descRu: 'Трансформация', color: '#fd79a8' },
+const PLAN_OPTIONS: { length: PlanLength; labelKey: string; descKey: string; color: string }[] = [
+  { length: 7, labelKey: 'wp_plan_7_label', descKey: 'wp_plan_7_desc', color: '#00cec9' },
+  { length: 30, labelKey: 'wp_plan_30_label', descKey: 'wp_plan_30_desc', color: '#6c5ce7' },
+  { length: 100, labelKey: 'wp_plan_100_label', descKey: 'wp_plan_100_desc', color: '#fd79a8' },
 ];
 
 const GOAL_LABELS: Record<string, { en: string; ru: string }> = {
@@ -87,22 +87,9 @@ const GOAL_LABELS: Record<string, { en: string; ru: string }> = {
   gain_muscle: { en: 'Muscle Gain', ru: 'Набор массы' },
 };
 
-// ---- Generation messages ----
-const GEN_MESSAGES_EN = [
-  'Analyzing your fitness level...',
-  'Selecting optimal exercises...',
-  'Balancing muscle groups...',
-  'Adding progressive overload...',
-  'Scheduling rest days...',
-  'Finalizing your program...',
-];
-const GEN_MESSAGES_RU = [
-  'Анализируем ваш уровень...',
-  'Подбираем упражнения...',
-  'Балансируем мышечные группы...',
-  'Добавляем прогрессию...',
-  'Планируем дни отдыха...',
-  'Финализируем программу...',
+// ---- Generation message keys ----
+const GEN_MESSAGE_KEYS = [
+  'wp_gen_1', 'wp_gen_2', 'wp_gen_3', 'wp_gen_4', 'wp_gen_5', 'wp_gen_6',
 ];
 
 // ---- Lang ----
@@ -198,7 +185,7 @@ export function WorkoutPlanPage() {
     }
     setGenMessage(0);
     genIntervalRef.current = setInterval(() => {
-      setGenMessage((p) => (p >= GEN_MESSAGES_EN.length - 1 ? p : p + 1));
+      setGenMessage((p) => (p >= GEN_MESSAGE_KEYS.length - 1 ? p : p + 1));
     }, 3000);
     return () => { if (genIntervalRef.current) clearInterval(genIntervalRef.current); };
   }, [viewState]);
@@ -268,10 +255,10 @@ export function WorkoutPlanPage() {
   return (
     <div className="min-h-screen pb-28">
       <PageHeader
-        title={lang === 'ru' ? 'Тренировки' : 'Workout Plan'}
+        title={t('wp_title')}
         subtitle={
           currentPlan
-            ? `${currentPlan.workout_type === 'home' ? (lang === 'ru' ? 'Дома' : 'Home') : (lang === 'ru' ? 'Зал' : 'Gym')} · ${currentPlan.plan_length} ${lang === 'ru' ? 'дней' : 'days'}`
+            ? `${currentPlan.workout_type === 'home' ? t('wp_home_label') : t('wp_gym_label')} · ${currentPlan.plan_length} ${t('shared_days_unit')}`
             : undefined
         }
         actions={
@@ -310,21 +297,21 @@ export function WorkoutPlanPage() {
               {/* Workout Location */}
               <div>
                 <p className="text-muted-foreground mb-3 px-1" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
-                  {lang === 'ru' ? 'Где тренируетесь?' : 'Where do you work out?'}
+                  {t('wp_where')}
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   <LocationCard
                     icon={Home}
-                    label={lang === 'ru' ? 'Дома' : 'At Home'}
-                    desc={lang === 'ru' ? 'Без оборудования' : 'No equipment needed'}
+                    label={t('wp_at_home')}
+                    desc={t('wp_no_equip')}
                     color="#00cec9"
                     selected={workoutLocation === 'home'}
                     onSelect={() => { hapticFeedback('light'); setWorkoutLocation('home'); }}
                   />
                   <LocationCard
                     icon={Building2}
-                    label={lang === 'ru' ? 'В зале' : 'At Gym'}
-                    desc={lang === 'ru' ? 'Полное оборудование' : 'Full equipment'}
+                    label={t('wp_at_gym')}
+                    desc={t('wp_full_equip')}
                     color="#6c5ce7"
                     selected={workoutLocation === 'gym'}
                     onSelect={() => { hapticFeedback('light'); setWorkoutLocation('gym'); }}
@@ -341,31 +328,31 @@ export function WorkoutPlanPage() {
                     </div>
                     <div>
                       <p className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
-                        {lang === 'ru' ? 'Ваш профиль' : 'Your Profile'}
+                        {t('shared_your_profile')}
                       </p>
                       <p className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>
-                        {lang === 'ru' ? 'AI создаст план на основе этих данных' : 'AI will tailor workouts to your level'}
+                        {t('shared_ai_tailor')}
                       </p>
                     </div>
                   </div>
                   <div className="grid grid-cols-3 gap-2">
                     <InfoPill
-                      label={lang === 'ru' ? 'Цель' : 'Goal'}
+                      label={t('shared_goal_label')}
                       value={GOAL_LABELS[profile.goal]?.[lang as 'en' | 'ru'] || profile.goal}
                       color="#6c5ce7"
                     />
                     <InfoPill
-                      label={lang === 'ru' ? 'Пол' : 'Gender'}
-                      value={profile.gender === 'male' ? (lang === 'ru' ? 'М' : 'Male') : (lang === 'ru' ? 'Ж' : 'Female')}
+                      label={t('shared_gender_label')}
+                      value={profile.gender === 'male' ? t('wp_gender_m') : t('wp_gender_f')}
                       color="#00cec9"
                     />
                     <InfoPill
-                      label={lang === 'ru' ? 'Активность' : 'Activity'}
+                      label={t('shared_activity_label')}
                       value={
-                        profile.activity_level === 'low' ? (lang === 'ru' ? 'Низкая' : 'Low') :
-                        profile.activity_level === 'medium' ? (lang === 'ru' ? 'Средняя' : 'Med') :
-                        profile.activity_level === 'high' ? (lang === 'ru' ? 'Высокая' : 'High') :
-                        lang === 'ru' ? 'Атлет' : 'Athlete'
+                        profile.activity_level === 'low' ? t('obn_activity_low') :
+                        profile.activity_level === 'medium' ? t('obn_activity_medium') :
+                        profile.activity_level === 'high' ? t('obn_activity_high') :
+                        t('obn_activity_athlete')
                       }
                       color="#ffeaa7"
                     />
@@ -378,13 +365,11 @@ export function WorkoutPlanPage() {
                   <div className="flex items-center gap-3 mb-3">
                     <AlertCircle className="w-6 h-6 text-[#fdcb6e]" />
                     <p className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
-                      {lang === 'ru' ? 'Заполните профиль' : 'Complete your profile'}
+                      {t('shared_complete_profile')}
                     </p>
                   </div>
                   <p className="text-muted-foreground" style={{ fontSize: '0.8125rem', lineHeight: 1.5 }}>
-                    {lang === 'ru'
-                      ? 'Пройдите онбординг для персонализированного плана тренировок.'
-                      : 'Complete onboarding for a personalized workout plan.'}
+                    {t('wp_complete_onboarding')}
                   </p>
                 </GlassCard>
               )}
@@ -392,7 +377,7 @@ export function WorkoutPlanPage() {
               {/* Plan length */}
               <div>
                 <p className="text-muted-foreground mb-3 px-1" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
-                  {lang === 'ru' ? 'Длительность плана' : 'Plan length'}
+                  {t('wp_plan_length')}
                 </p>
                 <div className="space-y-3">
                   {PLAN_OPTIONS.map((opt) => (
@@ -414,10 +399,10 @@ export function WorkoutPlanPage() {
                       </div>
                       <div className="text-left flex-1">
                         <p className="text-white" style={{ fontSize: '1rem', fontWeight: 600 }}>
-                          {lang === 'ru' ? opt.labelRu : opt.label}
+                          {t(opt.labelKey)}
                         </p>
                         <p className="text-white/40" style={{ fontSize: '0.8125rem' }}>
-                          {lang === 'ru' ? opt.descRu : opt.desc}
+                          {t(opt.descKey)}
                         </p>
                       </div>
                       <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
@@ -442,9 +427,7 @@ export function WorkoutPlanPage() {
               >
                 <Dumbbell className="w-5 h-5 text-white" />
                 <span className="text-white" style={{ fontSize: '1rem', fontWeight: 700 }}>
-                  {lang === 'ru'
-                    ? `Сгенерировать на ${selectedLength} дней`
-                    : `Generate ${selectedLength}-Day Plan`}
+                  {t('wp_generate_n', { n: selectedLength })}
                 </span>
               </motion.button>
             </motion.div>
@@ -459,7 +442,7 @@ export function WorkoutPlanPage() {
               exit={{ opacity: 0, scale: 0.95 }}
               className="py-12"
             >
-              <GeneratingAnimation lang={lang} messageIndex={genMessage} planLength={selectedLength} location={workoutLocation} />
+              <GeneratingAnimation messageIndex={genMessage} planLength={selectedLength} location={workoutLocation} />
             </motion.div>
           )}
 
@@ -477,7 +460,7 @@ export function WorkoutPlanPage() {
                   <AlertCircle className="w-8 h-8 text-[#ff6b6b]" />
                 </div>
                 <p className="text-white mb-2" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
-                  {lang === 'ru' ? 'Ошибка генерации' : 'Generation Failed'}
+                  {t('shared_gen_failed')}
                 </p>
                 <p className="text-white/40 mb-6 max-w-[280px] mx-auto" style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
                   {errorMsg}
@@ -489,7 +472,7 @@ export function WorkoutPlanPage() {
                 >
                   <RefreshCw className="w-4 h-4 text-white" />
                   <span className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
-                    {lang === 'ru' ? 'Попробовать снова' : 'Try Again'}
+                    {t('shared_try_again')}
                   </span>
                 </motion.button>
               </div>
@@ -528,11 +511,11 @@ export function WorkoutPlanPage() {
                         <div className="flex items-center gap-3 mt-1">
                           <span className="flex items-center gap-1 text-white/40" style={{ fontSize: '0.75rem' }}>
                             <Clock className="w-3 h-3" />
-                            {dayData.duration_minutes} {lang === 'ru' ? 'мин' : 'min'}
+                            {dayData.duration_minutes} {t('wp_min')}
                           </span>
                           <span className="flex items-center gap-1 text-white/40" style={{ fontSize: '0.75rem' }}>
                             <Dumbbell className="w-3 h-3" />
-                            {dayData.exercises.length} {lang === 'ru' ? 'упр.' : 'exercises'}
+                            {dayData.exercises.length} {t('wp_exercises_count')}
                           </span>
                         </div>
                       </div>
@@ -547,9 +530,7 @@ export function WorkoutPlanPage() {
                         fontWeight: 600,
                       }}
                     >
-                      {lang === 'ru'
-                        ? WORKOUT_TYPE_CONFIG[dayData.workout_type]?.labelRu
-                        : WORKOUT_TYPE_CONFIG[dayData.workout_type]?.label}
+                      {t(WORKOUT_TYPE_CONFIG[dayData.workout_type]?.key || 'wp_type_strength')}
                     </span>
                   </div>
 
@@ -557,7 +538,7 @@ export function WorkoutPlanPage() {
                   <div className="mb-3">
                     <div className="flex items-center justify-between mb-1.5">
                       <span className="text-white/35" style={{ fontSize: '0.6875rem' }}>
-                        {lang === 'ru' ? 'Прогресс' : 'Progress'}
+                        {t('wp_progress_label')}
                       </span>
                       <span className="text-white/60" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
                         {dayCompletedCount}/{dayExerciseCount}
@@ -587,7 +568,7 @@ export function WorkoutPlanPage() {
                     >
                       <Trophy className="w-4 h-4 text-[#00cec9]" />
                       <span className="text-white/80" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
-                        {lang === 'ru' ? 'Тренировка завершена!' : 'Workout Complete!'}
+                        {t('wp_workout_complete')}
                       </span>
                     </motion.div>
                   )}
@@ -601,12 +582,10 @@ export function WorkoutPlanPage() {
                     <Target className="w-8 h-8 text-[#74b9ff]" />
                   </div>
                   <p className="text-white mb-2" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
-                    {lang === 'ru' ? 'День отдыха' : 'Rest Day'}
+                    {t('wp_rest_day')}
                   </p>
                   <p className="text-white/40 max-w-[240px] mx-auto" style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
-                    {lang === 'ru'
-                      ? 'Восстановление — важная часть прогресса. Отдохните и подготовьтесь к следующей тренировке.'
-                      : 'Recovery is key to progress. Rest up and prepare for your next session.'}
+                    {t('wp_rest_desc')}
                   </p>
                 </GlassCard>
               )}
@@ -615,7 +594,7 @@ export function WorkoutPlanPage() {
               {dayData && dayData.workout_type !== 'rest' && dayData.exercises.length > 0 && (
                 <div className="space-y-2">
                   <p className="text-white/40 px-1" style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.05em' }}>
-                    {lang === 'ru' ? 'УПРАЖНЕНИЯ' : 'EXERCISES'}
+                    {t('wp_exercises_label')}
                   </p>
                   {dayData.exercises.map((exercise, idx) => {
                     const isCompleted = completedExercises.has(`${selectedDay}-${idx}`);
@@ -636,7 +615,7 @@ export function WorkoutPlanPage() {
               {!dayData && (
                 <div className="text-center py-12">
                   <p className="text-white/30" style={{ fontSize: '0.875rem' }}>
-                    {lang === 'ru' ? 'Нет данных для этого дня' : 'No data for this day'}
+                    {t('shared_no_data')}
                   </p>
                 </div>
               )}
@@ -804,7 +783,7 @@ function WeeklySchedule({
         <div className="flex items-center gap-2">
           <Calendar className="w-4 h-4 text-[#a29bfe]" />
           <span className="text-white" style={{ fontSize: '0.875rem', fontWeight: 600 }}>
-            {lang === 'ru' ? 'Неделя' : 'Week'} {currentWeek + 1}
+            {t('wp_week_label')} {currentWeek + 1}
             <span className="text-white/30 ml-1.5" style={{ fontWeight: 400 }}>
               / {totalWeeks}
             </span>
@@ -831,7 +810,7 @@ function WeeklySchedule({
 
           const date = new Date(planStart);
           date.setDate(date.getDate() + day - 1);
-          const weekDay = date.toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', { weekday: 'short' }).slice(0, 2);
+          const weekDay = date.toLocaleDateString(t('locale_code'), { weekday: 'short' }).slice(0, 2);
 
           return (
             <motion.button
@@ -960,7 +939,7 @@ function ExerciseCard({
                   <span className="text-white/15">·</span>
                   <span className="flex items-center gap-0.5 text-white/25" style={{ fontSize: '0.6875rem' }}>
                     <Timer className="w-2.5 h-2.5" />
-                    {formatRest()} {lang === 'ru' ? 'отдых' : 'rest'}
+                    {formatRest()} {t('wp_rest')}
                   </span>
                 </>
               )}
@@ -993,17 +972,17 @@ function ExerciseCard({
               <div className="px-4 pb-4 pt-0">
                 <div className="grid grid-cols-3 gap-2 p-3 rounded-xl bg-white/[0.02] border border-white/[0.04]">
                   <div className="text-center">
-                    <p className="text-white/30" style={{ fontSize: '0.5625rem' }}>{lang === 'ru' ? 'Подходы' : 'Sets'}</p>
+                    <p className="text-white/30" style={{ fontSize: '0.5625rem' }}>{t('wp_sets')}</p>
                     <p className="text-white" style={{ fontSize: '1.125rem', fontWeight: 700 }}>{exercise.sets}</p>
                   </div>
                   <div className="text-center">
                     <p className="text-white/30" style={{ fontSize: '0.5625rem' }}>
-                      {exercise.duration_seconds ? (lang === 'ru' ? 'Время' : 'Duration') : (lang === 'ru' ? 'Повторения' : 'Reps')}
+                      {exercise.duration_seconds ? t('wp_duration') : t('wp_reps')}
                     </p>
                     <p className="text-white" style={{ fontSize: '1.125rem', fontWeight: 700 }}>{formatReps()}</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-white/30" style={{ fontSize: '0.5625rem' }}>{lang === 'ru' ? 'Отдых' : 'Rest'}</p>
+                    <p className="text-white/30" style={{ fontSize: '0.5625rem' }}>{t('wp_rest_label')}</p>
                     <p className="text-white" style={{ fontSize: '1.125rem', fontWeight: 700 }}>{formatRest() || '—'}</p>
                   </div>
                 </div>
@@ -1023,17 +1002,16 @@ function ExerciseCard({
 
 // ---- Generating Animation ----
 function GeneratingAnimation({
-  lang,
   messageIndex,
   planLength,
   location,
 }: {
-  lang: string;
   messageIndex: number;
   planLength: PlanLength;
   location: WorkoutLocation;
 }) {
-  const messages = lang === 'ru' ? GEN_MESSAGES_RU : GEN_MESSAGES_EN;
+  const { t } = useTranslation();
+  const messages = GEN_MESSAGE_KEYS.map((key) => t(key));
 
   return (
     <div className="text-center">
@@ -1061,12 +1039,12 @@ function GeneratingAnimation({
       </div>
 
       <p className="text-white mb-2" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
-        {lang === 'ru' ? 'Создаём план' : 'Building Plan'}
+        {t('wp_building_title')}
       </p>
       <p className="text-white/30 mb-6" style={{ fontSize: '0.875rem' }}>
-        {planLength} {lang === 'ru' ? 'дней' : 'days'} · {location === 'home'
-          ? (lang === 'ru' ? 'Домашние тренировки' : 'Home Workouts')
-          : (lang === 'ru' ? 'Тренировки в зале' : 'Gym Workouts')}
+        {t('wp_building_desc_days', { n: planLength })} · {location === 'home'
+          ? t('wp_home_workouts')
+          : t('wp_gym_workouts')}
       </p>
 
       <div className="h-6 relative">
@@ -1143,7 +1121,7 @@ function HistorySheet({
         <div className="px-5 pt-2 pb-4">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-white" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
-              {lang === 'ru' ? 'Мои планы' : 'My Plans'}
+              {t('wp_my_plans')}
             </h2>
             <motion.button
               whileTap={{ scale: 0.9 }}
@@ -1156,7 +1134,7 @@ function HistorySheet({
 
           {plans.length === 0 && (
             <p className="text-white/30 text-center py-8" style={{ fontSize: '0.875rem' }}>
-              {lang === 'ru' ? 'Нет сохранённых планов' : 'No saved plans yet'}
+              {t('wp_no_plans')}
             </p>
           )}
 
@@ -1170,7 +1148,7 @@ function HistorySheet({
                 <button onClick={() => onSelect(plan)} className="flex-1 text-left">
                   <div className="flex items-center gap-2">
                     <p className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
-                      {plan.plan_length} {lang === 'ru' ? 'дней' : 'Days'}
+                      {plan.plan_length} {t('wp_days_count')}
                     </p>
                     <span
                       className="text-xs px-2 py-0.5 rounded-full"
@@ -1180,11 +1158,11 @@ function HistorySheet({
                         fontWeight: 500,
                       }}
                     >
-                      {plan.workout_type === 'home' ? (lang === 'ru' ? 'Дома' : 'Home') : (lang === 'ru' ? 'Зал' : 'Gym')}
+                      {plan.workout_type === 'home' ? t('wp_home_short') : t('wp_gym_short')}
                     </span>
                   </div>
                   <p className="text-white/30" style={{ fontSize: '0.75rem' }}>
-                    {new Date(plan.created_at).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', {
+                    {new Date(plan.created_at).toLocaleDateString(t('locale_code'), {
                       day: 'numeric',
                       month: 'short',
                       year: 'numeric',

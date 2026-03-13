@@ -81,43 +81,43 @@ export function ProfileNutritionPage() {
   const menuItems = [
     {
       icon: BarChart3,
-      label: 'Weight Tracking',
+      label: t('pn_weight_tracking'),
       color: '#0984e3',
       action: () => navigate('/weight'),
     },
     {
       icon: Scale,
-      label: 'Body Metrics',
+      label: t('pn_body_metrics'),
       color: '#6c5ce7',
       action: () => navigate('/profile/metrics'),
     },
     {
       icon: Target,
-      label: 'Calorie Goals',
+      label: t('pn_calorie_goals'),
       color: '#fd79a8',
       action: () => navigate('/profile/goals'),
     },
     {
       icon: Activity,
-      label: 'Fitness Preferences',
+      label: t('pn_fitness_prefs'),
       color: '#00cec9',
       action: () => navigate('/profile/preferences'),
     },
     {
       icon: Bell,
-      label: 'Notifications',
+      label: t('pn_notifications'),
       color: '#ffeaa7',
       action: () => navigate('/profile/notifications'),
     },
     {
       icon: Users,
-      label: 'Referrals',
+      label: t('pn_referrals'),
       color: '#a29bfe',
       action: () => navigate('/referrals'),
     },
     {
       icon: Settings,
-      label: 'Settings',
+      label: t('pn_settings'),
       color: '#74b9ff',
       action: () => navigate('/profile/settings'),
     },
@@ -154,15 +154,15 @@ export function ProfileNutritionPage() {
 
           <div className="grid grid-cols-3 gap-3 pt-3" style={{ borderTop: '1px solid var(--glass-border-subtle)' }}>
             <div className="text-center">
-              <p className="text-xs text-muted-foreground mb-1">Weight</p>
-              <p className="text-sm text-foreground font-medium">{metrics.weight} kg</p>
+              <p className="text-xs text-muted-foreground mb-1">{t('pn_weight')}</p>
+              <p className="text-sm text-foreground font-medium">{metrics.weight} {t('unit_kg')}</p>
             </div>
             <div className="text-center">
-              <p className="text-xs text-muted-foreground mb-1">Height</p>
-              <p className="text-sm text-foreground font-medium">{metrics.height} cm</p>
+              <p className="text-xs text-muted-foreground mb-1">{t('pn_height')}</p>
+              <p className="text-sm text-foreground font-medium">{metrics.height} {t('unit_cm')}</p>
             </div>
             <div className="text-center">
-              <p className="text-xs text-muted-foreground mb-1">BMI</p>
+              <p className="text-xs text-muted-foreground mb-1">{t('pn_bmi')}</p>
               <p className="text-sm text-foreground font-medium">{bmi}</p>
             </div>
           </div>
@@ -171,15 +171,15 @@ export function ProfileNutritionPage() {
         {/* Goal Progress */}
         <GlassCard className="p-5">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-foreground font-medium">Current Goal</h3>
+            <h3 className="text-foreground font-medium">{t('pn_current_goal')}</h3>
             <button className="text-sm text-app-accent">
               <Edit2 className="w-4 h-4" />
             </button>
           </div>
 
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-muted-foreground">Target Weight</span>
-            <span className="text-sm text-foreground font-medium">{targetWeight} kg</span>
+            <span className="text-sm text-muted-foreground">{t('pn_target_weight')}</span>
+            <span className="text-sm text-foreground font-medium">{targetWeight} {t('unit_kg')}</span>
           </div>
 
           <div className="relative h-2 rounded-full overflow-hidden mb-2" style={{ background: 'var(--glass-bg-row)' }}>
@@ -193,7 +193,7 @@ export function ProfileNutritionPage() {
           <div className="flex items-center gap-2">
             <TrendingDown className="w-4 h-4 text-[#00cec9]" />
             <span className="text-xs text-muted-foreground">
-              {weightToLose > 0 ? `${weightToLose.toFixed(1)} kg to go` : 'Goal reached!'}
+              {weightToLose > 0 ? t('pn_kg_to_go', { n: weightToLose.toFixed(1) }) : t('pn_goal_reached')}
             </span>
           </div>
         </GlassCard>
@@ -203,19 +203,19 @@ export function ProfileNutritionPage() {
           <GlassCard className="p-4">
             <div className="flex items-center gap-2 mb-2">
               <Award className="w-4 h-4 text-[#ffd700]" />
-              <span className="text-xs text-muted-foreground">Streak</span>
+              <span className="text-xs text-muted-foreground">{t('pn_streak')}</span>
             </div>
             <p className="text-2xl text-foreground font-semibold">14</p>
-            <p className="text-xs text-muted-foreground mt-1">Days logged</p>
+            <p className="text-xs text-muted-foreground mt-1">{t('pn_days_logged')}</p>
           </GlassCard>
 
           <GlassCard className="p-4">
             <div className="flex items-center gap-2 mb-2">
               <Activity className="w-4 h-4 text-[#00cec9]" />
-              <span className="text-xs text-muted-foreground">Workouts</span>
+              <span className="text-xs text-muted-foreground">{t('pn_workouts')}</span>
             </div>
             <p className="text-2xl text-foreground font-semibold">23</p>
-            <p className="text-xs text-muted-foreground mt-1">This month</p>
+            <p className="text-xs text-muted-foreground mt-1">{t('pn_this_month')}</p>
           </GlassCard>
         </div>
 
@@ -224,7 +224,7 @@ export function ProfileNutritionPage() {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Target className="w-5 h-5 text-[#fd79a8]" />
-              <h3 className="text-foreground font-medium">Daily Calorie Goal</h3>
+              <h3 className="text-foreground font-medium">{t('pn_daily_calorie_goal')}</h3>
             </div>
             <button className="text-sm text-app-accent">
               <Edit2 className="w-4 h-4" />
@@ -233,7 +233,7 @@ export function ProfileNutritionPage() {
 
           <p className="text-3xl text-foreground font-semibold mb-2">{calorieGoal}</p>
           <p className="text-sm text-muted-foreground">
-            Based on your {metrics.activityLevel} activity level
+            {t('pn_activity_based', { level: t(`pn_activity_${metrics.activityLevel}`) })}
           </p>
         </GlassCard>
 
@@ -256,8 +256,8 @@ export function ProfileNutritionPage() {
                 <Crown className="w-7 h-7 text-white" />
               </div>
               <div className="flex-1 text-left">
-                <p className="text-white font-semibold text-base mb-0.5">Upgrade to Premium</p>
-                <p className="text-white/70 text-sm">Unlimited scans, meal plans & more</p>
+                <p className="text-white font-semibold text-base mb-0.5">{t('pn_upgrade_premium')}</p>
+                <p className="text-white/70 text-sm">{t('pn_upgrade_desc')}</p>
               </div>
               <ChevronRight className="w-5 h-5 text-white/60" />
             </div>
@@ -273,8 +273,8 @@ export function ProfileNutritionPage() {
                   <Crown className="w-5 h-5 text-[#ffd700]" />
                 </div>
                 <div>
-                  <p className="text-foreground font-medium text-sm">Premium Active</p>
-                  <p className="text-muted-foreground text-xs">{subscriptionDaysLeft} days remaining</p>
+                  <p className="text-foreground font-medium text-sm">{t('pn_premium_active')}</p>
+                  <p className="text-muted-foreground text-xs">{t('pn_days_remaining', { n: subscriptionDaysLeft })}</p>
                 </div>
               </div>
               <div className="px-3 py-1 rounded-full bg-[#ffd700]/10 border border-[#ffd700]/20">
@@ -330,8 +330,8 @@ export function ProfileNutritionPage() {
               <Share2 className="w-6 h-6 text-white" />
             </div>
             <div className="text-left">
-              <p className="text-white font-medium">Share with Friends</p>
-              <p className="text-white/70 text-sm">Get rewards for referrals</p>
+              <p className="text-white font-medium">{t('pn_share_friends')}</p>
+              <p className="text-white/70 text-sm">{t('pn_share_rewards')}</p>
             </div>
           </div>
           <ChevronRight className="w-5 h-5 text-white/80" />
@@ -347,7 +347,7 @@ export function ProfileNutritionPage() {
           style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border)' }}
         >
           <LogOut className="w-5 h-5 text-muted-foreground" />
-          <span className="text-foreground/80">Sign Out</span>
+          <span className="text-foreground/80">{t('pn_sign_out')}</span>
         </button>
 
       </div>

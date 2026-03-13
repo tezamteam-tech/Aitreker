@@ -63,37 +63,24 @@ interface SavedPlan {
 }
 
 // ---- Meal config ----
-const MEAL_CONFIG: Record<MealType, { icon: React.ElementType; color: string; label: string; labelRu: string }> = {
-  breakfast: { icon: Coffee, color: '#ffeaa7', label: 'Breakfast', labelRu: 'Завтрак' },
-  lunch: { icon: UtensilsCrossed, color: '#fd79a8', label: 'Lunch', labelRu: 'Обед' },
-  dinner: { icon: Moon, color: '#a29bfe', label: 'Dinner', labelRu: 'Ужин' },
-  snack: { icon: Apple, color: '#00cec9', label: 'Snack', labelRu: 'Перекус' },
+const MEAL_CONFIG: Record<MealType, { icon: React.ElementType; color: string; key: string }> = {
+  breakfast: { icon: Coffee, color: '#ffeaa7', key: 'mp_meal_breakfast' },
+  lunch: { icon: UtensilsCrossed, color: '#fd79a8', key: 'mp_meal_lunch' },
+  dinner: { icon: Moon, color: '#a29bfe', key: 'mp_meal_dinner' },
+  snack: { icon: Apple, color: '#00cec9', key: 'mp_meal_snack' },
 };
 
 const MEAL_ORDER: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack'];
 
-const PLAN_OPTIONS: { length: PlanLength; label: string; labelRu: string; desc: string; descRu: string; color: string }[] = [
-  { length: 7, label: '1 Week', labelRu: '1 Неделя', desc: 'Quick start plan', descRu: 'Быстрый старт', color: '#00cec9' },
-  { length: 30, label: '1 Month', labelRu: '1 Месяц', desc: 'Full monthly plan', descRu: 'Полный месяц', color: '#6c5ce7' },
-  { length: 100, label: '100 Days', labelRu: '100 Дней', desc: 'Long-term transformation', descRu: 'Долгосрочная трансформация', color: '#fd79a8' },
+const PLAN_OPTIONS: { length: PlanLength; labelKey: string; descKey: string; color: string }[] = [
+  { length: 7, labelKey: 'mp_plan_7_label', descKey: 'mp_plan_7_desc', color: '#00cec9' },
+  { length: 30, labelKey: 'mp_plan_30_label', descKey: 'mp_plan_30_desc', color: '#6c5ce7' },
+  { length: 100, labelKey: 'mp_plan_100_label', descKey: 'mp_plan_100_desc', color: '#fd79a8' },
 ];
 
-// ---- Generation animation messages ----
-const GEN_MESSAGES_EN = [
-  'Analyzing your nutritional needs...',
-  'Calculating optimal macro ratios...',
-  'Designing balanced meals...',
-  'Adding variety and flavor...',
-  'Optimizing calorie distribution...',
-  'Finalizing your personalized plan...',
-];
-const GEN_MESSAGES_RU = [
-  'Анализируем ваши потребности...',
-  'Рассчитываем макронутриенты...',
-  'Составляем сбалансированное меню...',
-  'Добавляем разнообразие...',
-  'Оптимизируем калории...',
-  'Финализируем ваш план...',
+// ---- Generation animation message keys ----
+const GEN_MESSAGE_KEYS = [
+  'mp_gen_1', 'mp_gen_2', 'mp_gen_3', 'mp_gen_4', 'mp_gen_5', 'mp_gen_6',
 ];
 
 // ---- Goal labels ----
@@ -198,7 +185,7 @@ export function MealPlanPage() {
     setGenMessage(0);
     genIntervalRef.current = setInterval(() => {
       setGenMessage((prev) => {
-        if (prev >= GEN_MESSAGES_EN.length - 1) return prev;
+        if (prev >= GEN_MESSAGE_KEYS.length - 1) return prev;
         return prev + 1;
       });
     }, 3000);
@@ -232,9 +219,7 @@ export function MealPlanPage() {
       if (err?.code === 'LIMIT_REACHED' || err?.status === 429 || (err?.message && err.message.includes('limit'))) {
         setLimitReached(true);
         setErrorMsg(
-          lang === 'ru'
-            ? 'Достигнут лимит генерации планов на этой неделе'
-            : 'Weekly meal plan limit reached'
+          t('mp_limit_weekly')
         );
       } else {
         setLimitReached(false);
@@ -294,10 +279,10 @@ export function MealPlanPage() {
   return (
     <div className="min-h-screen pb-28">
       <PageHeader
-        title={lang === 'ru' ? 'План питания' : 'Meal Plan'}
+        title={t('mp_title')}
         subtitle={
           currentPlan
-            ? `${currentPlan.plan_length} ${lang === 'ru' ? 'дней' : 'days'}`
+            ? `${currentPlan.plan_length} ${t('shared_days_unit')}`
             : undefined
         }
         actions={
@@ -345,36 +330,36 @@ export function MealPlanPage() {
                     </div>
                     <div>
                       <p className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
-                        {lang === 'ru' ? 'Ваш профиль' : 'Your Profile'}
+                        {t('shared_your_profile')}
                       </p>
                       <p className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>
-                        {lang === 'ru' ? 'На основе этих данных AI создаст план' : 'AI will create a plan based on this'}
+                        {t('shared_ai_plan_based')}
                       </p>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <ProfilePill
-                      label={lang === 'ru' ? 'Цель' : 'Goal'}
+                      label={t('shared_goal_label')}
                       value={GOAL_LABELS[profile.goal]?.[lang as 'en' | 'ru'] || profile.goal}
                       color="#6c5ce7"
                     />
                     <ProfilePill
-                      label={lang === 'ru' ? 'Калории' : 'Calories'}
-                      value={`${profile.daily_calorie_target} ${lang === 'ru' ? 'ккал' : 'cal'}`}
+                      label={t('shared_calories_label')}
+                      value={`${profile.daily_calorie_target} ${t('cal_unit')}`}
                       color="#fd79a8"
                     />
                     <ProfilePill
-                      label={lang === 'ru' ? 'Пол' : 'Gender'}
-                      value={profile.gender === 'male' ? (lang === 'ru' ? 'Мужской' : 'Male') : (lang === 'ru' ? 'Женский' : 'Female')}
+                      label={t('shared_gender_label')}
+                      value={profile.gender === 'male' ? t('obn_male') : t('obn_female')}
                       color="#00cec9"
                     />
                     <ProfilePill
-                      label={lang === 'ru' ? 'Активность' : 'Activity'}
+                      label={t('shared_activity_label')}
                       value={
-                        profile.activity_level === 'low' ? (lang === 'ru' ? 'Низкая' : 'Low') :
-                        profile.activity_level === 'medium' ? (lang === 'ru' ? 'Средняя' : 'Medium') :
-                        profile.activity_level === 'high' ? (lang === 'ru' ? 'Высокая' : 'High') :
-                        lang === 'ru' ? 'Атлет' : 'Athlete'
+                        profile.activity_level === 'low' ? t('obn_activity_low') :
+                        profile.activity_level === 'medium' ? t('obn_activity_medium') :
+                        profile.activity_level === 'high' ? t('obn_activity_high') :
+                        t('obn_activity_athlete')
                       }
                       color="#ffeaa7"
                     />
@@ -388,13 +373,11 @@ export function MealPlanPage() {
                   <div className="flex items-center gap-3 mb-3">
                     <AlertCircle className="w-6 h-6 text-[#fdcb6e]" />
                     <p className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
-                      {lang === 'ru' ? 'Заполните профиль' : 'Complete your profile'}
+                      {t('shared_complete_profile')}
                     </p>
                   </div>
                   <p className="text-muted-foreground" style={{ fontSize: '0.8125rem', lineHeight: 1.5 }}>
-                    {lang === 'ru'
-                      ? 'Пройдите онбординг, чтобы AI мог создать персонализированный план питания.'
-                      : 'Complete the onboarding to let AI create a personalized meal plan for you.'}
+                    {t('mp_complete_onboarding')}
                   </p>
                 </GlassCard>
               )}
@@ -402,7 +385,7 @@ export function MealPlanPage() {
               {/* Plan length selector */}
               <div>
                 <p className="text-muted-foreground mb-3 px-1" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
-                  {lang === 'ru' ? 'Выберите длительность плана' : 'Choose plan length'}
+                  {t('mp_choose_length')}
                 </p>
                 <div className="space-y-3">
                   {PLAN_OPTIONS.map((opt) => (
@@ -430,10 +413,10 @@ export function MealPlanPage() {
                       </div>
                       <div className="text-left flex-1">
                         <p className="text-foreground" style={{ fontSize: '1rem', fontWeight: 600 }}>
-                          {lang === 'ru' ? opt.labelRu : opt.label}
+                          {t(opt.labelKey)}
                         </p>
                         <p className="text-muted-foreground" style={{ fontSize: '0.8125rem' }}>
-                          {lang === 'ru' ? opt.descRu : opt.desc}
+                          {t(opt.descKey)}
                         </p>
                       </div>
                       <div
@@ -466,9 +449,7 @@ export function MealPlanPage() {
               >
                 <Sparkles className="w-5 h-5 text-white" />
                 <span className="text-white" style={{ fontSize: '1rem', fontWeight: 700 }}>
-                  {lang === 'ru'
-                    ? `Сгенерировать на ${selectedLength} дней`
-                    : `Generate ${selectedLength}-Day Plan`}
+                  {t('mp_generate_n', { n: selectedLength })}
                 </span>
               </motion.button>
             </motion.div>
@@ -484,7 +465,6 @@ export function MealPlanPage() {
               className="py-12"
             >
               <GeneratingAnimation
-                lang={lang}
                 messageIndex={genMessage}
                 planLength={selectedLength}
               />
@@ -507,17 +487,13 @@ export function MealPlanPage() {
                       <Crown className="w-9 h-9 text-[#a29bfe]" />
                     </div>
                     <p className="text-white mb-2" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
-                      {lang === 'ru' ? 'Лимит планов' : 'Plan Limit Reached'}
+                      {t('mp_limit_title')}
                     </p>
                     <p className="text-white/40 mb-2 max-w-[280px] mx-auto" style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
-                      {lang === 'ru'
-                        ? 'Вы использовали 1/1 бесплатную генерацию на этой неделе'
-                        : "You've used 1/1 free generation this week"}
+                      {t('mp_limit_used')}
                     </p>
                     <p className="text-white/30 mb-8 max-w-[280px] mx-auto" style={{ fontSize: '0.8125rem', lineHeight: 1.5 }}>
-                      {lang === 'ru'
-                        ? 'Перейдите на Premium для безлимитной генерации планов'
-                        : 'Upgrade to Premium for unlimited meal plans'}
+                      {t('mp_limit_upgrade')}
                     </p>
                     <motion.button
                       whileTap={{ scale: 0.97 }}
@@ -527,7 +503,7 @@ export function MealPlanPage() {
                     >
                       <Crown className="w-5 h-5 text-white" />
                       <span className="text-white" style={{ fontSize: '1rem', fontWeight: 600 }}>
-                        {lang === 'ru' ? 'Перейти на Premium' : 'Upgrade to Premium'}
+                        {t('shared_upgrade_premium')}
                       </span>
                     </motion.button>
                     <br />
@@ -537,7 +513,7 @@ export function MealPlanPage() {
                       className="mt-2 text-white/40"
                       style={{ fontSize: '0.875rem' }}
                     >
-                      {lang === 'ru' ? 'Назад' : 'Go back'}
+                      {t('back')}
                     </motion.button>
                   </>
                 ) : (
@@ -546,7 +522,7 @@ export function MealPlanPage() {
                       <AlertCircle className="w-8 h-8 text-[#ff6b6b]" />
                     </div>
                     <p className="text-white mb-2" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
-                      {lang === 'ru' ? 'Ошибка генерации' : 'Generation Failed'}
+                      {t('shared_gen_failed')}
                     </p>
                     <p className="text-white/40 mb-6 max-w-[280px] mx-auto" style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
                       {errorMsg}
@@ -558,7 +534,7 @@ export function MealPlanPage() {
                     >
                       <RefreshCw className="w-4 h-4 text-white" />
                       <span className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
-                        {lang === 'ru' ? 'Попробовать снова' : 'Try Again'}
+                        {t('shared_try_again')}
                       </span>
                     </motion.button>
                   </>
@@ -598,10 +574,10 @@ export function MealPlanPage() {
                       </div>
                       <div>
                         <p className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
-                          {lang === 'ru' ? `День ${selectedDay}` : `Day ${selectedDay}`}
+                          {t('mp_day_label', { n: selectedDay })}
                         </p>
                         <p className="text-white/30" style={{ fontSize: '0.6875rem' }}>
-                          {dayData.meals.length} {lang === 'ru' ? 'приёмов пищи' : 'meals'}
+                          {t('mp_meals_count', { n: dayData.meals.length })}
                         </p>
                       </div>
                     </div>
@@ -610,7 +586,7 @@ export function MealPlanPage() {
                         {dayTotals.calories}
                       </p>
                       <p className="text-white/30" style={{ fontSize: '0.6875rem' }}>
-                        {lang === 'ru' ? 'ккал' : 'cal'}
+                        {t('cal_unit')}
                       </p>
                     </div>
                   </div>
@@ -618,17 +594,17 @@ export function MealPlanPage() {
                   {/* Macro bars */}
                   <div className="grid grid-cols-3 gap-2">
                     <MacroPill
-                      label={lang === 'ru' ? 'Белки' : 'Protein'}
+                      label={t('mp_protein')}
                       value={dayTotals.protein}
                       color="#6c5ce7"
                     />
                     <MacroPill
-                      label={lang === 'ru' ? 'Углеводы' : 'Carbs'}
+                      label={t('mp_carbs')}
                       value={dayTotals.carbs}
                       color="#00cec9"
                     />
                     <MacroPill
-                      label={lang === 'ru' ? 'Жиры' : 'Fat'}
+                      label={t('mp_fat')}
                       value={dayTotals.fat}
                       color="#e17055"
                     />
@@ -670,7 +646,7 @@ export function MealPlanPage() {
               {!dayData && (
                 <div className="text-center py-12">
                   <p className="text-white/30" style={{ fontSize: '0.875rem' }}>
-                    {lang === 'ru' ? 'Нет данных для этого дня' : 'No data for this day'}
+                    {t('shared_no_data')}
                   </p>
                 </div>
               )}
@@ -801,7 +777,7 @@ function CalendarNavigator({
         <div className="flex items-center gap-2">
           <Calendar className="w-4 h-4 text-[#a29bfe]" />
           <span className="text-white" style={{ fontSize: '0.875rem', fontWeight: 600 }}>
-            {lang === 'ru' ? 'Дни' : 'Days'} {startDay}–{endDay}
+            {t('mp_days_label')} {startDay}–{endDay}
             <span className="text-white/30 ml-1.5" style={{ fontWeight: 400 }}>
               / {totalDays}
             </span>
@@ -824,7 +800,7 @@ function CalendarNavigator({
           const isSelected = day === selectedDay;
           const date = new Date(planStart);
           date.setDate(date.getDate() + day - 1);
-          const weekDay = date.toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', { weekday: 'short' }).slice(0, 2);
+          const weekDay = date.toLocaleDateString(t('locale_code'), { weekday: 'short' }).slice(0, 2);
 
           return (
             <motion.button
@@ -917,17 +893,17 @@ function MealCard({
             </div>
             <div className="text-left">
               <p className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
-                {lang === 'ru' ? config.labelRu : config.label}
+                {t(config.key)}
               </p>
               <p className="text-white/30" style={{ fontSize: '0.6875rem' }}>
-                {items.length} {lang === 'ru' ? 'позиций' : 'items'} · P:{Math.round(totalProtein)}g C:{Math.round(totalCarbs)}g F:{Math.round(totalFat)}g
+                {items.length} {t('mp_items_count')} · P:{Math.round(totalProtein)}g C:{Math.round(totalCarbs)}g F:{Math.round(totalFat)}g
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <div className="text-right">
               <p className="text-white" style={{ fontSize: '1.125rem', fontWeight: 700 }}>{totalCals}</p>
-              <p className="text-white/30" style={{ fontSize: '0.5625rem' }}>{lang === 'ru' ? 'ккал' : 'cal'}</p>
+              <p className="text-white/30" style={{ fontSize: '0.5625rem' }}>{t('mp_cal_unit')}</p>
             </div>
             <motion.div animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
               <ChevronDown className="w-4 h-4 text-white/25" />
@@ -987,15 +963,14 @@ function MealCard({
 
 // ---- Generating Animation ----
 function GeneratingAnimation({
-  lang,
   messageIndex,
   planLength,
 }: {
-  lang: string;
   messageIndex: number;
   planLength: PlanLength;
 }) {
-  const messages = lang === 'ru' ? GEN_MESSAGES_RU : GEN_MESSAGES_EN;
+  const { t } = useTranslation();
+  const messages = GEN_MESSAGE_KEYS.map((key) => t(key));
 
   return (
     <div className="text-center">
@@ -1027,10 +1002,10 @@ function GeneratingAnimation({
       </div>
 
       <p className="text-white mb-2" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
-        {lang === 'ru' ? 'Генерируем план' : 'Generating Plan'}
+        {t('mp_generating_title')}
       </p>
       <p className="text-white/30 mb-6" style={{ fontSize: '0.875rem' }}>
-        {planLength} {lang === 'ru' ? 'дней персонализированного питания' : 'days of personalized nutrition'}
+        {t('mp_generating_desc', { n: planLength })}
       </p>
 
       {/* Animated message */}
@@ -1110,7 +1085,7 @@ function HistorySheet({
         <div className="px-5 pt-2 pb-4">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-white" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
-              {lang === 'ru' ? 'Мои планы' : 'My Plans'}
+              {t('mp_my_plans')}
             </h2>
             <motion.button
               whileTap={{ scale: 0.9 }}
@@ -1123,7 +1098,7 @@ function HistorySheet({
 
           {plans.length === 0 && (
             <p className="text-white/30 text-center py-8" style={{ fontSize: '0.875rem' }}>
-              {lang === 'ru' ? 'Нет сохранённых планов' : 'No saved plans yet'}
+              {t('mp_no_plans')}
             </p>
           )}
 
@@ -1138,10 +1113,10 @@ function HistorySheet({
                   className="flex-1 text-left"
                 >
                   <p className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
-                    {plan.plan_length} {lang === 'ru' ? 'дней' : 'Days'}
+                    {plan.plan_length} {t('mp_days_count')}
                   </p>
                   <p className="text-white/30" style={{ fontSize: '0.75rem' }}>
-                    {new Date(plan.created_at).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', {
+                    {new Date(plan.created_at).toLocaleDateString(t('locale_code'), {
                       day: 'numeric',
                       month: 'short',
                       year: 'numeric',

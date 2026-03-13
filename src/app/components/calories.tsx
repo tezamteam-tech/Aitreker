@@ -55,31 +55,23 @@ type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
 
 const MEAL_CONFIG: Record<
   MealType,
-  { icon: React.ElementType; color: string; label: string; labelRu: string }
+  { icon: React.ElementType; color: string; key: string }
 > = {
-  breakfast: { icon: Coffee, color: '#ffeaa7', label: 'Breakfast', labelRu: 'Завтрак' },
-  lunch: { icon: UtensilsCrossed, color: '#fd79a8', label: 'Lunch', labelRu: 'Обед' },
-  dinner: { icon: Moon, color: '#a29bfe', label: 'Dinner', labelRu: 'Ужин' },
-  snack: { icon: Apple, color: '#00cec9', label: 'Snack', labelRu: 'Перекус' },
+  breakfast: { icon: Coffee, color: '#ffeaa7', key: 'cal_meal_breakfast' },
+  lunch: { icon: UtensilsCrossed, color: '#fd79a8', key: 'cal_meal_lunch' },
+  dinner: { icon: Moon, color: '#a29bfe', key: 'cal_meal_dinner' },
+  snack: { icon: Apple, color: '#00cec9', key: 'cal_meal_snack' },
 };
 
 const MEAL_ORDER: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack'];
 
 // No mock data — entries loaded from API
 
-// ---- Helper: detect lang ----
-function useLang() {
-  const { t } = useTranslation();
-  const isRu = t('nav_home') === '\u0413\u043B\u0430\u0432\u043D\u0430\u044F';
-  return isRu ? 'ru' : 'en';
-}
-
 // ---- Component ----
 export function CaloriesPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const lang = useLang();
 
   // State
   const [entries, setEntries] = useState<FoodEntry[]>([]);
@@ -224,8 +216,8 @@ export function CaloriesPage() {
   return (
     <div className="min-h-screen pb-28">
       <PageHeader
-        title={lang === 'ru' ? 'Дневник питания' : 'Food Diary'}
-        subtitle={new Date().toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', {
+        title={t('cal_food_diary')}
+        subtitle={new Date().toLocaleDateString(t('locale_code'), {
           weekday: 'long',
           month: 'long',
           day: 'numeric',
@@ -243,10 +235,10 @@ export function CaloriesPage() {
               </div>
               <div>
                 <p className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
-                  {lang === 'ru' ? 'Цель на сегодня' : "Today's Goal"}
+                  {t('cal_todays_goal')}
                 </p>
                 <p className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
-                  {calorieTarget.toLocaleString()} {lang === 'ru' ? 'ккал' : 'cal'}
+                  {calorieTarget.toLocaleString()} {t('cal_unit')}
                 </p>
               </div>
             </div>
@@ -271,7 +263,7 @@ export function CaloriesPage() {
           <div className="flex items-end justify-between mb-3">
             <div>
               <p className="text-muted-foreground mb-0.5" style={{ fontSize: '0.6875rem' }}>
-                {lang === 'ru' ? 'Потреблено' : 'Consumed'}
+                {t('cal_consumed')}
               </p>
               <p className="text-foreground" style={{ fontSize: '2rem', fontWeight: 700, lineHeight: 1 }}>
                 {totalCalories.toLocaleString()}
@@ -279,7 +271,7 @@ export function CaloriesPage() {
             </div>
             <div className="text-right">
               <p className="text-muted-foreground mb-0.5" style={{ fontSize: '0.6875rem' }}>
-                {lang === 'ru' ? 'Осталось' : 'Remaining'}
+                {t('cal_remaining')}
               </p>
               <p
                 className={isOverBudget ? 'text-[#ff6b6b]' : 'text-[#00cec9]'}
@@ -311,17 +303,17 @@ export function CaloriesPage() {
           {/* Macro breakdown */}
           <div className="grid grid-cols-3 gap-2">
             <MacroSummary
-              label={lang === 'ru' ? 'Белки' : 'Protein'}
+              label={t('cal_protein')}
               value={totalProtein}
               color="#6c5ce7"
             />
             <MacroSummary
-              label={lang === 'ru' ? 'Углеводы' : 'Carbs'}
+              label={t('cal_carbs')}
               value={totalCarbs}
               color="#00cec9"
             />
             <MacroSummary
-              label={lang === 'ru' ? 'Жиры' : 'Fat'}
+              label={t('cal_fat')}
               value={totalFats}
               color="#e17055"
             />
@@ -342,7 +334,7 @@ export function CaloriesPage() {
             </div>
             <div className="text-left">
               <p className="text-white" style={{ fontSize: '0.875rem', fontWeight: 600 }}>
-                {lang === 'ru' ? 'Сканировать' : 'Scan Food'}
+                {t('cal_scan')}
               </p>
               <p className="text-white/50" style={{ fontSize: '0.6875rem' }}>
                 AI
@@ -365,10 +357,10 @@ export function CaloriesPage() {
             </div>
             <div className="text-left">
               <p className="text-foreground/80" style={{ fontSize: '0.875rem', fontWeight: 600 }}>
-                {lang === 'ru' ? 'Добавить' : 'Add Entry'}
+                {t('cal_add_entry')}
               </p>
               <p className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
-                {lang === 'ru' ? 'Вручную' : 'Manual'}
+                {t('cal_manual')}
               </p>
             </div>
           </motion.button>
@@ -403,17 +395,11 @@ export function CaloriesPage() {
                       </div>
                       <div>
                         <p className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
-                          {lang === 'ru' ? config.labelRu : config.label}
+                          {t(config.key)}
                         </p>
                         <p className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
                           {mealEntries.length}{' '}
-                          {lang === 'ru'
-                            ? mealEntries.length === 1
-                              ? 'запись'
-                              : 'записей'
-                            : mealEntries.length === 1
-                            ? 'item'
-                            : 'items'}
+                          {mealEntries.length === 1 ? t('cal_items_one') : t('cal_items_many')}
                         </p>
                       </div>
                     </div>
@@ -422,7 +408,7 @@ export function CaloriesPage() {
                         {mealCalories}
                       </p>
                       <p className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
-                        {lang === 'ru' ? 'ккал' : 'cal'}
+                        {t('cal_unit')}
                       </p>
                     </div>
                   </div>
@@ -435,7 +421,6 @@ export function CaloriesPage() {
                           key={entry.id}
                           entry={entry}
                           isDeleting={deletingId === entry.id}
-                          lang={lang}
                           onDelete={handleDelete}
                           onEdit={() => {
                             hapticFeedback('light');
@@ -462,12 +447,10 @@ export function CaloriesPage() {
               <UtensilsCrossed className="w-8 h-8 text-muted-foreground/30" />
             </div>
             <p className="text-muted-foreground mb-1" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
-              {lang === 'ru' ? 'Дневник пуст' : 'No food logged today'}
+              {t('cal_empty_diary')}
             </p>
             <p className="text-muted-foreground/60 max-w-[240px] mx-auto" style={{ fontSize: '0.8125rem', lineHeight: 1.5 }}>
-              {lang === 'ru'
-                ? 'Сканируйте или добавьте еду, чтобы начать отслеживание'
-                : 'Scan or add food to start tracking your nutrition'}
+              {t('cal_empty_diary_desc')}
             </p>
           </motion.div>
         )}
@@ -477,7 +460,6 @@ export function CaloriesPage() {
       <AnimatePresence>
         {showAddSheet && (
           <AddFoodSheet
-            lang={lang}
             onAdd={handleAddEntry}
             onClose={() => {
               hapticFeedback('light');
@@ -492,7 +474,6 @@ export function CaloriesPage() {
         {editingEntry && (
           <EditFoodSheet
             entry={editingEntry}
-            lang={lang}
             onSave={handleEditSave}
             onClose={() => {
               hapticFeedback('light');
@@ -541,16 +522,15 @@ function MacroSummary({
 function FoodEntryRow({
   entry,
   isDeleting,
-  lang,
   onDelete,
   onEdit,
 }: {
   entry: FoodEntry;
   isDeleting: boolean;
-  lang: string;
   onDelete: (id: string) => void;
   onEdit: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <motion.div
       layout
@@ -598,7 +578,7 @@ function FoodEntryRow({
               {entry.calories}
             </p>
             <p className="text-muted-foreground/50" style={{ fontSize: '0.5625rem' }}>
-              {lang === 'ru' ? 'ккал' : 'cal'}
+              {t('cal_unit')}
             </p>
           </div>
 
@@ -627,14 +607,13 @@ function FoodEntryRow({
 
 // ---- Add Food Bottom Sheet ----
 function AddFoodSheet({
-  lang,
   onAdd,
   onClose,
 }: {
-  lang: string;
   onAdd: (entry: Omit<FoodEntry, 'id'>) => void;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [calories, setCalories] = useState('');
   const [protein, setProtein] = useState('');
@@ -703,7 +682,7 @@ function AddFoodSheet({
           {/* Header */}
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-white" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
-              {lang === 'ru' ? 'Добавить еду' : 'Add Food Entry'}
+              {t('cal_manual_title')}
             </h2>
             <motion.button
               whileTap={{ scale: 0.9 }}
@@ -737,7 +716,7 @@ function AddFoodSheet({
                     className={active ? 'text-white' : 'text-white/40'}
                     style={{ fontSize: '0.8125rem', fontWeight: 500 }}
                   >
-                    {lang === 'ru' ? cfg.labelRu : cfg.label}
+                    {t(cfg.key)}
                   </span>
                 </button>
               );
@@ -748,25 +727,25 @@ function AddFoodSheet({
           <div className="space-y-3">
             <SheetInput
               ref={nameRef}
-              label={lang === 'ru' ? 'Название' : 'Food name'}
-              placeholder={lang === 'ru' ? 'Напр. Куриная грудка' : 'e.g. Grilled Chicken'}
+              label={t('cal_food_name')}
+              placeholder={t('cal_food_name_placeholder')}
               value={name}
               onChange={setName}
             />
 
             <SheetInput
-              label={lang === 'ru' ? 'Калории' : 'Calories'}
+              label={t('cal_calories')}
               placeholder="0"
               value={calories}
               onChange={setCalories}
               type="number"
-              suffix={lang === 'ru' ? 'ккал' : 'cal'}
+              suffix={t('cal_unit')}
               required
             />
 
             <div className="grid grid-cols-3 gap-2">
               <SheetInput
-                label={lang === 'ru' ? 'Белки' : 'Protein'}
+                label={t('cal_protein')}
                 placeholder="0"
                 value={protein}
                 onChange={setProtein}
@@ -774,7 +753,7 @@ function AddFoodSheet({
                 suffix="g"
               />
               <SheetInput
-                label={lang === 'ru' ? 'Углеводы' : 'Carbs'}
+                label={t('cal_carbs')}
                 placeholder="0"
                 value={carbs}
                 onChange={setCarbs}
@@ -782,7 +761,7 @@ function AddFoodSheet({
                 suffix="g"
               />
               <SheetInput
-                label={lang === 'ru' ? 'Жиры' : 'Fat'}
+                label={t('cal_fat')}
                 placeholder="0"
                 value={fats}
                 onChange={setFats}
@@ -802,7 +781,7 @@ function AddFoodSheet({
           >
             <Plus className="w-5 h-5 text-white" />
             <span className="text-white" style={{ fontSize: '1rem', fontWeight: 600 }}>
-              {lang === 'ru' ? 'Добавить' : 'Add to diary'}
+              {t('cal_add_btn')}
             </span>
           </motion.button>
         </div>
@@ -814,15 +793,14 @@ function AddFoodSheet({
 // ---- Edit Food Bottom Sheet ----
 function EditFoodSheet({
   entry,
-  lang,
   onSave,
   onClose,
 }: {
   entry: FoodEntry;
-  lang: string;
   onSave: (updated: FoodEntry) => void;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const [name, setName] = useState(entry.name);
   const [calories, setCalories] = useState(String(entry.calories));
   const [protein, setProtein] = useState(String(entry.protein));
@@ -876,7 +854,7 @@ function EditFoodSheet({
           {/* Header */}
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-white" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
-              {lang === 'ru' ? 'Редактировать' : 'Edit Entry'}
+              {t('cal_edit_entry')}
             </h2>
             <motion.button
               whileTap={{ scale: 0.9 }}
@@ -889,37 +867,37 @@ function EditFoodSheet({
 
           <div className="space-y-3">
             <SheetInput
-              label={lang === 'ru' ? 'Название' : 'Food name'}
+              label={t('cal_food_name')}
               value={name}
               onChange={setName}
             />
 
             <SheetInput
-              label={lang === 'ru' ? 'Калории' : 'Calories'}
+              label={t('cal_calories')}
               value={calories}
               onChange={setCalories}
               type="number"
-              suffix={lang === 'ru' ? 'ккал' : 'cal'}
+              suffix={t('cal_unit')}
               required
             />
 
             <div className="grid grid-cols-3 gap-2">
               <SheetInput
-                label={lang === 'ru' ? 'Белки' : 'Protein'}
+                label={t('cal_protein')}
                 value={protein}
                 onChange={setProtein}
                 type="number"
                 suffix="g"
               />
               <SheetInput
-                label={lang === 'ru' ? 'Углеводы' : 'Carbs'}
+                label={t('cal_carbs')}
                 value={carbs}
                 onChange={setCarbs}
                 type="number"
                 suffix="g"
               />
               <SheetInput
-                label={lang === 'ru' ? 'Жиры' : 'Fat'}
+                label={t('cal_fat')}
                 value={fats}
                 onChange={setFats}
                 type="number"
@@ -938,7 +916,7 @@ function EditFoodSheet({
           >
             <Check className="w-5 h-5 text-white" />
             <span className="text-white" style={{ fontSize: '1rem', fontWeight: 600 }}>
-              {lang === 'ru' ? 'Сохранить' : 'Save changes'}
+              {t('cal_save')}
             </span>
           </motion.button>
         </div>

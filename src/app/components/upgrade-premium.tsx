@@ -22,7 +22,6 @@ import {
   UtensilsCrossed,
   Dumbbell,
   Shield,
-  Zap,
   Gift,
   Send,
   ArrowLeft,
@@ -51,16 +50,10 @@ const PLANS: { id: PlanId; days: number; months: number; stars: number; save?: n
   { id: '90', days: 90, months: 3, stars: 900, save: 14, popular: false },
 ];
 
-// ---- Lang helper ----
-function useLang() {
-  const { t } = useTranslation();
-  return t('nav_home') === '\u0413\u043B\u0430\u0432\u043D\u0430\u044F' ? 'ru' : 'en';
-}
-
 export function UpgradePremiumPage() {
   const navigate = useNavigate();
   const { user, subscriptionActive, refreshSubscription } = useAuth();
-  const lang = useLang();
+  const { t, lang } = useTranslation();
 
   const [usage, setUsage] = useState<UsageData | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<PlanId>('60');
@@ -160,11 +153,11 @@ export function UpgradePremiumPage() {
       }
     } catch (err: any) {
       console.error('[Upgrade] Restore purchase error:', err);
-      setRestoreResult({ restored: false, message: lang === 'ru' ? 'Не удалось восстановить покупку' : 'Failed to restore purchase' });
+      setRestoreResult({ restored: false, message: t('up_restore_failed') });
     } finally {
       setRestoring(false);
     }
-  }, [refreshSubscription, lang]);
+  }, [refreshSubscription, t]);
 
   // Already premium
   if (subscriptionActive && !usageLoading) {
@@ -175,19 +168,17 @@ export function UpgradePremiumPage() {
             <Crown className="w-10 h-10 text-[#ffd700]" />
           </div>
           <h1 className="text-white mb-2" style={{ fontSize: '1.5rem', fontWeight: 700 }}>
-            {lang === 'ru' ? 'Вы уже Premium!' : "You're Premium!"}
+            {t('up_already_title')}
           </h1>
           <p className="text-white/50 mb-8" style={{ fontSize: '0.9375rem' }}>
-            {lang === 'ru'
-              ? 'У вас безлимитный доступ ко всем функциям'
-              : 'You have unlimited access to all features'}
+            {t('up_already_desc')}
           </p>
           <button
             onClick={() => navigate(-1)}
             className="px-6 py-3 rounded-xl bg-white/[0.06] text-white/70"
             style={{ fontSize: '0.9375rem' }}
           >
-            {lang === 'ru' ? 'Назад' : 'Go Back'}
+            {t('up_go_back')}
           </button>
         </div>
       </div>
@@ -225,7 +216,7 @@ export function UpgradePremiumPage() {
             className="text-white mb-2"
             style={{ fontSize: '1.5rem', fontWeight: 700 }}
           >
-            {lang === 'ru' ? 'Перейти на Premium' : 'Upgrade to Premium'}
+            {t('up_title')}
           </motion.h1>
 
           <motion.p
@@ -235,9 +226,7 @@ export function UpgradePremiumPage() {
             className="text-white/50"
             style={{ fontSize: '0.9375rem' }}
           >
-            {lang === 'ru'
-              ? 'Безлимитное сканирование, планы питания и тренировки'
-              : 'Unlimited scans, meal plans, and advanced workouts'}
+            {t('up_subtitle')}
           </motion.p>
         </div>
 
@@ -251,13 +240,13 @@ export function UpgradePremiumPage() {
           >
             <GlassCard className="!p-4">
               <p className="text-white/40 mb-3" style={{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.05em' }}>
-                {lang === 'ru' ? 'ВАШЕ ИСПОЛЬЗОВАНИЕ СЕГОДНЯ' : 'YOUR USAGE TODAY'}
+                {t('up_usage_title')}
               </p>
               <div className="space-y-2.5">
                 <UsageRow
                   icon={Camera}
                   color="#00cec9"
-                  label={lang === 'ru' ? 'Сканирование еды' : 'Food Scans'}
+                  label={t('up_food_scans')}
                   used={usage.scans.used}
                   limit={usage.scans.limit}
                   lang={lang}
@@ -265,7 +254,7 @@ export function UpgradePremiumPage() {
                 <UsageRow
                   icon={UtensilsCrossed}
                   color="#6c5ce7"
-                  label={lang === 'ru' ? 'Планы питания / нед.' : 'Meal Plans / week'}
+                  label={t('up_meal_plans_week')}
                   used={usage.meal_plans.used}
                   limit={usage.meal_plans.limit}
                   lang={lang}
@@ -273,7 +262,7 @@ export function UpgradePremiumPage() {
                 <UsageRow
                   icon={Dumbbell}
                   color="#fd79a8"
-                  label={lang === 'ru' ? 'Продвинутые тренировки' : 'Advanced Workouts'}
+                  label={t('up_advanced_workouts')}
                   used={0}
                   limit={0}
                   locked={!usage.workout_plans.advanced}
@@ -295,7 +284,7 @@ export function UpgradePremiumPage() {
             <div className="flex items-center gap-2 mb-4">
               <Sparkles className="w-4 h-4 text-[#a29bfe]" />
               <span className="text-white/70" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
-                {lang === 'ru' ? 'Сравнение планов' : 'Plan Comparison'}
+                {t('up_plan_comparison')}
               </span>
             </div>
 
@@ -312,31 +301,31 @@ export function UpgradePremiumPage() {
 
             <div className="space-y-2">
               <ComparisonRow
-                label={lang === 'ru' ? 'Скан еды' : 'Food Scans'}
+                label={t('up_food_scans_row')}
                 free="5/day"
-                premium={lang === 'ru' ? 'Безлимит' : 'Unlimited'}
+                premium={t('up_unlimited')}
                 premiumHighlight
               />
               <ComparisonRow
-                label={lang === 'ru' ? 'Планы питания' : 'Meal Plans'}
+                label={t('up_meal_plans_row')}
                 free="1/week"
-                premium={lang === 'ru' ? 'Безлимит' : 'Unlimited'}
+                premium={t('up_unlimited')}
                 premiumHighlight
               />
               <ComparisonRow
-                label={lang === 'ru' ? 'Тренировки' : 'Workouts'}
-                free={lang === 'ru' ? 'Базовые' : 'Basic'}
-                premium={lang === 'ru' ? 'Продвинутые' : 'Advanced'}
+                label={t('up_workouts_row')}
+                free={t('up_basic')}
+                premium={t('up_advanced')}
                 premiumHighlight
               />
               <ComparisonRow
-                label={lang === 'ru' ? 'AI Коуч' : 'AI Coach'}
+                label={t('up_ai_coach_row')}
                 free={<X className="w-3.5 h-3.5 text-white/20" />}
                 premium={<Check className="w-3.5 h-3.5 text-[#00cec9]" />}
                 premiumHighlight
               />
               <ComparisonRow
-                label={lang === 'ru' ? 'Инсайты' : 'Insights'}
+                label={t('up_insights_row')}
                 free={<X className="w-3.5 h-3.5 text-white/20" />}
                 premium={<Check className="w-3.5 h-3.5 text-[#00cec9]" />}
                 premiumHighlight
@@ -355,10 +344,10 @@ export function UpgradePremiumPage() {
           {PLANS.map((p) => {
             const isSelected = selectedPlan === p.id;
             const label = p.months === 1
-              ? (lang === 'ru' ? '1 месяц' : '1 month')
+              ? t('up_1_month')
               : p.months === 2
-              ? (lang === 'ru' ? '2 месяца' : '2 months')
-              : (lang === 'ru' ? '3 месяца' : '3 months');
+              ? t('up_2_months')
+              : t('up_3_months');
 
             const perMonth = Math.round(p.stars / p.months);
 
@@ -375,7 +364,7 @@ export function UpgradePremiumPage() {
                 {p.popular && (
                   <div className="absolute -top-2.5 right-4 px-3 py-0.5 rounded-full bg-[#6c5ce7]">
                     <span className="text-white" style={{ fontSize: '0.625rem', fontWeight: 700 }}>
-                      {lang === 'ru' ? 'ПОПУЛЯРНЫЙ' : 'POPULAR'}
+                      {t('up_popular')}
                     </span>
                   </div>
                 )}
@@ -392,7 +381,7 @@ export function UpgradePremiumPage() {
                     </div>
                     <span className="text-white/40" style={{ fontSize: '0.8125rem' }}>
                       {p.months > 1
-                        ? `~${perMonth} Stars/${lang === 'ru' ? 'мес' : 'mo'}`
+                        ? `~${perMonth} Stars/${t('up_per_month')}`
                         : `${p.stars} Stars`
                       }
                     </span>
@@ -424,7 +413,7 @@ export function UpgradePremiumPage() {
           className="text-center mb-4"
         >
           <span className="text-white/25" style={{ fontSize: '0.75rem' }}>
-            {`\u2248 $${plan.months === 1 ? '6' : plan.months === 2 ? '10' : '15'} \u00B7 ${plan.days} ${lang === 'ru' ? 'дней' : 'days'}`}
+            {`\u2248 $${plan.months === 1 ? '6' : plan.months === 2 ? '10' : '15'} \u00B7 ${plan.days} ${t('shared_days_unit')}`}
           </span>
         </motion.div>
 
@@ -446,12 +435,10 @@ export function UpgradePremiumPage() {
                 <Check className="w-7 h-7 text-green-400" />
               </motion.div>
               <p className="text-green-400 mb-1" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
-                {lang === 'ru' ? 'Оплата прошла успешно!' : 'Payment Successful!'}
+                {t('up_payment_success')}
               </p>
               <p className="text-white/50" style={{ fontSize: '0.8125rem' }}>
-                {lang === 'ru'
-                  ? `Premium активирован на ${plan.days} дней`
-                  : `Premium activated for ${plan.days} days`}
+                {t('up_premium_activated', { n: plan.days })}
               </p>
             </motion.div>
           )}
@@ -464,19 +451,17 @@ export function UpgradePremiumPage() {
             >
               <Send className="w-5 h-5 text-green-400 mx-auto mb-2" />
               <span className="text-green-400" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
-                {lang === 'ru' ? 'Инвойс отправлен в чат!' : 'Invoice sent to chat!'}
+                {t('up_invoice_sent')}
               </span>
               <p className="text-white/40 mt-1" style={{ fontSize: '0.75rem' }}>
-                {lang === 'ru'
-                  ? 'Откройте чат с ботом для оплаты'
-                  : 'Open the bot chat to complete payment'}
+                {t('up_open_chat')}
               </p>
               <button
                 onClick={() => { try { closeMiniApp(); } catch { window.close(); } }}
                 className="mt-3 px-5 py-2 rounded-xl bg-green-500/20 text-green-400"
                 style={{ fontSize: '0.8125rem', fontWeight: 600 }}
               >
-                {lang === 'ru' ? 'Перейти в чат' : 'Go to chat'}
+                {t('up_go_to_chat')}
               </button>
             </motion.div>
           )}
@@ -488,7 +473,7 @@ export function UpgradePremiumPage() {
               className="mb-4 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-center"
             >
               <span className="text-red-400" style={{ fontSize: '0.875rem' }}>
-                {lang === 'ru' ? 'Ошибка оплаты. Попробуйте снова.' : 'Payment failed. Please try again.'}
+                {t('up_payment_failed')}
               </span>
             </motion.div>
           )}
@@ -509,7 +494,7 @@ export function UpgradePremiumPage() {
           ) : (
             <>
               <Star className="w-5 h-5 fill-white" />
-              {lang === 'ru' ? `Оплатить ${plan.stars} Stars` : `Pay ${plan.stars} Stars`}
+              {t('up_pay', { n: plan.stars })}
             </>
           )}
         </motion.button>
@@ -527,7 +512,7 @@ export function UpgradePremiumPage() {
             style={{ fontSize: '0.875rem' }}
           >
             <Gift className="w-4 h-4" />
-            {lang === 'ru' ? 'Получить бесплатные дни' : 'Get free days'}
+            {t('up_free_days')}
           </button>
         </motion.div>
 
@@ -549,7 +534,7 @@ export function UpgradePremiumPage() {
             ) : (
               <RotateCcw className="w-3.5 h-3.5" />
             )}
-            {lang === 'ru' ? 'Восстановить покупку' : 'Restore Purchase'}
+            {t('up_restore')}
           </button>
           
           {/* Restore result message */}
@@ -577,7 +562,7 @@ export function UpgradePremiumPage() {
           style={{ fontSize: '0.75rem' }}
         >
           <Shield className="w-3.5 h-3.5" />
-          {lang === 'ru' ? 'Безопасная оплата через Telegram Stars' : 'Secure payment via Telegram Stars'}
+          {t('up_secure')}
         </motion.div>
       </div>
     </div>

@@ -99,7 +99,7 @@ export function PlanHistoryPage() {
     if (!iso) return '';
     const d = new Date(iso);
     const day = d.getDate();
-    const month = d.toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', { month: 'short' });
+    const month = d.toLocaleDateString(t('locale_code'), { month: 'short' });
     return `${day} ${month}`;
   };
 
@@ -200,7 +200,7 @@ export function PlanHistoryPage() {
                             {/* Meta badges */}
                             <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-white/[0.04] text-white/30" style={{ fontSize: '0.625rem', fontWeight: 500 }}>
-                                <Timer className="w-2.5 h-2.5" /> {draft.durationDays}{lang === 'ru' ? 'д' : 'd'}
+                                <Timer className="w-2.5 h-2.5" /> {draft.durationDays}{t('unit_days_short')}
                               </span>
                               <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md ${
                                 draft.hasPlan

@@ -34,6 +34,7 @@ import {
   hapticSuccess,
   hapticError,
 } from './telegram';
+import { useTranslation } from './i18n';
 
 // ---- Types ----
 type ScanStep = 'capture' | 'analyzing' | 'result' | 'error';
@@ -48,23 +49,26 @@ interface FoodResult {
 }
 
 // ---- Meal type config ----
-const MEAL_OPTIONS: Array<{ id: MealType; label: string; emoji: string }> = [
-  { id: 'breakfast', label: 'Breakfast', emoji: '\u{2615}' },
-  { id: 'lunch', label: 'Lunch', emoji: '\u{1F372}' },
-  { id: 'dinner', label: 'Dinner', emoji: '\u{1F37D}\uFE0F' },
-  { id: 'snack', label: 'Snack', emoji: '\u{1F34E}' },
-];
-
-function detectLanguage(): string {
-  if (typeof navigator !== 'undefined' && navigator.language?.startsWith('ru')) return 'ru';
-  return 'en';
-}
+// Meal labels are now resolved via t() in render
+const MEAL_IDS: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack'];
+const MEAL_EMOJIS: Record<MealType, string> = {
+  breakfast: '\u{2615}',
+  lunch: '\u{1F372}',
+  dinner: '\u{1F37D}\uFE0F',
+  snack: '\u{1F34E}',
+};
+const MEAL_KEYS: Record<MealType, string> = {
+  breakfast: 'scan_meal_breakfast',
+  lunch: 'scan_meal_lunch',
+  dinner: 'scan_meal_dinner',
+  snack: 'scan_meal_snack',
+};
 
 // ---- Component ----
 export function ScanFoodPage() {
   const navigate = useNavigate();
   const { user, subscriptionActive, isAdmin, isDevMode } = useAuth();
-  const lang = detectLanguage();
+  const { t, lang } = useTranslation();
 
   const [step, setStep] = useState<ScanStep>('capture');
   const [imageData, setImageData] = useState<string | null>(null);
@@ -149,20 +153,14 @@ export function ScanFoodPage() {
         setLimitReached(true);
         setScansUsed(err?.used || 5);
         setScansLimit(err?.limit || 5);
-        setErrorMessage(
-          lang === 'ru'
-            ? 'Достигнут дневной лимит сканирования'
-            : 'Daily scan limit reached'
-        );
+        setErrorMessage(t('scan_limit_reached'));
       } else {
-        setErrorMessage(
-          err?.message || (lang === 'ru' ? 'Не удалось распознать еду' : 'Could not analyze food')
-        );
+        setErrorMessage(err?.message || t('scan_error_default'));
       }
       setStep('error');
       hapticError();
     }
-  }, [imageData, lang]);
+  }, [imageData, lang, t]);
 
   // ---- Add to diary ----
   const addToDiary = useCallback(async () => {
@@ -230,7 +228,7 @@ export function ScanFoodPage() {
       {/* Header */}
       <div
         className="relative z-10 flex items-center justify-between px-4"
-        style={{ paddingTop: 'var(--safe-area-top, 12px)' }}
+        style={{ paddingTop: 'var(--safe-area-top, 56px)' }}
       >
         <motion.button
           whileTap={{ scale: 0.9 }}
@@ -243,7 +241,7 @@ export function ScanFoodPage() {
           className="text-white/90"
           style={{ fontSize: '1.0625rem', fontWeight: 600 }}
         >
-          {lang === 'ru' ? 'Сканировать еду' : 'Scan Food'}
+          {t('scan_title')}
         </h1>
         <div className="w-10" />
       </div>
@@ -276,15 +274,13 @@ export function ScanFoodPage() {
                     className="text-white mb-2 text-center"
                     style={{ fontSize: '1.375rem', fontWeight: 700 }}
                   >
-                    {lang === 'ru' ? 'Сфотографируйте блюдо' : 'Take a photo of your meal'}
+                    {t('scan_take_photo')}
                   </h2>
                   <p
                     className="text-white/40 text-center max-w-[280px] mb-8"
                     style={{ fontSize: '0.875rem', lineHeight: 1.5 }}
                   >
-                    {lang === 'ru'
-                      ? 'AI распознает еду и рассчитает калории и макронутриенты'
-                      : 'AI will recognize the food and calculate calories & macros'}
+                    {t('scan_ai_desc')}
                   </p>
 
                   <div className="w-full space-y-3 max-w-[320px]">
@@ -296,7 +292,7 @@ export function ScanFoodPage() {
                     >
                       <Camera className="w-5 h-5 text-white" />
                       <span className="text-white" style={{ fontSize: '1.0625rem', fontWeight: 600 }}>
-                        {lang === 'ru' ? 'Открыть камеру' : 'Open Camera'}
+                        {t('scan_open_camera')}
                       </span>
                     </motion.button>
 
@@ -307,7 +303,7 @@ export function ScanFoodPage() {
                     >
                       <ImageIcon className="w-5 h-5 text-white/60" />
                       <span className="text-white/70" style={{ fontSize: '1.0625rem', fontWeight: 600 }}>
-                        {lang === 'ru' ? 'Выбрать из галереи' : 'Choose from Gallery'}
+                        {t('scan_choose_gallery')}
                       </span>
                     </motion.button>
                   </div>
@@ -340,7 +336,7 @@ export function ScanFoodPage() {
                     >
                       <Sparkles className="w-5 h-5 text-white" />
                       <span className="text-white" style={{ fontSize: '1.0625rem', fontWeight: 600 }}>
-                        {lang === 'ru' ? 'Распознать еду' : 'Analyze Food'}
+                        {t('scan_analyze')}
                       </span>
                     </motion.button>
 
@@ -351,7 +347,7 @@ export function ScanFoodPage() {
                     >
                       <RotateCcw className="w-4 h-4 text-white/50" />
                       <span className="text-white/60" style={{ fontSize: '0.9375rem', fontWeight: 500 }}>
-                        {lang === 'ru' ? 'Переснять' : 'Retake'}
+                        {t('scan_retake')}
                       </span>
                     </motion.button>
                   </div>
@@ -392,12 +388,10 @@ export function ScanFoodPage() {
               </div>
 
               <h2 className="text-white mb-2" style={{ fontSize: '1.25rem', fontWeight: 700 }}>
-                {lang === 'ru' ? 'Анализирую...' : 'Analyzing...'}
+                {t('scan_analyzing')}
               </h2>
               <p className="text-white/40 text-center max-w-[240px]" style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
-                {lang === 'ru'
-                  ? 'AI распознаёт продукты и считает нутриенты'
-                  : 'AI is identifying food and calculating nutrients'}
+                {t('scan_analyzing_desc')}
               </p>
 
               <div className="flex items-center gap-1.5 mt-4">
@@ -436,7 +430,7 @@ export function ScanFoodPage() {
                     <div className="flex items-center gap-1.5">
                       <Sparkles className="w-3.5 h-3.5 text-[#a29bfe]" />
                       <span className="text-white/50" style={{ fontSize: '0.75rem' }}>
-                        {lang === 'ru' ? 'Распознано AI' : 'AI recognized'}
+                        {t('scan_ai_recognized')}
                       </span>
                     </div>
                   </motion.div>
@@ -455,23 +449,23 @@ export function ScanFoodPage() {
                         {result.estimated_calories}
                       </p>
                       <p className="text-white/40" style={{ fontSize: '0.8125rem' }}>
-                        {lang === 'ru' ? 'калорий' : 'calories'}
+                        {t('scan_calories_unit')}
                       </p>
                     </div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-3 gap-3">
-                  <MacroCard label={lang === 'ru' ? 'Белки' : 'Protein'} value={result.protein} unit="g" color="#6c5ce7" />
-                  <MacroCard label={lang === 'ru' ? 'Углеводы' : 'Carbs'} value={result.carbs} unit="g" color="#00cec9" />
-                  <MacroCard label={lang === 'ru' ? 'Жиры' : 'Fat'} value={result.fat} unit="g" color="#e17055" />
+                  <MacroCard label={t('scan_protein')} value={result.protein} unit={t('unit_g')} color="#6c5ce7" />
+                  <MacroCard label={t('scan_carbs')} value={result.carbs} unit={t('unit_g')} color="#00cec9" />
+                  <MacroCard label={t('scan_fat')} value={result.fat} unit={t('unit_g')} color="#e17055" />
                 </div>
               </GlassCard>
 
               {/* Meal type selector */}
               <div className="mb-4">
                 <p className="text-white/40 mb-2" style={{ fontSize: '0.8125rem', fontWeight: 500 }}>
-                  {lang === 'ru' ? 'Приём пищи' : 'Meal type'}
+                  {t('scan_meal_type')}
                 </p>
                 <div className="relative">
                   <motion.button
@@ -484,10 +478,10 @@ export function ScanFoodPage() {
                   >
                     <div className="flex items-center gap-2.5">
                       <span style={{ fontSize: '1.125rem' }}>
-                        {MEAL_OPTIONS.find((m) => m.id === selectedMeal)?.emoji}
+                        {MEAL_EMOJIS[selectedMeal]}
                       </span>
                       <span className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 500 }}>
-                        {MEAL_OPTIONS.find((m) => m.id === selectedMeal)?.label}
+                        {t(MEAL_KEYS[selectedMeal])}
                       </span>
                     </div>
                     <ChevronDown
@@ -504,28 +498,28 @@ export function ScanFoodPage() {
                         className="absolute top-full mt-1 left-0 right-0 z-20 rounded-xl bg-[#1a1a2e] border border-white/[0.1] overflow-hidden shadow-xl"
                         style={{ transformOrigin: 'top' }}
                       >
-                        {MEAL_OPTIONS.map((opt) => (
+                        {MEAL_IDS.map((opt) => (
                           <button
-                            key={opt.id}
+                            key={opt}
                             onClick={() => {
                               hapticFeedback('light');
-                              setSelectedMeal(opt.id);
+                              setSelectedMeal(opt);
                               setShowMealPicker(false);
                             }}
                             className={`w-full px-4 py-3 flex items-center gap-2.5 transition-colors ${
-                              selectedMeal === opt.id
+                              selectedMeal === opt
                                 ? 'bg-[#6c5ce7]/15'
                                 : 'hover:bg-white/[0.04] active:bg-white/[0.06]'
                             }`}
                           >
-                            <span style={{ fontSize: '1rem' }}>{opt.emoji}</span>
+                            <span style={{ fontSize: '1rem' }}>{MEAL_EMOJIS[opt]}</span>
                             <span
-                              className={selectedMeal === opt.id ? 'text-white' : 'text-white/60'}
+                              className={selectedMeal === opt ? 'text-white' : 'text-white/60'}
                               style={{ fontSize: '0.9375rem', fontWeight: 500 }}
                             >
-                              {opt.label}
+                              {t(MEAL_KEYS[opt])}
                             </span>
-                            {selectedMeal === opt.id && (
+                            {selectedMeal === opt && (
                               <Check className="w-4 h-4 text-[#6c5ce7] ml-auto" />
                             )}
                           </button>
@@ -556,7 +550,7 @@ export function ScanFoodPage() {
                         <Check className="w-5 h-5 text-[#00cec9]" />
                       </motion.div>
                       <span className="text-[#00cec9]" style={{ fontSize: '1.0625rem', fontWeight: 600 }}>
-                        {lang === 'ru' ? 'Добавлено!' : 'Added to diary!'}
+                        {t('scan_added')}
                       </span>
                     </motion.div>
                   ) : (
@@ -578,7 +572,7 @@ export function ScanFoodPage() {
                         <>
                           <Plus className="w-5 h-5 text-white" />
                           <span className="text-white" style={{ fontSize: '1.0625rem', fontWeight: 600 }}>
-                            {lang === 'ru' ? 'Добавить в дневник' : 'Add to diary'}
+                            {t('scan_add_diary')}
                           </span>
                         </>
                       )}
@@ -594,7 +588,7 @@ export function ScanFoodPage() {
                   >
                     <RotateCcw className="w-4 h-4 text-white/50" />
                     <span className="text-white/60" style={{ fontSize: '0.9375rem', fontWeight: 500 }}>
-                      {lang === 'ru' ? 'Сканировать другое' : 'Scan another'}
+                      {t('scan_another')}
                     </span>
                   </motion.button>
                 )}
@@ -622,17 +616,13 @@ export function ScanFoodPage() {
                   </motion.div>
 
                   <h2 className="text-white mb-2 text-center" style={{ fontSize: '1.25rem', fontWeight: 700 }}>
-                    {lang === 'ru' ? 'Лимит сканирований' : 'Scan Limit Reached'}
+                    {t('scan_limit_title')}
                   </h2>
                   <p className="text-white/40 text-center max-w-[280px] mb-2" style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
-                    {lang === 'ru'
-                      ? `Использовано ${scansUsed}/${scansLimit} бесплатных сканирований сегодня`
-                      : `You've used ${scansUsed}/${scansLimit} free scans today`}
+                    {t('scan_limit_desc', { used: scansUsed, limit: scansLimit })}
                   </p>
                   <p className="text-white/30 text-center max-w-[280px] mb-8" style={{ fontSize: '0.8125rem', lineHeight: 1.5 }}>
-                    {lang === 'ru'
-                      ? 'Перейдите на Premium для безлимитного сканирования'
-                      : 'Upgrade to Premium for unlimited scans'}
+                    {t('scan_limit_upgrade')}
                   </p>
 
                   <div className="w-full max-w-[320px] space-y-3">
@@ -644,7 +634,7 @@ export function ScanFoodPage() {
                     >
                       <Crown className="w-5 h-5 text-white" />
                       <span className="text-white" style={{ fontSize: '1.0625rem', fontWeight: 600 }}>
-                        {lang === 'ru' ? 'Перейти на Premium' : 'Upgrade to Premium'}
+                        {t('scan_upgrade_btn')}
                       </span>
                     </motion.button>
 
@@ -654,7 +644,7 @@ export function ScanFoodPage() {
                       className="w-full h-12 rounded-2xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center"
                     >
                       <span className="text-white/60" style={{ fontSize: '0.9375rem', fontWeight: 500 }}>
-                        {lang === 'ru' ? 'Назад' : 'Go back'}
+                        {t('back')}
                       </span>
                     </motion.button>
                   </div>
@@ -670,13 +660,10 @@ export function ScanFoodPage() {
                   </motion.div>
 
                   <h2 className="text-white mb-2 text-center" style={{ fontSize: '1.25rem', fontWeight: 700 }}>
-                    {lang === 'ru' ? 'Не удалось распознать' : 'Recognition failed'}
+                    {t('scan_error_title')}
                   </h2>
                   <p className="text-white/40 text-center max-w-[280px] mb-8" style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
-                    {errorMessage ||
-                      (lang === 'ru'
-                        ? 'Попробуйте сделать фото ближе и при хорошем освещении'
-                        : 'Try taking a closer photo with better lighting')}
+                    {errorMessage || t('scan_error_hint')}
                   </p>
 
                   <div className="w-full max-w-[320px] space-y-3">
@@ -687,7 +674,7 @@ export function ScanFoodPage() {
                     >
                       <RotateCcw className="w-5 h-5 text-white" />
                       <span className="text-white" style={{ fontSize: '1.0625rem', fontWeight: 600 }}>
-                        {lang === 'ru' ? 'Попробовать снова' : 'Try again'}
+                        {t('scan_try_again')}
                       </span>
                     </motion.button>
 
@@ -697,7 +684,7 @@ export function ScanFoodPage() {
                       className="w-full h-12 rounded-2xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center"
                     >
                       <span className="text-white/60" style={{ fontSize: '0.9375rem', fontWeight: 500 }}>
-                        {lang === 'ru' ? 'Назад' : 'Go back'}
+                        {t('back')}
                       </span>
                     </motion.button>
                   </div>

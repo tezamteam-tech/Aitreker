@@ -109,19 +109,12 @@ export function PaywallOverlay({ daysLeft, expiresAt, onSubscriptionUpdated }: P
 
   const handlePurchase = payMethod === 'stars' ? handlePurchaseStars : handlePurchaseTON;
 
-  const features = lang === 'ru'
-    ? [
-        'AI-коуч с персональными советами',
-        'AI-программы саморазвития',
-        'Стратегические цели с AI-планированием',
-        'AI-анализ журнала и инсайты',
-      ]
-    : [
-        'AI Coach with personalized advice',
-        'AI-powered development programs',
-        'Strategic goals with AI planning',
-        'AI journal analysis & insights',
-      ];
+  const features = [
+    t('pw_feat_1_ru'),
+    t('pw_feat_2_ru'),
+    t('pw_feat_3_ru'),
+    t('pw_feat_4_ru'),
+  ];
 
   return (
     <motion.div
@@ -158,9 +151,7 @@ export function PaywallOverlay({ daysLeft, expiresAt, onSubscriptionUpdated }: P
             className="text-white/50"
             style={{ fontSize: '0.9375rem' }}
           >
-            {lang === 'ru'
-              ? 'Разблокируй AI-коуча, умные программы и аналитику журнала'
-              : 'Unlock AI Coach, smart programs, and journal analytics'}
+            {t('pw_subtitle')}
           </motion.p>
         </div>
 
@@ -175,7 +166,7 @@ export function PaywallOverlay({ daysLeft, expiresAt, onSubscriptionUpdated }: P
             <div className="flex items-center gap-2 mb-4">
               <Sparkles className="w-4 h-4 text-[#a29bfe]" />
               <span className="text-white/70" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
-                {lang === 'ru' ? 'Что включено' : 'What\'s included'}
+                {t('pw_whats_included')}
               </span>
             </div>
             <div className="space-y-3">
@@ -234,10 +225,10 @@ export function PaywallOverlay({ daysLeft, expiresAt, onSubscriptionUpdated }: P
           {PLANS.map((plan) => {
             const isSelected = selectedPlan === plan.id;
             const label = plan.months === 1
-              ? (lang === 'ru' ? '1 месяц' : '1 month')
+              ? t('pw_1_month')
               : plan.months === 2
-              ? (lang === 'ru' ? '2 месяца' : '2 months')
-              : (lang === 'ru' ? '3 месяца' : '3 months');
+              ? t('pw_2_months')
+              : t('pw_3_months');
 
             const price = payMethod === 'stars' ? plan.stars : plan.tonPrice;
             const priceUnit = payMethod === 'stars' ? 'Stars' : 'TON';
@@ -265,7 +256,7 @@ export function PaywallOverlay({ daysLeft, expiresAt, onSubscriptionUpdated }: P
                     payMethod === 'stars' ? 'bg-[#6c5ce7]' : 'bg-blue-500'
                   }`}>
                     <span className="text-white" style={{ fontSize: '0.625rem', fontWeight: 700 }}>
-                      {lang === 'ru' ? 'ПОПУЛЯРНЫЙ' : 'POPULAR'}
+                      {t('pw_popular')}
                     </span>
                   </div>
                 )}
@@ -282,7 +273,7 @@ export function PaywallOverlay({ daysLeft, expiresAt, onSubscriptionUpdated }: P
                     </div>
                     <span className="text-white/40" style={{ fontSize: '0.8125rem' }}>
                       {plan.months > 1
-                        ? `~${perMonth} ${priceUnit}/${lang === 'ru' ? 'мес' : 'mo'}`
+                        ? `~${perMonth} ${priceUnit}/${t('pw_per_month')}`
                         : `${price} ${priceUnit}`
                       }
                     </span>
@@ -326,7 +317,7 @@ export function PaywallOverlay({ daysLeft, expiresAt, onSubscriptionUpdated }: P
               : `${selectedPlanData.tonPrice} TON`
             }
             {' · '}
-            {selectedPlanData.days} {lang === 'ru' ? 'дней' : 'days'}
+            {selectedPlanData.days} {t('shared_days_unit')}
           </span>
         </motion.div>
 
@@ -341,7 +332,7 @@ export function PaywallOverlay({ daysLeft, expiresAt, onSubscriptionUpdated }: P
             >
               <Check className="w-6 h-6 text-green-400 mx-auto mb-2" />
               <span className="text-green-400" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
-                {lang === 'ru' ? 'Оплата прошла успешно!' : 'Payment successful!'}
+                {t('pw_payment_success')}
               </span>
             </motion.div>
           )}
@@ -354,19 +345,17 @@ export function PaywallOverlay({ daysLeft, expiresAt, onSubscriptionUpdated }: P
             >
               <Send className="w-5 h-5 text-green-400 mx-auto mb-2" />
               <span className="text-green-400" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
-                {lang === 'ru' ? 'Инвойс отправлен в чат!' : 'Invoice sent to chat!'}
+                {t('pw_invoice_sent')}
               </span>
               <p className="text-white/40 mt-1" style={{ fontSize: '0.75rem' }}>
-                {lang === 'ru'
-                  ? 'Откройте чат с ботом для оплаты'
-                  : 'Open the bot chat to complete payment'}
+                {t('pw_open_chat_desc')}
               </p>
               <button
                 onClick={() => { try { closeMiniApp(); } catch { window.close(); } }}
                 className="mt-3 px-5 py-2 rounded-xl bg-green-500/20 text-green-400"
                 style={{ fontSize: '0.8125rem', fontWeight: 600 }}
               >
-                {lang === 'ru' ? 'Перейти в чат' : 'Go to chat'}
+                {t('pw_go_to_chat')}
               </button>
             </motion.div>
           )}
@@ -378,7 +367,7 @@ export function PaywallOverlay({ daysLeft, expiresAt, onSubscriptionUpdated }: P
               className="mb-4 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-center"
             >
               <span className="text-red-400" style={{ fontSize: '0.875rem' }}>
-                {lang === 'ru' ? 'Ошибка оплаты. Попробуйте снова.' : 'Payment failed. Please try again.'}
+                {t('pw_payment_failed')}
               </span>
             </motion.div>
           )}
@@ -403,12 +392,12 @@ export function PaywallOverlay({ daysLeft, expiresAt, onSubscriptionUpdated }: P
           ) : payMethod === 'stars' ? (
             <>
               <Star className="w-5 h-5 fill-white" />
-              {lang === 'ru' ? `Оплатить ${selectedPlanData.stars} Stars` : `Pay ${selectedPlanData.stars} Stars`}
+              {t('pw_pay_stars', { n: selectedPlanData.stars })}
             </>
           ) : (
             <>
               <Gem className="w-5 h-5" />
-              {lang === 'ru' ? `Оплатить ${selectedPlanData.tonPrice} TON` : `Pay ${selectedPlanData.tonPrice} TON`}
+              {t('pw_pay_ton', { n: selectedPlanData.tonPrice })}
             </>
           )}
         </motion.button>
@@ -429,7 +418,7 @@ export function PaywallOverlay({ daysLeft, expiresAt, onSubscriptionUpdated }: P
             style={{ fontSize: '0.875rem' }}
           >
             <Gift className="w-4 h-4" />
-            {lang === 'ru' ? 'Получить бесплатные дни' : 'Get free days'}
+            {t('pw_free_days')}
           </button>
         </motion.div>
 
@@ -442,7 +431,7 @@ export function PaywallOverlay({ daysLeft, expiresAt, onSubscriptionUpdated }: P
           style={{ fontSize: '0.75rem' }}
         >
           <Shield className="w-3.5 h-3.5" />
-          {lang === 'ru' ? 'Безопасная оплата через Telegram' : 'Secure payment via Telegram'}
+          {t('pw_secure')}
         </motion.div>
       </div>
     </motion.div>

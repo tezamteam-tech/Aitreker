@@ -590,7 +590,7 @@ export function JournalPage() {
                                 ? t('task_reminder_today', { time: taskReminderTime })
                                 : sd === tomorrow
                                 ? t('task_reminder_tomorrow', { time: taskReminderTime })
-                                : `${sd} ${lang === 'ru' ? 'в' : 'at'} ${taskReminderTime}`;
+                                : `${sd} ${t('date_at')} ${taskReminderTime}`;
                               const freqNote = taskFrequency === 'once'
                                 ? ''
                                 : taskFrequency === 'weekdays'
@@ -790,7 +790,7 @@ function groupByDate(
     } else if (dateStr === yesterday) {
       label = t('note_yesterday');
     } else {
-      label = new Date(dateStr).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', {
+      label = new Date(dateStr).toLocaleDateString(t('locale_code'), {
         day: 'numeric',
         month: 'long',
       });

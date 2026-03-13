@@ -444,11 +444,11 @@ export function setupSafeArea(): void {
       // Enforce at least 54px.
       safeTop = Math.max(topInset, 54);
     } else {
-      // Non-fullscreen: TG renders its native header ABOVE the WebView,
-      // so the WebView content area is already below TG chrome.
-      // A small padding (12px) provides breathing room.
-      // If TG reports a non-zero inset, respect it.
-      safeTop = topInset > 0 ? topInset : 12;
+      // Non-fullscreen: In many TG versions the native header chrome
+      // (close/back button, title, ···) overlays the top of the WebView.
+      // A minimum of 48px covers the standard ~44px TG header + breathing room.
+      // If TG reports a non-zero inset, respect the maximum.
+      safeTop = Math.max(topInset, 48);
     }
 
     document.documentElement.style.setProperty('--safe-area-top', `${safeTop}px`);

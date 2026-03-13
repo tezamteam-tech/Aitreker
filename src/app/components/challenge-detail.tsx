@@ -109,7 +109,7 @@ export function ChallengeDetailPage() {
         setCodeError(t('chd_code_error'));
         hapticFeedback('heavy');
       } else if (err.code === 'INSUFFICIENT_FUNDS') {
-        showToast(lang === 'ru' ? 'Недостаточно средств на балансе' : 'Insufficient balance');
+        showToast(t('chd_insufficient_balance'));
         hapticFeedback('heavy');
       } else {
         showToast(t('chd_join_error'));

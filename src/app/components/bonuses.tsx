@@ -146,7 +146,7 @@ export function BonusesPage() {
   const formatExpiry = (iso: string | null) => {
     if (!iso) return '';
     const d = new Date(iso);
-    return d.toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+    return d.toLocaleDateString(t('locale_code'), { day: 'numeric', month: 'short', year: 'numeric' });
   };
 
   // Referral progress (0-10 for current milestone)

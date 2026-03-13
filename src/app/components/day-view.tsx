@@ -190,9 +190,9 @@ export function DayViewPage() {
                   });
                 } else {
                   setIsGeneratingBlock(false);
-                  setBlockError(lang === 'ru' ? '\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u0441\u0433\u0435\u043D\u0435\u0440\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0431\u043B\u043E\u043A' : 'Could not generate block');
+                  setBlockError(t('dv_block_error'));
                 }
-              }).catch(() => { setIsGeneratingBlock(false); setBlockError(lang === 'ru' ? '\u041E\u0448\u0438\u0431\u043A\u0430 \u0433\u0435\u043D\u0435\u0440\u0430\u0446\u0438\u0438' : 'Generation error'); });
+              }).catch(() => { setIsGeneratingBlock(false); setBlockError(t('dv_gen_error')); });
             }
           });
         }
@@ -257,7 +257,7 @@ export function DayViewPage() {
       setTimeout(() => setSgXpBurstId(null), 2000);
       // Play XP coin sound
       playXpCoinSound();
-      showToast(lang === 'ru' ? `\u2705 \u0417\u0430\u0434\u0430\u0447\u0430 \u0432\u044B\u043F\u043E\u043B\u043D\u0435\u043D\u0430!  +${xp} XP` : `\u2705 Task completed!  +${xp} XP`);
+      showToast(`\u2705 ${t('dv_task_completed', { xp })}`);
     } catch (err) {
       console.error('[DayView] Strategic task complete error:', err);
     } finally {
@@ -487,8 +487,8 @@ export function DayViewPage() {
             <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 1.5, repeat: Infinity }} className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#6c5ce7]/20 to-[#a29bfe]/20 flex items-center justify-center mb-4">
               <Brain className="w-8 h-8 text-[#a29bfe]" />
             </motion.div>
-            <p className="text-white/60 mb-2" style={{ fontSize: '1rem', fontWeight: 600 }}>{lang === 'ru' ? '\u0413\u0435\u043D\u0435\u0440\u0438\u0440\u0443\u044E \u0441\u043B\u0435\u0434\u0443\u044E\u0449\u0438\u0439 \u0431\u043B\u043E\u043A...' : 'Generating next block...'}</p>
-            <p className="text-white/30" style={{ fontSize: '0.8125rem' }}>{lang === 'ru' ? '\u041A\u043E\u0443\u0447 \u0441\u043E\u0437\u0434\u0430\u0451\u0442 \u043D\u043E\u0432\u044B\u0435 \u0434\u043D\u0438 \u043F\u0440\u043E\u0433\u0440\u0430\u043C\u043C\u044B' : 'Coach is creating new program days'}</p>
+            <p className="text-white/60 mb-2" style={{ fontSize: '1rem', fontWeight: 600 }}>{t('dv_generating_block')}</p>
+            <p className="text-white/30" style={{ fontSize: '0.8125rem' }}>{t('dv_generating_block_desc')}</p>
             <Loader2 className="w-5 h-5 text-[#6c5ce7] animate-spin mt-4" />
           </>
         ) : blockError ? (
@@ -785,7 +785,7 @@ export function DayViewPage() {
                                     const updated = { ...day, tasksJson: day.tasksJson.map((t: Task) => t.id === task.id ? { ...t, reminderTime: reminderInput } : t) };
                                     setDay(updated);
                                   }
-                                  showToast(lang === 'ru' ? '\u23F0 \u041D\u0430\u043F\u043E\u043C\u0438\u043D\u0430\u043D\u0438\u0435 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u043E' : '\u23F0 Reminder updated');
+                                  showToast(`\u23F0 ${t('dv_reminder_updated')}`);
                                   hapticSuccess();
                                 } catch { showToast('Error'); }
                                 setSavingReminder(false);
@@ -906,7 +906,7 @@ export function DayViewPage() {
                 className="text-center text-white/15 mt-2"
                 style={{ fontSize: '0.6875rem' }}
               >
-                {lang === 'ru' ? '\u2190 \u0441\u0432\u0430\u0439\u043F\u043D\u0438 \u0432\u043F\u0440\u0430\u0432\u043E \u0434\u043B\u044F \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043D\u0438\u044F' : '\u2190 swipe right to complete'}
+                {t('dv_swipe_hint')}
               </motion.p>
             )}
           </motion.div>

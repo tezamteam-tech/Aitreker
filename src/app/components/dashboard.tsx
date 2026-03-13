@@ -935,7 +935,7 @@ export function DashboardPage() {
                           </span>
                           <span className="text-white/10">&middot;</span>
                           <span className="text-white/20" style={{ fontSize: '0.6875rem' }}>
-                            {daysLeft} {lang === 'ru' ? 'дн.' : 'd left'}
+                            {t('dash_days_left', { n: daysLeft })}
                           </span>
                           {myStreak > 1 && (
                             <>
@@ -1413,7 +1413,7 @@ export function DashboardPage() {
                                 ? t('task_reminder_today', { time: taskFromNoteTime })
                                 : sd === tomorrow
                                 ? t('task_reminder_tomorrow', { time: taskFromNoteTime })
-                                : `${sd} ${lang === 'ru' ? 'в' : 'at'} ${taskFromNoteTime}`;
+                                : `${sd} ${t('date_at')} ${taskFromNoteTime}`;
                               const freqNote = taskFromNoteFrequency === 'once'
                                 ? ''
                                 : taskFromNoteFrequency === 'weekdays'
@@ -1435,7 +1435,7 @@ export function DashboardPage() {
                   className="flex-1 h-12 rounded-xl bg-white/[0.06] text-white/60"
                   style={{ fontSize: '0.9375rem', fontWeight: 600 }}
                 >
-                  {lang === 'ru' ? 'Пропустить' : 'Skip'}
+                  {t('dash_skip_label')}
                 </button>
                 <motion.button
                   whileTap={{ scale: 0.97 }}
@@ -1602,7 +1602,7 @@ export function DashboardPage() {
                                 ? t('task_reminder_today', { time: dashNewReminderTime })
                                 : sd === tomorrow
                                 ? t('task_reminder_tomorrow', { time: dashNewReminderTime })
-                                : `${sd} ${lang === 'ru' ? '\u0432' : 'at'} ${dashNewReminderTime}`;
+                                : `${sd} ${t('date_at')} ${dashNewReminderTime}`;
                               const freqNote = dashNewFreq === 'once'
                                 ? ''
                                 : dashNewFreq === 'weekdays'
@@ -1788,7 +1788,7 @@ export function DashboardPage() {
                                 ? t('task_reminder_today', { time: editReminderTime })
                                 : sd === tomorrow
                                 ? t('task_reminder_tomorrow', { time: editReminderTime })
-                                : `${sd} ${lang === 'ru' ? 'в' : 'at'} ${editReminderTime}`;
+                                : `${sd} ${t('date_at')} ${editReminderTime}`;
                               const freqNote = editFreq === 'once'
                                 ? ''
                                 : editFreq === 'weekdays'

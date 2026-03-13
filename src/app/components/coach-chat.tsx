@@ -127,9 +127,7 @@ export function CoachChatPage() {
     const state = location.state as any;
     if (state?.insightsContext) {
       insightsHandled.current = true;
-      const prefix = lang === 'ru'
-        ? 'Вот мои AI-инсайты из журнала. Помоги мне разобраться и составить план действий:\n\n'
-        : 'Here are my journal AI insights. Help me understand them and create an action plan:\n\n';
+      const prefix = t('coach_insights_prefix');
       const msg = prefix + state.insightsContext;
       // Clear the state so navigating back and forth doesn't re-trigger
       window.history.replaceState({}, '');

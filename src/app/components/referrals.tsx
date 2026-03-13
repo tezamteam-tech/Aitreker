@@ -69,12 +69,6 @@ interface LeaderboardData {
   my_stats: LeaderboardEntry | null;
 }
 
-// ---- Lang helper ----
-function useLang() {
-  const { t } = useTranslation();
-  return t('nav_home') === '\u0413\u043B\u0430\u0432\u043D\u0430\u044F' ? 'ru' : 'en';
-}
-
 // ---- Reward tiers ----
 const BONUS_PER_SUBSCRIBER = 7; // days per subscribed referral
 const MILESTONE_BONUS = 30; // days for every 10 referrals
@@ -82,7 +76,6 @@ const MILESTONE_BONUS = 30; // days for every 10 referrals
 export function ReferralsPage() {
   const { user } = useAuth();
   const { t } = useTranslation();
-  const lang = useLang();
 
   const [data, setData] = useState<ReferralData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -166,9 +159,7 @@ export function ReferralsPage() {
     hapticFeedback('medium');
     if (!referralLink) return;
 
-    const shareText = lang === 'ru'
-      ? `Присоединяйся ко мне! Следи за питанием и тренировками с AI. ${referralLink}`
-      : `Join me on this fitness journey! Track your nutrition and workouts with AI. ${referralLink}`;
+    const shareText = `${t('ref_share_text')} ${referralLink}`;
 
     if (window.Telegram?.WebApp) {
       window.Telegram.WebApp.openTelegramLink(
@@ -193,10 +184,10 @@ export function ReferralsPage() {
   return (
     <div className="min-h-screen pb-28">
       <PageHeader
-        title={lang === 'ru' ? 'Рефералы' : 'Referrals'}
+        title={t('ref_title')}
         subtitle={
           data
-            ? `${totalInvited} ${lang === 'ru' ? 'друзей' : 'friends'} · ${totalBonusDays} ${lang === 'ru' ? 'бонусных дней' : 'bonus days'}`
+            ? t('ref_subtitle', { n: totalInvited, d: totalBonusDays })
             : undefined
         }
       />
@@ -214,7 +205,7 @@ export function ReferralsPage() {
           <GlassCard className="!p-5 text-center">
             <p className="text-white/50" style={{ fontSize: '0.875rem' }}>{error}</p>
             <button onClick={loadData} className="mt-3 text-[#a29bfe] text-sm font-medium">
-              {lang === 'ru' ? 'Повторить' : 'Retry'}
+              {t('ref_retry')}
             </button>
           </GlassCard>
         )}
@@ -227,19 +218,19 @@ export function ReferralsPage() {
                 icon={Users}
                 color="#6c5ce7"
                 value={totalInvited}
-                label={lang === 'ru' ? 'Приглашено' : 'Invited'}
+                label={t('ref_stat_invited')}
               />
               <StatCard
                 icon={Crown}
                 color="#ffd700"
                 value={subscribedCount}
-                label={lang === 'ru' ? 'Подписались' : 'Subscribed'}
+                label={t('ref_stat_subscribed')}
               />
               <StatCard
                 icon={CalendarPlus}
                 color="#00cec9"
                 value={totalBonusDays}
-                label={lang === 'ru' ? 'Бонус дней' : 'Bonus Days'}
+                label={t('ref_stat_bonus_days')}
               />
             </div>
 
@@ -251,12 +242,10 @@ export function ReferralsPage() {
                 </div>
                 <div>
                   <p className="text-white" style={{ fontSize: '1rem', fontWeight: 700 }}>
-                    {lang === 'ru' ? 'Пригласить друзей' : 'Invite Friends'}
+                    {t('ref_invite_title')}
                   </p>
                   <p className="text-white/35" style={{ fontSize: '0.75rem' }}>
-                    {lang === 'ru'
-                      ? `+${BONUS_PER_SUBSCRIBER} дней за каждого подписавшегося`
-                      : `+${BONUS_PER_SUBSCRIBER} days for each subscriber`}
+                    {t('ref_invite_desc', { n: BONUS_PER_SUBSCRIBER })}
                   </p>
                 </div>
               </div>
@@ -264,7 +253,7 @@ export function ReferralsPage() {
               {/* Referral link */}
               <div className="p-3 rounded-xl bg-white/[0.04] border border-white/[0.08] mb-3">
                 <p className="text-white/70 break-all font-mono" style={{ fontSize: '0.75rem', lineHeight: 1.6 }}>
-                  {referralLink || (lang === 'ru' ? 'Загрузка...' : 'Loading...')}
+                  {referralLink || t('ref_loading')}
                 </p>
               </div>
 
@@ -286,7 +275,7 @@ export function ReferralsPage() {
                       >
                         <CheckCircle2 className="w-4 h-4 text-[#00cec9]" />
                         <span className="text-[#00cec9]" style={{ fontSize: '0.875rem', fontWeight: 600 }}>
-                          {lang === 'ru' ? 'Скопировано!' : 'Copied!'}
+                          {t('ref_copied')}
                         </span>
                       </motion.div>
                     ) : (
@@ -299,7 +288,7 @@ export function ReferralsPage() {
                       >
                         <Copy className="w-4 h-4 text-white/50" />
                         <span className="text-white/80" style={{ fontSize: '0.875rem', fontWeight: 500 }}>
-                          {lang === 'ru' ? 'Копировать' : 'Copy'}
+                          {t('ref_copy')}
                         </span>
                       </motion.div>
                     )}
@@ -314,7 +303,7 @@ export function ReferralsPage() {
                 >
                   <Share2 className="w-4 h-4 text-white" />
                   <span className="text-white" style={{ fontSize: '0.875rem', fontWeight: 600 }}>
-                    {lang === 'ru' ? 'Поделиться' : 'Share'}
+                    {t('ref_share')}
                   </span>
                 </motion.button>
               </div>
@@ -328,10 +317,10 @@ export function ReferralsPage() {
                 </div>
                 <div className="flex-1">
                   <p className="text-white" style={{ fontSize: '1rem', fontWeight: 700 }}>
-                    {lang === 'ru' ? 'Бонусные дни' : 'Bonus Days Earned'}
+                    {t('ref_bonus_title')}
                   </p>
                   <p className="text-white/35" style={{ fontSize: '0.75rem' }}>
-                    {lang === 'ru' ? 'Премиум подписка за рефералов' : 'Premium subscription from referrals'}
+                    {t('ref_bonus_desc')}
                   </p>
                 </div>
                 <div className="text-right">
@@ -339,7 +328,7 @@ export function ReferralsPage() {
                     {totalBonusDays}
                   </p>
                   <p className="text-white/25" style={{ fontSize: '0.625rem' }}>
-                    {lang === 'ru' ? 'дней' : 'days'}
+                    {t('ref_days_unit')}
                   </p>
                 </div>
               </div>
@@ -348,14 +337,14 @@ export function ReferralsPage() {
               <div className="space-y-2.5">
                 <RewardTier
                   icon={UserPlus}
-                  title={lang === 'ru' ? 'За каждого подписчика' : 'Per Subscriber'}
-                  desc={lang === 'ru' ? `+${BONUS_PER_SUBSCRIBER} дней премиум` : `+${BONUS_PER_SUBSCRIBER} premium days`}
+                  title={t('ref_per_subscriber')}
+                  desc={t('ref_per_subscriber_desc', { n: BONUS_PER_SUBSCRIBER })}
                   color="#6c5ce7"
                 />
                 <RewardTier
                   icon={Sparkles}
-                  title={lang === 'ru' ? `Каждые 10 друзей` : `Every 10 Friends`}
-                  desc={lang === 'ru' ? `+${MILESTONE_BONUS} дней бонус` : `+${MILESTONE_BONUS} days bonus`}
+                  title={t('ref_every_10')}
+                  desc={t('ref_every_10_desc', { n: MILESTONE_BONUS })}
                   color="#ffd700"
                 />
               </div>
@@ -364,7 +353,7 @@ export function ReferralsPage() {
               <div className="mt-4 p-3 rounded-xl bg-white/[0.03] border border-white/[0.05]">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-white/40" style={{ fontSize: '0.6875rem' }}>
-                    {lang === 'ru' ? 'До следующего бонуса' : 'Next milestone bonus'}
+                    {t('ref_next_milestone')}
                   </span>
                   <span className="text-white/60" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
                     {nextMilestoneProgress}/10
@@ -380,7 +369,7 @@ export function ReferralsPage() {
                 </div>
                 {milestonesReached > 0 && (
                   <p className="text-white/25 mt-1.5" style={{ fontSize: '0.625rem' }}>
-                    {milestonesReached} {lang === 'ru' ? 'милестоунов достигнуто' : 'milestones reached'}
+                    {t('ref_milestones_reached', { n: milestonesReached })}
                   </p>
                 )}
               </div>
@@ -389,7 +378,7 @@ export function ReferralsPage() {
             {/* Your Referrals */}
             <div>
               <p className="text-white/40 px-1 mb-2.5" style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.05em' }}>
-                {lang === 'ru' ? 'ВАШИ РЕФЕРАЛЫ' : 'YOUR REFERRALS'}
+                {t('ref_your_referrals')}
                 {data.invited_users.length > 0 && (
                   <span className="text-white/20 ml-1.5">({data.invited_users.length})</span>
                 )}
@@ -401,12 +390,10 @@ export function ReferralsPage() {
                     <Users className="w-7 h-7 text-white/15" />
                   </div>
                   <p className="text-white/35 mb-1" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
-                    {lang === 'ru' ? 'Пока никого нет' : 'No referrals yet'}
+                    {t('ref_no_referrals')}
                   </p>
                   <p className="text-white/20 max-w-[240px] mx-auto" style={{ fontSize: '0.8125rem', lineHeight: 1.5 }}>
-                    {lang === 'ru'
-                      ? 'Поделитесь ссылкой с друзьями и получайте бонусные дни!'
-                      : 'Share your link with friends and earn bonus days!'}
+                    {t('ref_no_referrals_desc')}
                   </p>
                 </GlassCard>
               )}
@@ -419,17 +406,17 @@ export function ReferralsPage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.04 }}
                   >
-                    <ReferralCard user={invUser} lang={lang} />
+                    <ReferralCard user={invUser} />
                   </motion.div>
                 ))}
               </div>
             </div>
 
             {/* Leaderboard */}
-            <LeaderboardSection data={leaderboard} loading={lbLoading} lang={lang} currentUserId={user?.id} />
+            <LeaderboardSection data={leaderboard} loading={lbLoading} currentUserId={user?.id} />
 
             {/* How it works */}
-            <HowItWorks lang={lang} />
+            <HowItWorks />
           </>
         )}
       </div>
@@ -494,10 +481,11 @@ function RewardTier({
   );
 }
 
-function ReferralCard({ user, lang }: { user: InvitedUser; lang: string }) {
+function ReferralCard({ user }: { user: InvitedUser }) {
+  const { t } = useTranslation();
   const initials = user.first_name ? user.first_name.charAt(0).toUpperCase() : '?';
   const joinedDate = new Date(user.joined_at).toLocaleDateString(
-    lang === 'ru' ? 'ru-RU' : 'en-US',
+    t('locale_code'),
     { day: 'numeric', month: 'short' }
   );
 
@@ -557,7 +545,7 @@ function ReferralCard({ user, lang }: { user: InvitedUser; lang: string }) {
             <div className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-white/[0.03]">
               <CheckCircle2 className="w-3 h-3 text-white/20" />
               <span className="text-white/25" style={{ fontSize: '0.6875rem', fontWeight: 500 }}>
-                {lang === 'ru' ? 'Ожидание' : 'Pending'}
+                {t('ref_pending')}
               </span>
             </div>
           )}
@@ -567,25 +555,19 @@ function ReferralCard({ user, lang }: { user: InvitedUser; lang: string }) {
   );
 }
 
-function HowItWorks({ lang }: { lang: string }) {
-  const steps = lang === 'ru'
-    ? [
-        { num: 1, title: 'Поделитесь ссылкой', desc: 'Отправьте вашу реферальную ссылку друзьям' },
-        { num: 2, title: 'Друг присоединяется', desc: 'Они открывают приложение по вашей ссылке' },
-        { num: 3, title: 'Друг оформляет подписку', desc: 'Когда друг подписывается на Premium' },
-        { num: 4, title: 'Вы получаете бонус', desc: `+${BONUS_PER_SUBSCRIBER} дней Premium за каждого` },
-      ]
-    : [
-        { num: 1, title: 'Share your link', desc: 'Send your referral link to friends' },
-        { num: 2, title: 'Friend joins', desc: 'They open the app through your link' },
-        { num: 3, title: 'Friend subscribes', desc: 'When your friend gets Premium' },
-        { num: 4, title: 'You earn bonus', desc: `+${BONUS_PER_SUBSCRIBER} Premium days each` },
-      ];
+function HowItWorks() {
+  const { t } = useTranslation();
+  const steps = [
+    { num: 1, title: t('ref_step1_title'), desc: t('ref_step1_desc') },
+    { num: 2, title: t('ref_step2_title'), desc: t('ref_step2_desc') },
+    { num: 3, title: t('ref_step3_title'), desc: t('ref_step3_desc') },
+    { num: 4, title: t('ref_step4_title'), desc: t('ref_step4_desc', { n: BONUS_PER_SUBSCRIBER }) },
+  ];
 
   return (
     <GlassCard className="!p-5">
       <p className="text-white/40 mb-4" style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.05em' }}>
-        {lang === 'ru' ? 'КАК ЭТО РАБОТАЕТ' : 'HOW IT WORKS'}
+        {t('ref_how_title')}
       </p>
       <div className="space-y-3">
         {steps.map((step, idx) => (
@@ -614,12 +596,13 @@ function HowItWorks({ lang }: { lang: string }) {
   );
 }
 
-function LeaderboardSection({ data, loading, lang, currentUserId }: { data: LeaderboardData | null; loading: boolean; lang: string; currentUserId: string | undefined }) {
+function LeaderboardSection({ data, loading, currentUserId }: { data: LeaderboardData | null; loading: boolean; currentUserId: string | undefined }) {
+  const { t } = useTranslation();
   if (loading) {
     return (
       <div className="space-y-2">
         <p className="text-white/40 px-1" style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.05em' }}>
-          {lang === 'ru' ? 'ТОП РЕФЕРАЛЫ' : 'TOP REFERRERS'}
+          {t('ref_top_referrers')}
         </p>
         <GlassCard className="!p-8 flex items-center justify-center">
           <Loader2 className="w-5 h-5 text-[#a29bfe] animate-spin" />
@@ -640,13 +623,13 @@ function LeaderboardSection({ data, loading, lang, currentUserId }: { data: Lead
     <div className="space-y-2">
       <div className="flex items-center justify-between px-1">
         <p className="text-white/40" style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.05em' }}>
-          {lang === 'ru' ? 'ТОП РЕФЕРАЛЫ' : 'TOP REFERRERS'}
+          {t('ref_top_referrers')}
           <span className="text-white/20 ml-1.5">({data.total_referrers})</span>
         </p>
         {data.my_rank && (
           <span className="text-[#a29bfe] flex items-center gap-1" style={{ fontSize: '0.6875rem', fontWeight: 600 }}>
             <TrendingUp className="w-3 h-3" />
-            {lang === 'ru' ? `Вы #${data.my_rank}` : `You're #${data.my_rank}`}
+            {t('ref_your_rank', { n: data.my_rank })}
           </span>
         )}
       </div>
@@ -706,12 +689,12 @@ function LeaderboardSection({ data, loading, lang, currentUserId }: { data: Lead
                     {entry.first_name}
                     {isMe && (
                       <span className="text-[#a29bfe]/50 ml-1" style={{ fontSize: '0.625rem' }}>
-                        ({lang === 'ru' ? 'Вы' : 'You'})
+                        ({t('ref_you')})
                       </span>
                     )}
                   </p>
                   <p className="text-white/25" style={{ fontSize: '0.625rem' }}>
-                    {entry.referral_count} {lang === 'ru' ? 'друзей' : 'friends'}
+                    {entry.referral_count} {t('ref_friends_count')}
                     {entry.bonus_days_earned > 0 && ` · +${entry.bonus_days_earned}d`}
                   </p>
                 </div>
@@ -752,11 +735,11 @@ function LeaderboardSection({ data, loading, lang, currentUserId }: { data: Lead
                 <p className="text-[#a29bfe] truncate" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
                   {data.my_stats.first_name}
                   <span className="text-[#a29bfe]/50 ml-1" style={{ fontSize: '0.625rem' }}>
-                    ({lang === 'ru' ? 'Вы' : 'You'})
+                    ({t('ref_you')})
                   </span>
                 </p>
                 <p className="text-white/25" style={{ fontSize: '0.625rem' }}>
-                  {data.my_stats.referral_count} {lang === 'ru' ? 'друзей' : 'friends'}
+                  {data.my_stats.referral_count} {t('ref_friends_count')}
                 </p>
               </div>
               <p className="text-white/50 flex-shrink-0" style={{ fontSize: '0.875rem', fontWeight: 800 }}>

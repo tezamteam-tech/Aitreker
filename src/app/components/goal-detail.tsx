@@ -180,7 +180,7 @@ export function GoalDetailPage() {
         {/* Header */}
         <PageHeader
           title={goal.title}
-          subtitle={goal.targetDate ? new Date(goal.targetDate).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' }) : undefined}
+          subtitle={goal.targetDate ? new Date(goal.targetDate).toLocaleDateString(t('locale_code'), { day: 'numeric', month: 'long', year: 'numeric' }) : undefined}
         />
 
         {/* Progress */}
@@ -486,7 +486,7 @@ function TaskRow({
               {task.dueDate && (
                 <span className="flex items-center gap-1 text-white/20" style={{ fontSize: '0.6875rem' }}>
                   <Calendar className="w-3 h-3" />
-                  {new Date(task.dueDate).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', {
+                  {new Date(task.dueDate).toLocaleDateString(t('locale_code'), {
                     day: 'numeric', month: 'short',
                   })}
                 </span>

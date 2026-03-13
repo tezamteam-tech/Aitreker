@@ -186,9 +186,7 @@ export function OnboardingPage() {
             className="text-white/35 text-center max-w-[260px]"
             style={{ fontSize: '0.8125rem', lineHeight: 1.6 }}
           >
-            {splashLang === 'ru'
-              ? '\u0421\u0438\u043D\u0445\u0440\u043E\u043D\u0438\u0437\u0438\u0440\u0443\u0435\u043C \u0432\u0430\u0448\u0438 \u0446\u0435\u043B\u0438 \u0438 \u0437\u0430\u0434\u0430\u0447\u0438...'
-              : 'Syncing your goals and tasks...'}
+            {t('ob_splash_syncing', splashLang as any)}
           </motion.p>
 
           <motion.div

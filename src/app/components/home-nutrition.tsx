@@ -294,7 +294,7 @@ export function HomeNutritionPage() {
 
   return (
     <div className="min-h-screen pb-6">
-      <PageHeader title={t('home_title') || 'Nutrition Tracker'} />
+      <PageHeader title={t('home_title')} />
 
       <div className="px-4 space-y-4">
         
@@ -311,10 +311,10 @@ export function HomeNutritionPage() {
             </div>
             <div className="flex-1 text-left">
               <p className="text-foreground" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
-                Premium expires in {subscriptionDaysLeft} day{subscriptionDaysLeft !== 1 ? 's' : ''}
+                {t('hn_premium_expires', { n: subscriptionDaysLeft })}
               </p>
               <p className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
-                Tap to renew and keep unlimited access
+                {t('hn_premium_tap_renew')}
               </p>
             </div>
             <ChevronRight className="w-4 h-4 text-[#e17055]" />
@@ -335,11 +335,11 @@ export function HomeNutritionPage() {
             <div className="flex-1 text-left">
               <p className="text-foreground" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
                 {scansRemaining > 0
-                  ? `${scansRemaining}/5 free scans left today`
-                  : 'Daily scan limit reached'}
+                  ? t('hn_scans_left', { n: scansRemaining })
+                  : t('hn_scan_limit_reached')}
               </p>
               <p className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
-                Upgrade to Premium for unlimited access
+                {t('hn_upgrade_premium')}
               </p>
             </div>
             <ChevronRight className="w-4 h-4 text-[#a29bfe]" />
@@ -350,7 +350,7 @@ export function HomeNutritionPage() {
         <GlassCard className="p-5">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <p className="text-muted-foreground text-sm mb-1">Today's Calories</p>
+              <p className="text-muted-foreground text-sm mb-1">{t('hn_todays_calories')}</p>
               <h2 className="text-3xl text-foreground font-semibold">
                 {nutritionData.caloriesConsumed}
                 <span className="text-lg text-muted-foreground ml-1">/ {nutritionData.caloriesGoal}</span>
@@ -381,32 +381,32 @@ export function HomeNutritionPage() {
             <div className="text-center p-2.5 rounded-xl" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
               <div className="flex items-center justify-center gap-1 mb-1">
                 <Target className="w-3.5 h-3.5 text-[#6c5ce7]" />
-                <span className="text-xs text-muted-foreground">Target</span>
+                <span className="text-xs text-muted-foreground">{t('hn_target')}</span>
               </div>
               <p className="text-foreground" style={{ fontSize: '1.125rem', fontWeight: 600 }}>
                 {nutritionData.caloriesGoal}
               </p>
-              <p className="text-muted-foreground/50 text-xs mt-0.5">cal</p>
+              <p className="text-muted-foreground/50 text-xs mt-0.5">{t('hn_cal_unit')}</p>
             </div>
             <div className="text-center p-2.5 rounded-xl" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
               <div className="flex items-center justify-center gap-1 mb-1">
                 <Flame className="w-3.5 h-3.5 text-[#fd79a8]" />
-                <span className="text-xs text-muted-foreground">Consumed</span>
+                <span className="text-xs text-muted-foreground">{t('hn_consumed')}</span>
               </div>
               <p className="text-foreground" style={{ fontSize: '1.125rem', fontWeight: 600 }}>
                 {nutritionData.caloriesConsumed}
               </p>
-              <p className="text-muted-foreground/50 text-xs mt-0.5">cal</p>
+              <p className="text-muted-foreground/50 text-xs mt-0.5">{t('hn_cal_unit')}</p>
             </div>
             <div className="text-center p-2.5 rounded-xl" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
               <div className="flex items-center justify-center gap-1 mb-1">
                 <TrendingUp className="w-3.5 h-3.5 text-[#00cec9]" />
-                <span className="text-xs text-muted-foreground">Remaining</span>
+                <span className="text-xs text-muted-foreground">{t('hn_remaining')}</span>
               </div>
               <p className={`${caloriesRemaining >= 0 ? 'text-[#00cec9]' : 'text-[#ff6b6b]'}`} style={{ fontSize: '1.125rem', fontWeight: 600 }}>
                 {caloriesRemaining >= 0 ? caloriesRemaining : 0}
               </p>
-              <p className="text-muted-foreground/50 text-xs mt-0.5">cal</p>
+              <p className="text-muted-foreground/50 text-xs mt-0.5">{t('hn_cal_unit')}</p>
             </div>
           </div>
 
@@ -417,13 +417,13 @@ export function HomeNutritionPage() {
                 <div className="w-6 h-6 rounded-lg bg-[#e17055]/15 flex items-center justify-center">
                   <Zap className="w-3.5 h-3.5 text-[#e17055]" />
                 </div>
-                <span className="text-xs text-muted-foreground">BMR</span>
-                <span className="text-sm text-foreground/70">{bmr} cal</span>
+                <span className="text-xs text-muted-foreground">{t('hn_bmr')}</span>
+                <span className="text-sm text-foreground/70">{bmr} {t('hn_cal_unit')}</span>
               </div>
               {maintenanceCalories > 0 && (
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">TDEE</span>
-                  <span className="text-sm text-foreground/70">{maintenanceCalories} cal</span>
+                  <span className="text-xs text-muted-foreground">{t('hn_tdee')}</span>
+                  <span className="text-sm text-foreground/70">{maintenanceCalories} {t('hn_cal_unit')}</span>
                 </div>
               )}
             </div>
@@ -432,16 +432,16 @@ export function HomeNutritionPage() {
           {/* Macros */}
           <div className="grid grid-cols-3 gap-3 mt-4 pt-4" style={{ borderTop: '1px solid var(--glass-border-subtle)' }}>
             <div className="text-center">
-              <p className="text-xs text-muted-foreground mb-1">Protein</p>
-              <p className="text-sm text-foreground font-medium">{nutritionData.protein}g</p>
+              <p className="text-xs text-muted-foreground mb-1">{t('hn_protein')}</p>
+              <p className="text-sm text-foreground font-medium">{nutritionData.protein}{t('unit_g')}</p>
             </div>
             <div className="text-center">
-              <p className="text-xs text-muted-foreground mb-1">Carbs</p>
-              <p className="text-sm text-foreground font-medium">{nutritionData.carbs}g</p>
+              <p className="text-xs text-muted-foreground mb-1">{t('hn_carbs')}</p>
+              <p className="text-sm text-foreground font-medium">{nutritionData.carbs}{t('unit_g')}</p>
             </div>
             <div className="text-center">
-              <p className="text-xs text-muted-foreground mb-1">Fats</p>
-              <p className="text-sm text-foreground font-medium">{nutritionData.fats}g</p>
+              <p className="text-xs text-muted-foreground mb-1">{t('hn_fats')}</p>
+              <p className="text-sm text-foreground font-medium">{nutritionData.fats}{t('unit_g')}</p>
             </div>
           </div>
         </GlassCard>
@@ -457,8 +457,8 @@ export function HomeNutritionPage() {
               <Camera className="w-6 h-6 text-white" />
             </div>
             <div className="text-left">
-              <p className="text-white font-medium text-base">Scan Food</p>
-              <p className="text-white/70 text-sm">AI-powered calorie tracker</p>
+              <p className="text-white font-medium text-base">{t('hn_scan_food')}</p>
+              <p className="text-white/70 text-sm">{t('hn_scan_food_desc')}</p>
             </div>
           </div>
           <ChevronRight className="w-5 h-5 text-white/80" />
@@ -504,12 +504,14 @@ export function HomeNutritionPage() {
             </div>
             <div className="text-left">
               <p className="text-foreground font-medium" style={{ fontSize: '0.9375rem' }}>
-                {t('weight_home_title') || 'Weight Tracking'}
+                {t('weight_home_title')}
               </p>
               <p className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>
                 {latestWeight
-                  ? `${latestWeight.weight} kg${weeklyWeightChange !== null ? ` (${weeklyWeightChange >= 0 ? '+' : ''}${weeklyWeightChange.toFixed(1)} this week)` : ''}`
-                  : (t('weight_home_desc') || 'Log your weight & track progress')}
+                  ? (weeklyWeightChange !== null
+                    ? t('hn_weight_subtitle', { weight: latestWeight.weight, change: `${weeklyWeightChange >= 0 ? '+' : ''}${weeklyWeightChange.toFixed(1)}` })
+                    : `${latestWeight.weight} ${t('unit_kg')}`)
+                  : t('weight_home_desc')}
               </p>
             </div>
           </div>
@@ -524,7 +526,7 @@ export function HomeNutritionPage() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Utensils className="w-5 h-5 text-[#fd79a8]" />
-              <h3 className="text-foreground font-medium">Today's Meals</h3>
+              <h3 className="text-foreground font-medium">{t('hn_todays_meals')}</h3>
             </div>
             <button
               onClick={() => {
@@ -533,7 +535,7 @@ export function HomeNutritionPage() {
               }}
               className="text-sm text-app-accent"
             >
-              {todayMeals.length > 0 ? 'View All' : 'Log Food'}
+              {todayMeals.length > 0 ? t('hn_view_all') : t('hn_log_food')}
             </button>
           </div>
 
@@ -562,23 +564,23 @@ export function HomeNutritionPage() {
                       <p className="text-muted-foreground text-xs">{meal.time}</p>
                     </div>
                   </div>
-                  <span className="text-sm text-foreground/60">{meal.calories} cal</span>
+                  <span className="text-sm text-foreground/60">{meal.calories} {t('hn_cal_unit')}</span>
                 </motion.div>
               ))}
               {todayMeals.length > 3 && (
                 <p className="text-center text-muted-foreground text-xs pt-1">
-                  +{todayMeals.length - 3} more entries
+                  {t('hn_more_entries', { n: todayMeals.length - 3 })}
                 </p>
               )}
             </div>
           ) : (
             <div className="text-center py-6">
-              <p className="text-muted-foreground text-sm">No food logged yet today</p>
+              <p className="text-muted-foreground text-sm">{t('hn_no_food_logged')}</p>
               <button
                 onClick={() => { hapticFeedback('medium'); navigate('/calories/scan'); }}
                 className="text-app-accent text-sm mt-2"
               >
-                Scan or add your first meal →
+                {t('hn_scan_or_add')}
               </button>
             </div>
           )}
@@ -589,7 +591,7 @@ export function HomeNutritionPage() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Dumbbell className="w-5 h-5 text-[#00cec9]" />
-              <h3 className="text-foreground font-medium">Today's Workouts</h3>
+              <h3 className="text-foreground font-medium">{t('hn_todays_workouts')}</h3>
             </div>
             <button
               onClick={() => {
@@ -598,7 +600,7 @@ export function HomeNutritionPage() {
               }}
               className="text-sm text-app-accent"
             >
-              {todayWorkouts.length > 0 ? 'View All' : 'Create Plan'}
+              {todayWorkouts.length > 0 ? t('hn_view_all') : t('hn_create_plan')}
             </button>
           </div>
 
@@ -627,18 +629,18 @@ export function HomeNutritionPage() {
                       <p className="text-muted-foreground text-xs">{workout.duration}</p>
                     </div>
                   </div>
-                  <span className="text-sm text-[#fd79a8]">-{workout.calories} cal</span>
+                  <span className="text-sm text-[#fd79a8]">-{workout.calories} {t('hn_cal_unit')}</span>
                 </motion.div>
               ))}
             </div>
           ) : (
             <div className="text-center py-6">
-              <p className="text-muted-foreground text-sm">No workout plan yet</p>
+              <p className="text-muted-foreground text-sm">{t('hn_no_workout')}</p>
               <button
                 onClick={() => { hapticFeedback('medium'); navigate('/workout-plan'); }}
                 className="text-app-accent text-sm mt-2"
               >
-                Generate your AI workout plan →
+                {t('hn_gen_workout')}
               </button>
             </div>
           )}
@@ -649,27 +651,27 @@ export function HomeNutritionPage() {
           <GlassCard className="p-4">
             <div className="flex items-center gap-2 mb-2">
               <TrendingUp className="w-4 h-4 text-[#00cec9]" />
-              <span className="text-xs text-muted-foreground">This Week</span>
+              <span className="text-xs text-muted-foreground">{t('hn_this_week')}</span>
             </div>
             <p className="text-xl text-foreground font-semibold">
               {weeklyWeightChange !== null
                 ? `${weeklyWeightChange >= 0 ? '+' : ''}${weeklyWeightChange.toFixed(1)} kg`
                 : '—'}
             </p>
-            <p className="text-xs text-muted-foreground mt-1">Weight progress</p>
+            <p className="text-xs text-muted-foreground mt-1">{t('hn_weight_progress')}</p>
           </GlassCard>
 
           <GlassCard className="p-4">
             <div className="flex items-center gap-2 mb-2">
               <Flame className="w-4 h-4 text-[#fd79a8]" />
-              <span className="text-xs text-muted-foreground">Today</span>
+              <span className="text-xs text-muted-foreground">{t('hn_today')}</span>
             </div>
             <p className="text-xl text-foreground font-semibold">
               {nutritionData.caloriesConsumed > 0
                 ? nutritionData.caloriesConsumed.toLocaleString()
                 : '—'}
             </p>
-            <p className="text-xs text-muted-foreground mt-1">Calories consumed</p>
+            <p className="text-xs text-muted-foreground mt-1">{t('hn_calories_consumed')}</p>
           </GlassCard>
         </div>
       </div>

@@ -30,8 +30,8 @@ const PREFERRED_TIME_ICONS: Record<string, typeof Sun> = { morning: Sunrise, day
 const TASK_TYPE_COLORS: Record<string, string> = { mindfulness: 'bg-purple-500/15 text-purple-300', action: 'bg-blue-500/15 text-blue-300', reflection: 'bg-amber-500/15 text-amber-300' };
 const TASK_TYPE_EMOJI: Record<string, string> = { mindfulness: '\uD83E\uDDD8', action: '\u26A1', reflection: '\uD83C\uDF19' };
 
-const LOADING_EN = ['Analyzing your situation...', 'Identifying root challenges...', 'Designing daily tasks...', 'Calibrating coach personality...', 'Setting up reminders...', 'Finalizing your plan...'];
-const LOADING_RU = ['\u0410\u043D\u0430\u043B\u0438\u0437\u0438\u0440\u0443\u044E \u0441\u0438\u0442\u0443\u0430\u0446\u0438\u044E...', '\u041E\u043F\u0440\u0435\u0434\u0435\u043B\u044F\u044E \u043F\u0440\u043E\u0431\u043B\u0435\u043C\u044B...', '\u041F\u0440\u043E\u0435\u043A\u0442\u0438\u0440\u0443\u044E \u0437\u0430\u0434\u0430\u0447\u0438...', '\u041D\u0430\u0441\u0442\u0440\u0430\u0438\u0432\u0430\u044E \u043A\u043E\u0443\u0447\u0430...', '\u0423\u0441\u0442\u0430\u043D\u0430\u0432\u043B\u0438\u0432\u0430\u044E \u043D\u0430\u043F\u043E\u043C\u0438\u043D\u0430\u043D\u0438\u044F...', '\u0424\u0438\u043D\u0430\u043B\u0438\u0437\u0438\u0440\u0443\u044E \u043F\u043B\u0430\u043D...'];
+// Loading step keys resolved via t() at render time
+const LOADING_KEYS = ['pb_load_1', 'pb_load_2', 'pb_load_3', 'pb_load_4', 'pb_load_5', 'pb_load_6'];
 
 export function PlanBuilderPage() {
   const navigate = useNavigate();
@@ -134,7 +134,7 @@ export function PlanBuilderPage() {
     setError(null);
     setLoadingStep(0);
 
-    const steps = lang === 'ru' ? LOADING_RU : LOADING_EN;
+    const steps = LOADING_KEYS;
     let step = 0;
     const si = setInterval(() => { step = Math.min(step + 1, steps.length - 1); setLoadingStep(step); }, 2500);
 
@@ -163,7 +163,7 @@ export function PlanBuilderPage() {
       setError(t('pb_error'));
       setPhase('form');
     }
-  }, [canGenerate, userText, timePerDay, preferredTime, schedule, durationDays, t, lang]);
+  }, [canGenerate, userText, timePerDay, preferredTime, schedule, durationDays, t]);
 
   // ---- Continue conversation ----
   const handleContinue = useCallback(async () => {
@@ -177,7 +177,7 @@ export function PlanBuilderPage() {
       if (isLast) {
         setPhase('loading');
         setLoadingStep(0);
-        const steps = lang === 'ru' ? LOADING_RU : LOADING_EN;
+        const steps = LOADING_KEYS;
         let step = 0;
         const si = setInterval(() => { step = Math.min(step + 1, steps.length - 1); setLoadingStep(step); }, 2500);
 
@@ -208,7 +208,7 @@ export function PlanBuilderPage() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [draftId, answerText, stepNumber, totalSteps, t, lang]);
+  }, [draftId, answerText, stepNumber, totalSteps, t]);
 
   const handleRegenerate = useCallback(() => {
     hapticFeedback('light');
@@ -238,7 +238,7 @@ export function PlanBuilderPage() {
     }
   }, [draftId, navigate, t]);
 
-  const loadingSteps = lang === 'ru' ? LOADING_RU : LOADING_EN;
+  const loadingSteps = LOADING_KEYS.map(k => t(k));
 
   return (
     <PremiumGate feature="plan-builder">
@@ -462,7 +462,7 @@ export function PlanBuilderPage() {
                     {plan.programSubtitle && <p className="text-white/40 mt-0.5" style={{ fontSize: '0.8125rem' }}>{plan.programSubtitle}</p>}
                     <div className="flex items-center gap-3 mt-2">
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#6c5ce7]/10 text-[#a29bfe]" style={{ fontSize: '0.6875rem', fontWeight: 500 }}>
-                        <Timer className="w-3 h-3" /> {plan.durationDays || 7} {lang === 'ru' ? '\u0434\u043D\u0435\u0439' : 'days'}
+                        <Timer className="w-3 h-3" /> {plan.durationDays || 7} {t('shared_days_unit')}
                       </span>
                     </div>
                   </div>
