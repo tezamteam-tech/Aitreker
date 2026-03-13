@@ -5,7 +5,7 @@
 // from both React components and non-React utility functions.
 // =============================================
 
-const LS_KEY = 'become_local_settings';
+const LS_KEY = 'proper_local_settings';
 
 export interface LocalSettings {
   soundsEnabled: boolean;
@@ -18,6 +18,23 @@ const DEFAULTS: LocalSettings = {
   hapticsEnabled: true,
   compactCards: false,
 };
+
+/**
+ * Migration: read old key if new one doesn't exist
+ */
+function migrateLocalSettings(): void {
+  try {
+    if (!localStorage.getItem(LS_KEY) && localStorage.getItem('become_local_settings')) {
+      localStorage.setItem(LS_KEY, localStorage.getItem('become_local_settings')!);
+      localStorage.removeItem('become_local_settings');
+    }
+  } catch {}
+}
+
+/**
+ * Run migration once on module load
+ */
+if (typeof window !== 'undefined') migrateLocalSettings();
 
 /**
  * Read local settings from localStorage.

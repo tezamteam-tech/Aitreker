@@ -550,7 +550,7 @@ function AuthGate({ children }: { children: ReactNode }) {
 
     // If on the onboarding page and already onboarded → redirect to /home
     if (location.pathname === '/') {
-      const wasOnboarded = localStorage.getItem('nutrition_onboarded') === 'true';
+      const wasOnboarded = localStorage.getItem('nutrition_onboarded') === 'true' || localStorage.getItem('proper_onboarded') === 'true';
       if (wasOnboarded) {
         navigate('/home', { replace: true });
       }

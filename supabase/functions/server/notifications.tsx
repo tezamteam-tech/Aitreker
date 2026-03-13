@@ -87,7 +87,7 @@ async function safeSend(
 // ---- Mini App URL helpers ----
 
 function miniAppUrl(): string {
-  return Deno.env.get("BECOME_MINIAPP_URL") || "";
+  return Deno.env.get("PROPERFOOD_MINIAPP_URL") || Deno.env.get("BECOME_MINIAPP_URL") || "";
 }
 
 /**

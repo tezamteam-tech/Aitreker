@@ -432,6 +432,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setSubscriptionActive(false);
     setSubscriptionDaysLeft(0);
     localStorage.removeItem('become_onboarded');
+    localStorage.removeItem('proper_onboarded');
   }, []);
 
   // ---- Update user (optimistic) ----

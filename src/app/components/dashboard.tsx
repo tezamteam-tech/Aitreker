@@ -157,11 +157,11 @@ export function DashboardPage() {
 
   // Support banner dismiss state
   const [supportDismissed, setSupportDismissed] = useState(() => {
-    try { return localStorage.getItem('become_support_dismissed') === '1'; } catch { return false; }
+    try { return localStorage.getItem('proper_support_dismissed') === '1' || localStorage.getItem('become_support_dismissed') === '1'; } catch { return false; }
   });
   const dismissSupport = () => {
     setSupportDismissed(true);
-    try { localStorage.setItem('become_support_dismissed', '1'); } catch {}
+    try { localStorage.setItem('proper_support_dismissed', '1'); } catch {}
   };
 
   // Auto-compute default start date

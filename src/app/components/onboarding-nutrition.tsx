@@ -140,7 +140,8 @@ export function OnboardingNutritionPage() {
 
       hapticSuccess();
       localStorage.setItem('nutrition_onboarded', 'true');
-      localStorage.setItem('become_onboarded', 'true');
+      localStorage.setItem('proper_onboarded', 'true');
+      localStorage.setItem('become_onboarded', 'true'); // backward compat
       navigate('/home', { replace: true });
     } catch (err) {
       console.error('[NutritionOnboarding] Finish error:', err);
@@ -163,7 +164,8 @@ export function OnboardingNutritionPage() {
       // Still redirect on error — data will be re-submitted later
       hapticSuccess();
       localStorage.setItem('nutrition_onboarded', 'true');
-      localStorage.setItem('become_onboarded', 'true');
+      localStorage.setItem('proper_onboarded', 'true');
+      localStorage.setItem('become_onboarded', 'true'); // backward compat
       navigate('/home', { replace: true });
     } finally {
       setIsLoading(false);

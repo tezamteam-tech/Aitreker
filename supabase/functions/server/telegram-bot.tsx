@@ -12,15 +12,15 @@ const BOT_API = "https://api.telegram.org/bot";
 const BOT_FILE_API = "https://api.telegram.org/file/bot";
 
 function getBotToken(): string {
-  const token = Deno.env.get("TELEGRAM_BOT_TOKEN_BECOME");
+  const token = Deno.env.get("TELEGRAM_BOT_TOKEN_PROPER") || Deno.env.get("TELEGRAM_BOT_TOKEN_BECOME");
   if (!token) {
-    throw new Error("TELEGRAM_BOT_TOKEN_BECOME not set");
+    throw new Error("TELEGRAM_BOT_TOKEN_PROPER not set");
   }
   return token;
 }
 
 function getMiniAppUrl(): string {
-  return Deno.env.get("BECOME_MINIAPP_URL") || "";
+  return Deno.env.get("PROPERFOOD_MINIAPP_URL") || Deno.env.get("BECOME_MINIAPP_URL") || "";
 }
 
 // ---- Low-level API call ----
@@ -291,7 +291,7 @@ export async function fetchUserAvatarUrl(userId: number): Promise<string | null>
     const fileInfo = await getFile(largest.file_id);
     if (!fileInfo?.file_path) return null;
 
-    const token = Deno.env.get("TELEGRAM_BOT_TOKEN_BECOME") || "";
+    const token = Deno.env.get("TELEGRAM_BOT_TOKEN_PROPER") || Deno.env.get("TELEGRAM_BOT_TOKEN_BECOME") || "";
     const avatarUrl = `${BOT_FILE_API}${token}/${fileInfo.file_path}`;
     console.log(`[TG Bot] Fetched avatar for user ${userId}: ${fileInfo.file_path}`);
     return avatarUrl;

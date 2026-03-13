@@ -14,7 +14,8 @@ export type Lang = 'en' | 'ru';
 // All translation keys organized by feature/component
 const translations: Record<string, Record<Lang, string>> = {
   // ---- Common ----
-  become: { en: 'Proper Food', ru: 'Proper Food' },
+  app_name: { en: 'Proper Food', ru: 'Proper Food' },
+  become: { en: 'Proper Food', ru: 'Proper Food' }, // legacy alias
   loading: { en: 'Loading...', ru: '\u0417\u0430\u0433\u0440\u0443\u0437\u043A\u0430...' },
   saving: { en: 'Saving...', ru: '\u0421\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u0438\u0435...' },
   saved: { en: 'Saved', ru: '\u0421\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u043E' },

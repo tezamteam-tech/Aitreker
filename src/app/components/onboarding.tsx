@@ -71,7 +71,7 @@ export function OnboardingPage() {
   const navigate = useNavigate();
 
 
-  const wasOnboarded = typeof window !== 'undefined' && localStorage.getItem('become_onboarded') === 'true';
+  const wasOnboarded = typeof window !== 'undefined' && (localStorage.getItem('proper_onboarded') === 'true' || localStorage.getItem('become_onboarded') === 'true');
 
   useEffect(() => { expandApp(); }, []);
 
@@ -106,9 +106,10 @@ export function OnboardingPage() {
       const finalGoal = skipGoal || goal;
 
       updateUser({ language: finalLang, tone: finalTone as any, selectedGoal: finalGoal });
-      localStorage.setItem('become_challenge_mode', 'solo');
+      localStorage.setItem('proper_challenge_mode', 'solo');
       hapticSuccess();
-      localStorage.setItem('become_onboarded', 'true');
+      localStorage.setItem('proper_onboarded', 'true');
+      localStorage.setItem('become_onboarded', 'true'); // backward compat
       navigate('/home');
     } catch (err) {
       console.error('[Onboarding] Finish error:', err);

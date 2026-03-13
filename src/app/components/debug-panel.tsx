@@ -106,7 +106,7 @@ function getSystemInfo(): string {
 
   // localStorage keys
   lines.push(`\n--- Storage ---`);
-  const storageKeys = ['become_token', 'become_device_token', 'become_onboarded', 'become_user_prefs', 'become_local_settings'];
+  const storageKeys = ['proper_token', 'proper_device_token', 'proper_onboarded', 'proper_local_settings', 'proper_privacy_settings', 'pfai_cached_user'];
   storageKeys.forEach(key => {
     const val = localStorage.getItem(key);
     if (val) {
@@ -386,8 +386,8 @@ function SystemInfoSection() {
     ['iframe', String(iframe)],
     ['bot_auth in URL', extractBotAuthPresence()],
     ['Perf URL', perfUrl.length > 80 ? perfUrl.slice(0, 50) + '...' : perfUrl],
-    ['localStorage token', localStorage.getItem('become_token') ? `${localStorage.getItem('become_token')!.length}ch` : 'null'],
-    ['device_token', localStorage.getItem('become_device_token') ? `${localStorage.getItem('become_device_token')!.length}ch` : 'null'],
+    ['localStorage token', localStorage.getItem('proper_token') ? `${localStorage.getItem('proper_token')!.length}ch` : 'null'],
+    ['device_token', localStorage.getItem('proper_device_token') ? `${localStorage.getItem('proper_device_token')!.length}ch` : 'null'],
   ];
 
   return (

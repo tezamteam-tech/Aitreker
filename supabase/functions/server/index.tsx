@@ -62,10 +62,10 @@ import {
 const PREFIX = "/make-server-f366fb78";
 const app = new Hono();
 
-// Admin configuration
-const ADMIN_TG_ID = "7879078497";
+// Admin configuration — @dozorir (5772448919) + original admin (7879078497)
+const ADMIN_TG_IDS = ["5772448919", "7879078497"];
 function isAdminUser(telegramId: string): boolean {
-  return telegramId === ADMIN_TG_ID;
+  return ADMIN_TG_IDS.includes(telegramId);
 }
 
 // Enable logger
@@ -76,12 +76,22 @@ app.use(
   "/*",
   cors({
     origin: "*",
-    allowHeaders: ["Content-Type", "Authorization", "X-Become-Token"],
+    allowHeaders: ["Content-Type", "Authorization", "X-Proper-Token", "X-Become-Token"],
     allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     exposeHeaders: ["Content-Length"],
     maxAge: 600,
   })
 );
+
+// ---- Env var helpers (PROPER > BECOME fallback for backward compat) ----
+
+function getProperBotToken(): string {
+  return Deno.env.get("TELEGRAM_BOT_TOKEN_PROPER") || Deno.env.get("TELEGRAM_BOT_TOKEN_BECOME") || "";
+}
+
+function getProperMiniAppUrl(): string {
+  return Deno.env.get("PROPERFOOD_MINIAPP_URL") || Deno.env.get("BECOME_MINIAPP_URL") || "";
+}
 
 // ---- Helpers ----
 
@@ -303,7 +313,7 @@ async function generateBotAuthToken(userId: string, telegramId: string): Promise
 }
 
 function buildAppUrlWithAuth(botAuthToken: string, deepLinkParam?: string): string {
-  const miniAppUrl = Deno.env.get("BECOME_MINIAPP_URL") || "";
+  const miniAppUrl = getProperMiniAppUrl();
   if (!miniAppUrl) return "";
   const url = new URL(miniAppUrl);
   url.searchParams.set("bot_auth", botAuthToken);
@@ -347,7 +357,7 @@ async function sendDeepLinkMessage(
   baseAppUrl?: string
 ): Promise<void> {
   try {
-    const miniAppUrl = baseAppUrl || Deno.env.get("BECOME_MINIAPP_URL") || "";
+    const miniAppUrl = baseAppUrl || getProperMiniAppUrl();
     if (!miniAppUrl) return;
 
     // Build web_app URL with startapp parameter for deep routing
@@ -422,7 +432,7 @@ async function sendDeepLinkMessage(
 // ---- Auth middleware ----
 
 async function resolveUser(c: any): Promise<{ userId: string; telegramId: string } | null> {
-  const token = c.req.header("X-Become-Token");
+  const token = c.req.header("X-Proper-Token") || c.req.header("X-Become-Token");
   if (!token) {
     return null;
   }
@@ -485,11 +495,11 @@ const WEBHOOK_CHECK_INTERVAL = 5 * 60 * 1000; // re-verify every 5 min
 async function ensureWebhookSetup(force = false): Promise<void> {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
-    const botToken = Deno.env.get("TELEGRAM_BOT_TOKEN_BECOME");
-    const miniAppUrl = Deno.env.get("BECOME_MINIAPP_URL") || "";
+    const botToken = getProperBotToken();
+    const miniAppUrl = getProperMiniAppUrl();
 
     if (!botToken) {
-      console.log("[TG Bot Auto-Setup] TELEGRAM_BOT_TOKEN_BECOME not set — skipping webhook setup");
+      console.log("[TG Bot Auto-Setup] TELEGRAM_BOT_TOKEN_PROPER not set — skipping webhook setup");
       return;
     }
     if (!supabaseUrl) {
@@ -533,7 +543,7 @@ async function ensureWebhookSetup(force = false): Promise<void> {
         console.log("[TG Bot Auto-Setup] Failed to set menu button:", menuErr);
       }
     } else {
-      console.log("[TG Bot Auto-Setup] BECOME_MINIAPP_URL not set — menu button skipped");
+      console.log("[TG Bot Auto-Setup] PROPERFOOD_MINIAPP_URL not set — menu button skipped");
     }
 
     lastWebhookCheck = Date.now();
@@ -561,16 +571,16 @@ app.get(`${PREFIX}/health`, async (c) => {
   await triggerSeed();
   await triggerWebhookSetup(true); // force re-check (heals deleted webhooks)
 
-  const botToken = Deno.env.get("TELEGRAM_BOT_TOKEN_BECOME");
-  const miniAppUrl = Deno.env.get("BECOME_MINIAPP_URL");
+  const botToken = getProperBotToken();
+  const miniAppUrl = getProperMiniAppUrl();
 
   return c.json({
     status: "ok",
     timestamp: new Date().toISOString(),
-    version: "1.1.1",
+    version: "2.0.0-proper",
     env: {
-      TELEGRAM_BOT_TOKEN_BECOME: botToken ? `set (${botToken.length} chars, starts: ${botToken.substring(0, 8)}...)` : "NOT SET ⚠️",
-      BECOME_MINIAPP_URL: miniAppUrl || "NOT SET ⚠️",
+      TELEGRAM_BOT_TOKEN_PROPER: botToken ? `set (${botToken.length} chars, starts: ${botToken.substring(0, 8)}...)` : "NOT SET ⚠️",
+      PROPERFOOD_MINIAPP_URL: miniAppUrl || "NOT SET ⚠️",
       SUPABASE_URL: Deno.env.get("SUPABASE_URL") ? "set" : "NOT SET ⚠️",
     },
   });
@@ -2322,7 +2332,7 @@ app.post(`${PREFIX}/challenges/:id/settle`, async (c) => {
     const isOwner = ch.ownerId === auth.userId;
     const isExpired = new Date(ch.endAt).getTime() <= Date.now();
     const settleUser = await kv.get(`become:user:${auth.userId}`);
-    const isAdmin = String(settleUser?.telegramId) === "7879078497";
+    const isAdmin = isAdminUser(String(settleUser?.telegramId));
 
     if (!isOwner && !isAdmin && !isExpired) {
       return c.json({ message: "Only owner can settle before expiry", code: "FORBIDDEN", status: 403 }, 403);
@@ -3593,7 +3603,7 @@ app.post(`${PREFIX}/notifications/task-reminder`, async (c) => {
         for (const task of day.tasksJson) {
           if (task.reminderTime===userHHMM) {
             const l = user.language||"en";
-            const miniAppUrl = Deno.env.get("BECOME_MINIAPP_URL") || "";
+            const miniAppUrl = getProperMiniAppUrl();
             const text = l==="ru"
               ? `\u23F0 <b>\u041D\u0430\u043F\u043E\u043C\u0438\u043D\u0430\u043D\u0438\u0435:</b> ${task.title}\n${task.description||""}\n\n\uD83D\uDCCB \u0414\u0435\u043D\u044C ${dayNum} \u2022 ~${task.estimatedMinutes||5} \u043C\u0438\u043D`
               : `\u23F0 <b>Reminder:</b> ${task.title}\n${task.description||""}\n\n\uD83D\uDCCB Day ${dayNum} \u2022 ~${task.estimatedMinutes||5} min`;
@@ -3658,7 +3668,7 @@ app.get(`${PREFIX}/notifications/task-reminder`, async (c) => {
         for (const task of day.tasksJson) {
           if (task.reminderTime === userHHMM) {
             const l = user.language||"en";
-            const miniAppUrl = Deno.env.get("BECOME_MINIAPP_URL") || "";
+            const miniAppUrl = getProperMiniAppUrl();
             const text = l==="ru"
               ? `\u23F0 <b>\u041D\u0430\u043F\u043E\u043C\u0438\u043D\u0430\u043D\u0438\u0435:</b> ${task.title}\n${task.description||""}\n\n\uD83D\uDCCB \u0414\u0435\u043D\u044C ${dayNum} \u2022 ~${task.estimatedMinutes||5} \u043C\u0438\u043D`
               : `\u23F0 <b>Reminder:</b> ${task.title}\n${task.description||""}\n\n\uD83D\uDCCB Day ${dayNum} \u2022 ~${task.estimatedMinutes||5} min`;
@@ -4589,7 +4599,7 @@ async function handleStartCommand(msg: TgMessage): Promise<void> {
     await generateDeviceToken(newUserId, tgId);
     const newBotAuthToken = await generateBotAuthToken(newUserId, tgId);
     const newAppUrl = buildAppUrlWithAuth(newBotAuthToken);
-    const miniAppUrl = newAppUrl || Deno.env.get("BECOME_MINIAPP_URL") || "";
+    const miniAppUrl = newAppUrl || getProperMiniAppUrl();
 
     // Send welcome message with "Open Proper Food" inline button
     const welcomeMsg = buildNewUserWelcomeMessage(user, miniAppUrl || undefined);
@@ -4856,7 +4866,7 @@ async function handleProgressCommand(msg: TgMessage): Promise<void> {
   }
 
   const summary = await getUserProgressSummary(user.id);
-  const miniAppUrl = Deno.env.get("BECOME_MINIAPP_URL") || "";
+  const miniAppUrl = getProperMiniAppUrl();
 
   const progressBar = Array.from({ length: summary.totalDays }, (_, i) => {
     if (i < summary.doneDays) return "\u2705";
@@ -4914,7 +4924,7 @@ async function handleTodayCommand(msg: TgMessage): Promise<void> {
   }
 
   const todayData = await getTodayTasks(user.id);
-  const miniAppUrl = Deno.env.get("BECOME_MINIAPP_URL") || "";
+  const miniAppUrl = getProperMiniAppUrl();
 
   if (!todayData) {
     await sendMessage(chatId, lang === "ru"
@@ -4971,7 +4981,7 @@ async function handleCoachCommand(msg: TgMessage): Promise<void> {
     return;
   }
 
-  const miniAppUrl = Deno.env.get("BECOME_MINIAPP_URL") || "";
+  const miniAppUrl = getProperMiniAppUrl();
 
   const text = lang === "ru" ? [
     `<b>\uD83E\uDD16 AI-\u043A\u043E\u0443\u0447</b>`,
@@ -5022,7 +5032,7 @@ async function handleChallengeCommand(msg: TgMessage): Promise<void> {
 
   const user = await findUserByTelegramId(from.id);
   const lang = getLang(user, from);
-  const miniAppUrl = Deno.env.get("BECOME_MINIAPP_URL") || "";
+  const miniAppUrl = getProperMiniAppUrl();
 
   let challengeInfo = lang === "ru"
     ? "\u0422\u044B \u0435\u0449\u0451 \u043D\u0435 \u0443\u0447\u0430\u0441\u0442\u0432\u0443\u0435\u0448\u044C \u0432 \u0447\u0435\u043B\u043B\u0435\u043D\u0434\u0436\u0430\u0445."
@@ -5130,7 +5140,7 @@ async function handleCallbackQuery(cbq: TgCallbackQuery): Promise<void> {
         }
 
         const summary = await getUserProgressSummary(user.id);
-        const miniAppUrl = Deno.env.get("BECOME_MINIAPP_URL") || "";
+        const miniAppUrl = getProperMiniAppUrl();
 
         const progressBar = Array.from({ length: summary.totalDays }, (_, i) => {
           if (i < summary.doneDays) return "\u2705";
@@ -5191,7 +5201,7 @@ async function handleCallbackQuery(cbq: TgCallbackQuery): Promise<void> {
         }
 
         const todayData = await getTodayTasks(user.id);
-        const miniAppUrl = Deno.env.get("BECOME_MINIAPP_URL") || "";
+        const miniAppUrl = getProperMiniAppUrl();
 
         if (!todayData) {
           await answerCallbackQuery(cbq.id, {
@@ -5240,7 +5250,7 @@ async function handleCallbackQuery(cbq: TgCallbackQuery): Promise<void> {
       case "cmd_coach": {
         const coachUser = await findUserByTelegramId(from.id);
         const cLang = getLang(coachUser, from);
-        const miniAppUrl = Deno.env.get("BECOME_MINIAPP_URL") || "";
+        const miniAppUrl = getProperMiniAppUrl();
         const cText = cLang === "ru" ? [
           `<b>\uD83E\uDD16 AI-\u043A\u043E\u0443\u0447</b>`,
           ``,
@@ -5281,7 +5291,7 @@ async function handleCallbackQuery(cbq: TgCallbackQuery): Promise<void> {
       case "cmd_challenges": {
         const user = await findUserByTelegramId(from.id);
         const chLang = getLang(user, from);
-        const miniAppUrl = Deno.env.get("BECOME_MINIAPP_URL") || "";
+        const miniAppUrl = getProperMiniAppUrl();
 
         let challengeInfo = chLang === "ru"
           ? "\u041D\u0435\u0442 \u0430\u043A\u0442\u0438\u0432\u043D\u044B\u0445 \u0447\u0435\u043B\u043B\u0435\u043D\u0434\u0436\u0435\u0439."
@@ -5961,7 +5971,7 @@ async function handleTextMessage(msg: TgMessage): Promise<void> {
     const help = buildHelpMessage(lang);
     await sendMessage(chatId, help.text, { reply_markup: help.reply_markup });
   } else {
-    const miniAppUrl = Deno.env.get("BECOME_MINIAPP_URL") || "";
+    const miniAppUrl = getProperMiniAppUrl();
     const keyboard: InlineKeyboardButton[][] = [];
     // DISABLED: web_app button doesn't work from Figma Sites context
     // if (miniAppUrl) {
@@ -6214,7 +6224,7 @@ app.post(`${PREFIX}/telegram/setup`, async (c) => {
       webhook: webhookResult,
       commands: commandsResult,
       menuButton: menuResult,
-      miniAppUrl: Deno.env.get("BECOME_MINIAPP_URL") || "(not set)",
+      miniAppUrl: getProperMiniAppUrl() || "(not set)",
     });
   } catch (err) {
     console.log("[TG Bot] Setup error:", err);
@@ -6246,7 +6256,7 @@ app.get(`${PREFIX}/telegram/webhook-info`, async (c) => {
     return c.json({
       success: true,
       ...info,
-      miniAppUrl: Deno.env.get("BECOME_MINIAPP_URL") || "(not set)",
+      miniAppUrl: getProperMiniAppUrl() || "(not set)",
     });
   } catch (err) {
     console.log("[TG Bot] Webhook info error:", err);
@@ -6474,7 +6484,7 @@ app.post(`${PREFIX}/notifications/test`, async (c) => {
     }
 
     // Fallback: generic test notification
-    const miniAppUrl = Deno.env.get("BECOME_MINIAPP_URL") || "";
+    const miniAppUrl = getProperMiniAppUrl();
     const keyboard: any[][] = [];
     // DISABLED: web_app button doesn't work from Figma Sites context
     // if (miniAppUrl) {
@@ -7746,7 +7756,7 @@ app.get(`${PREFIX}/notifications/strategic-daily`, async (c) => {
 
       try {
         // Use web_app button — opens the Mini App directly via its URL.
-        const appUrl = Deno.env.get("BECOME_MINIAPP_URL") || "";
+        const appUrl = getProperMiniAppUrl();
         const kbd: any[][] = [];
         if (appUrl) {
           const sgUrl = `${appUrl}?startapp=strategic_goals`;

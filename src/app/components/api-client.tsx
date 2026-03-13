@@ -6,7 +6,7 @@
 //
 // Auth architecture:
 //   Authorization: Bearer {supabase_anon_key}  (for Supabase gateway)
-//   X-Become-Token: {session_token}            (for app-level auth)
+//   X-Proper-Token: {session_token}            (for app-level auth)
 // =============================================
 
 import type {
@@ -37,32 +37,32 @@ let accessToken: string | null = null;
 
 export function setToken(token: string): void {
   accessToken = token;
-  localStorage.setItem('become_token', token);
+  localStorage.setItem('proper_token', token);
 }
 
 export function getToken(): string | null {
   if (!accessToken) {
-    accessToken = localStorage.getItem('become_token');
+    accessToken = localStorage.getItem('proper_token');
   }
   return accessToken;
 }
 
 export function clearToken(): void {
   accessToken = null;
-  localStorage.removeItem('become_token');
+  localStorage.removeItem('proper_token');
 }
 
 // ---- Device token (long-lived, for session refresh) ----
 export function setDeviceToken(token: string): void {
-  localStorage.setItem('become_device_token', token);
+  localStorage.setItem('proper_device_token', token);
 }
 
 export function getDeviceToken(): string | null {
-  return localStorage.getItem('become_device_token');
+  return localStorage.getItem('proper_device_token');
 }
 
 export function clearDeviceToken(): void {
-  localStorage.removeItem('become_device_token');
+  localStorage.removeItem('proper_device_token');
 }
 
 // ---- HTTP helpers ----
@@ -111,7 +111,7 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   // Pass our app session token as a custom header
   const token = getToken();
   if (token) {
-    headers['X-Become-Token'] = token;
+    headers['X-Proper-Token'] = token;
   }
 
   // Guard: if no token and the endpoint requires auth, reject early

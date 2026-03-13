@@ -92,7 +92,7 @@ export function ProfilePage() {
   // ---- Local settings (persisted to localStorage) ----
   const [localSettings, setLocalSettings] = useState(() => {
     try {
-      const saved = localStorage.getItem('become_local_settings');
+      const saved = localStorage.getItem('proper_local_settings') || localStorage.getItem('become_local_settings');
       return saved ? JSON.parse(saved) : {
         soundsEnabled: true,
         hapticsEnabled: true,
@@ -106,7 +106,7 @@ export function ProfilePage() {
   // ---- Privacy settings (persisted to localStorage, synced to backend if needed) ----
   const [privacySettings, setPrivacySettings] = useState(() => {
     try {
-      const saved = localStorage.getItem('become_privacy_settings');
+      const saved = localStorage.getItem('proper_privacy_settings') || localStorage.getItem('become_privacy_settings');
       return saved ? JSON.parse(saved) : {
         showInLeaderboard: true,
         publicStreak: true,
@@ -122,7 +122,7 @@ export function ProfilePage() {
     hapticSelection();
     setLocalSettings((prev: any) => {
       const next = { ...prev, [key]: value };
-      try { localStorage.setItem('become_local_settings', JSON.stringify(next)); } catch {}
+      try { localStorage.setItem('proper_local_settings', JSON.stringify(next)); } catch {}
       return next;
     });
     showToast(t('profile_saved'));
@@ -132,7 +132,7 @@ export function ProfilePage() {
     hapticSelection();
     setPrivacySettings((prev: any) => {
       const next = { ...prev, [key]: value };
-      try { localStorage.setItem('become_privacy_settings', JSON.stringify(next)); } catch {}
+      try { localStorage.setItem('proper_privacy_settings', JSON.stringify(next)); } catch {}
       // Sync to backend (non-blocking)
       updateUser({ privacySettings: next } as any);
       return next;
@@ -159,7 +159,7 @@ export function ProfilePage() {
       const serverPrivacy = (user as any).privacySettings;
       setPrivacySettings((prev: any) => {
         const merged = { ...prev, ...serverPrivacy };
-        try { localStorage.setItem('become_privacy_settings', JSON.stringify(merged)); } catch {}
+        try { localStorage.setItem('proper_privacy_settings', JSON.stringify(merged)); } catch {}
         return merged;
       });
     }
@@ -979,6 +979,10 @@ export function ProfilePage() {
                     <button
                       onClick={() => {
                         hapticFeedback('medium');
+                        localStorage.removeItem('proper_local_settings');
+                        localStorage.removeItem('proper_privacy_settings');
+                        localStorage.removeItem('proper_support_dismissed');
+                        // Clean up legacy keys
                         localStorage.removeItem('become_local_settings');
                         localStorage.removeItem('become_privacy_settings');
                         localStorage.removeItem('become_support_dismissed');

@@ -28,10 +28,10 @@ export interface TelegramAuthResult {
  * 5. Verify HMAC-SHA256(secret_key, data_check_string) === hash
  */
 export async function validateInitData(initData: string): Promise<TelegramAuthResult> {
-  const botToken = Deno.env.get("TELEGRAM_BOT_TOKEN_BECOME");
+  const botToken = Deno.env.get("TELEGRAM_BOT_TOKEN_PROPER") || Deno.env.get("TELEGRAM_BOT_TOKEN_BECOME");
   if (!botToken) {
-    console.log("ERROR: TELEGRAM_BOT_TOKEN_BECOME environment variable is not set");
-    throw new Error("TELEGRAM_BOT_TOKEN_BECOME environment variable is not set");
+    console.log("ERROR: TELEGRAM_BOT_TOKEN_PROPER environment variable is not set");
+    throw new Error("TELEGRAM_BOT_TOKEN_PROPER environment variable is not set");
   }
 
   if (!initData || initData.trim() === "") {
