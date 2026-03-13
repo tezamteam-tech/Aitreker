@@ -40,6 +40,7 @@ import { playXpCoinSound } from './xp-sound';
 import { useTranslation } from './i18n';
 import { PageHeader } from './page-header';
 import { VoiceInput } from './voice-input';
+import { CameraCapture } from './camera-capture';
 
 // ---- Constants ----
 const TASK_ICONS: Record<string, React.ElementType> = {
@@ -142,6 +143,7 @@ export function DayViewPage() {
   const [viewingPhoto, setViewingPhoto] = useState<string | null>(null); // URL of photo being viewed fullscreen
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pendingTaskRef = useRef<string | null>(null); // which task triggered the file picker
+  const [cameraOpen, setCameraOpen] = useState(false);
 
   // Hide tab bar when bottom sheet / modal is open
   useBottomSheetLifecycle(phase === 'reflection' || phase === 'celebration' || !!viewingPhoto);
@@ -322,8 +324,49 @@ export function DayViewPage() {
   const triggerPhotoUpload = useCallback((taskId: string) => {
     if (existingProgress?.status === 'done') return;
     pendingTaskRef.current = taskId;
-    fileInputRef.current?.click();
+    // Use getUserMedia camera (reliable on Android), fallback to file input
+    if (navigator.mediaDevices?.getUserMedia) {
+      setCameraOpen(true);
+    } else {
+      fileInputRef.current?.click();
+    }
   }, [existingProgress]);
+
+  // Handle photo from getUserMedia camera overlay
+  const handleCameraCapture = useCallback(async (dataUrl: string) => {
+    setCameraOpen(false);
+    const taskId = pendingTaskRef.current;
+    if (!taskId || !day) return;
+
+    hapticFeedback('medium');
+    setUploadingTask(taskId);
+
+    try {
+      // Convert dataUrl to blob for compression
+      const resp = await fetch(dataUrl);
+      const blob = await resp.blob();
+      const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' });
+      const compressed = await compressImage(file);
+      const result = await api.uploadProof(programId, dayNum, taskId, compressed, 'image/jpeg');
+
+      if (result.success) {
+        setProofPhotos((prev) => ({ ...prev, [taskId]: result.signedUrl }));
+        setCheckedTasks((prev) => {
+          const next = new Set(prev);
+          next.add(taskId);
+          return next;
+        });
+        hapticSuccess();
+        showToast(t('proof_photo_sent'));
+      }
+    } catch (err) {
+      console.error('[DayView] Camera photo upload error:', err);
+      showToast(t('proof_upload_error'));
+    } finally {
+      setUploadingTask(null);
+      pendingTaskRef.current = null;
+    }
+  }, [day, programId, dayNum, showToast, t]);
 
   // ---- Done handler ----
   const handleDone = useCallback(async () => {
@@ -623,7 +666,7 @@ export function DayViewPage() {
           </div>
         </div>
 
-        {/* Hidden file input for photo proofs */}
+        {/* Hidden file input for photo proofs (fallback) */}
         <input
           ref={fileInputRef}
           type="file"
@@ -631,6 +674,13 @@ export function DayViewPage() {
           capture="environment"
           className="hidden"
           onChange={handlePhotoSelect}
+        />
+
+        {/* getUserMedia camera overlay (reliable on Android) */}
+        <CameraCapture
+          open={cameraOpen}
+          onCapture={handleCameraCapture}
+          onClose={() => { setCameraOpen(false); pendingTaskRef.current = null; }}
         />
 
         {/* Fullscreen photo viewer */}

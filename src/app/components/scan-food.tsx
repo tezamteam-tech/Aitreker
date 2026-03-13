@@ -35,6 +35,7 @@ import {
   hapticError,
 } from './telegram';
 import { useTranslation } from './i18n';
+import { CameraCapture } from './camera-capture';
 
 // ---- Types ----
 type ScanStep = 'capture' | 'analyzing' | 'result' | 'error';
@@ -90,6 +91,7 @@ export function ScanFoodPage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const [cameraOpen, setCameraOpen] = useState(false);
 
   // ---- Image handling ----
   const processFile = useCallback((file: File) => {
@@ -114,8 +116,20 @@ export function ScanFoodPage() {
 
   const openCamera = () => {
     hapticFeedback('light');
-    cameraInputRef.current?.click();
+    // Try native getUserMedia camera (works reliably on Android)
+    // Fall back to file input if getUserMedia is unavailable
+    if (navigator.mediaDevices?.getUserMedia) {
+      setCameraOpen(true);
+    } else {
+      cameraInputRef.current?.click();
+    }
   };
+
+  const handleCameraCapture = useCallback((dataUrl: string) => {
+    setCameraOpen(false);
+    setImageData(dataUrl);
+    setStep('capture');
+  }, []);
 
   const openGallery = () => {
     hapticFeedback('light');
@@ -223,6 +237,13 @@ export function ScanFoodPage() {
         accept="image/*"
         onChange={handleFileChange}
         className="hidden"
+      />
+
+      {/* getUserMedia camera overlay (reliable on Android) */}
+      <CameraCapture
+        open={cameraOpen}
+        onCapture={handleCameraCapture}
+        onClose={() => setCameraOpen(false)}
       />
 
       {/* Header */}
