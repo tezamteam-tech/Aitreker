@@ -80,17 +80,19 @@ export function init(debug: boolean): void {
       // Step 1: expand to full height
       try { wa.expand(); } catch {}
 
-      // Step 2: disable vertical swipes ASAP (prevents swipe-to-close)
+      // Step 2: disable vertical swipes ASAP (prevents swipe-to-close, requires 7.7+)
       try {
-        if (typeof wa.disableVerticalSwipes === 'function') {
+        if (typeof wa.isVersionAtLeast === 'function' && wa.isVersionAtLeast('7.7') &&
+            typeof wa.disableVerticalSwipes === 'function') {
           wa.disableVerticalSwipes();
           console.log('[ProperFood] disableVerticalSwipes() called');
         }
       } catch {}
 
-      // Step 3: enable closing confirmation
+      // Step 3: enable closing confirmation (requires 6.2+)
       try {
-        if (typeof wa.enableClosingConfirmation === 'function') {
+        if (typeof wa.isVersionAtLeast === 'function' && wa.isVersionAtLeast('6.2') &&
+            typeof wa.enableClosingConfirmation === 'function') {
           wa.enableClosingConfirmation();
         }
       } catch {}
@@ -107,8 +109,15 @@ export function init(debug: boolean): void {
       try { wa.ready(); } catch {};
 
       // Step 6: set header color to match current theme (bg_color adapts)
-      try { wa.setHeaderColor?.('bg_color'); } catch {}
-      try { wa.setBottomBarColor?.('bg_color'); } catch {}
+      // Version-gated: setHeaderColor requires 6.1+, setBottomBarColor requires 7.10+
+      if (typeof wa.isVersionAtLeast === 'function') {
+        if (wa.isVersionAtLeast('6.1')) {
+          try { wa.setHeaderColor?.('bg_color'); } catch {}
+        }
+        if (wa.isVersionAtLeast('7.10')) {
+          try { wa.setBottomBarColor?.('bg_color'); } catch {}
+        }
+      }
 
       // Step 7: initial safe-area setup
       setupSafeArea();

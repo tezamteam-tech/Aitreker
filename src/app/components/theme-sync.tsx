@@ -154,9 +154,13 @@ export function ThemeSync() {
     if (!isTelegram) return;
     try {
       const wa = (window as any).Telegram?.WebApp;
-      if (wa) {
-        wa.setHeaderColor?.('bg_color');
-        wa.setBottomBarColor?.('bg_color');
+      if (wa && typeof wa.isVersionAtLeast === 'function') {
+        if (wa.isVersionAtLeast('6.1')) {
+          wa.setHeaderColor?.('bg_color');
+        }
+        if (wa.isVersionAtLeast('7.10')) {
+          wa.setBottomBarColor?.('bg_color');
+        }
       }
     } catch {}
   }, [isTelegram]);

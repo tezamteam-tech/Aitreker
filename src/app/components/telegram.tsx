@@ -62,6 +62,22 @@ function getTelegramWebApp(): WebApp | null {
 }
 
 /**
+ * Check if the current Telegram WebApp version is at least `minVersion`.
+ * Returns false if the SDK is not available or version check fails.
+ * This MUST be called before invoking version-gated methods to prevent
+ * "[Telegram.WebApp] X is not supported in version Y.Z" console warnings.
+ */
+function isVersionAtLeast(minVersion: string): boolean {
+  try {
+    const wa = getTelegramWebApp();
+    if (!wa || typeof wa.isVersionAtLeast !== 'function') return false;
+    return wa.isVersionAtLeast(minVersion);
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Ensures Telegram SDK script is loaded.
  * On TG client it's already there; in browser we load it dynamically.
  */
@@ -218,28 +234,31 @@ export function hapticError(): void {
 // ---- Back Button ----
 
 /**
- * Show the Telegram back button.
+ * Show the Telegram back button (Bot API 6.1+).
  */
 export function showBackButton(): void {
   try {
+    if (!isVersionAtLeast('6.1')) return;
     getTelegramWebApp()?.BackButton?.show();
   } catch {}
 }
 
 /**
- * Hide the Telegram back button.
+ * Hide the Telegram back button (Bot API 6.1+).
  */
 export function hideBackButton(): void {
   try {
+    if (!isVersionAtLeast('6.1')) return;
     getTelegramWebApp()?.BackButton?.hide();
   } catch {}
 }
 
 /**
- * Subscribe to back button press. Returns unsubscribe function.
+ * Subscribe to back button press. Returns unsubscribe function (Bot API 6.1+).
  */
 export function onBackButtonPressed(callback: () => void): () => void {
   try {
+    if (!isVersionAtLeast('6.1')) return () => {};
     const wa = getTelegramWebApp();
     wa?.BackButton?.onClick(callback);
     return () => {
@@ -391,13 +410,19 @@ export function applyTelegramTheme(): void {
     const wa = getTelegramWebApp();
     if (!wa) return;
 
-    // Set header and background colors to match current theme (adapts to dark/light)
-    try { wa.setHeaderColor('bg_color'); } catch {}
-    try { wa.setBackgroundColor('bg_color'); } catch {}
-    try { wa.setBottomBarColor?.('bg_color'); } catch {}
+    // setHeaderColor requires 6.1+, setBottomBarColor requires 7.10+
+    if (isVersionAtLeast('6.1')) {
+      try { wa.setHeaderColor('bg_color'); } catch {}
+      try { wa.setBackgroundColor('bg_color'); } catch {}
+    }
+    if (isVersionAtLeast('7.10')) {
+      try { wa.setBottomBarColor?.('bg_color'); } catch {}
+    }
 
-    // Enable closing confirmation for safety
-    try { wa.enableClosingConfirmation(); } catch {}
+    // Enable closing confirmation (6.2+)
+    if (isVersionAtLeast('6.2')) {
+      try { wa.enableClosingConfirmation(); } catch {}
+    }
   } catch {}
 }
 
@@ -528,7 +553,11 @@ export async function requestFullscreen(): Promise<boolean> {
     const wa = getTelegramWebApp();
     if (!wa) return false;
 
-    // Prefer direct method check — more reliable than version string on Android
+    // Version gate: don't even touch the method on <8.0 to avoid SDK warnings
+    if (!isVersionAtLeast('8.0')) {
+      return false;
+    }
+
     if (typeof wa.requestFullscreen === 'function') {
       _fullscreenRequested = true;
       wa.requestFullscreen();
@@ -536,11 +565,7 @@ export async function requestFullscreen(): Promise<boolean> {
       return true;
     }
 
-    // Secondary: version check (keeps compatibility for future API changes)
-    if (typeof wa.isVersionAtLeast === 'function' && wa.isVersionAtLeast('8.0')) {
-      // Method should exist per spec but didn't pass the typeof check above — bail
-      console.warn('[TG] requestFullscreen: version OK but method not found');
-    }
+    console.warn('[TG] requestFullscreen: version OK but method not found');
   } catch (err) {
     console.warn('[TG] requestFullscreen error:', err);
     return false;
@@ -552,22 +577,22 @@ export async function requestFullscreen(): Promise<boolean> {
 
 /**
  * Disable vertical swipes to prevent accidental mini app closing (Bot API 7.7+).
- *
- * ANDROID FIX: The isVersionAtLeast version check was blocking this call on
- * some Android builds that report incorrect version strings. We now rely on
- * method existence rather than the version string.
  */
 export function disableVerticalSwipes(): boolean {
   try {
     const wa = getTelegramWebApp();
     if (!wa) return false;
+
+    // Version gate: don't touch on <7.7 to avoid SDK warnings
+    if (!isVersionAtLeast('7.7')) {
+      return false;
+    }
+
     if (typeof wa.disableVerticalSwipes === 'function') {
       wa.disableVerticalSwipes();
       console.log('[TG] disableVerticalSwipes() called');
       return true;
     }
-    // Older SDK: method not yet available
-    console.warn('[TG] disableVerticalSwipes: method not available on this client');
   } catch (err) {
     console.warn('[TG] disableVerticalSwipes error:', err);
   }
@@ -577,12 +602,18 @@ export function disableVerticalSwipes(): boolean {
 // ---- Closing Confirmation ----
 
 /**
- * Enable closing confirmation dialog (Bot API 7.6+).
+ * Enable closing confirmation dialog (Bot API 6.2+).
  */
 export function enableClosingConfirmation(): boolean {
   try {
     const wa = getTelegramWebApp();
     if (!wa) return false;
+
+    // Version gate: don't touch on <6.2 to avoid SDK warnings
+    if (!isVersionAtLeast('6.2')) {
+      return false;
+    }
+
     if (typeof wa.enableClosingConfirmation === 'function') {
       wa.enableClosingConfirmation();
       return true;
