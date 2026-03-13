@@ -30,7 +30,7 @@ import type {
 import { projectId, publicAnonKey } from '/utils/supabase/info';
 
 // Backend URL — Supabase Edge Function
-const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-f366fb78`;
+const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-fc549837`;
 
 // ---- Token storage ----
 let accessToken: string | null = null;

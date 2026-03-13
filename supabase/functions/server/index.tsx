@@ -59,7 +59,7 @@ import {
   type NotificationPrefs,
 } from "./notifications.tsx";
 
-const PREFIX = "/make-server-f366fb78";
+const PREFIX = "/make-server-fc549837";
 const app = new Hono();
 
 // Admin configuration — @dozorir (5772448919) + original admin (7879078497)
@@ -6196,8 +6196,8 @@ app.post(`${PREFIX}/telegram/webhook`, async (c) => {
 app.post(`${PREFIX}/telegram/setup`, async (c) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
-    // PREFIX is already /make-server-f366fb78, and the Edge Function name is also make-server-f366fb78
-    // So the full URL is: supabaseUrl/functions/v1/make-server-f366fb78/telegram/webhook
+    // PREFIX is /make-server-fc549837
+    // Full URL: supabaseUrl/functions/v1/make-server-fc549837/telegram/webhook
     const webhookUrl = `${supabaseUrl}/functions/v1${PREFIX}/telegram/webhook`;
 
     console.log(`[TG Bot] Setting up webhook: ${webhookUrl}`);
