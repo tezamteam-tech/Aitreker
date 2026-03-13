@@ -594,15 +594,28 @@ export function AppLayout() {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
+  // Track navigation history depth to handle direct-link edge case
+  const historyDepthRef = useRef(0);
+  useEffect(() => {
+    historyDepthRef.current += 1;
+  }, [location.pathname]);
+
   // Telegram Back Button integration
   useEffect(() => {
     const showBack = shouldShowBackButton(location.pathname);
+    console.log(`[Layout BackButton] path=${location.pathname} showBack=${showBack} historyDepth=${historyDepthRef.current}`);
 
     if (showBack) {
       showBackButton();
       const unsub = onBackButtonPressed(() => {
         hapticFeedback('light');
-        navigate(-1);
+        console.log(`[Layout BackButton] pressed! historyDepth=${historyDepthRef.current}`);
+        // If user opened a deep link directly (no history), go to /home instead
+        if (historyDepthRef.current <= 1) {
+          navigate('/home', { replace: true });
+        } else {
+          navigate(-1);
+        }
       });
       return () => {
         unsub();

@@ -308,18 +308,44 @@ export function hapticError(): void {
 
 // ---- Back Button ----
 
+// Track if SDK backButton has been mounted
+let _backButtonMounted = false;
+
+/**
+ * Ensure sdkBackButton is mounted (required in @tma.js/sdk v3 before show/hide/onClick).
+ */
+function ensureBackButtonMounted(): void {
+  if (_backButtonMounted) return;
+  try {
+    if (isSdkInitialized() && typeof sdkBackButton.mount === 'function') {
+      sdkBackButton.mount();
+      _backButtonMounted = true;
+      console.log('[TG BackButton] SDK backButton mounted');
+    }
+  } catch (err) {
+    console.warn('[TG BackButton] mount failed:', err);
+  }
+}
+
 /**
  * Show the Telegram back button (Bot API 6.1+).
  */
 export function showBackButton(): void {
   try {
     if (isSdkInitialized()) {
+      ensureBackButtonMounted();
       sdkBackButton.show();
     } else {
       if (!isVersionAtLeast('6.1')) return;
-      getTelegramWebApp()?.BackButton?.show();
+      const wa = getTelegramWebApp();
+      if (wa?.BackButton) {
+        wa.BackButton.isVisible = true;
+        wa.BackButton.show?.();
+      }
     }
-  } catch {}
+  } catch (err) {
+    console.warn('[TG BackButton] show failed:', err);
+  }
 }
 
 /**
@@ -328,12 +354,19 @@ export function showBackButton(): void {
 export function hideBackButton(): void {
   try {
     if (isSdkInitialized()) {
+      ensureBackButtonMounted();
       sdkBackButton.hide();
     } else {
       if (!isVersionAtLeast('6.1')) return;
-      getTelegramWebApp()?.BackButton?.hide();
+      const wa = getTelegramWebApp();
+      if (wa?.BackButton) {
+        wa.BackButton.isVisible = false;
+        wa.BackButton.hide?.();
+      }
     }
-  } catch {}
+  } catch (err) {
+    console.warn('[TG BackButton] hide failed:', err);
+  }
 }
 
 /**
@@ -342,6 +375,7 @@ export function hideBackButton(): void {
 export function onBackButtonPressed(callback: () => void): () => void {
   try {
     if (isSdkInitialized()) {
+      ensureBackButtonMounted();
       sdkBackButton.onClick(callback);
       return () => {
         try { sdkBackButton.offClick(callback); } catch {}
@@ -349,11 +383,23 @@ export function onBackButtonPressed(callback: () => void): () => void {
     }
     if (!isVersionAtLeast('6.1')) return () => {};
     const wa = getTelegramWebApp();
-    wa?.BackButton?.onClick(callback);
-    return () => {
-      try { wa?.BackButton?.offClick(callback); } catch {}
-    };
-  } catch {
+    if (wa?.BackButton) {
+      wa.BackButton.onClick(callback);
+      return () => {
+        try { wa.BackButton?.offClick(callback); } catch {}
+      };
+    }
+    // Fallback: listen to back_button_pressed event directly
+    if (wa) {
+      const handler = () => callback();
+      wa.onEvent?.('backButtonClicked', handler);
+      return () => {
+        try { wa.offEvent?.('backButtonClicked', handler); } catch {}
+      };
+    }
+    return () => {};
+  } catch (err) {
+    console.warn('[TG BackButton] onBackButtonPressed failed:', err);
     return () => {};
   }
 }

@@ -127,7 +127,6 @@ export function ProfileNutritionPage() {
     <div className="min-h-screen pb-6">
       <PageHeader 
         title={t('profile_title') || 'Profile'} 
-        showBack={false}
       />
 
       <div className="px-4 space-y-4">
