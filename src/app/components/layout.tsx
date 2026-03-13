@@ -570,10 +570,20 @@ export function AppLayout() {
   // Fullscreen + swipe protection on mobile TG clients
   useTelegramFullscreen();
 
-  // Setup Telegram safe areas on mount
+  // Setup Telegram safe areas on mount — with retry cascade
+  // TG SDK may not report correct safe areas immediately, so we
+  // re-run setupSafeArea() on a progressive schedule to catch
+  // delayed values from both iOS and Android clients.
   useEffect(() => {
     setupSafeArea();
     listenSafeAreaChanges();
+
+    // Retry cascade to catch late SDK initialization
+    const timers = [100, 300, 600, 1000, 2000, 4000].map((ms) =>
+      setTimeout(() => setupSafeArea(), ms)
+    );
+
+    return () => timers.forEach(clearTimeout);
   }, []);
 
   // Scroll to top on every route change

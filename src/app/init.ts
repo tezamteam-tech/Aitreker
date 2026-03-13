@@ -124,9 +124,12 @@ function bootstrapSafeArea(): void {
     if (inFullscreen && android) {
       safeTop = Math.max(topInset, 88);
     } else if (inFullscreen && ios) {
-      safeTop = Math.max(topInset, 54);
+      // iOS fullscreen: Dynamic Island/notch + TG header overlay → min 88px
+      safeTop = Math.max(topInset, 88);
     } else {
-      safeTop = topInset > 0 ? topInset : 12;
+      // Non-fullscreen: TG header chrome overlays the WebView on many versions.
+      // Enforce minimum of 56px (standard ~44px TG header + breathing room).
+      safeTop = Math.max(topInset, 56);
     }
 
     document.documentElement.style.setProperty('--safe-area-top', `${safeTop}px`);
@@ -231,11 +234,12 @@ export function init(debug: boolean): void {
   bootstrapSafeArea();
   computeAndSetHeaderOffset();
 
-  // Android boot pump: TG populates safeAreaInset asynchronously
+  // Boot pump: TG populates safeAreaInset asynchronously on both platforms
   const ua = (navigator?.userAgent || '').toLowerCase();
   const wa = (window as any).Telegram?.WebApp;
   const isAndroid = (wa?.platform || '').toLowerCase().includes('android') || /android/i.test(ua);
-  if (isAndroid) {
+  const isIOS = (wa?.platform || '').toLowerCase() === 'ios' || /iphone|ipad|ipod/i.test(ua);
+  if (isAndroid || isIOS) {
     [50, 150, 400, 800, 1500, 3000].forEach(ms =>
       setTimeout(() => {
         bootstrapSafeArea();
@@ -244,7 +248,10 @@ export function init(debug: boolean): void {
     );
   } else {
     [300, 1000, 3000].forEach(ms =>
-      setTimeout(() => computeAndSetHeaderOffset(), ms)
+      setTimeout(() => {
+        bootstrapSafeArea();
+        computeAndSetHeaderOffset();
+      }, ms)
     );
   }
 

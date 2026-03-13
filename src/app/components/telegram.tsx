@@ -439,16 +439,16 @@ export function setupSafeArea(): void {
       // SDK often reports 0 initially. Enforce minimum:
       //   status bar ≈ 28px + TG close-button row ≈ 44px + buffer → 88px
       safeTop = Math.max(topInset, 88);
-    } else if (inFullscreen && ios) {
-      // iOS fullscreen: Dynamic Island/notch (≈59px) + TG header overlay.
-      // Enforce at least 54px.
-      safeTop = Math.max(topInset, 54);
+    } else if ((inFullscreen || _fullscreenRequested) && ios) {
+      // iOS fullscreen: Dynamic Island/notch (≈47-59px) + TG header overlay (~44px).
+      // Enforce at least 88px to cover all iPhone models.
+      safeTop = Math.max(topInset, 88);
     } else {
       // Non-fullscreen: In many TG versions the native header chrome
       // (close/back button, title, ···) overlays the top of the WebView.
-      // A minimum of 48px covers the standard ~44px TG header + breathing room.
+      // A minimum of 56px covers the standard ~44px TG header + breathing room.
       // If TG reports a non-zero inset, respect the maximum.
-      safeTop = Math.max(topInset, 48);
+      safeTop = Math.max(topInset, 56);
     }
 
     document.documentElement.style.setProperty('--safe-area-top', `${safeTop}px`);
