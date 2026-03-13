@@ -31,19 +31,34 @@ import {
   getBotAuthToken,
   getStartParam,
   isTelegramClient,
+  getTelegramUser,
 } from './telegram';
 
-// ---- Offline-first user cache ----
+// ---- Offline-first user cache (with 24h TTL per doc spec) ----
 const USER_CACHE_KEY = 'pfai_cached_user';
 const SUB_CACHE_KEY = 'pfai_cached_sub';
+const SESSION_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+interface CachedSession {
+  user: User;
+  timestamp: number;
+}
 
 function getCachedUser(): User | null {
   try {
     const raw = localStorage.getItem(USER_CACHE_KEY);
     if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed.id === 'string' && typeof parsed.telegramId === 'number') {
-      return parsed as User;
+    const parsed: CachedSession = JSON.parse(raw);
+    // Check TTL — expire after 24h
+    if (!parsed.timestamp || Date.now() - parsed.timestamp > SESSION_CACHE_TTL_MS) {
+      console.log('[Auth] Cached session expired (>24h) — clearing');
+      localStorage.removeItem(USER_CACHE_KEY);
+      localStorage.removeItem(SUB_CACHE_KEY);
+      return null;
+    }
+    const user = parsed.user;
+    if (user && typeof user.id === 'string' && typeof user.telegramId === 'number') {
+      return user;
     }
   } catch {}
   return null;
@@ -51,7 +66,8 @@ function getCachedUser(): User | null {
 
 function setCachedUser(user: User): void {
   try {
-    localStorage.setItem(USER_CACHE_KEY, JSON.stringify(user));
+    const session: CachedSession = { user, timestamp: Date.now() };
+    localStorage.setItem(USER_CACHE_KEY, JSON.stringify(session));
   } catch {}
 }
 
@@ -73,6 +89,40 @@ function setCachedSub(active: boolean, daysLeft: number): void {
   try {
     localStorage.setItem(SUB_CACHE_KEY, JSON.stringify({ active, daysLeft }));
   } catch {}
+}
+
+// ---- Fast-path: parse user from initData for instant display (no network) ----
+// Creates a temporary AppUser from Telegram launch params.
+// ID prefixed with `lp-` signals data hasn't been server-verified yet.
+function buildFastPathUser(): User | null {
+  try {
+    const tgUser = getTelegramUser();
+    if (!tgUser || !tgUser.id) return null;
+
+    return {
+      id: `lp-${tgUser.id}`,           // temporary — replaced after server verification
+      telegramId: tgUser.id,
+      firstName: tgUser.first_name || 'User',
+      lastName: tgUser.last_name || null,
+      username: tgUser.username || null,
+      photoUrl: tgUser.photo_url || null,
+      language: tgUser.language_code || 'en',
+      tone: 'supportive',
+      selectedGoal: null,
+      xp: 0,
+      dailyReminderTime: null,
+      utcOffset: null,
+      activeProgramId: null,
+      subscriptionExpiresAt: null,
+      referralCode: null,
+      referralCount: 0,
+      referredBy: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    } as User;
+  } catch {
+    return null;
+  }
 }
 
 // ---- Auth phase tracking (for splash progress indicator) ----
@@ -376,13 +426,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (loginAttempted.current) return;
     loginAttempted.current = true;
 
-    // Phase 1: Restore cached user for instant display (offline-first)
+    // ============================================================
+    // 3-Strategy auth (per Telegram Mini App auth architecture):
+    //
+    // Strategy 1: localStorage cache (24h TTL) — instant UI
+    // Strategy 2: Fast-path from initData (no network) — instant UI
+    // Strategy 3: Full server verification (background)
+    //
+    // Strategies 1 & 2 show UI immediately; Strategy 3 runs in
+    // background and replaces temporary data with server-verified data.
+    // ============================================================
+
+    let hasInstantUser = false;
+
+    // Strategy 1: Restore cached user (with 24h TTL)
     const cached = getCachedUser();
     if (cached) {
-      console.log('[Auth] Restored cached user:', cached.id);
+      console.log('[Auth] Strategy 1: Restored cached user:', cached.id);
       setUser(cached);
       setIsCachedSession(true);
       setUserLang(cached.language || 'en');
+      hasInstantUser = true;
       // Restore cached subscription status
       const cachedSub = getCachedSub();
       if (cachedSub) {
@@ -391,14 +455,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    // Phase 2: Do real auth in background (replaces cached data when done)
-    setAuthPhase(cached ? 'restoring' : 'connecting');
+    // Strategy 2: Fast-path — parse user from Telegram launch params (no network)
+    // Only if no cache available. Creates optimistic user with id `lp-{tgId}`.
+    if (!hasInstantUser) {
+      const fastUser = buildFastPathUser();
+      if (fastUser) {
+        console.log('[Auth] Strategy 2: Fast-path user from initData:', fastUser.id);
+        setUser(fastUser);
+        setIsCachedSession(true); // treat as cached — not server-verified yet
+        setUserLang(fastUser.language || 'en');
+        hasInstantUser = true;
+      }
+    }
+
+    // Strategy 3: Full server verification (always runs, in background if we have instant user)
+    setAuthPhase(hasInstantUser ? 'restoring' : 'connecting');
     login().catch((err) => {
       console.warn('[Auth] Auto-login failed:', err);
-      // If we have a cached user, keep showing it even if re-auth fails
-      if (!cached) {
+
+      // Graceful degradation: if server fails but we have an instant user
+      // (from cache or fast-path), keep showing it. User sees UI but some
+      // server operations may not work. IDs with `lp-` prefix indicate
+      // data hasn't been server-verified.
+      if (hasInstantUser) {
+        console.log('[Auth] Graceful degradation: keeping instant user despite auth failure');
         setIsLoading(false);
       }
+
       setAuthPhase(null);
     });
   }, [login]);
