@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
-import { Monitor } from 'lucide-react';
+import { Monitor, Crown } from 'lucide-react';
 import { hapticFeedback, getStartParam, showBackButton, hideBackButton, onBackButtonPressed, isTelegramClient } from './telegram';
 import { useAuth, AuthProvider } from './auth-context';
 import { useEffect, useRef, useCallback, useState, useMemo } from 'react';
@@ -54,6 +54,9 @@ const TABS: TabDef[] = [
 const HIDE_TAB_PAGES = [
   '/', // onboarding
   '/coach',
+  '/nutrition-coach',
+  '/upgrade',
+  '/weight',
 ];
 
 // Pages where the Telegram BackButton should be shown (deeper/non-tab pages)
@@ -65,6 +68,7 @@ const BACK_BUTTON_PAGES = [
   '/plan-history',
   '/journal/insights',
   '/coach',
+  '/nutrition-coach',
   '/goals',
   '/goal/',
   '/strategic-goal/',
@@ -75,6 +79,8 @@ const BACK_BUTTON_PAGES = [
   '/calories/scan',
   '/calories/add',
   '/profile/',
+  '/upgrade',
+  '/weight',
 ];
 
 function shouldShowBackButton(pathname: string): boolean {
@@ -173,6 +179,7 @@ function GlassTabBar({ keyboardVisible }: { keyboardVisible: boolean }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
+  const { subscriptionActive } = useAuth();
   const activeTab = getActiveTab(location.pathname);
 
   // Hide when any bottom sheet is open
@@ -197,6 +204,24 @@ function GlassTabBar({ keyboardVisible }: { keyboardVisible: boolean }) {
           }}
         >
           <div className="mx-auto max-w-md px-4 pb-2">
+
+            {/* Premium upgrade pill for free users — above tab bar */}
+            {!subscriptionActive && location.pathname !== '/upgrade' && (
+              <motion.button
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => {
+                  hapticFeedback('light');
+                  navigate('/upgrade');
+                }}
+                className="mx-auto mb-2 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-[#6c5ce7]/80 to-[#a29bfe]/80 border border-white/10"
+                style={{ boxShadow: '0 4px 16px rgba(108,92,231,0.3)' }}
+              >
+                <Crown className="w-3 h-3 text-[#ffd700]" />
+                <span className="text-white text-[0.6875rem] font-medium">Go Premium</span>
+              </motion.button>
+            )}
 
             <div
               className="bg-liquid-glass relative rounded-[28px] overflow-hidden"
@@ -241,7 +266,15 @@ function GlassTabBar({ keyboardVisible }: { keyboardVisible: boolean }) {
                           transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                         />
                       )}
-                      <NavIcon pathData={tab.iconPaths} active={isActive} />
+                      <div className="relative">
+                        <NavIcon pathData={tab.iconPaths} active={isActive} />
+                        {/* Premium crown badge on profile tab */}
+                        {tab.key === 'profile' && subscriptionActive && (
+                          <div className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 rounded-full bg-[#0a0a0f] flex items-center justify-center">
+                            <Crown className="w-2.5 h-2.5 text-[#ffd700] fill-[#ffd700]" />
+                          </div>
+                        )}
+                      </div>
                     </button>
                   );
                 })}
@@ -324,6 +357,8 @@ export function AppLayout() {
       navigate(`/strategic-goal/${id}`, { replace: true });
     } else if (startParam === 'coach') {
       navigate('/coach', { replace: true });
+    } else if (startParam === 'nutrition_coach' || startParam === 'nutri_coach') {
+      navigate('/nutrition-coach', { replace: true });
     } else if (startParam === 'journal') {
       navigate('/journal', { replace: true });
     } else if (startParam === 'focus') {
@@ -336,6 +371,10 @@ export function AppLayout() {
       navigate('/profile', { replace: true });
     } else if (startParam === 'challenges') {
       navigate('/challenges', { replace: true });
+    } else if (startParam === 'upgrade' || startParam === 'premium') {
+      navigate('/upgrade', { replace: true });
+    } else if (startParam === 'weight' || startParam === 'weight_tracking') {
+      navigate('/weight', { replace: true });
     }
   }, []);
 

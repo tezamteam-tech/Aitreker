@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — Internationalization (i18n)
+// Proper Food AI — Internationalization (i18n)
 // =============================================
 // Centralized translations for bot messages,
 // notifications, and inline keyboards.
@@ -18,108 +18,108 @@ export function detectLang(languageCode?: string | null): Lang {
 const translations: Record<string, Record<Lang, string>> = {
   // === /start welcome ===
   welcome_title: {
-    en: "Welcome to BECOME, {name}!",
-    ru: "\u0414\u043E\u0431\u0440\u043E \u043F\u043E\u0436\u0430\u043B\u043E\u0432\u0430\u0442\u044C \u0432 BECOME, {name}!",
+    en: "Welcome to Proper Food AI, {name}!",
+    ru: "Добро пожаловать в Proper Food AI, {name}!",
   },
   welcome_subtitle: {
     en: "Your personal development companion.",
-    ru: "\u0422\u0432\u043E\u0439 \u043F\u0435\u0440\u0441\u043E\u043D\u0430\u043B\u044C\u043D\u044B\u0439 \u043F\u043E\u043C\u043E\u0449\u043D\u0438\u043A \u0432 \u0441\u0430\u043C\u043E\u0440\u0430\u0437\u0432\u0438\u0442\u0438\u0438.",
+    ru: "Твой личный помощник в развитии.",
   },
   welcome_desc: {
     en: "Build lasting habits through AI-powered programs from 7 to 100 days.",
-    ru: "\u0421\u043E\u0437\u0434\u0430\u0432\u0430\u0439 \u0443\u0441\u0442\u043E\u0439\u0447\u0438\u0432\u044B\u0435 \u043F\u0440\u0438\u0432\u044B\u0447\u043A\u0438 \u0447\u0435\u0440\u0435\u0437 \u043F\u0440\u043E\u0433\u0440\u0430\u043C\u043C\u044B \u043E\u0442 7 \u0434\u043D\u0435\u0439 \u0434\u043E 100 \u0434\u043D\u0435\u0439 \u0441 AI-\u043A\u043E\u0443\u0447\u0435\u043C.",
+    ru: "Создавай устойчивые привычки с помощью AI-программ от 7 до 100 дней.",
   },
   welcome_how: {
     en: "How it works:",
-    ru: "\u041A\u0430\u043A \u044D\u0442\u043E \u0440\u0430\u0431\u043E\u0442\u0430\u0435\u0442:",
+    ru: "Как это работает:",
   },
   welcome_step1: {
     en: "1. Share your contact to get started",
-    ru: "1. \u041F\u043E\u0434\u0435\u043B\u0438\u0441\u044C \u043A\u043E\u043D\u0442\u0430\u043A\u0442\u043E\u043C \u0434\u043B\u044F \u043D\u0430\u0447\u0430\u043B\u0430",
+    ru: "1. Поделись контактом, чтобы начать",
   },
   welcome_step2: {
     en: "2. Complete daily tasks in your program",
-    ru: "2. \u0412\u044B\u043F\u043E\u043B\u043D\u044F\u0439 \u0435\u0436\u0435\u0434\u043D\u0435\u0432\u043D\u044B\u0435 \u0437\u0430\u0434\u0430\u043D\u0438\u044F",
+    ru: "2. Выполняй ежедневные задания в программе",
   },
   welcome_step3: {
     en: "3. Get personalized AI coaching",
-    ru: "3. \u041F\u043E\u043B\u0443\u0447\u0430\u0439 \u043F\u0435\u0440\u0441\u043E\u043D\u0430\u043B\u044C\u043D\u044B\u0439 AI-\u043A\u043E\u0443\u0447\u0438\u043D\u0433",
+    ru: "3. Получай персонализированный AI-коучинг",
   },
   welcome_step4: {
     en: "4. Join challenges with others",
-    ru: "4. \u0423\u0447\u0430\u0441\u0442\u0432\u0443\u0439 \u0432 \u0447\u0435\u043B\u043B\u0435\u043D\u0434\u0436\u0430\u0445 \u0441 \u0434\u0440\u0443\u0437\u044C\u044F\u043C\u0438",
+    ru: "4. Участвуй в челленджах с другими",
   },
   welcome_cta: {
     en: "Tap the button below to share your contact and get started!",
-    ru: "\u041D\u0430\u0436\u043C\u0438 \u043A\u043D\u043E\u043F\u043A\u0443 \u043D\u0438\u0436\u0435, \u0447\u0442\u043E\u0431\u044B \u043F\u043E\u0434\u0435\u043B\u0438\u0442\u044C\u0441\u044F \u043A\u043E\u043D\u0442\u0430\u043A\u0442\u043E\u043C \u0438 \u043D\u0430\u0447\u0430\u0442\u044C!",
+    ru: "Нажми кнопку ниже, чтобы поделиться контактом и начать!",
   },
   welcome_returning: {
     en: "Welcome back, {name}! Open the app to continue your journey.",
-    ru: "\u0421 \u0432\u043E\u0437\u0432\u0440\u0430\u0449\u0435\u043D\u0438\u0435\u043C, {name}! \u041E\u0442\u043A\u0440\u043E\u0439 \u043F\u0440\u0438\u043B\u043E\u0436\u0435\u043D\u0438\u0435, \u0447\u0442\u043E\u0431\u044B \u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0438\u0442\u044C.",
+    ru: "С возвращением, {name}! Открой приложение, чтобы продолжить.",
   },
 
   // === Contact shared ===
   contact_success_title: {
     en: "You're all set, {name}!",
-    ru: "\u0413\u043E\u0442\u043E\u0432\u043E, {name}!",
+    ru: "Всё готово, {name}!",
   },
   contact_success_body: {
     en: "Your account has been created. Open the app to start your first program!",
-    ru: "\u0410\u043A\u043A\u0430\u0443\u043D\u0442 \u0441\u043E\u0437\u0434\u0430\u043D. \u041E\u0442\u043A\u0440\u043E\u0439 \u043F\u0440\u0438\u043B\u043E\u0436\u0435\u043D\u0438\u0435, \u0447\u0442\u043E\u0431\u044B \u043D\u0430\u0447\u0430\u0442\u044C \u0441\u0432\u043E\u044E \u043F\u0435\u0440\u0432\u0443\u044E \u043F\u0440\u043E\u0433\u0440\u0430\u043C\u043C\u0443!",
+    ru: "Твой аккаунт создан. Открой приложение, чтобы начать первую программу!",
   },
   contact_features: {
     en: "What awaits you:",
-    ru: "\u0427\u0442\u043E \u0442\u0435\u0431\u044F \u0436\u0434\u0451\u0442:",
+    ru: "Что тебя ждёт:",
   },
   contact_f1: {
     en: "Programs from 7 to 100 days with daily tasks",
-    ru: "\u041F\u0440\u043E\u0433\u0440\u0430\u043C\u043C\u044B \u043E\u0442 7 \u0434\u043D\u0435\u0439 \u0434\u043E 100 \u0434\u043D\u0435\u0439 \u0441 \u0435\u0436\u0435\u0434\u043D\u0435\u0432\u043D\u044B\u043C\u0438 \u0437\u0430\u0434\u0430\u043D\u0438\u044F\u043C\u0438",
+    ru: "Программы от 7 до 100 дней с ежедневными заданиями",
   },
   contact_f2: {
     en: "AI Coach for personalized guidance",
-    ru: "AI-\u043A\u043E\u0443\u0447 \u0434\u043B\u044F \u043F\u0435\u0440\u0441\u043E\u043D\u0430\u043B\u044C\u043D\u044B\u0445 \u0440\u0435\u043A\u043E\u043C\u0435\u043D\u0434\u0430\u0446\u0438\u0439",
+    ru: "AI-коуч для персонализированного руководства",
   },
   contact_f3: {
     en: "Challenges & competitions with friends",
-    ru: "\u0427\u0435\u043B\u043B\u0435\u043D\u0434\u0436\u0438 \u0438 \u0441\u043E\u0440\u0435\u0432\u043D\u043E\u0432\u0430\u043D\u0438\u044F \u0441 \u0434\u0440\u0443\u0437\u044C\u044F\u043C\u0438",
+    ru: "Челленджи и соревнования с друзьями",
   },
   contact_f4: {
     en: "Push notifications & progress tracking",
-    ru: "\u0423\u0432\u0435\u0434\u043E\u043C\u043B\u0435\u043D\u0438\u044F \u0438 \u043E\u0442\u0441\u043B\u0435\u0436\u0438\u0432\u0430\u043D\u0438\u0435 \u043F\u0440\u043E\u0433\u0440\u0435\u0441\u0441\u0430",
+    ru: "Уведомления и отслеживание прогресса",
   },
 
   // === Reply keyboard buttons ===
   btn_share_contact: {
     en: "\u{1F4F2} Share Contact",
-    ru: "\u{1F4F2} \u041F\u043E\u0434\u0435\u043B\u0438\u0441\u044C \u043A\u043E\u043D\u0442\u0430\u043A\u0442\u043E\u043C",
+    ru: "\u{1F4F2} Поделиться контактом",
   },
   btn_open_app: {
-    en: "\u{1F3AF} Open BECOME",
-    ru: "\u{1F3AF} \u041E\u0442\u043A\u0440\u044B\u0442\u044C BECOME",
+    en: "\u{1F3AF} Open Proper Food",
+    ru: "\u{1F3AF} Открыть Proper Food",
   },
   btn_progress: {
     en: "\u{1F4CA} My Progress",
-    ru: "\u{1F4CA} \u041C\u043E\u0439 \u043F\u0440\u043E\u0433\u0440\u0435\u0441\u0441",
+    ru: "\u{1F4CA} Мой прогресс",
   },
   btn_today_tasks: {
     en: "\u{1F4CB} Today's Tasks",
-    ru: "\u{1F4CB} \u0417\u0430\u0434\u0430\u043D\u0438\u044F \u043D\u0430 \u0441\u0435\u0433\u043E\u0434\u043D\u044F",
+    ru: "\u{1F4CB} Задания на сегодня",
   },
   btn_coach: {
     en: "\u{1F916} Ask Coach",
-    ru: "\u{1F916} AI-\u043A\u043E\u0443\u0447",
+    ru: "\u{1F916} AI-коуч",
   },
   btn_challenges: {
     en: "\u{1F3C6} Challenges",
-    ru: "\u{1F3C6} \u0427\u0435\u043B\u043B\u0435\u043D\u0434\u0436\u0438",
+    ru: "\u{1F3C6} Челленджи",
   },
   btn_settings: {
     en: "\u{2699}\u{FE0F} Settings",
-    ru: "\u{2699}\u{FE0F} \u041D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0438",
+    ru: "\u{2699}\u{FE0F} Настройки",
   },
   btn_help: {
     en: "\u{2753} Help",
-    ru: "\u{2753} \u041F\u043E\u043C\u043E\u0449\u044C",
+    ru: "\u{2753} Помощь",
   },
   btn_menu: {
     en: "\u{25C0}\u{FE0F} Back to Menu",
@@ -135,238 +135,238 @@ const translations: Record<string, Record<Lang, string>> = {
   },
   btn_continue: {
     en: "\u{1F3AF} Continue",
-    ru: "\u{1F3AF} \u041F\u0440\u043E\u0434\u043E\u043B\u0436\u0438\u0442\u044C",
+    ru: "\u{1F3AF} Продолжить",
   },
   btn_start_day: {
     en: "\u{1F3AF} Start Day {n}",
-    ru: "\u{1F3AF} \u041D\u0430\u0447\u0430\u0442\u044C \u0434\u0435\u043D\u044C {n}",
+    ru: "\u{1F3AF} Начать день {n}",
   },
   btn_view_tasks: {
     en: "\u{1F4CB} View Tasks",
-    ru: "\u{1F4CB} \u0417\u0430\u0434\u0430\u043D\u0438\u044F",
+    ru: "\u{1F4CB} Задания",
   },
   btn_start_now: {
     en: "\u{1F3AF} Start Now",
-    ru: "\u{1F3AF} \u041D\u0430\u0447\u0430\u0442\u044C",
+    ru: "\u{1F3AF} Начать сейчас",
   },
   btn_keep_going: {
     en: "\u{1F3AF} Keep Going",
-    ru: "\u{1F3AF} \u041F\u0440\u043E\u0434\u043E\u043B\u0436\u0430\u0439",
+    ru: "\u{1F3AF} Продолжай",
   },
   btn_next_program: {
     en: "\u{1F680} Start Next Program",
-    ru: "\u{1F680} \u0421\u043B\u0435\u0434\u0443\u044E\u0449\u0430\u044F \u043F\u0440\u043E\u0433\u0440\u0430\u043C\u043C\u0430",
+    ru: "\u{1F680} Следующая программа",
   },
   btn_view_challenge: {
     en: "\u{1F3C6} View Challenge",
-    ru: "\u{1F3C6} \u0421\u043C\u043E\u0442\u0440\u0435\u0442\u044C \u0447\u0435\u043B\u043B\u0435\u043D\u0434\u0436",
+    ru: "\u{1F3C6} Просмотреть челлендж",
   },
   btn_join_challenge: {
     en: "\u{1F3C6} Join a Challenge",
-    ru: "\u{1F3C6} \u041F\u0440\u0438\u0441\u043E\u0435\u0434\u0438\u043D\u0438\u0442\u044C\u0441\u044F \u043A \u0447\u0435\u043B\u043B\u0435\u043D\u0434\u0436\u0443",
+    ru: "\u{1F3C6} Присоединиться к челленджу",
   },
   btn_try_tomorrow: {
     en: "\u{1F3AF} Try Again Tomorrow",
-    ru: "\u{1F3AF} \u041F\u043E\u043F\u0440\u043E\u0431\u043E\u0432\u0430\u0442\u044C \u0437\u0430\u0432\u0442\u0440\u0430",
+    ru: "\u{1F3AF} Попробовать завтра",
   },
   btn_tomorrow_tasks: {
     en: "\u{1F4CB} Tomorrow's Tasks",
-    ru: "\u{1F4CB} \u0417\u0430\u0434\u0430\u043D\u0438\u044F \u043D\u0430 \u0437\u0430\u0432\u0442\u0440\u0430",
+    ru: "\u{1F4CB} Задания на завтра",
   },
 
   // === Notifications ===
   notif_day_done: {
     en: "Day {n} completed!",
-    ru: "\u0414\u0435\u043D\u044C {n} \u0437\u0430\u0432\u0435\u0440\u0448\u0451\u043D!",
+    ru: "День {n} завершён!",
   },
   notif_day_skip: {
     en: "Day {n} skipped",
-    ru: "\u0414\u0435\u043D\u044C {n} \u043F\u0440\u043E\u043F\u0443\u0449\u0435\u043D",
+    ru: "День {n} пропущен",
   },
   notif_xp: {
     en: "+{xp} XP (total: {total})",
-    ru: "+{xp} XP (\u0432\u0441\u0435\u0433\u043E: {total})",
+    ru: "+{xp} XP (всего: {total})",
   },
   notif_streak: {
     en: "{n}-day streak!",
-    ru: "{n} \u0434\u043D\u0435\u0439 \u043F\u043E\u0434\u0440\u044F\u0434!",
+    ru: "{n} дней подряд!",
   },
   notif_skip_ok: {
     en: "It's okay to take a break. Come back tomorrow!",
-    ru: "\u041D\u0438\u0447\u0435\u0433\u043E \u0441\u0442\u0440\u0430\u0448\u043D\u043E\u0433\u043E. \u0412\u043E\u0437\u0432\u0440\u0430\u0449\u0430\u0439\u0441\u044F \u0437\u0430\u0432\u0442\u0440\u0430!",
+    ru: "Ничего, если пропустишь. Возвращайся завтра!",
   },
   notif_program_done: {
     en: "Program complete! Congratulations!",
-    ru: "\u041F\u0440\u043E\u0433\u0440\u0430\u043C\u043C\u0430 \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043D\u0430! \u041F\u043E\u0437\u0434\u0440\u0430\u0432\u043B\u044F\u0435\u043C!",
+    ru: "Программа завершена! Поздравляем!",
   },
   notif_streak_title: {
     en: "{n}-Day Streak!",
-    ru: "\u0421\u0435\u0440\u0438\u044F {n} \u0434\u043D\u0435\u0439!",
+    ru: "Серия {n} дней!",
   },
   notif_streak_body: {
     en: "You've been consistent for {n} days straight.\nThat's not luck \u2014 that's discipline becoming identity.",
-    ru: "\u0422\u044B \u0431\u044B\u043B \u043F\u043E\u0441\u043B\u0435\u0434\u043E\u0432\u0430\u0442\u0435\u043B\u0435\u043D {n} \u0434\u043D\u0435\u0439 \u043F\u043E\u0434\u0440\u044F\u0434.\n\u042D\u0442\u043E \u043D\u0435 \u0443\u0434\u0430\u0447\u0430 \u2014 \u044D\u0442\u043E \u0434\u0438\u0441\u0446\u0438\u043F\u043B\u0438\u043D\u0430, \u0441\u0442\u0430\u043D\u043E\u0432\u044F\u0449\u0430\u044F\u0441\u044F \u0438\u0434\u0435\u043D\u0442\u0438\u0447\u043D\u043E\u0441\u0442\u044C\u044E.",
+    ru: "Ты был последователен {n} дней подряд.\nЭто не удача \u2014 это дисциплина, становящаяся частью тебя.",
   },
   notif_program_complete_title: {
     en: "Program Complete!",
-    ru: "\u041F\u0440\u043E\u0433\u0440\u0430\u043C\u043C\u0430 \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043D\u0430!",
+    ru: "Программа завершена!",
   },
   notif_program_complete_body: {
     en: "You finished \"{title}\"",
-    ru: "\u0422\u044B \u0437\u0430\u0432\u0435\u0440\u0448\u0438\u043B \u00AB{title}\u00BB",
+    ru: "Ты завершил \"{title}\"",
   },
   notif_program_results: {
     en: "Results:",
-    ru: "\u0420\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442\u044B:",
+    ru: "Результаты:",
   },
   notif_program_completed_days: {
     en: "{done}/{total} days completed ({pct}%)",
-    ru: "{done}/{total} \u0434\u043D\u0435\u0439 \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043D\u043E ({pct}%)",
+    ru: "{done}/{total} дней завершено ({pct}%)",
   },
   notif_program_xp: {
     en: "{xp} total XP earned",
-    ru: "{xp} XP \u0437\u0430\u0440\u0430\u0431\u043E\u0442\u0430\u043D\u043E",
+    ru: "{xp} XP заработано",
   },
   notif_program_outro: {
     en: "What you've built in {n} days is real.\nReady for the next program?",
-    ru: "\u0422\u043E, \u0447\u0442\u043E \u0442\u044B \u0441\u043E\u0437\u0434\u0430\u043B \u0437\u0430 {n} \u0434\u043D\u0435\u0439 \u2014 \u0440\u0435\u0430\u043B\u044C\u043D\u043E.\n\u0413\u043E\u0442\u043E\u0432 \u043A \u0441\u043B\u0435\u0434\u0443\u044E\u0449\u0435\u0439 \u043F\u0440\u043E\u0433\u0440\u0430\u043C\u043C\u0435?",
+    ru: "То, что ты построил за {n} дней, реальность.\nГотов к следующей программе?",
   },
   notif_challenge_new_member: {
     en: "New challenger!",
-    ru: "\u041D\u043E\u0432\u044B\u0439 \u0443\u0447\u0430\u0441\u0442\u043D\u0438\u043A!",
+    ru: "Новый участник!",
   },
   notif_challenge_member_body: {
     en: "<b>{name}</b> joined your challenge\n\"{title}\"",
-    ru: "<b>{name}</b> \u043F\u0440\u0438\u0441\u043E\u0435\u0434\u0438\u043D\u0438\u043B\u0441\u044F \u043A \u0442\u0432\u043E\u0435\u043C\u0443 \u0447\u0435\u043B\u043B\u0435\u043D\u0434\u0436\u0443\n\u00AB{title}\u00BB",
+    ru: "<b>{name}</b> присоединился к твоему челленджу\n\"{title}\"",
   },
   notif_challenge_members_count: {
     en: "{n} members now competing.",
-    ru: "{n} \u0443\u0447\u0430\u0441\u0442\u043D\u0438\u043A\u043E\u0432 \u0441\u043E\u0440\u0435\u0432\u043D\u0443\u044E\u0442\u0441\u044F.",
+    ru: "{n} участников сейчас соревнуются.",
   },
   notif_challenge_accepted: {
     en: "Challenge Accepted!",
-    ru: "\u0412\u044B\u0437\u043E\u0432 \u043F\u0440\u0438\u043D\u044F\u0442!",
+    ru: "Челлендж принят!",
   },
   notif_challenge_joined_body: {
     en: "You joined \"{title}\"\nType: {type} \u2022 {days} days",
-    ru: "\u0422\u044B \u043F\u0440\u0438\u0441\u043E\u0435\u0434\u0438\u043D\u0438\u043B\u0441\u044F \u043A \u00AB{title}\u00BB\n\u0422\u0438\u043F: {type} \u2022 {days} \u0434\u043D\u0435\u0439",
+    ru: "Ты присоединился к \"{title}\"\nТип: {type} \u2022 {days} дней",
   },
   notif_challenge_stay: {
     en: "Stay consistent and show up every day.\nYour progress will be visible to other members.",
-    ru: "\u0411\u0443\u0434\u044C \u043F\u043E\u0441\u043B\u0435\u0434\u043E\u0432\u0430\u0442\u0435\u043B\u0435\u043D \u2014 \u043F\u043E\u044F\u0432\u043B\u044F\u0439\u0441\u044F \u043A\u0430\u0436\u0434\u044B\u0439 \u0434\u0435\u043D\u044C.\n\u0422\u0432\u043E\u0439 \u043F\u0440\u043E\u0433\u0440\u0435\u0441\u0441 \u0432\u0438\u0434\u0435\u043D \u0434\u0440\u0443\u0433\u0438\u043C \u0443\u0447\u0430\u0441\u0442\u043D\u0438\u043A\u0430\u043C.",
+    ru: "Будь последователен и появляйся каждый день.\nТвой прогресс будет виден другим участникам.",
   },
   notif_daily_greetings: {
     en: "Rise and build.|New day, new chance.|Your future self is watching.|Small steps, big change.|Show up for yourself today.",
-    ru: "\u0412\u0441\u0442\u0430\u0432\u0430\u0439 \u0438 \u0434\u0435\u0439\u0441\u0442\u0432\u0443\u0439.|\u041D\u043E\u0432\u044B\u0439 \u0434\u0435\u043D\u044C \u2014 \u043D\u043E\u0432\u044B\u0439 \u0448\u0430\u043D\u0441.|\u0422\u0432\u043E\u0451 \u0431\u0443\u0434\u0443\u0449\u0435\u0435 \u00AB\u044F\u00BB \u043D\u0430\u0431\u043B\u044E\u0434\u0430\u0435\u0442.|\u041C\u0430\u043B\u0435\u043D\u044C\u043A\u0438\u0435 \u0448\u0430\u0433\u0438 \u2014 \u0431\u043E\u043B\u044C\u0448\u0438\u0435 \u043F\u0435\u0440\u0435\u043C\u0435\u043D\u044B.|\u0421\u0435\u0433\u043E\u0434\u043D\u044F \u2014 \u0440\u0430\u0434\u0438 \u0441\u0435\u0431\u044F.",
+    ru: "Вставай и строй.|Новый день, новая возможность.|Твоя будущая версия наблюдает.|Маленькие шаги, большие изменения.|Появляйся для себя сегодня.",
   },
   notif_daily_tasks_waiting: {
     en: "{n} tasks waiting for you.",
-    ru: "{n} \u0437\u0430\u0434\u0430\u043D\u0438\u0439 \u0436\u0434\u0443\u0442 \u0442\u0435\u0431\u044F.",
+    ru: "{n} заданий ждут тебя.",
   },
   notif_daily_open_app: {
     en: "Open the app to get started.",
-    ru: "\u041E\u0442\u043A\u0440\u043E\u0439 \u043F\u0440\u0438\u043B\u043E\u0436\u0435\u043D\u0438\u0435, \u0447\u0442\u043E\u0431\u044B \u043D\u0430\u0447\u0430\u0442\u044C.",
+    ru: "Открой приложение, чтобы начать.",
   },
 
   // === Welcome notification (from Mini App auth) ===
   notif_welcome_title: {
-    en: "Welcome to BECOME, {name}!",
-    ru: "\u0414\u043E\u0431\u0440\u043E \u043F\u043E\u0436\u0430\u043B\u043E\u0432\u0430\u0442\u044C \u0432 BECOME, {name}!",
+    en: "Welcome to Proper Food AI, {name}!",
+    ru: "Добро пожаловать в Proper Food AI, {name}!",
   },
   notif_welcome_body: {
     en: "Your personal development journey starts now.",
-    ru: "\u0422\u0432\u043E\u0439 \u043F\u0443\u0442\u044C \u0441\u0430\u043C\u043E\u0440\u0430\u0437\u0432\u0438\u0442\u0438\u044F \u043D\u0430\u0447\u0438\u043D\u0430\u0435\u0442\u0441\u044F \u0441\u0435\u0439\u0447\u0430\u0441.",
+    ru: "Твоя путь к развитию начинается сейчас.",
   },
   notif_welcome_f1: {
     en: "Your first program is ready",
-    ru: "\u0422\u0432\u043E\u044F \u043F\u0435\u0440\u0432\u0430\u044F \u043F\u0440\u043E\u0433\u0440\u0430\u043C\u043C\u0430 \u0433\u043E\u0442\u043E\u0432\u0430",
+    ru: "Твоя первая программа готова",
   },
   notif_welcome_f2: {
     en: "AI Coach will guide you after each day",
-    ru: "AI-\u043A\u043E\u0443\u0447 \u043F\u043E\u043C\u043E\u0436\u0435\u0442 \u043F\u043E\u0441\u043B\u0435 \u043A\u0430\u0436\u0434\u043E\u0433\u043E \u0434\u043D\u044F",
+    ru: "AI-коуч будет помогать тебе после каждого дня",
   },
   notif_welcome_f3: {
     en: "Create or join challenges with friends",
-    ru: "\u0421\u043E\u0437\u0434\u0430\u0432\u0430\u0439 \u0438\u043B\u0438 \u043F\u0440\u0438\u0441\u043E\u0435\u0434\u0438\u043D\u044F\u0439\u0441\u044F \u043A \u0447\u0435\u043B\u043B\u0435\u043D\u0434\u0436\u0430\u043C",
+    ru: "Создай или присоединись к челленджам с друзьями",
   },
   notif_welcome_f4: {
     en: "I'll send you reminders & progress updates",
-    ru: "\u0411\u0443\u0434\u0443 \u043F\u0440\u0438\u0441\u044B\u043B\u0430\u0442\u044C \u043D\u0430\u043F\u043E\u043C\u0438\u043D\u0430\u043D\u0438\u044F \u0438 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u044F",
+    ru: "Я буду отправлять напоминания и обновления о прогрессе",
   },
   notif_welcome_open: {
     en: "Open the app to start Day 1!",
-    ru: "\u041E\u0442\u043A\u0440\u043E\u0439 \u043F\u0440\u0438\u043B\u043E\u0436\u0435\u043D\u0438\u0435 \u0434\u043B\u044F \u043D\u0430\u0447\u0430\u043B\u0430!",
+    ru: "Открой приложение, чтобы начать первый день!",
   },
 
   // === Challenge type labels ===
-  challenge_solo: { en: "Solo", ru: "\u0421\u043E\u043B\u043E" },
-  challenge_contract: { en: "Commitment Contract", ru: "\u041A\u043E\u043D\u0442\u0440\u0430\u043A\u0442" },
-  challenge_pool: { en: "Shared Path", ru: "\u041E\u0431\u0449\u0438\u0439 \u043F\u0443\u0442\u044C" },
+  challenge_solo: { en: "Solo", ru: "Соло" },
+  challenge_contract: { en: "Commitment Contract", ru: "Контракт обязательств" },
+  challenge_pool: { en: "Shared Path", ru: "Общий путь" },
 
   // === Challenge member day complete notifications ===
   notif_ch_member_day_title: {
     en: "{name} completed a day!",
-    ru: "{name} \u0437\u0430\u0432\u0435\u0440\u0448\u0438\u043B(\u0430) \u0434\u0435\u043D\u044C!",
+    ru: "{name} завершил день!",
   },
   notif_ch_member_day_body: {
     en: "{name} completed day {day} in \"{title}\" ({pct}% done)",
-    ru: "{name} \u0437\u0430\u0432\u0435\u0440\u0448\u0438\u043B(\u0430) \u0434\u0435\u043D\u044C {day} \u0432 \u00AB{title}\u00BB ({pct}%)",
+    ru: "{name} завершил день {day} в \"{title}\" ({pct}%)",
   },
   notif_ch_member_streak: {
     en: "{name} is on a {n}-day streak!",
-    ru: "{name} \u0434\u0435\u0440\u0436\u0438\u0442 \u0441\u0435\u0440\u0438\u044E {n} \u0434\u043D\u0435\u0439!",
+    ru: "{name} на серии {n} дней!",
   },
   notif_ch_member_cta: {
     en: "Don't fall behind \u2014 complete your day too!",
-    ru: "\u041D\u0435 \u043E\u0442\u0441\u0442\u0430\u0432\u0430\u0439 \u2014 \u0437\u0430\u0432\u0435\u0440\u0448\u0438 \u0441\u0432\u043E\u0439 \u0434\u0435\u043D\u044C!",
+    ru: "Не отставайся \u2014 заверши свой день тоже!",
   },
 
   // === Misc ===
   not_started: {
     en: "You haven't started yet. Send /start to begin!",
-    ru: "\u0422\u044B \u0435\u0449\u0451 \u043D\u0435 \u043D\u0430\u0447\u0430\u043B. \u041E\u0442\u043F\u0440\u0430\u0432\u044C /start!",
+    ru: "Ты ещё не начал. Отправь /start, чтобы начать!",
   },
   unknown_bot: {
-    en: "I'm your BECOME bot! Use the buttons below or try /start, /progress, /today, /help.",
-    ru: "\u042F \u0442\u0432\u043E\u0439 BECOME-\u0431\u043E\u0442! \u0418\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u0439 \u043A\u043D\u043E\u043F\u043A\u0438 \u043D\u0438\u0436\u0435 \u0438\u043B\u0438 \u043F\u043E\u043F\u0440\u043E\u0431\u0443\u0439 /start, /progress, /today, /help.",
+    en: "I'm your Proper Food AI bot! Use the buttons below or try /start, /progress, /today, /help.",
+    ru: "Я твой Proper Food AI бот! Используй кнопки ниже или попробуй /start, /progress, /today, /help.",
   },
   day_of: {
     en: "Day {cur} of {total}",
-    ru: "\u0414\u0435\u043D\u044C {cur} \u0438\u0437 {total}",
+    ru: "День {cur} из {total}",
   },
   completed_days: {
     en: "Completed: <b>{n}/{total}</b> days",
-    ru: "\u0417\u0430\u0432\u0435\u0440\u0448\u0435\u043D\u043E: <b>{n}/{total}</b> \u0434\u043D\u0435\u0439",
+    ru: "Завершено: <b>{n}/{total}</b> дней",
   },
   streak_label: {
     en: "Streak: <b>{n}</b> days",
-    ru: "\u0421\u0435\u0440\u0438\u044F: <b>{n}</b> \u0434\u043D\u0435\u0439",
+    ru: "Серия: <b>{n}</b> дней",
   },
   skipped_label: {
     en: "Skipped: <b>{n}</b>",
-    ru: "\u041F\u0440\u043E\u043F\u0443\u0449\u0435\u043D\u043E: <b>{n}</b>",
+    ru: "Пропущено: <b>{n}</b>",
   },
   open_app_complete: {
     en: "Open the app to complete your tasks and earn XP!",
-    ru: "\u041E\u0442\u043A\u0440\u043E\u0439 \u043F\u0440\u0438\u043B\u043E\u0436\u0435\u043D\u0438\u0435, \u0447\u0442\u043E\u0431\u044B \u0432\u044B\u043F\u043E\u043B\u043D\u0438\u0442\u044C \u0437\u0430\u0434\u0430\u043D\u0438\u044F!",
+    ru: "Открой приложение, чтобы завершить задания и заработать XP!",
   },
   todays_tasks: {
     en: "Today's tasks:",
-    ru: "\u0417\u0430\u0434\u0430\u043D\u0438\u044F \u043D\u0430 \u0441\u0435\u0433\u043E\u0434\u043D\u044F:",
+    ru: "Задания на сегодня:",
   },
 
   // === Challenge expiring notifications ===
   notif_challenge_expiring_title: {
     en: "Challenge Ending Soon!",
-    ru: "\u0427\u0435\u043B\u043B\u0435\u043D\u0434\u0436 \u0441\u043A\u043E\u0440\u043E \u0437\u0430\u043A\u0430\u043D\u0447\u0438\u0432\u0430\u0435\u0442\u0441\u044F!",
+    ru: "Челлендж скоро заканчивается!",
   },
   notif_challenge_expiring_body: {
     en: "Your challenge \"{title}\" ends in ~{hours}h. Make sure to complete today\u2019s tasks!",
-    ru: "\u0422\u0432\u043E\u0439 \u0447\u0435\u043B\u043B\u0435\u043D\u0434\u0436 \u00AB{title}\u00BB \u0437\u0430\u043A\u043E\u043D\u0447\u0438\u0442\u0441\u044F \u0447\u0435\u0440\u0435\u0437 ~{hours}\u0447. \u0423\u0441\u043F\u0435\u0439 \u0432\u044B\u043F\u043E\u043B\u043D\u0438\u0442\u044C \u0437\u0430\u0434\u0430\u043D\u0438\u044F!",
+    ru: "Твой челлендж \"{title}\" заканчивается через ~{hours} ч. Убедись, что завершишь задания на сегодня!",
   },
   notif_challenge_expiring_action: {
     en: "Complete your tasks now to secure your deposit!",
-    ru: "\u0412\u044B\u043F\u043E\u043B\u043D\u0438 \u0437\u0430\u0434\u0430\u043D\u0438\u044F, \u0447\u0442\u043E\u0431\u044B \u0441\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C \u0434\u0435\u043F\u043E\u0437\u0438\u0442!",
+    ru: "Заверши задания сейчас, чтобы сохранить депозит!",
   },
   notif_challenge_expiring_btn: {
     en: "\u{1F3C3} Complete Tasks",

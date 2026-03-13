@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — Notification Service (i18n)
+// Proper Food AI — Notification Service (i18n)
 // =============================================
 // Sends proactive messages to users via Telegram Bot.
 // All notifications are fire-and-forget: failures are
@@ -95,7 +95,7 @@ function miniAppUrl(): string {
  * Uses Telegram's native mechanism — no SSL dependency, no "untrusted site" dialogs.
  */
 function buildTgDeepLink(startapp?: string): string {
-  const botUsername = Deno.env.get("TELEGRAM_BOT_USERNAME") || "BECOMEAI_BOT";
+  const botUsername = Deno.env.get("TELEGRAM_BOT_USERNAME") || "ProperFoodAI_bot";
   const appShortName = Deno.env.get("TELEGRAM_MINIAPP_SHORT_NAME") || "app";
   const base = `https://t.me/${botUsername}/${appShortName}`;
   if (startapp) {

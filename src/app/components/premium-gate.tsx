@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — Premium Gate (Freemium AI Paywall)
+// Proper Food AI — Premium Gate (Freemium AI Paywall)
 // =============================================
 // Replaces page content with a beautiful upsell
 // screen when user doesn't have an active
@@ -20,13 +20,14 @@ import {
   Check,
   Gift,
   Lock,
+  Salad,
 } from 'lucide-react';
 import { GlassCard } from './glass-card';
 import { useAuth } from './auth-context';
 import { hapticFeedback } from './telegram';
 import { useTranslation } from './i18n';
 
-export type PremiumFeature = 'coach' | 'plan-builder' | 'strategic-goal' | 'insights';
+export type PremiumFeature = 'coach' | 'plan-builder' | 'strategic-goal' | 'insights' | 'nutrition-coach';
 
 interface PremiumGateProps {
   feature: PremiumFeature;
@@ -38,6 +39,7 @@ const FEATURE_ICONS: Record<PremiumFeature, React.ElementType> = {
   'plan-builder': Sparkles,
   'strategic-goal': Target,
   insights: Brain,
+  'nutrition-coach': Salad,
 };
 
 const FEATURE_COLORS: Record<PremiumFeature, { from: string; to: string; accent: string }> = {
@@ -45,6 +47,7 @@ const FEATURE_COLORS: Record<PremiumFeature, { from: string; to: string; accent:
   'plan-builder': { from: 'from-[#6c5ce7]', to: 'to-[#a29bfe]', accent: 'text-[#a29bfe]' },
   'strategic-goal': { from: 'from-[#00cec9]', to: 'to-[#6c5ce7]', accent: 'text-[#00cec9]' },
   insights: { from: 'from-[#fd79a8]', to: 'to-[#6c5ce7]', accent: 'text-[#fd79a8]' },
+  'nutrition-coach': { from: 'from-[#00b894]', to: 'to-[#00cec9]', accent: 'text-[#00b894]' },
 };
 
 const FEATURE_DESC_KEYS: Record<PremiumFeature, string> = {
@@ -52,6 +55,7 @@ const FEATURE_DESC_KEYS: Record<PremiumFeature, string> = {
   'plan-builder': 'premium_plan_builder_desc',
   'strategic-goal': 'premium_strategic_goal_desc',
   insights: 'premium_insights_desc',
+  'nutrition-coach': 'premium_nutrition_coach_desc',
 };
 
 const FEATURE_TITLE_KEYS: Record<PremiumFeature, string> = {
@@ -59,6 +63,7 @@ const FEATURE_TITLE_KEYS: Record<PremiumFeature, string> = {
   'plan-builder': 'home_create_path',
   'strategic-goal': 'goals_create_strategic',
   insights: 'insights_btn',
+  'nutrition-coach': 'nutrition_coach_title',
 };
 
 /**
@@ -86,6 +91,7 @@ export function PremiumGate({ feature, children }: PremiumGateProps) {
     { key: 'premium_feat_plan', icon: Sparkles },
     { key: 'premium_feat_strategy', icon: Target },
     { key: 'premium_feat_insights', icon: Brain },
+    { key: 'premium_feat_nutrition', icon: Salad },
   ];
 
   return (
@@ -158,7 +164,7 @@ export function PremiumGate({ feature, children }: PremiumGateProps) {
             <div className="space-y-3">
               {features.map((f) => {
                 const FIcon = f.icon;
-                const isCurrentFeature = f.key === `premium_feat_${feature === 'plan-builder' ? 'plan' : feature === 'strategic-goal' ? 'strategy' : feature}`;
+                const isCurrentFeature = f.key === `premium_feat_${feature === 'plan-builder' ? 'plan' : feature === 'strategic-goal' ? 'strategy' : feature === 'nutrition-coach' ? 'nutrition' : feature}`;
                 return (
                   <div key={f.key} className={`flex items-center gap-3 ${isCurrentFeature ? 'opacity-100' : 'opacity-60'}`}>
                     <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${

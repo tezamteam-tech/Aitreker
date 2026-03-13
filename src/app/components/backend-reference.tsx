@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — Backend Reference (apps/api)
+// Proper Food AI — Backend Reference (apps/api)
 // =============================================
 // This file is NOT rendered in the frontend.
 // It documents the exact backend implementation
@@ -367,7 +367,7 @@ app.use(authRoutes);
 app.use(meRoutes);
 
 app.listen(PORT, () => {
-  console.log(\\\`BECOME API running on port \\\${PORT}\\\`);
+  console.log(\\\`Proper Food AI API running on port \\\${PORT}\\\`);
 });
 `;
 

@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — Journal AI Insights
+// Proper Food AI — Journal AI Insights
 // =============================================
 // AI-powered analysis of journal entries.
 // Shows themes, patterns, strengths, areas

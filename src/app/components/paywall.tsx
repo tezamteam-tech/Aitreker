@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — Paywall / Subscription Screen
+// Proper Food AI — Paywall / Subscription Screen
 // =============================================
 // Shown when subscription has expired. Offers
 // Stars & TON payment plans and access to bonuses.
@@ -148,7 +148,7 @@ export function PaywallOverlay({ daysLeft, expiresAt, onSubscriptionUpdated }: P
             className="text-white mb-2"
             style={{ fontSize: '1.5rem', fontWeight: 700 }}
           >
-            BECOME Premium
+            Proper Food Premium
           </motion.h1>
 
           <motion.p

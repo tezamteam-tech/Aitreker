@@ -1,33 +1,37 @@
 // =============================================
-// Proper Food AI — AI Coach Chat
+// AI Nutrition Coach — RAG-enhanced Chat
 // =============================================
-// Full conversational chat with the AI coach.
-// Describe situations, ask for advice, get
-// support and actionable strategies.
+// Personalized nutrition & fitness advice with
+// access to user profile, food history, calorie
+// balance, and meal plan data.
 // =============================================
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate, useLocation } from 'react-router';
+import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Send,
   Loader2,
-  Bot,
   User,
   Plus,
   MessageSquare,
   Trash2,
   X,
-  Sparkles,
   Clock,
+  Apple,
+  Salad,
+  Flame,
+  Scale,
+  Sparkles,
+  ChevronLeft,
+  Dumbbell,
 } from 'lucide-react';
-import { GlassCard } from './glass-card';
 import { api } from './api-client';
 import { hapticFeedback, hapticSuccess } from './telegram';
 import { useTranslation } from './i18n';
 import { VoiceInput } from './voice-input';
 import { PremiumGate } from './premium-gate';
-import { PageHeader } from './page-header';
+import { PremiumBadge } from './premium-gate';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -44,9 +48,8 @@ interface ConversationSummary {
   createdAt: string;
 }
 
-export function CoachChatPage() {
+export function NutritionCoachPage() {
   const navigate = useNavigate();
-  const location = useLocation();
   const { t, lang } = useTranslation();
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -63,7 +66,6 @@ export function CoachChatPage() {
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const insightsHandled = useRef(false);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -96,7 +98,7 @@ export function CoachChatPage() {
     hapticFeedback('light');
 
     try {
-      const res = await api.coachChatSend(msg, conversationId || undefined);
+      const res = await api.nutriCoachSend(msg, conversationId || undefined);
       setConversationId(res.conversationId);
       const assistantMsg: ChatMessage = {
         role: 'assistant',
@@ -106,8 +108,8 @@ export function CoachChatPage() {
       setMessages((prev) => [...prev, assistantMsg]);
       hapticSuccess();
     } catch (err: any) {
-      console.error('[Coach Chat] Send error:', err);
-      setError(t('coach_chat_error'));
+      console.error('[NutriCoach] Send error:', err);
+      setError(t('nutri_coach_error'));
     } finally {
       setSending(false);
     }
@@ -121,31 +123,14 @@ export function CoachChatPage() {
     }
   };
 
-  // Handle incoming journal insights context
-  useEffect(() => {
-    if (insightsHandled.current) return;
-    const state = location.state as any;
-    if (state?.insightsContext) {
-      insightsHandled.current = true;
-      const prefix = lang === 'ru'
-        ? 'Вот мои AI-инсайты из журнала. Помоги мне разобраться и составить план действий:\n\n'
-        : 'Here are my journal AI insights. Help me understand them and create an action plan:\n\n';
-      const msg = prefix + state.insightsContext;
-      // Clear the state so navigating back and forth doesn't re-trigger
-      window.history.replaceState({}, '');
-      // Small delay so the component is fully mounted
-      setTimeout(() => handleSend(msg), 300);
-    }
-  }, [location.state, lang, handleSend]);
-
   // Load conversation history list
   const loadHistory = useCallback(async () => {
     setLoadingHistory(true);
     try {
-      const res = await api.coachChatList();
+      const res = await api.nutriCoachList();
       setConversations(res.conversations || []);
     } catch (err) {
-      console.error('[Coach Chat] History error:', err);
+      console.error('[NutriCoach] History error:', err);
     } finally {
       setLoadingHistory(false);
     }
@@ -155,12 +140,12 @@ export function CoachChatPage() {
   const openConversation = useCallback(async (convId: string) => {
     hapticFeedback('light');
     try {
-      const conv = await api.coachChatGet(convId);
+      const conv = await api.nutriCoachGet(convId);
       setConversationId(conv.id);
       setMessages(conv.messages || []);
       setShowHistory(false);
     } catch (err) {
-      console.error('[Coach Chat] Open conv error:', err);
+      console.error('[NutriCoach] Open conv error:', err);
     }
   }, []);
 
@@ -168,7 +153,7 @@ export function CoachChatPage() {
   const deleteConversation = useCallback(async (convId: string) => {
     hapticFeedback('medium');
     try {
-      await api.coachChatDelete(convId);
+      await api.nutriCoachDelete(convId);
       setConversations((prev) => prev.filter((c) => c.id !== convId));
       if (conversationId === convId) {
         setConversationId(null);
@@ -176,7 +161,7 @@ export function CoachChatPage() {
       }
       setDeletingId(null);
     } catch (err) {
-      console.error('[Coach Chat] Delete error:', err);
+      console.error('[NutriCoach] Delete error:', err);
     }
   }, [conversationId]);
 
@@ -189,49 +174,83 @@ export function CoachChatPage() {
     setShowHistory(false);
   };
 
-  // Suggestions
+  // Nutrition-specific suggestion chips
   const suggestions = [
-    t('coach_chat_suggest_1'),
-    t('coach_chat_suggest_2'),
-    t('coach_chat_suggest_3'),
-    t('coach_chat_suggest_4'),
+    t('nutri_coach_suggest_1'),
+    t('nutri_coach_suggest_2'),
+    t('nutri_coach_suggest_3'),
+    t('nutri_coach_suggest_4'),
+    t('nutri_coach_suggest_5'),
   ];
 
   const isEmpty = messages.length === 0;
 
+  // Format assistant messages with basic markdown-like rendering
+  const formatMessage = (content: string) => {
+    // Bold: **text**
+    const parts = content.split(/(\*\*[^*]+\*\*)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={i} className="text-white/90 font-semibold">{part.slice(2, -2)}</strong>;
+      }
+      return <span key={i}>{part}</span>;
+    });
+  };
+
   return (
-    <PremiumGate feature="coach">
+    <PremiumGate feature="nutrition-coach">
     <div className="h-[100dvh] flex flex-col overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-20 -right-20 w-60 h-60 rounded-full bg-[#6c5ce7]/8 blur-[100px]" />
-        <div className="absolute bottom-1/4 -left-16 w-48 h-48 rounded-full bg-[#00cec9]/6 blur-[80px]" />
+        <div className="absolute -top-20 -right-20 w-60 h-60 rounded-full bg-[#00b894]/8 blur-[100px]" />
+        <div className="absolute bottom-1/4 -left-16 w-48 h-48 rounded-full bg-[#fdcb6e]/6 blur-[80px]" />
       </div>
 
       {/* Header */}
       <div className="relative z-10 px-5 shrink-0" style={{ paddingTop: 'var(--safe-area-top, 56px)', paddingBottom: '0.5rem' }}>
-        <PageHeader
-          title={t('coach_chat_title')}
-          mb="mb-0"
-          actions={
-            <>
-              <motion.button
-                whileTap={{ scale: 0.9 }}
-                onClick={() => { hapticFeedback('light'); loadHistory(); setShowHistory(true); }}
-                className="w-9 h-9 rounded-xl bg-white/[0.06] flex items-center justify-center"
-              >
-                <Clock className="w-4.5 h-4.5 text-white/40" />
-              </motion.button>
-              <motion.button
-                whileTap={{ scale: 0.9 }}
-                onClick={startNewChat}
-                className="w-9 h-9 rounded-xl bg-[#6c5ce7]/20 border border-[#6c5ce7]/30 flex items-center justify-center"
-              >
-                <Plus className="w-5 h-5 text-[#a29bfe]" />
-              </motion.button>
-            </>
-          }
-        />
+        <div className="flex items-center justify-between mb-0">
+          <div className="flex items-center gap-3">
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => navigate(-1)}
+              className="w-9 h-9 rounded-xl bg-white/[0.06] flex items-center justify-center"
+            >
+              <ChevronLeft className="w-5 h-5 text-white/50" />
+            </motion.button>
+            <div>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#00b894] to-[#00cec9] flex items-center justify-center">
+                  <Salad className="w-4.5 h-4.5 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-white font-bold" style={{ fontSize: '1.125rem', lineHeight: 1.2 }}>
+                    {t('nutri_coach_title')}
+                  </h1>
+                  <p className="text-white/30" style={{ fontSize: '0.6875rem' }}>
+                    {t('nutri_coach_subtitle')}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => { hapticFeedback('light'); loadHistory(); setShowHistory(true); }}
+              className="w-9 h-9 rounded-xl bg-white/[0.06] flex items-center justify-center"
+            >
+              <Clock className="w-4.5 h-4.5 text-white/40" />
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={startNewChat}
+              className="w-9 h-9 rounded-xl bg-[#00b894]/20 border border-[#00b894]/30 flex items-center justify-center"
+            >
+              <Plus className="w-5 h-5 text-[#00b894]" />
+            </motion.button>
+          </div>
+        </div>
       </div>
 
       {/* Divider */}
@@ -250,12 +269,42 @@ export function CoachChatPage() {
             animate={{ opacity: 1, y: 0 }}
             className="flex flex-col items-center justify-center py-8"
           >
-            <div className="w-16 h-16 rounded-2xl bg-[#6c5ce7]/10 flex items-center justify-center mb-4">
-              <Bot className="w-8 h-8 text-[#a29bfe]" />
+            {/* Coach avatar */}
+            <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-[#00b894]/20 to-[#00cec9]/10 flex items-center justify-center mb-4 border border-[#00b894]/20">
+              <Salad className="w-10 h-10 text-[#00b894]" />
             </div>
-            <p className="text-white/50 text-center max-w-xs mb-6" style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
-              {t('coach_chat_welcome')}
+            <p className="text-white/50 text-center max-w-xs mb-2" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
+              {t('nutri_coach_welcome_title')}
             </p>
+            <p className="text-white/30 text-center max-w-xs mb-6" style={{ fontSize: '0.8125rem', lineHeight: 1.5 }}>
+              {t('nutri_coach_welcome')}
+            </p>
+
+            {/* Quick action icons */}
+            <div className="flex gap-4 mb-6">
+              {[
+                { icon: Apple, label: t('nutri_coach_topic_diet'), color: '#e17055' },
+                { icon: Flame, label: t('nutri_coach_topic_calories'), color: '#fdcb6e' },
+                { icon: Scale, label: t('nutri_coach_topic_weight'), color: '#00b894' },
+                { icon: Dumbbell, label: t('nutri_coach_topic_workout'), color: '#6c5ce7' },
+              ].map((item, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 + i * 0.05 }}
+                  className="flex flex-col items-center gap-1.5"
+                >
+                  <div
+                    className="w-11 h-11 rounded-2xl flex items-center justify-center"
+                    style={{ background: `${item.color}15`, border: `1px solid ${item.color}25` }}
+                  >
+                    <item.icon className="w-5 h-5" style={{ color: item.color }} />
+                  </div>
+                  <span className="text-white/30" style={{ fontSize: '0.625rem' }}>{item.label}</span>
+                </motion.div>
+              ))}
+            </div>
 
             {/* Suggestion chips */}
             <div className="flex flex-wrap gap-2 justify-center max-w-sm">
@@ -264,10 +313,10 @@ export function CoachChatPage() {
                   key={i}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 + i * 0.05 }}
+                  transition={{ delay: 0.2 + i * 0.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => handleSend(s)}
-                  className="px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white/50 hover:text-white/70 hover:bg-white/[0.06] transition-all"
+                  className="px-3.5 py-2 rounded-xl bg-[#00b894]/[0.06] border border-[#00b894]/[0.12] text-white/50 hover:text-white/70 hover:bg-[#00b894]/[0.1] transition-all"
                   style={{ fontSize: '0.8125rem' }}
                 >
                   {s}
@@ -288,11 +337,11 @@ export function CoachChatPage() {
             {/* Avatar */}
             <div className={`w-8 h-8 rounded-lg shrink-0 flex items-center justify-center mt-0.5 ${
               msg.role === 'assistant'
-                ? 'bg-[#6c5ce7]/15'
+                ? 'bg-gradient-to-br from-[#00b894]/20 to-[#00cec9]/10'
                 : 'bg-white/[0.06]'
             }`}>
               {msg.role === 'assistant' ? (
-                <Bot className="w-4 h-4 text-[#a29bfe]" />
+                <Salad className="w-4 h-4 text-[#00b894]" />
               ) : (
                 <User className="w-4 h-4 text-white/40" />
               )}
@@ -302,7 +351,7 @@ export function CoachChatPage() {
             <div
               className={`max-w-[80%] rounded-2xl px-4 py-3 ${
                 msg.role === 'user'
-                  ? 'bg-[#6c5ce7]/20 border border-[#6c5ce7]/20'
+                  ? 'bg-[#00b894]/20 border border-[#00b894]/20'
                   : 'bg-white/[0.04] border border-white/[0.06]'
               }`}
             >
@@ -312,7 +361,7 @@ export function CoachChatPage() {
                 }`}
                 style={{ fontSize: '0.875rem', lineHeight: 1.6 }}
               >
-                {msg.content}
+                {msg.role === 'assistant' ? formatMessage(msg.content) : msg.content}
               </p>
               <p className="text-white/15 mt-1.5" style={{ fontSize: '0.625rem' }}>
                 {new Date(msg.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -328,16 +377,16 @@ export function CoachChatPage() {
             animate={{ opacity: 1, y: 0 }}
             className="flex gap-2.5"
           >
-            <div className="w-8 h-8 rounded-lg bg-[#6c5ce7]/15 flex items-center justify-center shrink-0">
-              <Bot className="w-4 h-4 text-[#a29bfe]" />
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#00b894]/20 to-[#00cec9]/10 flex items-center justify-center shrink-0">
+              <Salad className="w-4 h-4 text-[#00b894]" />
             </div>
             <div className="rounded-2xl px-4 py-3 bg-white/[0.04] border border-white/[0.06]">
               <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-[#a29bfe]/40 animate-bounce" style={{ animationDelay: '0ms' }} />
-                <span className="w-2 h-2 rounded-full bg-[#a29bfe]/40 animate-bounce" style={{ animationDelay: '150ms' }} />
-                <span className="w-2 h-2 rounded-full bg-[#a29bfe]/40 animate-bounce" style={{ animationDelay: '300ms' }} />
+                <span className="w-2 h-2 rounded-full bg-[#00b894]/40 animate-bounce" style={{ animationDelay: '0ms' }} />
+                <span className="w-2 h-2 rounded-full bg-[#00b894]/40 animate-bounce" style={{ animationDelay: '150ms' }} />
+                <span className="w-2 h-2 rounded-full bg-[#00b894]/40 animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
-              <p className="text-white/20 mt-1" style={{ fontSize: '0.6875rem' }}>{t('coach_chat_thinking')}</p>
+              <p className="text-white/20 mt-1" style={{ fontSize: '0.6875rem' }}>{t('nutri_coach_thinking')}</p>
             </div>
           </motion.div>
         )}
@@ -366,7 +415,7 @@ export function CoachChatPage() {
             value={input}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            placeholder={t('coach_chat_placeholder')}
+            placeholder={t('nutri_coach_placeholder')}
             rows={1}
             className="flex-1 bg-transparent text-white placeholder:text-white/20 outline-none resize-none py-1"
             style={{ fontSize: '0.9375rem', lineHeight: 1.5, maxHeight: 120 }}
@@ -378,7 +427,7 @@ export function CoachChatPage() {
             disabled={!input.trim() || sending}
             className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all ${
               input.trim() && !sending
-                ? 'bg-[#6c5ce7] text-white'
+                ? 'bg-[#00b894] text-white'
                 : 'bg-white/[0.04] text-white/20'
             }`}
           >
@@ -409,7 +458,7 @@ export function CoachChatPage() {
               className="absolute bottom-0 left-0 right-0 max-h-[70vh] rounded-t-3xl bg-liquid-glass-panel border-t border-white/[0.1] p-6 pb-10 overflow-y-auto"
             >
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-white" style={{ fontSize: '1.25rem', fontWeight: 700 }}>{t('coach_chat_history')}</h2>
+                <h2 className="text-white" style={{ fontSize: '1.25rem', fontWeight: 700 }}>{t('nutri_coach_history')}</h2>
                 <button
                   onClick={() => setShowHistory(false)}
                   className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center"
@@ -425,7 +474,7 @@ export function CoachChatPage() {
               ) : conversations.length === 0 ? (
                 <div className="text-center py-8">
                   <MessageSquare className="w-8 h-8 text-white/10 mx-auto mb-2" />
-                  <p className="text-white/20" style={{ fontSize: '0.875rem' }}>{t('coach_chat_no_history')}</p>
+                  <p className="text-white/20" style={{ fontSize: '0.875rem' }}>{t('nutri_coach_no_history')}</p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -438,12 +487,12 @@ export function CoachChatPage() {
                         onClick={() => openConversation(conv.id)}
                         className={`w-full text-left p-3.5 rounded-xl bg-white/[0.03] border transition-all ${
                           conversationId === conv.id
-                            ? 'border-[#6c5ce7]/30 bg-[#6c5ce7]/5'
+                            ? 'border-[#00b894]/30 bg-[#00b894]/5'
                             : 'border-white/[0.05] hover:bg-white/[0.05]'
                         }`}
                       >
                         <div className="flex items-center gap-2 mb-1">
-                          <MessageSquare className="w-3.5 h-3.5 text-[#a29bfe]/50" />
+                          <Salad className="w-3.5 h-3.5 text-[#00b894]/50" />
                           <span className="text-white/20" style={{ fontSize: '0.6875rem' }}>
                             {conv.messageCount} msgs
                           </span>

@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — Frontend i18n System
+// Proper Food AI — Frontend i18n System
 // =============================================
 // Centralized translations (ru/en) for the entire
 // React frontend. Reads language from api-client
@@ -14,7 +14,7 @@ export type Lang = 'en' | 'ru';
 // All translation keys organized by feature/component
 const translations: Record<string, Record<Lang, string>> = {
   // ---- Common ----
-  become: { en: 'BECOME', ru: 'BECOME' },
+  become: { en: 'Proper Food', ru: 'Proper Food' },
   loading: { en: 'Loading...', ru: '\u0417\u0430\u0433\u0440\u0443\u0437\u043A\u0430...' },
   saving: { en: 'Saving...', ru: '\u0421\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u0438\u0435...' },
   saved: { en: 'Saved', ru: '\u0421\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u043E' },
@@ -64,7 +64,7 @@ const translations: Record<string, Record<Lang, string>> = {
   // ---- Auth / Errors ----
   auth_retry_login: { en: 'Retry login', ru: '\u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u044C \u0432\u0445\u043E\u0434' },
   auth_dismiss: { en: 'Dismiss', ru: '\u0421\u043A\u0440\u044B\u0442\u044C' },
-  auth_no_initdata_title: { en: 'Welcome to BECOME', ru: 'Добро пожаловать в BECOME' },
+  auth_no_initdata_title: { en: 'Welcome to Proper Food', ru: 'Добро пожаловать в Proper Food' },
   auth_no_initdata_desc: {
     en: 'To get started, open the chat with',
     ru: 'Чтобы начать, откройте чат с',
@@ -74,8 +74,8 @@ const translations: Record<string, Record<Lang, string>> = {
     ru: ', поделитесь номером телефона и нажмите «Открыть».',
   },
   auth_no_initdata_step1: {
-    en: 'Open @BECOMEAI_BOT in Telegram',
-    ru: 'Откройте @BECOMEAI_BOT в Telegram',
+    en: 'Open @ProperFoodAI_bot in Telegram',
+    ru: 'Откройте @ProperFoodAI_bot в Telegram',
   },
   auth_no_initdata_step2: {
     en: 'Share your phone number',
@@ -85,27 +85,27 @@ const translations: Record<string, Record<Lang, string>> = {
     en: 'Tap «Open» button',
     ru: 'Нажмите кнопку «Открыть»',
   },
-  auth_open_from_bot: { en: 'Open @BECOMEAI_BOT', ru: 'Открыть @BECOMEAI_BOT' },
+  auth_open_from_bot: { en: 'Open @ProperFoodAI_bot', ru: 'Открыть @ProperFoodAI_bot' },
   // Kept for debug/dev — not shown to users
   auth_continue_dev: { en: 'Continue in dev mode', ru: 'Продолжить в dev-режиме' },
   auth_tg_failed: {
-    en: 'To use the app, open the chat with @BECOMEAI_BOT, share your phone number and tap «Open».',
-    ru: 'Для использования приложения откройте чат с @BECOMEAI_BOT, поделитесь номером телефона и нажмите «Открыть».',
+    en: 'To use the app, open the chat with @ProperFoodAI_bot, share your phone number and tap «Open».',
+    ru: 'Для использования приложения откройте чат с @ProperFoodAI_bot, поделитесь номером телефона и нажмите «Открыть».',
   },
   auth_unexpected: { en: 'Authentication failed unexpectedly. Please retry.', ru: '\u041D\u0435\u043E\u0436\u0438\u0434\u0430\u043D\u043D\u0430\u044F \u043E\u0448\u0438\u0431\u043A\u0430 \u0430\u0432\u0442\u043E\u0440\u0438\u0437\u0430\u0446\u0438\u0438. \u041F\u043E\u043F\u0440\u043E\u0431\u0443\u0439\u0442\u0435 \u0441\u043D\u043E\u0432\u0430.' },
   auth_dev_mode_banner: { en: 'Dev mode — no Telegram auth', ru: 'Dev-\u0440\u0435\u0436\u0438\u043C — \u0431\u0435\u0437 Telegram \u0430\u0432\u0442\u043E\u0440\u0438\u0437\u0430\u0446\u0438\u0438' },
-  auth_bot_token_expired: { en: 'Auth link expired. Open the app again from @BECOMEAI_BOT.', ru: '\u0421\u0441\u044B\u043B\u043A\u0430 \u0443\u0441\u0442\u0430\u0440\u0435\u043B\u0430. \u041E\u0442\u043A\u0440\u043E\u0439\u0442\u0435 \u043F\u0440\u0438\u043B\u043E\u0436\u0435\u043D\u0438\u0435 \u0437\u0430\u043D\u043E\u0432\u043E \u0438\u0437 @BECOMEAI_BOT.' },
+  auth_bot_token_expired: { en: 'Auth link expired. Open the app again from @ProperFoodAI_bot.', ru: 'Ссылка устарела. Откройте приложение заново из @ProperFoodAI_bot.' },
   auth_ob_hint_title: { en: 'Telegram authorization', ru: '\u0410\u0432\u0442\u043E\u0440\u0438\u0437\u0430\u0446\u0438\u044F Telegram' },
   auth_ob_hint_desc: {
-    en: 'Open this app from @BECOMEAI_BOT to enable Telegram authorization.',
-    ru: '\u041E\u0442\u043A\u0440\u043E\u0439\u0442\u0435 \u044D\u0442\u043E \u043F\u0440\u0438\u043B\u043E\u0436\u0435\u043D\u0438\u0435 \u0438\u0437 @BECOMEAI_BOT \u0434\u043B\u044F \u0430\u0432\u0442\u043E\u0440\u0438\u0437\u0430\u0446\u0438\u0438 \u0447\u0435\u0440\u0435\u0437 Telegram.',
+    en: 'Open this app from @ProperFoodAI_bot to enable Telegram authorization.',
+    ru: 'Откройте это приложение из @ProperFoodAI_bot для авторизации через Telegram.',
   },
   auth_retrying: { en: 'Retrying...', ru: '\u041F\u043E\u0432\u0442\u043E\u0440\u043D\u0430\u044F \u043F\u043E\u043F\u044B\u0442\u043A\u0430...' },
   auth_session_expired: { en: 'Session expired. Please login again.', ru: '\u0421\u0435\u0441\u0441\u0438\u044F \u0438\u0441\u0442\u0435\u043A\u043B\u0430. \u0412\u043E\u0439\u0434\u0438\u0442\u0435 \u0441\u043D\u043E\u0432\u0430.' },
 
   // ---- Support banner ----
   support_title: { en: 'Support the Project', ru: 'Поддержать проект' },
-  support_desc: { en: 'BECOME is built with love. Help us grow and improve!', ru: 'BECOME создан с любовью. Помогите нам расти и становиться лучше!' },
+  support_desc: { en: 'Proper Food AI is built with love. Help us grow and improve!', ru: 'Proper Food AI создан с любовью. Помогите нам расти и становиться лучше!' },
   support_btn: { en: 'Support ❤️', ru: 'Поддержать ❤️' },
   support_share_btn: { en: 'Share', ru: 'Поделиться' },
 
@@ -139,7 +139,7 @@ const translations: Record<string, Record<Lang, string>> = {
   privacy_ai_journal: { en: 'AI Journal Access', ru: 'Доступ AI к журналу' },
   privacy_ai_journal_desc: { en: 'Allow AI coach to use journal notes for coaching', ru: 'AI-коуч использует записи журнала для коучинга' },
   privacy_analytics: { en: 'Usage Analytics', ru: 'Аналитика использования' },
-  privacy_analytics_desc: { en: 'Help improve BECOME with anonymous usage data', ru: 'Помогите улучшить BECOME с анонимными данными' },
+  privacy_analytics_desc: { en: 'Help improve Proper Food with anonymous usage data', ru: 'Помогите улучшить Proper Food с анонимными данными' },
 
   // ---- Dashboard ----
   greeting_morning: { en: 'Good morning', ru: '\u0414\u043E\u0431\u0440\u043E\u0435 \u0443\u0442\u0440\u043E' },
@@ -276,12 +276,12 @@ const translations: Record<string, Record<Lang, string>> = {
 
   // ---- Onboarding (single-screen) ----
   skip: { en: 'Skip', ru: '\u041F\u0440\u043E\u043F\u0443\u0441\u0442\u0438\u0442\u044C' },
-  ob_welcome_title: { en: 'Welcome to BECOME', ru: '\u0414\u043E\u0431\u0440\u043E \u043F\u043E\u0436\u0430\u043B\u043E\u0432\u0430\u0442\u044C \u0432 BECOME' },
+  ob_welcome_title: { en: 'Welcome to Proper Food', ru: 'Добро пожаловать в Proper Food' },
   ob_welcome_desc: { en: 'Set your preferences \u2014 you can change them later', ru: '\u041D\u0430\u0441\u0442\u0440\u043E\u0439 \u043F\u043E\u0434 \u0441\u0435\u0431\u044F \u2014 \u043C\u043E\u0436\u043D\u043E \u0438\u0437\u043C\u0435\u043D\u0438\u0442\u044C \u043F\u043E\u0436\u0435' },
   ob_lang_label: { en: 'Language', ru: '\u042F\u0437\u044B\u043A' },
   ob_goal_label: { en: 'Your goal', ru: '\u0422\u0432\u043E\u044F \u0446\u0435\u043B\u044C' },
   ob_tone_label: { en: 'Coach tone', ru: '\u0422\u043E\u043D \u043A\u043E\u0443\u0447\u0430' },
-  ob_start_btn: { en: 'Start BECOME', ru: '\u041D\u0430\u0447\u0430\u0442\u044C' },
+  ob_start_btn: { en: 'Start', ru: 'Начать' },
 
   // ---- Onboarding (legacy keys) ----
   step1_title: { en: 'Choose your language', ru: '\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u044F\u0437\u044B\u043A' },
@@ -467,8 +467,8 @@ const translations: Record<string, Record<Lang, string>> = {
 
   // ---- Share ----
   share_challenge: { en: 'Share', ru: '\u041F\u043E\u0434\u0435\u043B\u0438\u0442\u044C\u0441\u044F' },
-  share_challenge_text: { en: 'Join my BECOME challenge "{title}"! Let\'s grow together.', ru: '\u041F\u0440\u0438\u0441\u043E\u0435\u0434\u0438\u043D\u044F\u0439\u0441\u044F \u043A \u043C\u043E\u0435\u043C\u0443 \u0447\u0435\u043B\u043B\u0435\u043D\u0434\u0436\u0443 \u0432 BECOME "{title}"! \u0420\u0430\u0441\u0442\u0451\u043C \u0432\u043C\u0435\u0441\u0442\u0435.' },
-  share_private_text: { en: 'Join my private BECOME challenge "{title}"!\nCode: {code}', ru: '\u041F\u0440\u0438\u0441\u043E\u0435\u0434\u0438\u043D\u044F\u0439\u0441\u044F \u043A \u043C\u043E\u0435\u043C\u0443 \u0437\u0430\u043A\u0440\u044B\u0442\u043E\u043C\u0443 \u0447\u0435\u043B\u043B\u0435\u043D\u0434\u0436\u0443 BECOME "{title}"!\n\u041A\u043E\u0434: {code}' },
+  share_challenge_text: { en: 'Join my Proper Food challenge "{title}"! Let\'s grow together.', ru: 'Присоединяйся к моему челленджу в Proper Food "{title}"! Растём вместе.' },
+  share_private_text: { en: 'Join my private Proper Food challenge "{title}"!\nCode: {code}', ru: 'Присоединяйся к моему закрытому челленджу Proper Food "{title}"!\nКод: {code}' },
   share_invite_friends: { en: 'Invite friends', ru: '\u041F\u0440\u0438\u0433\u043B\u0430\u0441\u0438\u0442\u044C \u0434\u0440\u0443\u0437\u0435\u0439' },
 
   // ---- Leaderboard ----
@@ -493,8 +493,8 @@ const translations: Record<string, Record<Lang, string>> = {
   bot_success: { en: 'Bot configured successfully!', ru: '\u0411\u043E\u0442 \u0443\u0441\u043F\u0435\u0448\u043D\u043E \u043D\u0430\u0441\u0442\u0440\u043E\u0435\u043D!' },
   bot_webhook_removed: { en: 'Webhook removed', ru: 'Webhook \u0443\u0434\u0430\u043B\u0451\u043D' },
   bot_info: {
-    en: 'Setup registers: webhook URL, bot commands menu, and Mini App button. Make sure TELEGRAM_BOT_TOKEN_BECOME and BECOME_MINIAPP_URL are set in Supabase secrets.',
-    ru: '\u041D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0430 \u0440\u0435\u0433\u0438\u0441\u0442\u0440\u0438\u0440\u0443\u0435\u0442: webhook URL, \u043C\u0435\u043D\u044E \u043A\u043E\u043C\u0430\u043D\u0434 \u0431\u043E\u0442\u0430 \u0438 \u043A\u043D\u043E\u043F\u043A\u0443 Mini App. \u0423\u0431\u0435\u0434\u0438\u0442\u0435\u0441\u044C, \u0447\u0442\u043E TELEGRAM_BOT_TOKEN_BECOME \u0438 BECOME_MINIAPP_URL \u0437\u0430\u0434\u0430\u043D\u044B \u0432 Supabase secrets.',
+    en: 'Setup registers: webhook URL, bot commands menu, and Mini App button. Make sure TELEGRAM_BOT_TOKEN_BECOME and PROPERFOOD_MINIAPP_URL are set in Supabase secrets.',
+    ru: 'Настройка регистрирует: webhook URL, меню команд бота и кнопку Mini App. Убедитесь, что TELEGRAM_BOT_TOKEN_BECOME и PROPERFOOD_MINIAPP_URL заданы в Supabase secrets.',
   },
 
   // ---- Plan Builder ----
@@ -692,7 +692,7 @@ const translations: Record<string, Record<Lang, string>> = {
   coach_chat_new: { en: 'New Chat', ru: '\u041D\u043E\u0432\u044B\u0439 \u0447\u0430\u0442' },
   coach_chat_history: { en: 'Chat History', ru: '\u0418\u0441\u0442\u043E\u0440\u0438\u044F \u0447\u0430\u0442\u043E\u0432' },
   coach_chat_empty: { en: 'Ask me anything about your goals, habits, or challenges', ru: '\u0421\u043F\u0440\u043E\u0441\u0438 \u043C\u0435\u043D\u044F \u043E \u0446\u0435\u043B\u044F\u0445, \u043F\u0440\u0438\u0432\u044B\u0447\u043A\u0430\u0445 \u0438\u043B\u0438 \u0442\u0440\u0443\u0434\u043D\u043E\u0441\u0442\u044F\u0445' },
-  coach_chat_welcome: { en: "Hi! I'm your BECOME Coach. I'm here to help you with personal development, habits, and any challenges you're facing. What's on your mind?", ru: '\u041F\u0440\u0438\u0432\u0435\u0442! \u042F \u0442\u0432\u043E\u0439 BECOME \u043A\u043E\u0443\u0447. \u042F \u0437\u0434\u0435\u0441\u044C, \u0447\u0442\u043E\u0431\u044B \u043F\u043E\u043C\u043E\u0447\u044C \u0441 \u0441\u0430\u043C\u043E\u0440\u0430\u0437\u0432\u0438\u0442\u0438\u0435\u043C, \u043F\u0440\u0438\u0432\u044B\u0447\u043A\u0430\u043C\u0438 \u0438 \u043B\u044E\u0431\u044B\u043C\u0438 \u0432\u044B\u0437\u043E\u0432\u0430\u043C\u0438. \u0427\u0442\u043E \u0443 \u0442\u0435\u0431\u044F \u043D\u0430 \u0443\u043C\u0435?' },
+  coach_chat_welcome: { en: "Hi! I'm your Proper Food Coach. I'm here to help you with nutrition, fitness, and any health goals you're working on. What's on your mind?", ru: 'Привет! Я твой Proper Food коуч. Я здесь, чтобы помочь с питанием, тренировками и любыми целями по здоровью. Что у тебя на уме?' },
   coach_chat_suggestions: { en: 'Suggestions', ru: '\u041F\u043E\u0434\u0441\u043A\u0430\u0437\u043A\u0438' },
   coach_chat_suggest_1: { en: "I'm struggling with motivation", ru: '\u041C\u043D\u0435 \u0442\u0440\u0443\u0434\u043D\u043E \u0441 \u043C\u043E\u0442\u0438\u0432\u0430\u0446\u0438\u0435\u0439' },
   coach_chat_suggest_2: { en: 'How to build a new habit?', ru: '\u041A\u0430\u043A \u0432\u044B\u0440\u0430\u0431\u043E\u0442\u0430\u0442\u044C \u043D\u043E\u0432\u0443\u044E \u043F\u0440\u0438\u0432\u044B\u0447\u043A\u0443?' },
@@ -701,6 +701,46 @@ const translations: Record<string, Record<Lang, string>> = {
   coach_chat_error: { en: 'Failed to send message. Try again.', ru: '\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u043E\u0442\u043F\u0440\u0430\u0432\u0438\u0442\u044C. \u041F\u043E\u043F\u0440\u043E\u0431\u0443\u0439 \u0435\u0449\u0451.' },
   coach_chat_delete: { en: 'Delete chat?', ru: '\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0447\u0430\u0442?' },
   coach_chat_no_history: { en: 'No previous chats', ru: '\u041D\u0435\u0442 \u043F\u0440\u0435\u0434\u044B\u0434\u0443\u0449\u0438\u0445 \u0447\u0430\u0442\u043E\u0432' },
+
+  // ---- AI Nutrition Coach ----
+  nutri_coach_title: { en: 'AI Nutrition Coach', ru: 'AI-\u043D\u0443\u0442\u0440\u0438\u0446\u0438\u043E\u043B\u043E\u0433' },
+  nutri_coach_subtitle: { en: 'Personalized advice based on your data', ru: '\u041F\u0435\u0440\u0441\u043E\u043D\u0430\u043B\u044C\u043D\u044B\u0435 \u0441\u043E\u0432\u0435\u0442\u044B \u043D\u0430 \u043E\u0441\u043D\u043E\u0432\u0435 \u0442\u0432\u043E\u0438\u0445 \u0434\u0430\u043D\u043D\u044B\u0445' },
+  nutri_coach_placeholder: { en: 'Ask about nutrition, calories, diet...', ru: '\u0421\u043F\u0440\u043E\u0441\u0438 \u043E \u043F\u0438\u0442\u0430\u043D\u0438\u0438, \u043A\u0430\u043B\u043E\u0440\u0438\u044F\u0445, \u0434\u0438\u0435\u0442\u0435...' },
+  nutri_coach_thinking: { en: 'Analyzing your data...', ru: '\u0410\u043D\u0430\u043B\u0438\u0437\u0438\u0440\u0443\u044E \u0442\u0432\u043E\u0438 \u0434\u0430\u043D\u043D\u044B\u0435...' },
+  nutri_coach_welcome_title: { en: 'Your AI Nutrition Coach', ru: '\u0422\u0432\u043E\u0439 AI-\u043D\u0443\u0442\u0440\u0438\u0446\u0438\u043E\u043B\u043E\u0433' },
+  nutri_coach_welcome: { en: "I have access to your profile, food diary, weekly trends, calorie balance, meal plan and workout plan. Ask me anything about your nutrition & fitness!", ru: '\u042F \u0438\u043C\u0435\u044E \u0434\u043E\u0441\u0442\u0443\u043F \u043A \u0442\u0432\u043E\u0435\u043C\u0443 \u043F\u0440\u043E\u0444\u0438\u043B\u044E, \u0434\u043D\u0435\u0432\u043D\u0438\u043A\u0443 \u043F\u0438\u0442\u0430\u043D\u0438\u044F, \u043D\u0435\u0434\u0435\u043B\u044C\u043D\u044B\u043C \u0442\u0440\u0435\u043D\u0434\u0430\u043C, \u0431\u0430\u043B\u0430\u043D\u0441\u0443 \u043A\u0430\u043B\u043E\u0440\u0438\u0439, \u043F\u043B\u0430\u043D\u0443 \u043F\u0438\u0442\u0430\u043D\u0438\u044F \u0438 \u043F\u043B\u0430\u043D\u0443 \u0442\u0440\u0435\u043D\u0438\u0440\u043E\u0432\u043E\u043A. \u0421\u043F\u0440\u0430\u0448\u0438\u0432\u0430\u0439 \u043E \u0447\u0451\u043C \u0443\u0433\u043E\u0434\u043D\u043E!' },
+  nutri_coach_suggest_1: { en: 'What should I eat today?', ru: '\u0427\u0442\u043E \u043C\u043D\u0435 \u0441\u044A\u0435\u0441\u0442\u044C \u0441\u0435\u0433\u043E\u0434\u043D\u044F?' },
+  nutri_coach_suggest_2: { en: 'How many calories should I consume?', ru: '\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u043A\u0430\u043B\u043E\u0440\u0438\u0439 \u043C\u043D\u0435 \u043D\u0443\u0436\u043D\u043E?' },
+  nutri_coach_suggest_3: { en: 'How to lose weight faster?', ru: '\u041A\u0430\u043A \u043F\u043E\u0445\u0443\u0434\u0435\u0442\u044C \u0431\u044B\u0441\u0442\u0440\u0435\u0435?' },
+  nutri_coach_suggest_4: { en: 'Am I getting enough protein?', ru: '\u0414\u043E\u0441\u0442\u0430\u0442\u043E\u0447\u043D\u043E \u043B\u0438 \u044F \u043F\u043E\u043B\u0443\u0447\u0430\u044E \u0431\u0435\u043B\u043A\u0430?' },
+  nutri_coach_suggest_5: { en: 'How should I eat around today\'s workout?', ru: '\u041A\u0430\u043A \u043F\u0438\u0442\u0430\u0442\u044C\u0441\u044F \u0432\u043E\u043A\u0440\u0443\u0433 \u0441\u0435\u0433\u043E\u0434\u043D\u044F\u0448\u043D\u0435\u0439 \u0442\u0440\u0435\u043D\u0438\u0440\u043E\u0432\u043A\u0438?' },
+  nutri_coach_error: { en: 'Failed to get response. Try again.', ru: '\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u043F\u043E\u043B\u0443\u0447\u0438\u0442\u044C \u043E\u0442\u0432\u0435\u0442. \u041F\u043E\u043F\u0440\u043E\u0431\u0443\u0439 \u0435\u0449\u0451.' },
+  nutri_coach_history: { en: 'Chat History', ru: '\u0418\u0441\u0442\u043E\u0440\u0438\u044F \u0447\u0430\u0442\u043E\u0432' },
+  nutri_coach_no_history: { en: 'No previous chats', ru: '\u041D\u0435\u0442 \u043F\u0440\u0435\u0434\u044B\u0434\u0443\u0449\u0438\u0445 \u0447\u0430\u0442\u043E\u0432' },
+  nutri_coach_topic_diet: { en: 'Diet', ru: '\u0414\u0438\u0435\u0442\u0430' },
+  nutri_coach_topic_calories: { en: 'Calories', ru: '\u041A\u0430\u043B\u043E\u0440\u0438\u0438' },
+  nutri_coach_topic_weight: { en: 'Weight', ru: '\u0412\u0435\u0441' },
+  nutri_coach_topic_workout: { en: 'Workout', ru: '\u0422\u0440\u0435\u043D\u0438\u0440\u043E\u0432\u043A\u0430' },
+  nutri_coach_home_title: { en: 'AI Coach', ru: 'AI-\u043A\u043E\u0443\u0447' },
+  nutri_coach_home_desc: { en: 'Ask about nutrition & fitness', ru: '\u0421\u043F\u0440\u043E\u0441\u0438 \u043E \u043F\u0438\u0442\u0430\u043D\u0438\u0438 \u0438 \u0444\u0438\u0442\u043D\u0435\u0441\u0435' },
+
+  // ---- Weight Tracking ----
+  weight_title: { en: 'Weight Tracking', ru: '\u041E\u0442\u0441\u043B\u0435\u0436\u0438\u0432\u0430\u043D\u0438\u0435 \u0432\u0435\u0441\u0430' },
+  weight_current: { en: 'Current Weight', ru: '\u0422\u0435\u043A\u0443\u0449\u0438\u0439 \u0432\u0435\u0441' },
+  weight_trend: { en: 'Weight Trend', ru: '\u0414\u0438\u043D\u0430\u043C\u0438\u043A\u0430 \u0432\u0435\u0441\u0430' },
+  weight_week: { en: 'Week', ru: '\u041D\u0435\u0434\u0435\u043B\u044F' },
+  weight_avg: { en: 'Average', ru: '\u0421\u0440\u0435\u0434\u043D\u0435\u0435' },
+  weight_entries: { en: 'Entries', ru: '\u0417\u0430\u043F\u0438\u0441\u0438' },
+  weight_log_title: { en: 'Log Weight', ru: '\u0417\u0430\u043F\u0438\u0441\u0430\u0442\u044C \u0432\u0435\u0441' },
+  weight_log_btn: { en: 'Log Weight', ru: '\u0417\u0430\u043F\u0438\u0441\u0430\u0442\u044C' },
+  weight_saved: { en: 'Saved!', ru: '\u0421\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u043E!' },
+  weight_note_placeholder: { en: 'Add a note (optional)', ru: '\u0414\u043E\u0431\u0430\u0432\u0438\u0442\u044C \u0437\u0430\u043C\u0435\u0442\u043A\u0443 (\u043D\u0435\u043E\u0431\u044F\u0437\u0430\u0442\u0435\u043B\u044C\u043D\u043E)' },
+  weight_history: { en: 'History', ru: '\u0418\u0441\u0442\u043E\u0440\u0438\u044F' },
+  weight_no_data: { en: 'No weight data yet', ru: '\u041D\u0435\u0442 \u0434\u0430\u043D\u043D\u044B\u0445 \u043E \u0432\u0435\u0441\u0435' },
+  weight_log_first: { en: 'Log your first weight below', ru: '\u0417\u0430\u043F\u0438\u0448\u0438\u0442\u0435 \u0441\u0432\u043E\u0439 \u043F\u0435\u0440\u0432\u044B\u0439 \u0432\u0435\u0441 \u043D\u0438\u0436\u0435' },
+  weight_need_more: { en: 'Log more entries to see the trend', ru: '\u0414\u043E\u0431\u0430\u0432\u044C\u0442\u0435 \u0435\u0449\u0451 \u0437\u0430\u043F\u0438\u0441\u0438 \u0434\u043B\u044F \u0433\u0440\u0430\u0444\u0438\u043A\u0430' },
+  weight_home_title: { en: 'Weight Tracking', ru: '\u041E\u0442\u0441\u043B\u0435\u0436\u0438\u0432\u0430\u043D\u0438\u0435 \u0432\u0435\u0441\u0430' },
+  weight_home_desc: { en: 'Log your weight & track progress', ru: '\u0417\u0430\u043F\u0438\u0441\u044B\u0432\u0430\u0439\u0442\u0435 \u0432\u0435\u0441 \u0438 \u0441\u043B\u0435\u0434\u0438\u0442\u0435 \u0437\u0430 \u043F\u0440\u043E\u0433\u0440\u0435\u0441\u0441\u043E\u043C' },
 
   goals_title: { en: 'My Goals', ru: '\u041C\u043E\u0438 \u0446\u0435\u043B\u0438' },
   goals_subtitle: { en: 'Everything you planned for your life', ru: 'Всё, что ты запланировал' },
@@ -883,7 +923,7 @@ const translations: Record<string, Record<Lang, string>> = {
   bonus_referral_count: { en: '{n} friends invited', ru: '{n} \u0434\u0440\u0443\u0437\u0435\u0439 \u043F\u0440\u0438\u0433\u043B\u0430\u0448\u0435\u043D\u043E' },
   bonus_referral_progress: { en: '{n}/10 for +30 days', ru: '{n}/10 \u0434\u043B\u044F +30 \u0434\u043D\u0435\u0439' },
   bonus_share_btn: { en: 'Share with friends', ru: '\u041F\u043E\u0434\u0435\u043B\u0438\u0442\u044C\u0441\u044F \u0441 \u0434\u0440\u0443\u0437\u044C\u044F\u043C\u0438' },
-  bonus_share_text: { en: 'Join me on BECOME \u2014 an app for self-development with AI coach!', ru: '\u041F\u0440\u0438\u0441\u043E\u0435\u0434\u0438\u043D\u044F\u0439\u0441\u044F \u043A BECOME \u2014 \u043F\u0440\u0438\u043B\u043E\u0436\u0435\u043D\u0438\u044E \u0434\u043B\u044F \u0441\u0430\u043C\u043E\u0440\u0430\u0437\u0432\u0438\u0442\u0438\u044F \u0441 AI-\u043A\u043E\u0443\u0447\u0435\u043C!' },
+  bonus_share_text: { en: 'Join me on Proper Food — an AI nutrition & fitness tracker!', ru: 'Присоединяйся к Proper Food — AI-трекеру питания и тренировок!' },
   bonus_link_copied: { en: 'Link copied!', ru: '\u0421\u0441\u044B\u043B\u043A\u0430 \u0441\u043A\u043E\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u0430!' },
   bonus_reward_claimed: { en: '+30 days added!', ru: '+30 \u0434\u043D\u0435\u0439 \u0434\u043E\u0431\u0430\u0432\u043B\u0435\u043D\u043E!' },
   bonus_support_title: { en: 'Support the project', ru: '\u041F\u043E\u0434\u0434\u0435\u0440\u0436\u0430\u0442\u044C \u043F\u0440\u043E\u0435\u043A\u0442' },
@@ -924,8 +964,27 @@ const translations: Record<string, Record<Lang, string>> = {
   premium_feat_plan: { en: 'AI-generated development programs', ru: 'AI-\u043F\u0440\u043E\u0433\u0440\u0430\u043C\u043C\u044B \u0440\u0430\u0437\u0432\u0438\u0442\u0438\u044F' },
   premium_feat_strategy: { en: 'Strategic goals with AI planning', ru: '\u0421\u0442\u0440\u0430\u0442\u0435\u0433\u0438\u0447\u0435\u0441\u043A\u0438\u0435 \u0446\u0435\u043B\u0438 \u0441 AI-\u043F\u043B\u0430\u043D\u0438\u0440\u043E\u0432\u0430\u043D\u0438\u0435\u043C' },
   premium_feat_insights: { en: 'AI journal analysis & insights', ru: 'AI-\u0430\u043D\u0430\u043B\u0438\u0437 \u0436\u0443\u0440\u043D\u0430\u043B\u0430 \u0438 \u0438\u043D\u0441\u0430\u0439\u0442\u044B' },
+  premium_feat_nutrition: { en: 'AI Nutrition Coach with RAG', ru: 'AI-\u043D\u0443\u0442\u0440\u0438\u0446\u0438\u043E\u043B\u043E\u0433 \u0441 \u0434\u043E\u0441\u0442\u0443\u043F\u043E\u043C \u043A \u0434\u0430\u043D\u043D\u044B\u043C' },
+  premium_nutrition_coach_desc: { en: 'Get personalized nutrition advice powered by AI with access to your food diary, calorie balance, meal plan and workout data.', ru: '\u041F\u043E\u043B\u0443\u0447\u0430\u0439 \u043F\u0435\u0440\u0441\u043E\u043D\u0430\u043B\u044C\u043D\u044B\u0435 \u0441\u043E\u0432\u0435\u0442\u044B \u043F\u043E \u043F\u0438\u0442\u0430\u043D\u0438\u044E \u043E\u0442 AI \u0441 \u0434\u043E\u0441\u0442\u0443\u043F\u043E\u043C \u043A \u0434\u043D\u0435\u0432\u043D\u0438\u043A\u0443 \u043F\u0438\u0442\u0430\u043D\u0438\u044F, \u0431\u0430\u043B\u0430\u043D\u0441\u0443 \u043A\u0430\u043B\u043E\u0440\u0438\u0439, \u043F\u043B\u0430\u043D\u0443 \u043F\u0438\u0442\u0430\u043D\u0438\u044F \u0438 \u0442\u0440\u0435\u043D\u0438\u0440\u043E\u0432\u043A\u0430\u043C.' },
+  nutrition_coach_title: { en: 'AI Nutrition Coach', ru: 'AI-\u043D\u0443\u0442\u0440\u0438\u0446\u0438\u043E\u043B\u043E\u0433' },
   premium_free_plan: { en: 'Free Plan', ru: '\u0411\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u044B\u0439 \u043F\u043B\u0430\u043D' },
   premium_free_plan_desc: { en: 'Upgrade to unlock AI features', ru: '\u041F\u043E\u0434\u043A\u043B\u044E\u0447\u0438 Premium \u0434\u043B\u044F AI-\u0444\u0443\u043D\u043A\u0446\u0438\u0439' },
+
+  // ---- Streak Share Card ----
+  streak_days_label: { en: 'days of tracking', ru: '\u0434\u043D\u0435\u0439 \u0442\u0440\u0435\u043A\u0438\u043D\u0433\u0430' },
+  streak_congrats_title: { en: 'Amazing streak!', ru: '\u041D\u0435\u0432\u0435\u0440\u043E\u044F\u0442\u043D\u0430\u044F \u0441\u0435\u0440\u0438\u044F!' },
+  streak_7_desc: { en: 'You\'ve tracked your nutrition for a full week. That\'s how habits are built!', ru: '\u0412\u044B \u043E\u0442\u0441\u043B\u0435\u0436\u0438\u0432\u0430\u043B\u0438 \u043F\u0438\u0442\u0430\u043D\u0438\u0435 \u0446\u0435\u043B\u0443\u044E \u043D\u0435\u0434\u0435\u043B\u044E. \u0422\u0430\u043A \u0444\u043E\u0440\u043C\u0438\u0440\u0443\u044E\u0442\u0441\u044F \u043F\u0440\u0438\u0432\u044B\u0447\u043A\u0438!' },
+  streak_30_desc: { en: 'A whole month of consistent tracking. You\'re on fire! Share your dedication.', ru: '\u0426\u0435\u043B\u044B\u0439 \u043C\u0435\u0441\u044F\u0446 \u043F\u043E\u0441\u043B\u0435\u0434\u043E\u0432\u0430\u0442\u0435\u043B\u044C\u043D\u043E\u0433\u043E \u0442\u0440\u0435\u043A\u0438\u043D\u0433\u0430. \u0412\u044B \u0432 \u043E\u0433\u043D\u0435! \u041F\u043E\u0434\u0435\u043B\u0438\u0442\u0435\u0441\u044C \u0434\u043E\u0441\u0442\u0438\u0436\u0435\u043D\u0438\u0435\u043C.' },
+  streak_100_desc: { en: '100 days! You\'re a true nutrition champion. Inspire others with your journey!', ru: '100 \u0434\u043D\u0435\u0439! \u0412\u044B \u043D\u0430\u0441\u0442\u043E\u044F\u0449\u0438\u0439 \u0447\u0435\u043C\u043F\u0438\u043E\u043D. \u0412\u0434\u043E\u0445\u043D\u043E\u0432\u0438\u0442\u0435 \u0434\u0440\u0443\u0433\u0438\u0445!' },
+  streak_current: { en: 'Current streak: {days} days', ru: '\u0422\u0435\u043A\u0443\u0449\u0430\u044F \u0441\u0435\u0440\u0438\u044F: {days} \u0434\u043D\u0435\u0439' },
+  streak_share_telegram: { en: 'Share on Telegram', ru: '\u041F\u043E\u0434\u0435\u043B\u0438\u0442\u044C\u0441\u044F \u0432 Telegram' },
+  streak_share_telegram_desc: { en: 'Send to friends & groups', ru: '\u041E\u0442\u043F\u0440\u0430\u0432\u0438\u0442\u044C \u0434\u0440\u0443\u0437\u044C\u044F\u043C \u0438 \u0432 \u0433\u0440\u0443\u043F\u043F\u044B' },
+  streak_share_instagram: { en: 'Share on Instagram', ru: '\u041F\u043E\u0434\u0435\u043B\u0438\u0442\u044C\u0441\u044F \u0432 Instagram' },
+  streak_share_instagram_desc: { en: 'Copy text & open Instagram', ru: '\u0421\u043A\u043E\u043F\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0442\u0435\u043A\u0441\u0442 \u0438 \u043E\u0442\u043A\u0440\u044B\u0442\u044C Instagram' },
+  streak_copied: { en: 'Copied! Paste in your story', ru: '\u0421\u043A\u043E\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u043E! \u0412\u0441\u0442\u0430\u0432\u044C\u0442\u0435 \u0432 \u0441\u0442\u043E\u0440\u0438' },
+  streak_copy_link: { en: 'Copy referral link', ru: '\u0421\u043A\u043E\u043F\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0440\u0435\u0444\u0435\u0440\u0430\u043B\u044C\u043D\u0443\u044E \u0441\u0441\u044B\u043B\u043A\u0443' },
+  streak_link_copied: { en: 'Link copied!', ru: '\u0421\u0441\u044B\u043B\u043A\u0430 \u0441\u043A\u043E\u043F\u0438\u0440\u043E\u0432\u0430\u043D\u0430!' },
+  streak_maybe_later: { en: 'Maybe later', ru: '\u041F\u043E\u0437\u0436\u0435' },
 };
 
 /**

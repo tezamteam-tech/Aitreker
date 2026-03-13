@@ -12,6 +12,7 @@
 // =============================================
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Sparkles,
@@ -32,6 +33,7 @@ import {
   Zap,
   AlertCircle,
   RefreshCw,
+  Crown,
 } from 'lucide-react';
 import { GlassCard } from './glass-card';
 import { useAuth } from './auth-context';
@@ -114,6 +116,7 @@ export function MealPlanPage() {
   const { user } = useAuth();
   const { t } = useTranslation();
   const lang = useLang();
+  const navigate = useNavigate();
 
   // State
   const [viewState, setViewState] = useState<ViewState>('empty');
@@ -126,6 +129,7 @@ export function MealPlanPage() {
   const [showHistory, setShowHistory] = useState(false);
   const [savedPlans, setSavedPlans] = useState<SavedPlan[]>([]);
   const [loadingPlans, setLoadingPlans] = useState(false);
+  const [limitReached, setLimitReached] = useState(false);
   const genIntervalRef = useRef<ReturnType<typeof setInterval>>();
 
   useBottomSheetLifecycle(showHistory);
@@ -225,7 +229,17 @@ export function MealPlanPage() {
       setViewState('viewing');
     } catch (err: any) {
       hapticError();
-      setErrorMsg(err?.message || 'Failed to generate meal plan');
+      if (err?.code === 'LIMIT_REACHED' || err?.status === 429 || (err?.message && err.message.includes('limit'))) {
+        setLimitReached(true);
+        setErrorMsg(
+          lang === 'ru'
+            ? 'Достигнут лимит генерации планов на этой неделе'
+            : 'Weekly meal plan limit reached'
+        );
+      } else {
+        setLimitReached(false);
+        setErrorMsg(err?.message || 'Failed to generate meal plan');
+      }
       setViewState('error');
     }
   }, [profile, selectedLength]);
@@ -486,25 +500,68 @@ export function MealPlanPage() {
               className="py-12"
             >
               <div className="text-center">
-                <div className="w-20 h-20 rounded-[1.5rem] bg-[#ff6b6b]/10 border border-[#ff6b6b]/20 flex items-center justify-center mx-auto mb-5">
-                  <AlertCircle className="w-8 h-8 text-[#ff6b6b]" />
-                </div>
-                <p className="text-white mb-2" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
-                  {lang === 'ru' ? 'Ошибка генерации' : 'Generation Failed'}
-                </p>
-                <p className="text-white/40 mb-6 max-w-[280px] mx-auto" style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
-                  {errorMsg}
-                </p>
-                <motion.button
-                  whileTap={{ scale: 0.97 }}
-                  onClick={handleGenerate}
-                  className="px-8 h-12 rounded-xl bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe] inline-flex items-center gap-2"
-                >
-                  <RefreshCw className="w-4 h-4 text-white" />
-                  <span className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
-                    {lang === 'ru' ? 'Попробовать снова' : 'Try Again'}
-                  </span>
-                </motion.button>
+                {limitReached ? (
+                  <>
+                    <div className="w-20 h-20 rounded-[1.5rem] bg-gradient-to-br from-[#6c5ce7]/20 to-[#a29bfe]/10 border border-white/[0.08] flex items-center justify-center mx-auto mb-5">
+                      <Crown className="w-9 h-9 text-[#a29bfe]" />
+                    </div>
+                    <p className="text-white mb-2" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
+                      {lang === 'ru' ? 'Лимит планов' : 'Plan Limit Reached'}
+                    </p>
+                    <p className="text-white/40 mb-2 max-w-[280px] mx-auto" style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
+                      {lang === 'ru'
+                        ? 'Вы использовали 1/1 бесплатную генерацию на этой неделе'
+                        : "You've used 1/1 free generation this week"}
+                    </p>
+                    <p className="text-white/30 mb-8 max-w-[280px] mx-auto" style={{ fontSize: '0.8125rem', lineHeight: 1.5 }}>
+                      {lang === 'ru'
+                        ? 'Перейдите на Premium для безлимитной генерации планов'
+                        : 'Upgrade to Premium for unlimited meal plans'}
+                    </p>
+                    <motion.button
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => { hapticFeedback('medium'); navigate('/upgrade'); }}
+                      className="px-8 h-14 rounded-2xl bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe] inline-flex items-center gap-2.5 mb-3"
+                      style={{ boxShadow: '0 8px 32px rgba(108,92,231,0.3)' }}
+                    >
+                      <Crown className="w-5 h-5 text-white" />
+                      <span className="text-white" style={{ fontSize: '1rem', fontWeight: 600 }}>
+                        {lang === 'ru' ? 'Перейти на Premium' : 'Upgrade to Premium'}
+                      </span>
+                    </motion.button>
+                    <br />
+                    <motion.button
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => { hapticFeedback('light'); setViewState('selecting'); }}
+                      className="mt-2 text-white/40"
+                      style={{ fontSize: '0.875rem' }}
+                    >
+                      {lang === 'ru' ? 'Назад' : 'Go back'}
+                    </motion.button>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-20 h-20 rounded-[1.5rem] bg-[#ff6b6b]/10 border border-[#ff6b6b]/20 flex items-center justify-center mx-auto mb-5">
+                      <AlertCircle className="w-8 h-8 text-[#ff6b6b]" />
+                    </div>
+                    <p className="text-white mb-2" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
+                      {lang === 'ru' ? 'Ошибка генерации' : 'Generation Failed'}
+                    </p>
+                    <p className="text-white/40 mb-6 max-w-[280px] mx-auto" style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
+                      {errorMsg}
+                    </p>
+                    <motion.button
+                      whileTap={{ scale: 0.97 }}
+                      onClick={handleGenerate}
+                      className="px-8 h-12 rounded-xl bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe] inline-flex items-center gap-2"
+                    >
+                      <RefreshCw className="w-4 h-4 text-white" />
+                      <span className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
+                        {lang === 'ru' ? 'Попробовать снова' : 'Try Again'}
+                      </span>
+                    </motion.button>
+                  </>
+                )}
               </div>
             </motion.div>
           )}

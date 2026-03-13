@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — API Client Layer (Production)
+// Proper Food AI — API Client Layer (Production)
 // =============================================
 // Typed HTTP client connecting to Supabase Edge Function backend.
 // No mocks, no dev mode — all calls hit the real API.
@@ -253,6 +253,54 @@ export const api = {
 
   async registerReferral(referralCode: string): Promise<{ success: boolean }> {
     return request('POST', '/bonuses/referral-register', { referralCode });
+  },
+
+  // ---- Referrals ----
+
+  /** Get full referral data: code, invited users, bonus days */
+  async getReferrals(): Promise<{
+    referral_code: string;
+    referral_count: number;
+    bonus_days_earned: number;
+    invited_users: Array<{
+      user_id: string;
+      first_name: string;
+      username: string | null;
+      joined_at: string;
+      is_subscribed: boolean;
+      bonus_days_granted: number;
+    }>;
+  }> {
+    return request('GET', '/referrals');
+  },
+
+  /** Grant bonus premium days when invited user subscribes */
+  async grantReferralBonus(invitedUserId: string): Promise<{ success: boolean; bonus_days: number }> {
+    return request('POST', '/referrals/grant-bonus', { invited_user_id: invitedUserId });
+  },
+
+  /** Get referral leaderboard (top referrers) */
+  async getReferralLeaderboard(): Promise<{
+    leaderboard: Array<{
+      user_id: string;
+      first_name: string;
+      username: string | null;
+      referral_count: number;
+      bonus_days_earned: number;
+      rank: number;
+    }>;
+    total_referrers: number;
+    my_rank: number | null;
+    my_stats: {
+      user_id: string;
+      first_name: string;
+      username: string | null;
+      referral_count: number;
+      bonus_days_earned: number;
+      rank: number;
+    } | null;
+  }> {
+    return request('GET', '/referrals/leaderboard');
   },
 
   // Update user preferences
@@ -631,6 +679,44 @@ export const api = {
     return request('DELETE', `/ai/coach/chat/${conversationId}`);
   },
 
+  // ---- AI Nutrition Coach (RAG-enhanced) ----
+
+  async nutriCoachSend(message: string, conversationId?: string): Promise<CoachChatResponse> {
+    return request('POST', '/ai/nutrition-coach/chat', { message, conversationId });
+  },
+
+  async nutriCoachGet(conversationId: string): Promise<CoachConversation> {
+    return request('GET', `/ai/nutrition-coach/chat/${conversationId}`);
+  },
+
+  async nutriCoachList(): Promise<{ conversations: CoachConversationSummary[] }> {
+    return request('GET', '/ai/nutrition-coach/conversations');
+  },
+
+  async nutriCoachDelete(conversationId: string): Promise<{ success: boolean }> {
+    return request('DELETE', `/ai/nutrition-coach/chat/${conversationId}`);
+  },
+
+  // ---- Weight Tracking ----
+
+  async logWeight(weight: number, note?: string): Promise<{ success: boolean; entry: any }> {
+    return request('POST', '/weight-log', { weight, note });
+  },
+
+  async getWeightHistory(limit?: number): Promise<{ entries: Array<{ id: string; weight: number; note: string | null; date: string; created_at: string }>; count: number }> {
+    const q = limit ? `?limit=${limit}` : '';
+    return request('GET', `/weight-log/history${q}`);
+  },
+
+  async deleteWeightEntry(entryId: string): Promise<{ success: boolean }> {
+    return request('DELETE', `/weight-log/${entryId}`);
+  },
+
+  /** Check if user needs a weigh-in reminder (daily dedup, sends Telegram notification) */
+  async checkWeighInReminder(): Promise<{ sent: boolean; reason?: string; daysSinceLast?: number }> {
+    return request('POST', '/weight-log/check-reminder');
+  },
+
   // ---- Journal Insights ----
 
   async generateJournalInsights(period?: string): Promise<{ insights: string }> {
@@ -842,6 +928,16 @@ export const api = {
     return request('GET', '/subscription/status');
   },
 
+  /** Get freemium usage limits and current counts */
+  async getUsage(): Promise<{
+    is_premium: boolean;
+    scans: { used: number; limit: number | null; remaining: number | null };
+    meal_plans: { used: number; limit: number | null; remaining: number | null };
+    workout_plans: { advanced: boolean };
+  }> {
+    return request('GET', '/subscription/usage');
+  },
+
   async createInvoice(plan: '30' | '60' | '90'): Promise<{
     success: boolean;
     sentToChat: boolean;
@@ -850,6 +946,44 @@ export const api = {
     days: number;
   }> {
     return request('POST', '/subscription/create-invoice', { plan });
+  },
+
+  async createInvoiceLink(plan: '30' | '60' | '90'): Promise<{
+    success: boolean;
+    invoiceLink: string;
+    plan: string;
+    stars: number;
+    days: number;
+  }> {
+    return request('POST', '/subscription/create-invoice-link', { plan });
+  },
+
+  async activateSubscription(plan: '30' | '60' | '90', stars: number): Promise<{
+    success: boolean;
+    alreadyActive: boolean;
+    expiresAt: string;
+    daysAdded: number;
+  }> {
+    return request('POST', '/subscription/activate', { plan, stars });
+  },
+
+  /** Restore purchase — re-activate subscription if valid payment exists but sub is inactive */
+  async restorePurchase(): Promise<{
+    success: boolean;
+    restored: boolean;
+    expiresAt: string | null;
+    daysLeft: number;
+    message: string;
+  }> {
+    return request('POST', '/subscription/restore');
+  },
+
+  /** Check subscription expiry and send Telegram reminder if ≤3 days left (deduped daily) */
+  async checkExpiryReminder(): Promise<{
+    sent: boolean;
+    daysLeft: number;
+  }> {
+    return request('POST', '/subscription/check-expiry-reminder');
   },
 
   async createTonInvoice(plan: '30' | '60' | '90'): Promise<{
@@ -1012,6 +1146,18 @@ export const api = {
     const res = await request<AuthResponse>('POST', '/auth/phone-verify', { phone, code });
     setToken(res.token);
     return res;
+  },
+
+  // ---- Nutrition Streak ----
+
+  /** Get current nutrition tracking streak and pending milestone */
+  async getNutritionStreak(): Promise<{ streak: number; pending_milestone: number | null }> {
+    return request('GET', '/streak/nutrition');
+  },
+
+  /** Mark a streak milestone as shown (so share card won't appear again) */
+  async markMilestoneShown(milestone: number): Promise<{ success: boolean }> {
+    return request('POST', '/streak/milestone-shown', { milestone });
   },
 
   // ---- Auth: Refresh session via device token ----

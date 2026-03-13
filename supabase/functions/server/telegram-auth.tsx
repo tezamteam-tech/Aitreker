@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — Telegram initData HMAC-SHA256 Validation
+// Proper Food AI — Telegram initData HMAC-SHA256 Validation
 // =============================================
 
 export interface TelegramUserData {

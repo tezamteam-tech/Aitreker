@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — Create Challenge (/challenges/create)
+// Proper Food AI — Create Challenge (/challenges/create)
 // =============================================
 
 import React, { useState, useCallback, useEffect } from 'react';
@@ -25,6 +25,7 @@ import type { ChallengeType, ChallengeCurrency, ChallengeVisibility, ChallengeWi
 import { hapticFeedback, hapticSuccess, shareTelegram } from './telegram';
 import { useTranslation } from './i18n';
 import { PageHeader } from './page-header';
+import { buildBotLink } from './bot-config';
 
 const TYPES: { id: ChallengeType; labelKey: string; sublabelKey: string; icon: typeof FileSignature; color: string; bgColor: string }[] = [
   {
@@ -133,7 +134,7 @@ export function ChallengeCreatePage() {
   }, [type, title, depositAmount, currency, durationDays, rulesText, visibility, lang]);
 
   const inviteLink = created
-    ? `https://t.me/BECOMEAI_BOT/app?startapp=challenge_${created.id}`
+    ? buildBotLink(`challenge_${created.id}`)
     : '';
 
   const handleCopyLink = useCallback(() => {

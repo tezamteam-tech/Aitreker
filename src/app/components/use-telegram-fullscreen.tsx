@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — useTelegramFullscreen Hook
+// Proper Food AI — useTelegramFullscreen Hook
 // =============================================
 // Handles fullscreen, swipe-to-close protection, and closing
 // confirmation on mobile TG clients.

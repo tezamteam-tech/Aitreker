@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — Supabase Edge Function Server
+// Proper Food AI — Supabase Edge Function Server
 // Hono web server with all API routes
 // =============================================
 
@@ -123,6 +123,117 @@ async function resolveContentLang(c: any): Promise<string> {
 const XP_DONE = 10;
 const XP_SKIP = 2;
 
+// ---- Referral bonus on subscription ----
+const REFERRAL_BONUS_DAYS = 7;
+
+/**
+ * When a user subscribes, check if they were referred by someone.
+ * If so, grant the referrer +7 premium days and send a notification.
+ * Fire-and-forget — never blocks the payment flow.
+ */
+async function grantReferralBonusOnSubscription(subscriberUserId: string): Promise<void> {
+  try {
+    const refLog = await kv.get(`become:referral:log:${subscriberUserId}`);
+    if (!refLog || !refLog.referrerId) {
+      console.log(`[Referral Bonus] User ${subscriberUserId} has no referrer — skipping`);
+      return;
+    }
+
+    const referrerUserId = refLog.referrerId;
+    const invitedKey = `become:referral:invited:${referrerUserId}`;
+    const invited: any[] = (await kv.get(invitedKey)) || [];
+    const invEntry = invited.find((inv: any) => inv.userId === subscriberUserId);
+
+    if (invEntry && invEntry.bonusDaysGranted > 0) {
+      console.log(`[Referral Bonus] Already granted for subscriber=${subscriberUserId}, referrer=${referrerUserId}`);
+      return;
+    }
+
+    const referrer = await kv.get(`become:user:${referrerUserId}`);
+    if (!referrer) {
+      console.log(`[Referral Bonus] Referrer ${referrerUserId} not found — skipping`);
+      return;
+    }
+
+    const currentExpiry = referrer.subscriptionExpiresAt
+      ? new Date(referrer.subscriptionExpiresAt).getTime()
+      : Date.now();
+    const base = Math.max(currentExpiry, Date.now());
+    referrer.subscriptionExpiresAt = new Date(base + REFERRAL_BONUS_DAYS * 24 * 60 * 60 * 1000).toISOString();
+    referrer.updatedAt = new Date().toISOString();
+    await kv.set(`become:user:${referrerUserId}`, referrer);
+
+    if (invEntry) {
+      invEntry.isSubscribed = true;
+      invEntry.bonusDaysGranted = REFERRAL_BONUS_DAYS;
+      await kv.set(invitedKey, invited);
+    } else {
+      const subscriber = await kv.get(`become:user:${subscriberUserId}`);
+      invited.push({
+        userId: subscriberUserId,
+        firstName: subscriber?.firstName || "User",
+        username: subscriber?.username || null,
+        joinedAt: refLog.registeredAt || new Date().toISOString(),
+        isSubscribed: true,
+        bonusDaysGranted: REFERRAL_BONUS_DAYS,
+      });
+      await kv.set(invitedKey, invited);
+    }
+
+    // Send Telegram notification to referrer
+    try {
+      const referrerLang = referrer.language === "ru" ? "ru" : "en";
+      const subscriber = await kv.get(`become:user:${subscriberUserId}`);
+      const subName = subscriber?.firstName || "A friend";
+
+      const notifText = referrerLang === "ru"
+        ? `🎉 <b>Реферальный бонус!</b>\n\nВаш друг <b>${subName}</b> оформил Premium подписку.\nВы получили <b>+${REFERRAL_BONUS_DAYS} дней</b> премиум подписки!\n\n📊 Всего приглашено: <b>${referrer.referralCount || 0}</b> друзей`
+        : `🎉 <b>Referral Bonus!</b>\n\nYour friend <b>${subName}</b> subscribed to Premium.\nYou earned <b>+${REFERRAL_BONUS_DAYS} days</b> of premium subscription!\n\n📊 Total invited: <b>${referrer.referralCount || 0}</b> friends`;
+
+      const tgId = referrer.telegramId;
+      if (tgId) {
+        const deepLink = buildTgDeepLink("referrals");
+        const keyboard: InlineKeyboardButton[][] = [
+          [{ text: referrerLang === "ru" ? "👥 Мои рефералы" : "👥 My Referrals", url: deepLink }],
+        ];
+        await sendMessage(Number(tgId), notifText, { reply_markup: { inline_keyboard: keyboard } });
+        console.log(`[Referral Bonus] Notification sent to referrer tg:${tgId}`);
+      }
+    } catch (notifErr) {
+      console.log(`[Referral Bonus] Notification send failed (non-critical):`, notifErr);
+    }
+
+    console.log(`[Referral Bonus] Granted +${REFERRAL_BONUS_DAYS} days to referrer=${referrerUserId} for subscriber=${subscriberUserId}`);
+  } catch (err) {
+    console.log(`[Referral Bonus] Error (non-critical):`, err);
+  }
+}
+
+/**
+ * Notify referrer when a new friend joins (not yet subscribed).
+ * Fire-and-forget.
+ */
+async function notifyReferrerNewJoin(referrerUserId: string, newUserName: string): Promise<void> {
+  try {
+    const referrer = await kv.get(`become:user:${referrerUserId}`);
+    if (!referrer || !referrer.telegramId) return;
+
+    const lang = referrer.language === "ru" ? "ru" : "en";
+    const text = lang === "ru"
+      ? `👋 <b>Новый реферал!</b>\n\n<b>${newUserName}</b> присоединился по вашей ссылке.\nКогда друг оформит подписку, вы получите <b>+${REFERRAL_BONUS_DAYS} дней</b> Premium!\n\n📊 Всего приглашено: <b>${referrer.referralCount || 0}</b>`
+      : `👋 <b>New Referral!</b>\n\n<b>${newUserName}</b> joined through your link.\nWhen they subscribe, you'll earn <b>+${REFERRAL_BONUS_DAYS} days</b> Premium!\n\n📊 Total invited: <b>${referrer.referralCount || 0}</b>`;
+
+    const deepLink = buildTgDeepLink("referrals");
+    const keyboard: InlineKeyboardButton[][] = [
+      [{ text: lang === "ru" ? "👥 Мои рефералы" : "👥 My Referrals", url: deepLink }],
+    ];
+    await sendMessage(Number(referrer.telegramId), text, { reply_markup: { inline_keyboard: keyboard } });
+    console.log(`[Referral] Join notification sent to referrer ${referrerUserId}`);
+  } catch (err) {
+    console.log(`[Referral] Join notification error (non-critical):`, err);
+  }
+}
+
 // ---- Bot auth token (for Mini App auth without initData) ----
 const BOT_AUTH_TTL = 24 * 60 * 60 * 1000; // 24 hours — reply keyboard stays visible long, needs generous TTL
 const DEVICE_TOKEN_TTL = 90 * 24 * 60 * 60 * 1000; // 90 days
@@ -207,13 +318,13 @@ function buildAppUrlWithAuth(botAuthToken: string, deepLinkParam?: string): stri
  * This bypasses any SSL issues on the direct web URL and always opens
  * as a proper Mini App within Telegram, not a browser tab.
  *
- * Format: https://t.me/BECOMEAI_BOT/app?startapp=PARAM
+ * Format: https://t.me/ProperFoodAI_bot/app?startapp=PARAM
  *
  * Use this for `url:` type inline buttons instead of direct Vercel URLs.
  * Telegram treats t.me links as trusted and opens them natively.
  */
 function buildTgDeepLink(startapp?: string): string {
-  const botUsername = Deno.env.get("TELEGRAM_BOT_USERNAME") || "BECOMEAI_BOT";
+  const botUsername = Deno.env.get("TELEGRAM_BOT_USERNAME") || "ProperFoodAI_bot";
   const appShortName = Deno.env.get("TELEGRAM_MINIAPP_SHORT_NAME") || "app";
   const base = `https://t.me/${botUsername}/${appShortName}`;
   if (startapp) {
@@ -795,7 +906,7 @@ app.post(`${PREFIX}/auth/phone-request`, async (c) => {
     const lang = found.user.language === "ru" ? "ru" : "en";
     const codeText = lang === "ru"
       ? [
-          `🔐 <b>Код подтверждения BECOME</b>`,
+          `🔐 <b>Код подтверждения Proper Food</b>`,
           ``,
           `Ваш код для входа в приложение:`,
           ``,
@@ -805,7 +916,7 @@ app.post(`${PREFIX}/auth/phone-request`, async (c) => {
           `Если вы не запрашивали код — просто проигнорируйте.`,
         ].join("\n")
       : [
-          `🔐 <b>BECOME Verification Code</b>`,
+          `🔐 <b>Proper Food Verification Code</b>`,
           ``,
           `Your code to log in:`,
           ``,
@@ -2531,11 +2642,205 @@ app.post(`${PREFIX}/bonuses/referral-register`, async (c) => {
     // Log the referral
     await kv.set(`become:referral:log:${auth.userId}`, { referrerId: referrerUserId, registeredAt: new Date().toISOString() });
 
+    // Add to referrer's invited list for listing
+    const invitedKey = `become:referral:invited:${referrerUserId}`;
+    const existingInvited: any[] = (await kv.get(invitedKey)) || [];
+    existingInvited.push({
+      userId: auth.userId,
+      firstName: user.firstName || "User",
+      username: user.username || null,
+      joinedAt: new Date().toISOString(),
+      isSubscribed: false,
+      bonusDaysGranted: 0,
+    });
+    await kv.set(invitedKey, existingInvited);
+
+    // Fire-and-forget: notify referrer about the new join
+    notifyReferrerNewJoin(referrerUserId, user.firstName || "A friend").catch(() => {});
+
     console.log(`[Bonuses] Referral registered: new_user=${auth.userId}, referrer=${referrerUserId}`);
     return c.json({ success: true, referrerUserId });
   } catch (err) {
     console.log("POST /bonuses/referral-register error:", err);
     return c.json({ message: `Error registering referral: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- GET /referrals ----
+// Returns the current user's referral info: code, invited users, bonus days
+app.get(`${PREFIX}/referrals`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const user = await kv.get(`become:user:${auth.userId}`);
+    if (!user) return c.json({ message: "User not found", code: "NOT_FOUND", status: 404 }, 404);
+
+    // Ensure referral code
+    if (!user.referralCode) {
+      user.referralCode = generateId("ref").replace("ref_", "").slice(0, 10);
+      await kv.set(`become:referral:${user.referralCode}`, auth.userId);
+      if (user.referralCount === undefined) user.referralCount = 0;
+      user.updatedAt = new Date().toISOString();
+      await kv.set(`become:user:${auth.userId}`, user);
+    }
+
+    // Get invited users list
+    const invitedKey = `become:referral:invited:${auth.userId}`;
+    const invited: any[] = (await kv.get(invitedKey)) || [];
+
+    // Calculate total bonus days earned
+    const totalBonusDays = invited.reduce((sum: number, inv: any) => sum + (inv.bonusDaysGranted || 0), 0);
+
+    return c.json({
+      referral_code: user.referralCode,
+      referral_count: user.referralCount || 0,
+      bonus_days_earned: totalBonusDays,
+      invited_users: invited.map((inv: any) => ({
+        user_id: inv.userId,
+        first_name: inv.firstName || "User",
+        username: inv.username || null,
+        joined_at: inv.joinedAt,
+        is_subscribed: inv.isSubscribed || false,
+        bonus_days_granted: inv.bonusDaysGranted || 0,
+      })),
+    });
+  } catch (err) {
+    console.log("GET /referrals error:", err);
+    return c.json({ message: `Error fetching referrals: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- POST /referrals/grant-bonus ----
+// When an invited user subscribes, grant bonus premium days to referrer.
+// Body: { invited_user_id: string }
+app.post(`${PREFIX}/referrals/grant-bonus`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const { invited_user_id } = await c.req.json();
+    if (!invited_user_id) return c.json({ message: "invited_user_id required", code: "BAD_REQUEST", status: 400 }, 400);
+
+    // Find the referral log for this invited user
+    const refLog = await kv.get(`become:referral:log:${invited_user_id}`);
+    if (!refLog || refLog.referrerId !== auth.userId) {
+      return c.json({ message: "No referral relationship found", code: "NOT_FOUND", status: 404 }, 404);
+    }
+
+    // Check if bonus already granted for this user
+    const invitedKey = `become:referral:invited:${auth.userId}`;
+    const invited: any[] = (await kv.get(invitedKey)) || [];
+    const invEntry = invited.find((inv: any) => inv.userId === invited_user_id);
+
+    if (invEntry && invEntry.bonusDaysGranted > 0) {
+      return c.json({ message: "Bonus already granted for this user", code: "ALREADY_GRANTED", status: 409 }, 409);
+    }
+
+    // Grant 7 bonus premium days to the referrer
+    const BONUS_DAYS = 7;
+    const referrer = await kv.get(`become:user:${auth.userId}`);
+    if (!referrer) return c.json({ message: "Referrer not found", code: "NOT_FOUND", status: 404 }, 404);
+
+    const currentExpiry = referrer.subscriptionExpiresAt ? new Date(referrer.subscriptionExpiresAt).getTime() : Date.now();
+    const base = Math.max(currentExpiry, Date.now());
+    referrer.subscriptionExpiresAt = new Date(base + BONUS_DAYS * 24 * 60 * 60 * 1000).toISOString();
+    referrer.updatedAt = new Date().toISOString();
+    await kv.set(`become:user:${auth.userId}`, referrer);
+
+    // Update invited entry
+    if (invEntry) {
+      invEntry.isSubscribed = true;
+      invEntry.bonusDaysGranted = BONUS_DAYS;
+      await kv.set(invitedKey, invited);
+    }
+
+    console.log(`[Referral] Bonus granted: referrer=${auth.userId}, invited=${invited_user_id}, +${BONUS_DAYS} days`);
+    return c.json({ success: true, bonus_days: BONUS_DAYS });
+  } catch (err) {
+    console.log("POST /referrals/grant-bonus error:", err);
+    return c.json({ message: `Error granting bonus: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- GET /referrals/leaderboard ----
+// Returns top referrers ranked by referral count + bonus days. Public (no auth required).
+app.get(`${PREFIX}/referrals/leaderboard`, async (c) => {
+  try {
+    // Get all users via tg mappings
+    const tgMappings = await kv.getByPrefix("become:user:tg:");
+    if (!tgMappings || tgMappings.length === 0) {
+      return c.json({ leaderboard: [], total_referrers: 0 });
+    }
+
+    // Collect user IDs
+    const userIds: string[] = tgMappings
+      .map((item: any) => typeof item === "string" ? item : (item?.value || item))
+      .filter((id: any) => id && typeof id === "string");
+
+    // Fetch users in batches and filter those with referrals
+    const referrers: Array<{
+      user_id: string;
+      first_name: string;
+      username: string | null;
+      referral_count: number;
+      bonus_days_earned: number;
+      rank: number;
+    }> = [];
+
+    for (const uid of userIds) {
+      try {
+        const u = await kv.get(`become:user:${uid}`);
+        if (u && (u.referralCount || 0) > 0) {
+          // Calculate bonus days from invited list
+          const invited: any[] = (await kv.get(`become:referral:invited:${uid}`)) || [];
+          const bonusDays = invited.reduce((sum: number, inv: any) => sum + (inv.bonusDaysGranted || 0), 0);
+
+          referrers.push({
+            user_id: uid,
+            first_name: u.firstName || "User",
+            username: u.username || null,
+            referral_count: u.referralCount || 0,
+            bonus_days_earned: bonusDays,
+            rank: 0,
+          });
+        }
+      } catch (_) { /* skip */ }
+    }
+
+    // Sort by referral count descending, then by bonus days
+    referrers.sort((a, b) => {
+      if (b.referral_count !== a.referral_count) return b.referral_count - a.referral_count;
+      return b.bonus_days_earned - a.bonus_days_earned;
+    });
+
+    // Assign ranks and limit to top 50
+    const top = referrers.slice(0, 50);
+    top.forEach((r, i) => { r.rank = i + 1; });
+
+    // Find requesting user's rank if authenticated
+    let my_rank: number | null = null;
+    let my_stats: typeof referrers[0] | null = null;
+    try {
+      const auth = await resolveUser(c);
+      if (auth) {
+        const idx = referrers.findIndex(r => r.user_id === auth.userId);
+        if (idx >= 0) {
+          my_rank = idx + 1;
+          my_stats = { ...referrers[idx], rank: my_rank };
+        }
+      }
+    } catch (_) { /* no auth, that's fine */ }
+
+    return c.json({
+      leaderboard: top,
+      total_referrers: referrers.length,
+      my_rank,
+      my_stats,
+    });
+  } catch (err) {
+    console.log("GET /referrals/leaderboard error:", err);
+    return c.json({ message: `Error fetching leaderboard: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
   }
 });
 
@@ -2638,7 +2943,7 @@ app.post(`${PREFIX}/ai/coach`, async (c) => {
       ? "Respond in English."
       : `Respond in the language with code "${language}". All output must be in that language.`;
 
-    const systemPrompt = `You are an AI coach for a personal development app called BECOME. Your role is to give brief, practical coaching after the user completes or skips a daily task set.
+    const systemPrompt = `You are an AI coach for a nutrition & fitness tracker app called Proper Food. Your role is to give brief, practical coaching after the user completes or skips a daily task set.
 
 RULES:
 - ${langInstruction}
@@ -2793,7 +3098,7 @@ app.post(`${PREFIX}/ai/coach/followup`, async (c) => {
       return c.json({ shortMessage: "Coach is thinking...", nextStep: "Try again later." });
     }
 
-    const systemPrompt = `You are an AI coach for BECOME, a personal development app. The user just received your coaching and is now asking a follow-up question.
+    const systemPrompt = `You are an AI coach for Proper Food, a nutrition & fitness tracker app. The user just received your coaching and is now asking a follow-up question.
 
 RULES:
 - ${langInstruction}
@@ -4040,7 +4345,7 @@ async function handleStartCommand(msg: TgMessage): Promise<void> {
     const kbBotAuthToken = await generateBotAuthToken(existingUserId, tgId);
     const kbAppUrl = buildAppUrlWithAuth(kbBotAuthToken);
 
-    // skipOpenButton=true: "Open BECOME" is in the reply keyboard, not inline
+    // skipOpenButton=true: "Open Proper Food" is in the reply keyboard, not inline
     const returning = buildReturningStartMessage(user, deepLinkParam, undefined, true);
     await sendMessage(chatId, returning.text, {
       reply_markup: returning.reply_markup,
@@ -4173,7 +4478,7 @@ async function handleStartCommand(msg: TgMessage): Promise<void> {
     const newAppUrl = buildAppUrlWithAuth(newBotAuthToken);
     const miniAppUrl = newAppUrl || Deno.env.get("BECOME_MINIAPP_URL") || "";
 
-    // Send welcome message with "Open BECOME" inline button
+    // Send welcome message with "Open Proper Food" inline button
     const welcomeMsg = buildNewUserWelcomeMessage(user, miniAppUrl || undefined);
     await sendMessage(chatId, welcomeMsg.text, { reply_markup: welcomeMsg.reply_markup });
 
@@ -5120,9 +5425,9 @@ async function handleCallbackQuery(cbq: TgCallbackQuery): Promise<void> {
           // Direct subscription purchase via Stars invoice in chat
           const planDays = data.replace("pay_sub_", "");
           const subPlans: Record<string, { days: number; stars: number; title_en: string; title_ru: string; desc_en: string; desc_ru: string }> = {
-            "30": { days: 30, stars: 350, title_en: "BECOME Premium \u2014 1 Month", title_ru: "BECOME Premium \u2014 1 \u043C\u0435\u0441\u044F\u0446", desc_en: "30 days of full access to all features", desc_ru: "30 \u0434\u043D\u0435\u0439 \u043F\u043E\u043B\u043D\u043E\u0433\u043E \u0434\u043E\u0441\u0442\u0443\u043F\u0430 \u043A\u043E \u0432\u0441\u0435\u043C \u0444\u0443\u043D\u043A\u0446\u0438\u044F\u043C" },
-            "60": { days: 60, stars: 600, title_en: "BECOME Premium \u2014 2 Months", title_ru: "BECOME Premium \u2014 2 \u043C\u0435\u0441\u044F\u0446\u0430", desc_en: "60 days of full access (save 14%)", desc_ru: "60 \u0434\u043D\u0435\u0439 \u043F\u043E\u043B\u043D\u043E\u0433\u043E \u0434\u043E\u0441\u0442\u0443\u043F\u0430 (\u044D\u043A\u043E\u043D\u043E\u043C\u0438\u044F 14%)" },
-            "90": { days: 90, stars: 900, title_en: "BECOME Premium \u2014 3 Months", title_ru: "BECOME Premium \u2014 3 \u043C\u0435\u0441\u044F\u0446\u0430", desc_en: "90 days of full access (save 14%)", desc_ru: "90 \u0434\u043D\u0435\u0439 \u043F\u043E\u043B\u043D\u043E\u0433\u043E \u0434\u043E\u0441\u0442\u0443\u043F\u0430 (\u044D\u043A\u043E\u043D\u043E\u043C\u0438\u044F 14%)" },
+            "30": { days: 30, stars: 350, title_en: "Proper Food Premium — 1 Month", title_ru: "Proper Food Premium — 1 месяц", desc_en: "30 days of full access to all features", desc_ru: "30 дней полного доступа ко всем функциям" },
+            "60": { days: 60, stars: 600, title_en: "Proper Food Premium — 2 Months", title_ru: "Proper Food Premium — 2 месяца", desc_en: "60 days of full access (save 14%)", desc_ru: "60 дней полного доступа (экономия 14%)" },
+            "90": { days: 90, stars: 900, title_en: "Proper Food Premium — 3 Months", title_ru: "Proper Food Premium — 3 месяца", desc_en: "90 days of full access (save 14%)", desc_ru: "90 дней полного доступа (экономия 14%)" },
           };
           const plan = subPlans[planDays];
           if (plan) {
@@ -5160,7 +5465,7 @@ async function handleCallbackQuery(cbq: TgCallbackQuery): Promise<void> {
             await sendInvoice({
               chatId,
               title: payLang === "ru" ? `\u041F\u043E\u043F\u043E\u043B\u043D\u0435\u043D\u0438\u0435 \u2014 ${amount} \u2B50` : `Top Up \u2014 ${amount} \u2B50`,
-              description: payLang === "ru" ? `\u041F\u043E\u043F\u043E\u043B\u043D\u0435\u043D\u0438\u0435 \u0431\u0430\u043B\u0430\u043D\u0441\u0430 BECOME \u043D\u0430 ${amount} Stars` : `Add ${amount} Stars to your BECOME balance`,
+              description: payLang === "ru" ? `Пополнение баланса Proper Food на ${amount} Stars` : `Add ${amount} Stars to your Proper Food balance`,
               payload: `topup_${amount}_${payUserId}_${Date.now()}`,
               currency: "XTR",
               prices: [{ label: payLang === "ru" ? "\u041F\u043E\u043F\u043E\u043B\u043D\u0435\u043D\u0438\u0435" : "Top Up", amount }],
@@ -5276,6 +5581,9 @@ async function handleCallbackQuery(cbq: TgCallbackQuery): Promise<void> {
 
           console.log(`[Payment] Balance payment from bot: user=${payUser.id}, plan=${planDays}, stars=${planInfo.stars}`);
           await logTransaction(payUser.id, "subscription", planInfo.stars, "stars", { description: `+${planInfo.days}d` });
+
+          // Fire-and-forget: grant referral bonus to referrer if applicable
+          grantReferralBonusOnSubscription(payUser.id).catch(() => {});
 
           const successText = payLang === "ru"
             ? `\u2705 <b>\u041E\u043F\u043B\u0430\u0442\u0430 \u043F\u0440\u043E\u0448\u043B\u0430 \u0443\u0441\u043F\u0435\u0448\u043D\u043E!</b>\n\n\u{1F389} \u041F\u043E\u0434\u043F\u0438\u0441\u043A\u0430 \u043F\u0440\u043E\u0434\u043B\u0435\u043D\u0430 \u043D\u0430 <b>${planInfo.days} \u0434\u043D\u0435\u0439</b>.\n\u0421\u043F\u0438\u0441\u0430\u043D\u043E: <b>${planInfo.stars} Stars</b>\n\u041E\u0441\u0442\u0430\u0442\u043E\u043A: <b>${payWallet.starsBalance} Stars</b>\n\u0414\u0435\u0439\u0441\u0442\u0432\u0443\u0435\u0442 \u0434\u043E: <b>${new Date(payUser.subscriptionExpiresAt).toLocaleDateString("ru-RU")}</b>`
@@ -5545,7 +5853,7 @@ async function handleTextMessage(msg: TgMessage): Promise<void> {
     // DISABLED: web_app button doesn't work from Figma Sites context
     // if (miniAppUrl) {
     //   keyboard.push([{
-    //     text: lang === "ru" ? "\uD83C\uDFAF \u041E\u0442\u043A\u0440\u044B\u0442\u044C BECOME" : "\uD83C\uDFAF Open BECOME",
+    //     text: lang === "ru" ? "\uD83C\uDFAF Открыть Proper Food" : "\uD83C\uDFAF Open Proper Food",
     //     web_app: { url: miniAppUrl }
     //   }]);
     // }
@@ -5556,8 +5864,8 @@ async function handleTextMessage(msg: TgMessage): Promise<void> {
 
     await sendMessage(chatId,
       lang === "ru"
-        ? "\u042F \u0442\u0432\u043E\u0439 BECOME-\u0431\u043E\u0442! \u0418\u0441\u043F\u043E\u043B\u044C\u0437\u0443\u0439 \u043A\u043D\u043E\u043F\u043A\u0438 \u043D\u0438\u0436\u0435 \u0438\u043B\u0438 /start, /progress, /today, /help."
-        : "I'm your BECOME bot! Use the buttons below or try /start, /progress, /today, /help.",
+        ? "Я твой Proper Food бот! Используй кнопки ниже или /start, /progress, /today, /help."
+        : "I'm your Proper Food bot! Use the buttons below or try /start, /progress, /today, /help.",
       { reply_markup: { inline_keyboard: keyboard } }
     );
   }
@@ -5679,6 +5987,9 @@ app.post(`${PREFIX}/telegram/webhook`, async (c) => {
 
                 console.log(`[Payment] Extended subscription for user ${payerUserId} by ${daysToAdd} days, new expiry: ${payerUser.subscriptionExpiresAt}`);
                 await logTransaction(payerUserId, "subscription", starsAmount, "stars", { description: `+${daysToAdd}d` });
+
+                // Fire-and-forget: grant referral bonus to referrer if applicable
+                grantReferralBonusOnSubscription(payerUserId).catch(() => {});
 
                 const notifText = lang === "ru"
                   ? `✅ <b>Оплата прошла успешно!</b>\n\n🎉 Подписка продлена на <b>${daysToAdd} дней</b>.\nДействует до: <b>${new Date(payerUser.subscriptionExpiresAt).toLocaleDateString("ru-RU")}</b>`
@@ -6054,7 +6365,7 @@ app.post(`${PREFIX}/notifications/test`, async (c) => {
     const keyboard: any[][] = [];
     // DISABLED: web_app button doesn't work from Figma Sites context
     // if (miniAppUrl) {
-    //   keyboard.push([{ text: "\u{1F3AF} Open BECOME", web_app: { url: miniAppUrl } }]);
+    //   keyboard.push([{ text: "\u{1F3AF} Open Proper Food", web_app: { url: miniAppUrl } }]);
     // }
 
     await sendMessage(tgId, testLang === "ru" ? [
@@ -7326,7 +7637,7 @@ app.get(`${PREFIX}/notifications/strategic-daily`, async (c) => {
         const kbd: any[][] = [];
         if (appUrl) {
           const sgUrl = `${appUrl}?startapp=strategic_goals`;
-          kbd.push([{ text: isRu ? "\uD83D\uDE80 \u041E\u0442\u043A\u0440\u044B\u0442\u044C BECOME" : "\uD83D\uDE80 Open BECOME", web_app: { url: sgUrl } }]);
+          kbd.push([{ text: isRu ? "\uD83D\uDE80 Открыть Proper Food" : "\uD83D\uDE80 Open Proper Food", web_app: { url: sgUrl } }]);
         }
         await sendMessage(Number(user.telegramId), text, {
           reply_markup: kbd.length ? { inline_keyboard: kbd } : undefined,
@@ -7508,7 +7819,7 @@ app.post(`${PREFIX}/strategic-goals/analyze-image`, async (c) => {
     if (imageMode === "selfie") {
       systemPrompt = [
         langInstr,
-        `You are a friendly AI life coach named BECOME.`,
+        `You are a friendly AI nutrition & fitness coach named Proper Food.`,
         `The user "${firstName}" uploaded a photo of THEMSELVES (a selfie).`,
         `Analyze their appearance and suggest potential self-improvement goals.`,
         `Consider: fitness/body composition, style/fashion, grooming, posture, confidence, etc.`,
@@ -7521,7 +7832,7 @@ app.post(`${PREFIX}/strategic-goals/analyze-image`, async (c) => {
     } else {
       systemPrompt = [
         langInstr,
-        `You are a friendly AI life coach named BECOME.`,
+        `You are a friendly AI nutrition & fitness coach named Proper Food.`,
         `The user "${firstName}" uploaded an INSPIRATION photo \u2014 something they aspire to (a dream car, dream body, lifestyle, place, skill, etc).`,
         `Analyze the image and figure out what kind of goal the user likely wants.`,
         `Return ONLY valid JSON:`,
@@ -7667,7 +7978,7 @@ app.post(`${PREFIX}/strategic-goals/:id/selfie-checkin`, async (c) => {
     if (hasOriginal && originalUrl) {
       systemPrompt = [
         langInstr,
-        `You are BECOME, a supportive AI coach.`,
+        `You are Proper Food, a supportive AI coach.`,
         `"${firstName}" set a goal: "${goalTitle}" ${daysSinceStart} days ago.`,
         `They uploaded their BEFORE selfie when starting, and NOW uploaded a new CHECK-IN selfie.`,
         `Compare the two photos and provide an honest but encouraging progress assessment.`,
@@ -7683,7 +7994,7 @@ app.post(`${PREFIX}/strategic-goals/:id/selfie-checkin`, async (c) => {
     } else {
       systemPrompt = [
         langInstr,
-        `You are BECOME, a supportive AI coach.`,
+        `You are Proper Food, a supportive AI coach.`,
         `"${firstName}" set a goal: "${goalTitle}" ${daysSinceStart} days ago.`,
         `They uploaded a new check-in selfie. No previous selfie available for comparison.`,
         `Analyze the photo and provide encouragement and assessment related to their goal.`,
@@ -7865,7 +8176,7 @@ app.post(`${PREFIX}/ai/coach/chat`, async (c) => {
     const toneDesc = toneMap[tone] || toneMap.supportive;
     const langInstruction = language === "en" ? "Respond in English." : `Respond in the language with code "${language}". All output must be in that language.`;
 
-    const systemPrompt = `You are BECOME Coach — an AI life coach. You help with personal development, habit building, emotional support, and problem-solving.
+    const systemPrompt = `You are Proper Food Coach — an AI nutrition & fitness coach. You help with nutrition, fitness, habit building, and health goals.
 
 RULES:
 - ${langInstruction}
@@ -8268,6 +8579,344 @@ app.post(`${PREFIX}/tasks/:id/send-reminder`, async (c) => {
 });
 
 // =============================================
+// FREEMIUM LIMITS & NUTRITION AI ENDPOINTS
+// =============================================
+
+const FREE_SCAN_LIMIT_PER_DAY = 5;
+const FREE_MEAL_PLAN_LIMIT_PER_WEEK = 1;
+
+async function isPremiumUser(userId: string): Promise<boolean> {
+  const user = await kv.get(`become:user:${userId}`);
+  if (!user) return false;
+  if (!user.subscriptionExpiresAt) return false;
+  return new Date(user.subscriptionExpiresAt).getTime() > Date.now();
+}
+
+async function getDailyScanCount(userId: string): Promise<number> {
+  const today = new Date().toISOString().slice(0, 10);
+  return (await kv.get(`become:usage:scan:${userId}:${today}`)) || 0;
+}
+
+async function incrementDailyScanCount(userId: string): Promise<number> {
+  const today = new Date().toISOString().slice(0, 10);
+  const key = `become:usage:scan:${userId}:${today}`;
+  const next = ((await kv.get(key)) || 0) + 1;
+  await kv.set(key, next);
+  return next;
+}
+
+function getISOWeek(): string {
+  const d = new Date();
+  const yearStart = new Date(d.getFullYear(), 0, 1);
+  const weekNo = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + yearStart.getDay() + 1) / 7);
+  return `${d.getFullYear()}-W${String(weekNo).padStart(2, "0")}`;
+}
+
+async function getWeeklyMealPlanCount(userId: string): Promise<number> {
+  return (await kv.get(`become:usage:mealplan:${userId}:${getISOWeek()}`)) || 0;
+}
+
+async function incrementWeeklyMealPlanCount(userId: string): Promise<number> {
+  const key = `become:usage:mealplan:${userId}:${getISOWeek()}`;
+  const next = ((await kv.get(key)) || 0) + 1;
+  await kv.set(key, next);
+  return next;
+}
+
+// ---- GET /subscription/usage ----
+app.get(`${PREFIX}/subscription/usage`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const premium = await isPremiumUser(auth.userId);
+    const scanCount = await getDailyScanCount(auth.userId);
+    const mealPlanCount = await getWeeklyMealPlanCount(auth.userId);
+
+    return c.json({
+      is_premium: premium,
+      scans: { used: scanCount, limit: premium ? null : FREE_SCAN_LIMIT_PER_DAY, remaining: premium ? null : Math.max(0, FREE_SCAN_LIMIT_PER_DAY - scanCount) },
+      meal_plans: { used: mealPlanCount, limit: premium ? null : FREE_MEAL_PLAN_LIMIT_PER_WEEK, remaining: premium ? null : Math.max(0, FREE_MEAL_PLAN_LIMIT_PER_WEEK - mealPlanCount) },
+      workout_plans: { advanced: premium },
+    });
+  } catch (err) {
+    console.log("GET /subscription/usage error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- POST /food/scan ----
+app.post(`${PREFIX}/food/scan`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const premium = await isPremiumUser(auth.userId);
+    if (!premium) {
+      const scanCount = await getDailyScanCount(auth.userId);
+      if (scanCount >= FREE_SCAN_LIMIT_PER_DAY) {
+        return c.json({ message: "Daily scan limit reached. Upgrade to Premium for unlimited scans.", code: "LIMIT_REACHED", status: 429, limit: FREE_SCAN_LIMIT_PER_DAY, used: scanCount }, 429);
+      }
+    }
+
+    const { imageBase64, mimeType } = await c.req.json();
+    if (!imageBase64) return c.json({ message: "imageBase64 is required", code: "BAD_REQUEST", status: 400 }, 400);
+
+    const openaiKey = Deno.env.get("OPENAI_API_KEY");
+    if (!openaiKey) return c.json({ message: "OpenAI not configured", code: "CONFIG_ERROR", status: 500 }, 500);
+
+    const imgMime = mimeType || "image/jpeg";
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${openaiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: "You are a nutrition expert. Analyze the food in the image and return a JSON object with exactly these fields: food_name (string), estimated_calories (number), protein (number, grams), carbs (number, grams), fat (number, grams). Return ONLY the JSON, no other text." },
+          { role: "user", content: [
+            { type: "text", text: "What food is this? Estimate the calories and macronutrients." },
+            { type: "image_url", image_url: { url: `data:${imgMime};base64,${imageBase64}` } },
+          ] },
+        ],
+        max_tokens: 300,
+      }),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.log(`[Food Scan] OpenAI error: ${response.status} ${errText}`);
+      return c.json({ message: "AI analysis failed", code: "AI_ERROR", status: 502 }, 502);
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || "";
+    let parsed: any;
+    try {
+      const jsonStr = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+      parsed = JSON.parse(jsonStr);
+    } catch {
+      console.log("[Food Scan] Failed to parse AI response:", content);
+      return c.json({ message: "Could not parse AI response", code: "PARSE_ERROR", status: 502 }, 502);
+    }
+
+    await incrementDailyScanCount(auth.userId);
+    console.log(`[Food Scan] Success for user ${auth.userId}: ${parsed.food_name} (${parsed.estimated_calories} cal)`);
+    return c.json({ food_name: parsed.food_name || "Unknown food", estimated_calories: parsed.estimated_calories || 0, protein: parsed.protein || 0, carbs: parsed.carbs || 0, fat: parsed.fat || 0 });
+  } catch (err) {
+    console.log("POST /food/scan error:", err);
+    return c.json({ message: `Error scanning food: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- POST /food/entries ----
+app.post(`${PREFIX}/food/entries`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const body = await c.req.json();
+    const { food_name, calories, protein, carbs, fat, meal_type } = body;
+    if (!food_name) return c.json({ message: "food_name required", code: "BAD_REQUEST", status: 400 }, 400);
+
+    const entryId = generateId("food");
+    const now = new Date().toISOString();
+    const today = now.slice(0, 10);
+    const entry = { id: entryId, userId: auth.userId, food_name, calories: calories || 0, protein: protein || 0, carbs: carbs || 0, fat: fat || 0, meal_type: meal_type || "snack", date: today, created_at: now };
+
+    await kv.set(`become:food:${auth.userId}:${entryId}`, entry);
+    const indexKey = `become:food_idx:${auth.userId}:${today}`;
+    const index: string[] = (await kv.get(indexKey)) || [];
+    index.push(entryId);
+    await kv.set(indexKey, index);
+
+    // Invalidate weekly trends cache on new food entry
+    try {
+      const cacheKey = `become:cache:weekly_trends:${auth.userId}:${today}`;
+      await kv.del(cacheKey);
+    } catch (_) {}
+
+    console.log(`[Food] Entry added: user=${auth.userId}, food=${food_name}, cal=${calories}`);
+    return c.json(entry);
+  } catch (err) {
+    console.log("POST /food/entries error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- GET /food/entries ----
+app.get(`${PREFIX}/food/entries`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const date = c.req.query("date") || new Date().toISOString().slice(0, 10);
+    const indexKey = `become:food_idx:${auth.userId}:${date}`;
+    const index: string[] = (await kv.get(indexKey)) || [];
+    if (index.length === 0) return c.json([]);
+
+    const keys = index.map((id: string) => `become:food:${auth.userId}:${id}`);
+    const entries = await kv.mget(keys);
+    return c.json(entries.filter((e: any) => e && e.id).sort((a: any, b: any) => a.created_at > b.created_at ? 1 : -1));
+  } catch (err) {
+    console.log("GET /food/entries error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- DELETE /food/entries/:id ----
+app.delete(`${PREFIX}/food/entries/:id`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const entryId = c.req.param("id");
+    const entry = await kv.get(`become:food:${auth.userId}:${entryId}`);
+    if (!entry) return c.json({ message: "Entry not found", code: "NOT_FOUND", status: 404 }, 404);
+
+    await kv.del(`become:food:${auth.userId}:${entryId}`);
+    const date = entry.date || new Date().toISOString().slice(0, 10);
+    const indexKey = `become:food_idx:${auth.userId}:${date}`;
+    const index: string[] = (await kv.get(indexKey)) || [];
+    await kv.set(indexKey, index.filter((id: string) => id !== entryId));
+
+    // Invalidate weekly trends cache on food deletion
+    try {
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const cacheKey = `become:cache:weekly_trends:${auth.userId}:${todayStr}`;
+      await kv.del(cacheKey);
+    } catch (_) {}
+
+    return c.json({ success: true });
+  } catch (err) {
+    console.log("DELETE /food/entries/:id error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- POST /meal-plans/generate ----
+app.post(`${PREFIX}/meal-plans/generate`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const premium = await isPremiumUser(auth.userId);
+    if (!premium) {
+      const count = await getWeeklyMealPlanCount(auth.userId);
+      if (count >= FREE_MEAL_PLAN_LIMIT_PER_WEEK) {
+        return c.json({ message: "Weekly meal plan limit reached. Upgrade to Premium for unlimited plans.", code: "LIMIT_REACHED", status: 429, limit: FREE_MEAL_PLAN_LIMIT_PER_WEEK, used: count }, 429);
+      }
+    }
+
+    const body = await c.req.json();
+    const { plan_length, goal, daily_calories, gender, activity_level } = body;
+    const days = plan_length || 7;
+
+    const openaiKey = Deno.env.get("OPENAI_API_KEY");
+    if (!openaiKey) return c.json({ message: "OpenAI not configured", code: "CONFIG_ERROR", status: 500 }, 500);
+
+    const userProfile = await kv.get(`become:user_profile:${auth.telegramId}`);
+    const calTarget = daily_calories || userProfile?.daily_calorie_target || 2000;
+    const userGoal = goal || userProfile?.goal || "maintain weight";
+    const userGender = gender || userProfile?.gender || "not specified";
+    const userActivity = activity_level || userProfile?.activity_level || "moderate";
+    const batchDays = Math.min(days, 7);
+
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${openaiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: 'You are a professional nutritionist. Create a detailed meal plan. Return ONLY a JSON object: { "days": [ { "day": 1, "meals": { "breakfast": { "name": "...", "calories": N, "protein": N, "carbs": N, "fat": N, "ingredients": ["..."], "instructions": "..." }, "lunch": {...}, "dinner": {...}, "snack": {...} }, "total_calories": N } ] }. No other text.' },
+          { role: "user", content: `Create a ${batchDays}-day meal plan for a ${userGender} with ${userActivity} activity level. Goal: ${userGoal}. Daily calorie target: ${calTarget} calories. Make meals varied, practical, and nutritious.` },
+        ],
+        max_tokens: 4000,
+        temperature: 0.7,
+      }),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.log(`[Meal Plan] OpenAI error: ${response.status} ${errText}`);
+      return c.json({ message: "AI generation failed", code: "AI_ERROR", status: 502 }, 502);
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || "";
+    let planData: any;
+    try {
+      const jsonStr = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+      planData = JSON.parse(jsonStr);
+    } catch {
+      console.log("[Meal Plan] Failed to parse AI response:", content.slice(0, 500));
+      return c.json({ message: "Could not parse AI response", code: "PARSE_ERROR", status: 502 }, 502);
+    }
+
+    const planId = generateId("mplan");
+    const savedPlan = { id: planId, userId: auth.userId, plan_length: days, plan_data: planData, created_at: new Date().toISOString() };
+    await kv.set(`become:mealplan:${auth.userId}:${planId}`, savedPlan);
+
+    const plansIndexKey = `become:mealplans:${auth.userId}`;
+    const plansIndex: string[] = (await kv.get(plansIndexKey)) || [];
+    plansIndex.unshift(planId);
+    await kv.set(plansIndexKey, plansIndex);
+
+    await incrementWeeklyMealPlanCount(auth.userId);
+    console.log(`[Meal Plan] Generated ${batchDays}-day plan for user ${auth.userId}`);
+    return c.json(savedPlan);
+  } catch (err) {
+    console.log("POST /meal-plans/generate error:", err);
+    return c.json({ message: `Error generating meal plan: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- GET /meal-plans ----
+app.get(`${PREFIX}/meal-plans`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+    const plansIndex: string[] = (await kv.get(`become:mealplans:${auth.userId}`)) || [];
+    if (plansIndex.length === 0) return c.json([]);
+    const keys = plansIndex.map((id: string) => `become:mealplan:${auth.userId}:${id}`);
+    const plans = await kv.mget(keys);
+    return c.json(plans.filter((p: any) => p && p.id));
+  } catch (err) {
+    console.log("GET /meal-plans error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- GET /meal-plans/:id ----
+app.get(`${PREFIX}/meal-plans/:id`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+    const plan = await kv.get(`become:mealplan:${auth.userId}:${c.req.param("id")}`);
+    if (!plan) return c.json({ message: "Plan not found", code: "NOT_FOUND", status: 404 }, 404);
+    return c.json(plan);
+  } catch (err) {
+    console.log("GET /meal-plans/:id error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- DELETE /meal-plans/:id ----
+app.delete(`${PREFIX}/meal-plans/:id`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+    const planId = c.req.param("id");
+    await kv.del(`become:mealplan:${auth.userId}:${planId}`);
+    const plansIndex: string[] = (await kv.get(`become:mealplans:${auth.userId}`)) || [];
+    await kv.set(`become:mealplans:${auth.userId}`, plansIndex.filter((id: string) => id !== planId));
+    return c.json({ success: true });
+  } catch (err) {
+    console.log("DELETE /meal-plans/:id error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// =============================================
 // SUBSCRIPTION / PAYWALL ENDPOINTS
 // =============================================
 
@@ -8305,9 +8954,9 @@ app.post(`${PREFIX}/subscription/create-invoice`, async (c) => {
 
     const { plan } = await c.req.json();
     const plans: Record<string, { days: number; stars: number; title_en: string; title_ru: string; desc_en: string; desc_ru: string }> = {
-      "30": { days: 30, stars: 350, title_en: "BECOME Premium — 1 Month", title_ru: "BECOME Premium — 1 месяц", desc_en: "30 days of full access to all features", desc_ru: "30 дней полного доступа ко всем функциям" },
-      "60": { days: 60, stars: 600, title_en: "BECOME Premium — 2 Months", title_ru: "BECOME Premium — 2 месяца", desc_en: "60 days of full access (save 14%)", desc_ru: "60 дней полного доступа (экономия 14%)" },
-      "90": { days: 90, stars: 900, title_en: "BECOME Premium — 3 Months", title_ru: "BECOME Premium — 3 месяца", desc_en: "90 days of full access (save 14%)", desc_ru: "90 дней полного доступа (экономия 14%)" },
+      "30": { days: 30, stars: 350, title_en: "Proper Food Premium — 1 Month", title_ru: "Proper Food Premium — 1 месяц", desc_en: "30 days of full access to all features", desc_ru: "30 дней полного доступа ко всем функциям" },
+      "60": { days: 60, stars: 600, title_en: "Proper Food Premium — 2 Months", title_ru: "Proper Food Premium — 2 месяца", desc_en: "60 days of full access (save 14%)", desc_ru: "60 дней полного доступа (экономия 14%)" },
+      "90": { days: 90, stars: 900, title_en: "Proper Food Premium — 3 Months", title_ru: "Proper Food Premium — 3 месяца", desc_en: "90 days of full access (save 14%)", desc_ru: "90 дней полного доступа (экономия 14%)" },
     };
 
     const planData = plans[plan];
@@ -8333,6 +8982,265 @@ app.post(`${PREFIX}/subscription/create-invoice`, async (c) => {
   } catch (err) {
     console.log("POST /subscription/create-invoice error:", err);
     return c.json({ message: `Error sending invoice: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- POST /subscription/create-invoice-link ----
+// Returns an invoice link for Telegram.WebApp.openInvoice() — instant in-app payment
+app.post(`${PREFIX}/subscription/create-invoice-link`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const { plan } = await c.req.json();
+    const plans: Record<string, { days: number; stars: number; title_en: string; title_ru: string; desc_en: string; desc_ru: string }> = {
+      "30": { days: 30, stars: 350, title_en: "Proper Food Premium — 1 Month", title_ru: "Proper Food Premium — 1 месяц", desc_en: "30 days of full access to all features", desc_ru: "30 дней полного доступа ко всем функциям" },
+      "60": { days: 60, stars: 600, title_en: "Proper Food Premium — 2 Months", title_ru: "Proper Food Premium — 2 месяца", desc_en: "60 days of full access (save 14%)", desc_ru: "60 дней полного доступа (экономия 14%)" },
+      "90": { days: 90, stars: 900, title_en: "Proper Food Premium — 3 Months", title_ru: "Proper Food Premium — 3 месяца", desc_en: "90 days of full access (save 14%)", desc_ru: "90 дней полного доступа (экономия 14%)" },
+    };
+
+    const planData = plans[plan];
+    if (!planData) return c.json({ message: "Invalid plan", code: "BAD_REQUEST", status: 400 }, 400);
+
+    const user = await kv.get(`become:user:${auth.userId}`);
+    const lang = user?.language === "ru" ? "ru" : "en";
+
+    const invoiceLink = await createInvoiceLink({
+      title: lang === "ru" ? planData.title_ru : planData.title_en,
+      description: lang === "ru" ? planData.desc_ru : planData.desc_en,
+      payload: `sub_${plan}_${auth.userId}_${Date.now()}`,
+      currency: "XTR",
+      prices: [{ label: lang === "ru" ? "Подписка" : "Subscription", amount: planData.stars }],
+    });
+
+    console.log(`[Payment] Created invoice link for user ${auth.userId}, plan=${plan}`);
+    return c.json({ success: true, invoiceLink, plan, stars: planData.stars, days: planData.days });
+  } catch (err) {
+    console.log("POST /subscription/create-invoice-link error:", err);
+    return c.json({ message: `Error creating invoice link: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- POST /subscription/activate ----
+// Called from Mini App after successful in-app payment to activate subscription immediately
+// (The webhook handler also activates, this is a safety net for immediate UI feedback)
+app.post(`${PREFIX}/subscription/activate`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const { plan, stars } = await c.req.json();
+    const daysMap: Record<string, number> = { "30": 30, "60": 60, "90": 90 };
+    const daysToAdd = daysMap[plan] || 30;
+
+    const user = await kv.get(`become:user:${auth.userId}`);
+    if (!user) return c.json({ message: "User not found", code: "NOT_FOUND", status: 404 }, 404);
+
+    // Check if subscription was already extended by the webhook (avoid double-granting)
+    const currentExpiry = user.subscriptionExpiresAt
+      ? new Date(user.subscriptionExpiresAt).getTime()
+      : 0;
+    const expectedMinExpiry = Date.now() + (daysToAdd - 1) * 24 * 60 * 60 * 1000;
+
+    if (currentExpiry >= expectedMinExpiry) {
+      console.log(`[Payment] Subscription already active for user ${auth.userId}, skipping duplicate activate`);
+      return c.json({
+        success: true,
+        alreadyActive: true,
+        expiresAt: user.subscriptionExpiresAt,
+        daysAdded: daysToAdd,
+      });
+    }
+
+    // Extend subscription
+    const base = Math.max(currentExpiry, Date.now());
+    user.subscriptionExpiresAt = new Date(base + daysToAdd * 24 * 60 * 60 * 1000).toISOString();
+    user.updatedAt = new Date().toISOString();
+    await kv.set(`become:user:${auth.userId}`, user);
+
+    // Record payment
+    const paymentId = generateId("pay");
+    await kv.set(`become:payment:${paymentId}`, {
+      id: paymentId,
+      userId: auth.userId,
+      telegramId: auth.telegramId,
+      currency: "XTR",
+      amount: stars || 0,
+      payload: `miniapp_sub_${plan}_${auth.userId}_${Date.now()}`,
+      daysAdded: daysToAdd,
+      type: "subscription",
+      source: "miniapp_activate",
+      createdAt: new Date().toISOString(),
+    });
+    const paymentList = await kv.get(`become:payments:${auth.userId}`) || [];
+    paymentList.push(paymentId);
+    await kv.set(`become:payments:${auth.userId}`, paymentList);
+
+    console.log(`[Payment] Mini App activate: user ${auth.userId} +${daysToAdd} days, expires ${user.subscriptionExpiresAt}`);
+
+    // Fire-and-forget referral bonus
+    grantReferralBonusOnSubscription(auth.userId).catch(() => {});
+
+    return c.json({
+      success: true,
+      alreadyActive: false,
+      expiresAt: user.subscriptionExpiresAt,
+      daysAdded: daysToAdd,
+    });
+  } catch (err) {
+    console.log("POST /subscription/activate error:", err);
+    return c.json({ message: `Error activating subscription: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- POST /subscription/restore ----
+// Restore purchase: checks payment history and re-activates subscription if valid payment exists but sub is inactive
+app.post(`${PREFIX}/subscription/restore`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const user = await kv.get(`become:user:${auth.userId}`);
+    if (!user) return c.json({ message: "User not found", code: "NOT_FOUND", status: 404 }, 404);
+
+    // Check if already active
+    const currentExpiry = user.subscriptionExpiresAt ? new Date(user.subscriptionExpiresAt).getTime() : 0;
+    if (currentExpiry > Date.now()) {
+      const daysLeft = Math.ceil((currentExpiry - Date.now()) / (24 * 60 * 60 * 1000));
+      return c.json({
+        success: true,
+        restored: false,
+        expiresAt: user.subscriptionExpiresAt,
+        daysLeft,
+        message: "Subscription is already active",
+      });
+    }
+
+    // Look for payments that should still grant remaining days
+    const paymentIds: string[] = await kv.get(`become:payments:${auth.userId}`) || [];
+    if (paymentIds.length === 0) {
+      return c.json({
+        success: true,
+        restored: false,
+        expiresAt: null,
+        daysLeft: 0,
+        message: "No payment history found",
+      });
+    }
+
+    // Fetch all payment records
+    const keys = paymentIds.map((id: string) => `become:payment:${id}`);
+    const payments = await kv.mget(keys);
+    const validPayments = payments
+      .filter((p: any) => p && p.id && p.type === "subscription" && p.daysAdded)
+      .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    if (validPayments.length === 0) {
+      return c.json({
+        success: true,
+        restored: false,
+        expiresAt: null,
+        daysLeft: 0,
+        message: "No subscription payments found to restore",
+      });
+    }
+
+    // Find the most recent payment and check if its expiry window is still valid
+    // (paid_at + days_added should be in the future)
+    const lastPayment = validPayments[0];
+    const paidAt = new Date(lastPayment.createdAt).getTime();
+    const expectedExpiry = paidAt + (lastPayment.daysAdded * 24 * 60 * 60 * 1000);
+
+    if (expectedExpiry <= Date.now()) {
+      return c.json({
+        success: true,
+        restored: false,
+        expiresAt: null,
+        daysLeft: 0,
+        message: "Last payment's subscription period has already expired. Please purchase a new plan.",
+      });
+    }
+
+    // Restore: set expiry to the expected date
+    user.subscriptionExpiresAt = new Date(expectedExpiry).toISOString();
+    user.updatedAt = new Date().toISOString();
+    await kv.set(`become:user:${auth.userId}`, user);
+
+    const daysLeft = Math.ceil((expectedExpiry - Date.now()) / (24 * 60 * 60 * 1000));
+
+    console.log(`[Payment] Restore purchase: user ${auth.userId}, restored to ${user.subscriptionExpiresAt} (${daysLeft} days left)`);
+
+    return c.json({
+      success: true,
+      restored: true,
+      expiresAt: user.subscriptionExpiresAt,
+      daysLeft,
+      message: `Subscription restored! ${daysLeft} days remaining.`,
+    });
+  } catch (err) {
+    console.log("POST /subscription/restore error:", err);
+    return c.json({ message: `Error restoring purchase: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- POST /subscription/check-expiry-reminder ----
+// Client-triggered: sends Telegram notification if subscription expires within 3 days (deduped daily)
+app.post(`${PREFIX}/subscription/check-expiry-reminder`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const user = await kv.get(`become:user:${auth.userId}`);
+    if (!user) return c.json({ sent: false, daysLeft: 0 });
+
+    const expiresAt = user.subscriptionExpiresAt ? new Date(user.subscriptionExpiresAt).getTime() : 0;
+    if (expiresAt <= Date.now()) {
+      return c.json({ sent: false, daysLeft: 0 });
+    }
+
+    const daysLeft = Math.ceil((expiresAt - Date.now()) / (24 * 60 * 60 * 1000));
+
+    // Only send if ≤3 days left
+    if (daysLeft > 3) {
+      return c.json({ sent: false, daysLeft });
+    }
+
+    // Dedup: only send once per day
+    const today = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
+    const dedupKey = `become:expiry_reminder:${auth.userId}:${today}`;
+    const alreadySent = await kv.get(dedupKey);
+    if (alreadySent) {
+      return c.json({ sent: false, daysLeft });
+    }
+
+    // Mark as sent for today
+    await kv.set(dedupKey, { sentAt: new Date().toISOString() });
+
+    // Send Telegram notification
+    const tgId = user.telegramId;
+    if (tgId) {
+      const lang = user.language === "ru" ? "ru" : "en";
+      const text = lang === "ru"
+        ? `⏰ <b>Подписка скоро истекает!</b>\n\nВаша Premium подписка истекает через <b>${daysLeft} ${daysLeft === 1 ? "день" : "дня"}</b>.\n\n🔄 Продлите подписку, чтобы сохранить безлимитный доступ к сканированию еды, планам питания и тренировкам.`
+        : `⏰ <b>Subscription Expiring Soon!</b>\n\nYour Premium subscription expires in <b>${daysLeft} day${daysLeft === 1 ? "" : "s"}</b>.\n\n🔄 Renew now to keep unlimited access to food scanning, meal plans, and workouts.`;
+
+      const deepLink = buildTgDeepLink("upgrade");
+      const keyboard: InlineKeyboardButton[][] = [
+        [{ text: lang === "ru" ? "⭐ Продлить Premium" : "⭐ Renew Premium", url: deepLink }],
+      ];
+
+      try {
+        await sendMessage(Number(tgId), text, { reply_markup: { inline_keyboard: keyboard } });
+        console.log(`[Subscription] Expiry reminder sent to user ${auth.userId} (${daysLeft} days left)`);
+      } catch (notifErr) {
+        console.log(`[Subscription] Failed to send expiry reminder:`, notifErr);
+      }
+    }
+
+    return c.json({ sent: true, daysLeft });
+  } catch (err) {
+    console.log("POST /subscription/check-expiry-reminder error:", err);
+    return c.json({ sent: false, daysLeft: 0 });
   }
 });
 
@@ -8367,7 +9275,7 @@ app.post(`${PREFIX}/subscription/create-ton-invoice`, async (c) => {
     });
 
     // The invoiceUrl links to the bot with payment command
-    const botUsername = "BECOMEAI_BOT";
+    const botUsername = Deno.env.get("TELEGRAM_BOT_USERNAME") || "ProperFoodAI_bot";
     const invoiceUrl = `https://t.me/${botUsername}?start=tonpay_${paymentId}`;
 
     console.log(`[Payment] Created TON invoice for user ${auth.userId}, plan=${plan}, ton=${planData.tonAmount}`);
@@ -8401,8 +9309,8 @@ app.post(`${PREFIX}/wallet/topup-stars`, async (c) => {
       chatId,
       title: lang === "ru" ? `Пополнение — ${starsAmount} ⭐` : `Top Up — ${starsAmount} ⭐`,
       description: lang === "ru"
-        ? `Пополнение баланса BECOME на ${starsAmount} Stars. Оплатите прямо здесь.`
-        : `Add ${starsAmount} Stars to your BECOME wallet. Pay right here.`,
+        ? `Пополнение баланса Proper Food на ${starsAmount} Stars. Оплатите прямо здесь.`
+        : `Add ${starsAmount} Stars to your Proper Food wallet. Pay right here.`,
       payload: `topup_stars_${starsAmount}_${auth.userId}_${Date.now()}`,
       currency: "XTR",
       prices: [{ label: lang === "ru" ? "Пополнение" : "Top Up", amount: starsAmount }],
@@ -8557,6 +9465,10 @@ app.post(`${PREFIX}/wallet/pay-subscription`, async (c) => {
 
       console.log(`[Payment] Subscription from balance: user=${auth.userId}, plan=${plan}, currency=${currency}`);
       await logTransaction(auth.userId, "subscription", requiredAmount, currency as "stars" | "ton", { description: `+${planData.days}d` });
+
+      // Fire-and-forget: grant referral bonus to referrer if applicable
+      grantReferralBonusOnSubscription(auth.userId).catch(() => {});
+
       return c.json({
         success: true,
         daysAdded: planData.days,
@@ -8632,8 +9544,8 @@ app.post(`${PREFIX}/notifications/subscription-expiry`, async (c) => {
 
         if (daysLeft === 5) {
           const text = lang === "ru"
-            ? `⚠️ <b>Подписка истекает через 5 дней</b>\n\n📅 Действует до: <b>${new Date(user.subscriptionExpiresAt).toLocaleDateString("ru-RU")}</b>\n\nПродли подписку, чтобы не потерять доступ к AI-коучу, челленджам и всем функциям BECOME.`
-            : `⚠️ <b>Your subscription expires in 5 days</b>\n\n📅 Valid until: <b>${new Date(user.subscriptionExpiresAt).toLocaleDateString("en-US")}</b>\n\nRenew your subscription to keep access to AI Coach, challenges, and all BECOME features.`;
+            ? `⚠️ <b>Подписка истекает через 5 дней</b>\n\n📅 Действует до: <b>${new Date(user.subscriptionExpiresAt).toLocaleDateString("ru-RU")}</b>\n\nПродли подписку, чтобы не потерять доступ к AI-коучу и всем функциям Proper Food.`
+            : `⚠️ <b>Your subscription expires in 5 days</b>\n\n📅 Valid until: <b>${new Date(user.subscriptionExpiresAt).toLocaleDateString("en-US")}</b>\n\nRenew your subscription to keep access to AI Coach and all Proper Food features.`;
           try {
             await sendMessage(chatId, text);
             await kv.set(notifKey, { sentAt: new Date().toISOString() });
@@ -9086,8 +9998,8 @@ app.post(`${PREFIX}/admin/credit-wallet`, async (c) => {
         const symbol = currency === "stars" ? "★" : "TON";
         const newBalance = currency === "stars" ? wallet.starsBalance : wallet.tonBalance;
         const notifText = lang === "ru"
-          ? `🎁 <b>Баланс пополнен!</b>\n\n💰 Зачислено: <b>${amount} ${symbol}</b>\n📊 Новый баланс: <b>${newBalance} ${symbol}</b>\n\nСпасибо, что вы с BECOME! 🚀`
-          : `🎁 <b>Balance topped up!</b>\n\n💰 Credited: <b>${amount} ${symbol}</b>\n📊 New balance: <b>${newBalance} ${symbol}</b>\n\nThank you for being with BECOME! 🚀`;
+          ? `🎁 <b>Баланс пополнен!</b>\n\n💰 Зачислено: <b>${amount} ${symbol}</b>\n📊 Новый баланс: <b>${newBalance} ${symbol}</b>\n\nСпасибо, что вы с Proper Food! 🚀`
+          : `🎁 <b>Balance topped up!</b>\n\n💰 Credited: <b>${amount} ${symbol}</b>\n📊 New balance: <b>${newBalance} ${symbol}</b>\n\nThank you for being with Proper Food! 🚀`;
         await sendMessage(chatId, notifText);
         console.log(`[Admin] Sent credit notification to user ${userId} (tg:${creditedUser.telegramId}): ${amount} ${currency}`);
       }
@@ -9516,6 +10428,723 @@ app.get(`${PREFIX}/user-profile`, async (c) => {
       { message: `Error fetching profile: ${err}`, code: "INTERNAL_ERROR", status: 500 },
       500
     );
+  }
+});
+
+// =============================================
+// WEIGHT TRACKING
+// =============================================
+
+// ---- POST /weight-log ----
+// Log a weight entry
+app.post(`${PREFIX}/weight-log`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const body = await c.req.json();
+    const { weight, note } = body;
+
+    if (!weight || isNaN(Number(weight)) || Number(weight) < 20 || Number(weight) > 500) {
+      return c.json({ message: "Invalid weight value", code: "VALIDATION_ERROR", status: 400 }, 400);
+    }
+
+    const now = new Date();
+    const dateStr = now.toISOString().slice(0, 10);
+    const entryId = generateId("wt");
+
+    const entry = {
+      id: entryId,
+      userId: auth.userId,
+      weight: Number(weight),
+      note: note || null,
+      date: dateStr,
+      created_at: now.toISOString(),
+    };
+
+    // Store individual entry
+    await kv.set(`become:weight:${auth.userId}:${entryId}`, entry);
+
+    // Update date index (one entry per day, latest wins)
+    const dateIndexKey = `become:weight_idx:${auth.userId}`;
+    const dateIndex: Array<{ date: string; entryId: string }> = (await kv.get(dateIndexKey)) || [];
+
+    // Replace if same date, otherwise prepend
+    const existingIdx = dateIndex.findIndex((d: any) => d.date === dateStr);
+    if (existingIdx >= 0) {
+      // Delete old entry for this date
+      const oldEntryId = dateIndex[existingIdx].entryId;
+      await kv.del(`become:weight:${auth.userId}:${oldEntryId}`);
+      dateIndex[existingIdx] = { date: dateStr, entryId };
+    } else {
+      dateIndex.unshift({ date: dateStr, entryId });
+    }
+
+    // Keep max 365 entries
+    if (dateIndex.length > 365) {
+      const removed = dateIndex.splice(365);
+      for (const r of removed) {
+        kv.del(`become:weight:${auth.userId}:${r.entryId}`).catch(() => {});
+      }
+    }
+
+    await kv.set(dateIndexKey, dateIndex);
+
+    // Also update user profile weight
+    try {
+      const profile = await kv.get(`become:user_profile:${auth.telegramId}`);
+      if (profile) {
+        profile.weight = Number(weight);
+        profile.updated_at = now.toISOString();
+        await kv.set(`become:user_profile:${auth.telegramId}`, profile);
+      }
+    } catch (e) {
+      console.log("[WeightLog] Profile update error (non-critical):", e);
+    }
+
+    // Invalidate weekly trends cache
+    try {
+      const cacheKey = `become:cache:weekly_trends:${auth.userId}:${dateStr}`;
+      await kv.del(cacheKey);
+    } catch (_) {}
+
+    console.log(`[WeightLog] Saved entry ${entryId} for user ${auth.userId}: ${weight}kg`);
+    return c.json({ success: true, entry });
+  } catch (err) {
+    console.log("POST /weight-log error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- GET /weight-log/history ----
+// Get weight history (last N entries)
+app.get(`${PREFIX}/weight-log/history`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const limitParam = c.req.query("limit");
+    const limit = Math.min(Number(limitParam) || 90, 365);
+
+    const dateIndexKey = `become:weight_idx:${auth.userId}`;
+    const dateIndex: Array<{ date: string; entryId: string }> = (await kv.get(dateIndexKey)) || [];
+
+    if (dateIndex.length === 0) {
+      return c.json({ entries: [], count: 0 });
+    }
+
+    const sliced = dateIndex.slice(0, limit);
+    const keys = sliced.map((d: any) => `become:weight:${auth.userId}:${d.entryId}`);
+    const entries = (await kv.mget(keys)).filter((e: any) => e && e.id);
+
+    return c.json({ entries, count: entries.length });
+  } catch (err) {
+    console.log("GET /weight-log/history error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- DELETE /weight-log/:entryId ----
+app.delete(`${PREFIX}/weight-log/:entryId`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const entryId = c.req.param("entryId");
+    await kv.del(`become:weight:${auth.userId}:${entryId}`);
+
+    // Remove from index
+    const dateIndexKey = `become:weight_idx:${auth.userId}`;
+    const dateIndex: Array<{ date: string; entryId: string }> = (await kv.get(dateIndexKey)) || [];
+    const filtered = dateIndex.filter((d: any) => d.entryId !== entryId);
+    await kv.set(dateIndexKey, filtered);
+
+    return c.json({ success: true });
+  } catch (err) {
+    console.log("DELETE /weight-log/:entryId error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- POST /weight-log/check-reminder ----
+// Check if user needs a weigh-in reminder. Sends Telegram notification
+// if they haven't logged weight today. Daily dedup via KV.
+app.post(`${PREFIX}/weight-log/check-reminder`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const today = new Date().toISOString().slice(0, 10);
+    const dedupKey = `become:weighin_reminder:${auth.userId}:${today}`;
+    
+    // Check if already sent today
+    const alreadySent = await kv.get(dedupKey);
+    if (alreadySent) {
+      return c.json({ sent: false, reason: "already_sent_today" });
+    }
+
+    // Check if user has logged weight today
+    const dateIndexKey = `become:weight_idx:${auth.userId}`;
+    const dateIndex: Array<{ date: string; entryId: string }> = (await kv.get(dateIndexKey)) || [];
+    const todayEntry = dateIndex.find((d: any) => d.date === today);
+    
+    if (todayEntry) {
+      return c.json({ sent: false, reason: "already_logged_today" });
+    }
+
+    // Check if user has any weight entries at all (don't remind brand new users)
+    if (dateIndex.length === 0) {
+      return c.json({ sent: false, reason: "no_history" });
+    }
+
+    // Get user for telegram ID and language
+    const user = await kv.get(`become:user:${auth.userId}`);
+    if (!user?.telegramId) {
+      return c.json({ sent: false, reason: "no_telegram_id" });
+    }
+
+    // Check notification preferences
+    const prefs = await getNotificationPrefs(auth.userId);
+    if (!prefs.enabled || !prefs.dailyReminder) {
+      return c.json({ sent: false, reason: "notifications_disabled" });
+    }
+
+    // Determine last weigh-in date
+    const lastDate = dateIndex.length > 0 ? dateIndex[0].date : null;
+    const daysSinceLast = lastDate
+      ? Math.floor((Date.now() - new Date(lastDate).getTime()) / 86400000)
+      : 0;
+
+    // Send reminder
+    const lang = user.language || "en";
+    const emoji = "\u2696\uFE0F";
+    const text = lang === "ru"
+      ? `${emoji} \u041D\u0435 \u0437\u0430\u0431\u0443\u0434\u044C\u0442\u0435 \u0432\u0437\u0432\u0435\u0441\u0438\u0442\u044C\u0441\u044F \u0441\u0435\u0433\u043E\u0434\u043D\u044F!\n\n${daysSinceLast > 1 ? `\u041F\u043E\u0441\u043B\u0435\u0434\u043D\u0435\u0435 \u0432\u0437\u0432\u0435\u0448\u0438\u0432\u0430\u043D\u0438\u0435: ${daysSinceLast} \u0434\u043D. \u043D\u0430\u0437\u0430\u0434.` : "\u0420\u0435\u0433\u0443\u043B\u044F\u0440\u043D\u043E\u0435 \u043E\u0442\u0441\u043B\u0435\u0436\u0438\u0432\u0430\u043D\u0438\u0435 \u043F\u043E\u043C\u043E\u0433\u0430\u0435\u0442 \u0432\u0438\u0434\u0435\u0442\u044C \u043F\u0440\u043E\u0433\u0440\u0435\u0441\u0441."}\n\n\u041E\u0442\u043A\u0440\u043E\u0439\u0442\u0435 \u043F\u0440\u0438\u043B\u043E\u0436\u0435\u043D\u0438\u0435, \u0447\u0442\u043E\u0431\u044B \u0437\u0430\u043F\u0438\u0441\u0430\u0442\u044C \u0432\u0435\u0441.`
+      : `${emoji} Don't forget to weigh in today!\n\n${daysSinceLast > 1 ? `Last weigh-in: ${daysSinceLast} days ago.` : "Regular tracking helps you see your progress."}\n\nOpen the app to log your weight.`;
+
+    const keyboard = [[{
+      text: lang === "ru" ? "\uD83D\uDCCA \u0417\u0430\u043F\u0438\u0441\u0430\u0442\u044C \u0432\u0435\u0441" : "\uD83D\uDCCA Log Weight",
+      url: buildTgDeepLink('weight'),
+    }]];
+
+    await sendMessage(user.telegramId, text, keyboard);
+
+    // Mark as sent today
+    await kv.set(dedupKey, { sentAt: new Date().toISOString() });
+
+    console.log(`[WeighIn Reminder] Sent to user ${auth.userId} (${daysSinceLast} days since last)`);
+    return c.json({ sent: true, daysSinceLast });
+  } catch (err) {
+    console.log("POST /weight-log/check-reminder error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// =============================================
+// AI NUTRITION COACH — RAG-enhanced nutrition chat
+// =============================================
+
+// ---- POST /ai/nutrition-coach/chat ----
+app.post(`${PREFIX}/ai/nutrition-coach/chat`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const body = await c.req.json();
+    const { message: userMessage, conversationId } = body;
+
+    if (!userMessage || !userMessage.trim()) {
+      return c.json({ message: "message is required", code: "BAD_REQUEST", status: 400 }, 400);
+    }
+
+    // Rate limiting
+    const rateLimitKey = `become:rate:nutri_coach:${auth.userId}`;
+    const rateData = await kv.get(rateLimitKey);
+    const now = Date.now();
+    if (rateData) {
+      const windowStart = rateData.windowStart || 0;
+      const count = rateData.count || 0;
+      if (now - windowStart < COACH_RATE_WINDOW) {
+        if (count >= COACH_RATE_LIMIT * 3) {
+          const retryAfter = Math.ceil((COACH_RATE_WINDOW - (now - windowStart)) / 1000);
+          return c.json({ message: `Too many requests. Try again in ${Math.ceil(retryAfter / 60)} min.`, code: "RATE_LIMITED", status: 429, retryAfterSeconds: retryAfter }, 429);
+        }
+        await kv.set(rateLimitKey, { windowStart, count: count + 1 });
+      } else {
+        await kv.set(rateLimitKey, { windowStart: now, count: 1 });
+      }
+    } else {
+      await kv.set(rateLimitKey, { windowStart: now, count: 1 });
+    }
+
+    const user = await kv.get(`become:user:${auth.userId}`);
+    const language = user?.language || "en";
+    const firstName = user?.firstName || "";
+
+    // ---- RAG: Gather all nutrition context ----
+    let ragContext = "";
+
+    // 1) User Profile
+    try {
+      const profile = await kv.get(`become:user_profile:${auth.telegramId}`);
+      if (profile) {
+        ragContext += `\n--- USER PROFILE ---`;
+        ragContext += `\nGender: ${profile.gender || "unknown"}, Age: ${profile.age || "unknown"}, Height: ${profile.height || "unknown"} cm, Weight: ${profile.weight || "unknown"} kg`;
+        ragContext += `\nActivity level: ${profile.activity_level || "unknown"}, Goal: ${profile.goal || "unknown"}`;
+        ragContext += `\nDaily calorie target: ${profile.daily_calorie_target || "not set"} kcal, BMR: ${profile.bmr || "N/A"} kcal, Maintenance: ${profile.daily_maintenance_calories || "N/A"} kcal`;
+      } else {
+        ragContext += `\n--- USER PROFILE ---\nNo profile set up yet.`;
+      }
+    } catch (e) {
+      console.log("[NutriCoach] Profile fetch error:", e);
+    }
+
+    // 2) Today's food entries + calorie balance
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const indexKey = `become:food_idx:${auth.userId}:${today}`;
+      const foodIndex: string[] = (await kv.get(indexKey)) || [];
+
+      if (foodIndex.length > 0) {
+        const foodKeys = foodIndex.map((id: string) => `become:food:${auth.userId}:${id}`);
+        const entries = (await kv.mget(foodKeys)).filter((e: any) => e && e.id);
+
+        let totalCal = 0, totalProtein = 0, totalCarbs = 0, totalFat = 0;
+        const foodList: string[] = [];
+
+        for (const e of entries) {
+          totalCal += e.calories || 0;
+          totalProtein += e.protein || 0;
+          totalCarbs += e.carbs || 0;
+          totalFat += e.fat || 0;
+          foodList.push(`${e.food_name} (${e.calories}kcal, P${e.protein}g C${e.carbs}g F${e.fat}g) [${e.meal_type || "snack"}]`);
+        }
+
+        ragContext += `\n\n--- TODAY'S FOOD LOG (${today}) ---`;
+        ragContext += `\nEntries:`;
+        foodList.forEach((f, i) => { ragContext += `\n  ${i + 1}. ${f}`; });
+        ragContext += `\nTotals: ${totalCal} kcal | P: ${totalProtein}g | C: ${totalCarbs}g | F: ${totalFat}g`;
+
+        const profile = await kv.get(`become:user_profile:${auth.telegramId}`);
+        const target = profile?.daily_calorie_target || 2000;
+        const remaining = target - totalCal;
+        ragContext += `\nTarget: ${target} kcal | Remaining: ${remaining} kcal | ${remaining > 0 ? "Under target" : "OVER by " + Math.abs(remaining) + " kcal"}`;
+      } else {
+        ragContext += `\n\n--- TODAY'S FOOD LOG ---\nNo food logged today.`;
+      }
+    } catch (e) {
+      console.log("[NutriCoach] Food entries fetch error:", e);
+    }
+
+    // 3) Weekly food trends (last 7 days aggregate) — CACHED
+    try {
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const trendsCacheKey = `become:cache:weekly_trends:${auth.userId}:${todayStr}`;
+      let cachedTrends = await kv.get(trendsCacheKey);
+
+      if (!cachedTrends) {
+        // Compute fresh
+        const weekDays: { date: string; cal: number; protein: number; carbs: number; fat: number; entries: number }[] = [];
+        for (let d = 1; d <= 7; d++) {
+          const dayDate = new Date(Date.now() - d * 86400000).toISOString().slice(0, 10);
+          const dayIdx: string[] = (await kv.get(`become:food_idx:${auth.userId}:${dayDate}`)) || [];
+          if (dayIdx.length > 0) {
+            const dayKeys = dayIdx.map((id: string) => `become:food:${auth.userId}:${id}`);
+            const dayEntries = (await kv.mget(dayKeys)).filter((e: any) => e && e.id);
+            let dC = 0, dP = 0, dCb = 0, dF = 0;
+            for (const e of dayEntries) { dC += e.calories || 0; dP += e.protein || 0; dCb += e.carbs || 0; dF += e.fat || 0; }
+            weekDays.push({ date: dayDate, cal: dC, protein: dP, carbs: dCb, fat: dF, entries: dayIdx.length });
+          }
+        }
+
+        const profile = await kv.get(`become:user_profile:${auth.telegramId}`);
+        const target = profile?.daily_calorie_target || 2000;
+
+        cachedTrends = { weekDays, target, cachedAt: Date.now() };
+        // Cache for current day (auto-invalidated by date key changing tomorrow)
+        await kv.set(trendsCacheKey, cachedTrends);
+        console.log(`[NutriCoach] Weekly trends computed & cached for ${auth.userId}, ${cachedTrends.weekDays.length} days`);
+      } else {
+        console.log(`[NutriCoach] Weekly trends cache HIT for ${auth.userId}`);
+      }
+
+      const { weekDays, target } = cachedTrends;
+
+      if (weekDays.length > 0) {
+        const totalDays = weekDays.length;
+        const avgCal = Math.round(weekDays.reduce((s: number, d: any) => s + d.cal, 0) / totalDays);
+        const avgProtein = Math.round(weekDays.reduce((s: number, d: any) => s + d.protein, 0) / totalDays);
+        const avgCarbs = Math.round(weekDays.reduce((s: number, d: any) => s + d.carbs, 0) / totalDays);
+        const avgFat = Math.round(weekDays.reduce((s: number, d: any) => s + d.fat, 0) / totalDays);
+        const totalEntries = weekDays.reduce((s: number, d: any) => s + d.entries, 0);
+        const highDay = weekDays.reduce((max: any, d: any) => d.cal > max.cal ? d : max);
+        const lowDay = weekDays.reduce((min: any, d: any) => d.cal < min.cal ? d : min);
+
+        ragContext += `\n\n--- WEEKLY FOOD TRENDS (last 7 days, cached) ---`;
+        ragContext += `\nDays with data: ${totalDays}/7, Total entries: ${totalEntries}`;
+        ragContext += `\nAvg daily: ${avgCal} kcal | P${avgProtein}g C${avgCarbs}g F${avgFat}g`;
+        ragContext += `\nHighest day: ${highDay.date} (${highDay.cal} kcal) | Lowest: ${lowDay.date} (${lowDay.cal} kcal)`;
+
+        const deficit = target - avgCal;
+        ragContext += `\nAvg vs target (${target}): ${deficit > 0 ? "deficit " + deficit : "surplus +" + Math.abs(deficit)} kcal/day`;
+
+        ragContext += `\nDaily breakdown:`;
+        for (const d of weekDays) {
+          ragContext += `\n  ${d.date}: ${d.cal}kcal P${d.protein}g C${d.carbs}g F${d.fat}g (${d.entries} entries)`;
+        }
+      } else {
+        ragContext += `\n\n--- WEEKLY FOOD TRENDS ---\nNo food data in the last 7 days.`;
+      }
+    } catch (e) {
+      console.log("[NutriCoach] Weekly trends error:", e);
+    }
+
+    // 4) Active meal plan
+    try {
+      const plansIndex: string[] = (await kv.get(`become:mealplans:${auth.userId}`)) || [];
+      if (plansIndex.length > 0) {
+        const latestPlan = await kv.get(`become:mealplan:${auth.userId}:${plansIndex[0]}`);
+        if (latestPlan?.plan_data?.days) {
+          ragContext += `\n\n--- ACTIVE MEAL PLAN ---`;
+          ragContext += `\nLength: ${latestPlan.plan_length} days, created: ${latestPlan.created_at?.slice(0, 10) || "?"}`;
+          const createdDate = new Date(latestPlan.created_at);
+          const dayNum = Math.floor((Date.now() - createdDate.getTime()) / 86400000) + 1;
+          const todayPlanDay = latestPlan.plan_data.days.find((d: any) => d.day === dayNum);
+          if (todayPlanDay?.meals) {
+            ragContext += `\nToday (day ${dayNum}) meals:`;
+            for (const meal of todayPlanDay.meals) {
+              const items = meal.items?.map((it: any) => `${it.food_name}(${it.calories}kcal)`).join(", ") || "none";
+              ragContext += `\n  ${meal.meal_type}: ${items}`;
+            }
+          } else {
+            ragContext += `\nDay ${dayNum}${dayNum > latestPlan.plan_length ? " (plan ended)" : " — no meals data"}`;
+          }
+        }
+      }
+    } catch (e) {}
+
+    // 5) Active workout plan
+    try {
+      const workoutIndex: string[] = (await kv.get(`become:workout_plans_index:${auth.userId}`)) || [];
+      if (workoutIndex.length > 0) {
+        const latestWorkout = await kv.get(`become:workout_plans:${auth.userId}:${workoutIndex[0]}`);
+        if (latestWorkout?.workout_data?.days) {
+          ragContext += `\n\n--- ACTIVE WORKOUT PLAN ---`;
+          ragContext += `\nType: ${latestWorkout.workout_type || "mixed"}, Length: ${latestWorkout.plan_length} days, created: ${latestWorkout.created_at?.slice(0, 10) || "?"}`;
+          const createdDate = new Date(latestWorkout.created_at);
+          const dayNum = Math.floor((Date.now() - createdDate.getTime()) / 86400000) + 1;
+          const todayWorkoutDay = latestWorkout.workout_data.days.find((d: any) => d.day === dayNum);
+          if (todayWorkoutDay) {
+            ragContext += `\nToday (day ${dayNum}): ${todayWorkoutDay.workout_type || "workout"}`;
+            if (todayWorkoutDay.workout_type === "rest") {
+              ragContext += ` — REST DAY`;
+            } else if (todayWorkoutDay.exercises?.length > 0) {
+              ragContext += `, ${todayWorkoutDay.exercises.length} exercises`;
+              const exList = todayWorkoutDay.exercises.slice(0, 6).map((ex: any) =>
+                `${ex.name} (${ex.sets}x${ex.reps}${ex.duration ? ", " + ex.duration : ""})`
+              ).join(", ");
+              ragContext += `\n  Exercises: ${exList}`;
+              if (todayWorkoutDay.exercises.length > 6) {
+                ragContext += ` +${todayWorkoutDay.exercises.length - 6} more`;
+              }
+            }
+          } else {
+            ragContext += `\nDay ${dayNum}${dayNum > latestWorkout.plan_length ? " (plan ended)" : " — no workout data"}`;
+          }
+
+          // Weekly workout schedule summary
+          const weekStart = Math.max(1, dayNum - (dayNum - 1) % 7);
+          const weekEnd = Math.min(weekStart + 6, latestWorkout.plan_length);
+          const weekDays = latestWorkout.workout_data.days.filter((d: any) => d.day >= weekStart && d.day <= weekEnd);
+          if (weekDays.length > 0) {
+            const restDays = weekDays.filter((d: any) => d.workout_type === "rest").length;
+            const activeDays = weekDays.length - restDays;
+            const workoutTypes = weekDays.filter((d: any) => d.workout_type !== "rest").map((d: any) => d.workout_type).join(", ");
+            ragContext += `\nThis week (days ${weekStart}-${weekEnd}): ${activeDays} workout days, ${restDays} rest days`;
+            ragContext += `\nWorkout types: ${workoutTypes || "varied"}`;
+          }
+        }
+      }
+    } catch (e) {
+      console.log("[NutriCoach] Workout plan context error:", e);
+    }
+
+    // 6) Weight tracking history
+    try {
+      const weightIndexKey = `become:weight_idx:${auth.userId}`;
+      const weightIndex: Array<{ date: string; entryId: string }> = (await kv.get(weightIndexKey)) || [];
+
+      if (weightIndex.length > 0) {
+        // Load last 30 entries for trend analysis
+        const recentEntries = weightIndex.slice(0, 30);
+        const weightKeys = recentEntries.map((d: any) => `become:weight:${auth.userId}:${d.entryId}`);
+        const weights = (await kv.mget(weightKeys)).filter((e: any) => e && e.weight);
+
+        if (weights.length > 0) {
+          ragContext += `\n\n--- WEIGHT TRACKING HISTORY ---`;
+          ragContext += `\nTotal entries: ${weightIndex.length}`;
+          ragContext += `\nLatest weight: ${weights[0].weight} kg (${weights[0].date})`;
+
+          if (weights.length >= 2) {
+            const latest = weights[0].weight;
+            const oldest = weights[weights.length - 1].weight;
+            const change = (latest - oldest).toFixed(1);
+            const daySpan = Math.round((new Date(weights[0].date).getTime() - new Date(weights[weights.length - 1].date).getTime()) / 86400000);
+            ragContext += `\nOldest in window: ${oldest} kg (${weights[weights.length - 1].date})`;
+            ragContext += `\nChange over ${daySpan} days: ${Number(change) > 0 ? "+" : ""}${change} kg`;
+
+            // Weekly average if enough data
+            if (weights.length >= 7) {
+              const last7 = weights.slice(0, 7);
+              const avg7 = (last7.reduce((s: number, w: any) => s + w.weight, 0) / last7.length).toFixed(1);
+              ragContext += `\nLast 7 entries avg: ${avg7} kg`;
+            }
+
+            // Trend direction
+            if (weights.length >= 3) {
+              const recent3 = weights.slice(0, 3).map((w: any) => w.weight);
+              const isDecreasing = recent3[0] < recent3[1] && recent3[1] < recent3[2];
+              const isIncreasing = recent3[0] > recent3[1] && recent3[1] > recent3[2];
+              const isFlat = Math.abs(recent3[0] - recent3[2]) < 0.3;
+              ragContext += `\nRecent trend: ${isDecreasing ? "decreasing (good for weight loss)" : isIncreasing ? "increasing" : isFlat ? "stable/flat" : "fluctuating"}`;
+            }
+
+            // Rate of change per week
+            if (daySpan >= 7) {
+              const weeklyRate = ((Number(change)) / daySpan * 7).toFixed(2);
+              ragContext += `\nWeekly rate: ${Number(weeklyRate) > 0 ? "+" : ""}${weeklyRate} kg/week`;
+              if (Math.abs(Number(weeklyRate)) > 1.0) {
+                ragContext += ` (${Number(weeklyRate) < 0 ? "rapid loss — may be too aggressive" : "rapid gain"})`;
+              }
+            }
+
+            // Last 10 data points for detail
+            ragContext += `\nRecent entries:`;
+            const show = weights.slice(0, 10);
+            for (const w of show) {
+              ragContext += `\n  ${w.date}: ${w.weight} kg${w.note ? " (" + w.note + ")" : ""}`;
+            }
+          }
+        }
+      } else {
+        ragContext += `\n\n--- WEIGHT TRACKING ---\nNo weight entries logged yet.`;
+      }
+    } catch (e) {
+      console.log("[NutriCoach] Weight history error:", e);
+    }
+
+    // ---- Build conversation ----
+    const convId = conversationId || generateId("nconv");
+    const convKey = `become:nutri_conv:${auth.userId}:${convId}`;
+    const existing = await kv.get(convKey);
+    const messages: Array<{ role: string; content: string; ts: string }> = existing?.messages || [];
+    messages.push({ role: "user", content: userMessage.trim(), ts: new Date().toISOString() });
+
+    const langInstruction = language === "en" ? "Respond in English." : `Respond in the language with code "${language}". All output must be in that language.`;
+
+    const systemPrompt = `You are a professional AI Nutrition & Fitness Coach inside the Proper Food AI app. You provide evidence-based, personalized nutrition and fitness advice.
+
+RULES:
+- ${langInstruction}
+- User's name: "${firstName}".
+- You have access to the user's REAL data below. Always reference it in answers.
+- Keep responses 3-8 sentences, focused, actionable.
+- Give specific food recommendations with approximate calories when relevant.
+- When asked "what should I eat", check what they already ate today, remaining calorie budget, and their meal plan.
+- For weight loss questions, reference BMR, maintenance calories, and current deficit/surplus.
+- If no food logged today, encourage using the food scanner.
+- If they have a meal plan, reference it and suggest following it.
+- Use WEEKLY FOOD TRENDS to identify patterns: are they consistently hitting their target? Any macro imbalances over the week?
+- If they have a workout plan, factor in today's workout when recommending food (more carbs before cardio, more protein on strength days).
+- On rest days from workouts, suggest slightly lower calorie intake if the goal is weight loss.
+- Use WEIGHT TRACKING HISTORY to analyze long-term progress: reference trend direction, rate of change, and whether the pace is healthy (0.5-1kg/week loss is ideal).
+- If weight is stalling despite calorie deficit, suggest diet breaks, refeed days, or adjusting targets.
+- Correlate weight trends with food intake trends to give holistic advice.
+- If no weight data, encourage the user to log their weight regularly for better tracking.
+- Use established nutrition science (protein ~1.6-2.2g/kg for active, balanced macros).
+- Never recommend extreme diets, fasting for minors, or promote eating disorders.
+- Be encouraging but honest about progress.
+- If missing data (no profile, no food log), tell the user to set it up.
+
+${ragContext}`;
+
+    const historyForAi = messages.slice(-30).map((m) => ({
+      role: m.role as "user" | "assistant",
+      content: m.content,
+    }));
+
+    const apiKey = Deno.env.get("OPENAI_API_KEY");
+    let assistantMessage = "";
+
+    if (!apiKey) {
+      assistantMessage = language === "ru"
+        ? "AI сервис временно недоступен. Попробуй позже."
+        : "AI service is temporarily unavailable. Try again later.";
+    } else {
+      const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [{ role: "system", content: systemPrompt }, ...historyForAi],
+          temperature: 0.7,
+          max_tokens: 700,
+        }),
+      });
+
+      if (!openaiRes.ok) {
+        const errText = await openaiRes.text();
+        console.log(`[NutriCoach] OpenAI error ${openaiRes.status}: ${errText}`);
+        return c.json({ message: `AI error: ${openaiRes.status}`, code: "AI_ERROR", status: 502 }, 502);
+      }
+
+      const data = await openaiRes.json();
+      assistantMessage = data.choices?.[0]?.message?.content || "";
+    }
+
+    if (!assistantMessage) {
+      return c.json({ message: "AI returned empty response", code: "AI_EMPTY", status: 502 }, 502);
+    }
+
+    messages.push({ role: "assistant", content: assistantMessage, ts: new Date().toISOString() });
+
+    await kv.set(convKey, {
+      id: convId,
+      userId: auth.userId,
+      messages: messages.slice(-80),
+      updatedAt: new Date().toISOString(),
+      createdAt: existing?.createdAt || new Date().toISOString(),
+    });
+
+    console.log(`[NutriCoach] User ${auth.userId}, conv ${convId}, msgs: ${messages.length}, ragLen: ${ragContext.length}`);
+    return c.json({ conversationId: convId, response: assistantMessage, messageCount: messages.length });
+  } catch (err) {
+    console.log("POST /ai/nutrition-coach/chat error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- GET /ai/nutrition-coach/chat/:conversationId ----
+app.get(`${PREFIX}/ai/nutrition-coach/chat/:conversationId`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+    const convId = c.req.param("conversationId");
+    const conv = await kv.get(`become:nutri_conv:${auth.userId}:${convId}`);
+    if (!conv) return c.json({ message: "Conversation not found", code: "NOT_FOUND", status: 404 }, 404);
+    return c.json(conv);
+  } catch (err) {
+    console.log("GET /ai/nutrition-coach/chat/:id error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- GET /ai/nutrition-coach/conversations ----
+app.get(`${PREFIX}/ai/nutrition-coach/conversations`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+    const convs = await kv.getByPrefix(`become:nutri_conv:${auth.userId}:`);
+    const sorted = convs
+      .filter((conv: any) => conv && conv.id && conv.messages?.length > 0)
+      .sort((a: any, b: any) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+      .map((conv: any) => ({
+        id: conv.id,
+        messageCount: conv.messages.length,
+        lastMessage: conv.messages[conv.messages.length - 1]?.content?.slice(0, 100) || "",
+        lastRole: conv.messages[conv.messages.length - 1]?.role || "",
+        updatedAt: conv.updatedAt,
+        createdAt: conv.createdAt,
+      }));
+    return c.json({ conversations: sorted });
+  } catch (err) {
+    console.log("GET /ai/nutrition-coach/conversations error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- DELETE /ai/nutrition-coach/chat/:conversationId ----
+app.delete(`${PREFIX}/ai/nutrition-coach/chat/:conversationId`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+    const convId = c.req.param("conversationId");
+    await kv.del(`become:nutri_conv:${auth.userId}:${convId}`);
+    return c.json({ success: true });
+  } catch (err) {
+    console.log("DELETE /ai/nutrition-coach/chat/:id error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- GET /streak/nutrition ----
+// Calculate consecutive days with food entries (nutrition tracking streak)
+app.get(`${PREFIX}/streak/nutrition`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const today = new Date();
+    let streak = 0;
+    const maxLookback = 365;
+
+    for (let i = 0; i < maxLookback; i++) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().slice(0, 10);
+      const indexKey = `become:food_idx:${auth.userId}:${dateStr}`;
+      const index: string[] = (await kv.get(indexKey)) || [];
+      if (index.length > 0) {
+        streak++;
+      } else {
+        // If today has no entries yet, skip and check from yesterday
+        if (i === 0) continue;
+        break;
+      }
+    }
+
+    // Determine pending milestone (highest unshown among 7, 30, 100)
+    const milestones = [100, 30, 7];
+    let pendingMilestone: number | null = null;
+    for (const m of milestones) {
+      if (streak >= m) {
+        const shownKey = `become:streak_milestone_shown:${auth.userId}:${m}`;
+        const shown = await kv.get(shownKey);
+        if (!shown) {
+          pendingMilestone = m;
+          break;
+        }
+      }
+    }
+
+    console.log(`[Streak] user=${auth.userId} streak=${streak} pendingMilestone=${pendingMilestone}`);
+    return c.json({ streak, pending_milestone: pendingMilestone });
+  } catch (err) {
+    console.log("GET /streak/nutrition error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- POST /streak/milestone-shown ----
+// Mark a milestone as shown so we don't show the share card again
+app.post(`${PREFIX}/streak/milestone-shown`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const { milestone } = await c.req.json();
+    if (![7, 30, 100].includes(milestone)) {
+      return c.json({ message: "Invalid milestone", code: "BAD_REQUEST", status: 400 }, 400);
+    }
+
+    const shownKey = `become:streak_milestone_shown:${auth.userId}:${milestone}`;
+    await kv.set(shownKey, { shown_at: new Date().toISOString() });
+
+    console.log(`[Streak] Milestone ${milestone} marked as shown for user=${auth.userId}`);
+    return c.json({ success: true });
+  } catch (err) {
+    console.log("POST /streak/milestone-shown error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
   }
 });
 

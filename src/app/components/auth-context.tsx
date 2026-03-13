@@ -1,12 +1,12 @@
 // =============================================
-// BECOME — Auth Context (Telegram Mini App only)
+// Proper Food AI — Auth Context (Telegram Mini App only)
 // =============================================
 // Production auth flow (Vercel deployment):
 //   1. bot_auth token from URL (Telegram bot link)
 //   2. Telegram initData (via window.Telegram.WebApp)
 //   3. Device token refresh (session continuity)
 //
-// If none work: show "Open from @BECOMEAI_BOT" screen.
+// If none work: show "Open from @ProperFoodAI_bot" screen.
 // No web login / phone auth — Telegram only.
 //
 // NOTE: On Vercel (unlike Figma Sites), initData is
@@ -30,7 +30,8 @@ import {
   getInitData,
   getBotAuthToken,
   isTelegramClient,
-} from './telegram';
+}
+ from './telegram';
 
 // ---- ADMIN Telegram IDs ----
 // These users get isAdmin=true (your own Telegram ID + testers)
@@ -58,12 +59,33 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+// ---- Safe default for when useAuth is called outside AuthProvider ----
+// This prevents crashes during HMR, error boundary rendering, etc.
+const AUTH_DEFAULT: AuthContextValue = {
+  user: null,
+  isAuthenticated: false,
+  isLoading: true,
+  authError: null,
+  noInitDataWarning: false,
+  isAdmin: false,
+  isDevMode: false,
+  subscriptionActive: false,
+  subscriptionDaysLeft: 0,
+  login: async () => {},
+  logout: () => {},
+  updateUser: () => {},
+  refreshSubscription: async () => {},
+};
+
 // ---- Hook ----
 
 export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext);
   if (!ctx) {
-    throw new Error('useAuth must be used within AuthProvider');
+    // Return safe default instead of throwing — handles HMR transitions,
+    // React Router error boundaries rendering above AuthProvider, etc.
+    console.warn('[Auth] useAuth called outside AuthProvider — returning defaults');
+    return AUTH_DEFAULT;
   }
   return ctx;
 }
@@ -94,6 +116,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const status = await api.getSubscriptionStatus();
       setSubscriptionActive(status.isActive || status.isAdmin);
       setSubscriptionDaysLeft(status.daysLeft);
+      
+      // Fire-and-forget: if subscription is expiring within 3 days, trigger server-side
+      // Telegram notification (deduped daily on the server)
+      if ((status.isActive || status.isAdmin) && status.daysLeft > 0 && status.daysLeft <= 3) {
+        api.checkExpiryReminder().catch(() => {});
+      }
     } catch (err) {
       console.warn('[Auth] Failed to refresh subscription:', err);
     }

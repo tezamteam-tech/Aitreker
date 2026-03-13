@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — Challenges List (/challenges)
+// Proper Food AI — Challenges List (/challenges)
 // =============================================
 
 import React, { useState, useEffect, useCallback } from 'react';

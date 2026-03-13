@@ -1,12 +1,12 @@
 // =============================================
-// BECOME — Telegram WebApp SDK Integration
+// Proper Food AI — Telegram WebApp SDK Integration
 // =============================================
 // Production (Vercel): Telegram SDK is injected by TG
 // client automatically. initData is available via
 // window.Telegram.WebApp.initData.
 //
 // bot_auth fallback remains for reply keyboard links
-// (user taps "Open BECOME" in chat → URL with bot_auth).
+// (user taps "Open Proper Food" in chat → URL with bot_auth).
 //
 // Performance API capture of bot_auth is kept as safety
 // net but is rarely needed on Vercel (no URL rewriting).

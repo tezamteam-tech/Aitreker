@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — AI Plan Builder (multi-step, 7/30/100d)
+// Proper Food AI — AI Plan Builder (multi-step, 7/30/100d)
 // =============================================
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';

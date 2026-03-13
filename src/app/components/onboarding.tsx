@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — Onboarding (single-screen, skippable)
+// Proper Food AI — Onboarding (single-screen, skippable)
 // =============================================
 // Compact one-page setup with pre-selected defaults.
 // User can skip entirely or adjust language, goal, tone.
@@ -162,7 +162,7 @@ export function OnboardingPage() {
             className="text-white/80 tracking-[0.25em] mb-10"
             style={{ fontSize: '0.875rem', fontWeight: 600 }}
           >
-            BECOME
+            Proper Food
           </motion.p>
 
           <motion.div
@@ -231,7 +231,7 @@ export function OnboardingPage() {
               <Zap className="w-4.5 h-4.5 text-white" />
             </div>
             <span className="text-white/80 tracking-widest" style={{ fontSize: '0.8125rem', fontWeight: 600, letterSpacing: '0.18em' }}>
-              BECOME
+              Proper Food
             </span>
           </div>
 

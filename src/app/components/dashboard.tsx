@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — Dashboard Hub (/home)
+// Proper Food AI — Dashboard Hub (/home)
 // =============================================
 // Quick entry point into all sections:
 //   1. Quick access grid (goals, coach, path, journal)
@@ -71,6 +71,7 @@ import { VoiceNoteRecorder } from './voice-note-recorder';
 import { XpStatsCard } from './animated-counter';
 import { PremiumBadge } from './premium-gate';
 import { PageHeader } from './page-header';
+import { buildStartLink } from './bot-config';
 
 // Helper: find current user's member entry in challenge
 function findMyMember(ch: ChallengeWithMembers, userId?: string) {
@@ -510,7 +511,7 @@ export function DashboardPage() {
                   </p>
                   <div className="flex items-center gap-2.5 mt-3.5">
                     <a
-                      href={`https://t.me/dozorir?text=${encodeURIComponent('Спасибо за BECOME как можно поддержать проект?')}`}
+                      href={`https://t.me/dozorir?text=${encodeURIComponent('Спасибо за Proper Food как можно поддержать проект?')}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={() => {
@@ -518,7 +519,7 @@ export function DashboardPage() {
                         try {
                           const tgApp = (window as any).Telegram?.WebApp;
                           if (tgApp?.openTelegramLink) {
-                            tgApp.openTelegramLink(`https://t.me/dozorir?text=${encodeURIComponent('Спасибо за BECOME как можно поддержать проект?')}`);
+                            tgApp.openTelegramLink(`https://t.me/dozorir?text=${encodeURIComponent('Спасибо за Proper Food как можно поддержать проект?')}`);
                           }
                         } catch (_) {}
                       }}
@@ -532,7 +533,7 @@ export function DashboardPage() {
                       onClick={() => {
                         hapticFeedback('medium');
                         const referralLink = user?.referralCode
-                          ? `https://t.me/BECOMEAI_BOT?start=ref_${user.referralCode}`
+                          ? buildStartLink(`ref_${user.referralCode}`)
                           : '';
                         if (!referralLink) return;
                         const shareText = `${t('bonus_share_text')}\n\n${referralLink}`;

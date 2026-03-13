@@ -28,6 +28,7 @@ import {
   Award,
   Activity,
   Heart,
+  BarChart3,
 } from 'lucide-react';
 import { GlassCard } from './glass-card';
 import { useAuth } from './auth-context';
@@ -45,7 +46,7 @@ interface UserMetrics {
 }
 
 export function ProfileNutritionPage() {
-  const { user, signOut } = useAuth();
+  const { user, logout, subscriptionActive, subscriptionDaysLeft } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
 
@@ -59,7 +60,7 @@ export function ProfileNutritionPage() {
   });
 
   const [calorieGoal, setCalorieGoal] = useState(2000);
-  const [isPremium, setIsPremium] = useState(false);
+  const isPremium = subscriptionActive;
 
   const bmi = (metrics.weight / ((metrics.height / 100) ** 2)).toFixed(1);
   const targetWeight = 70;
@@ -78,6 +79,12 @@ export function ProfileNutritionPage() {
   };
 
   const menuItems = [
+    {
+      icon: BarChart3,
+      label: 'Weight Tracking',
+      color: '#0984e3',
+      action: () => navigate('/weight'),
+    },
     {
       icon: Scale,
       label: 'Body Metrics',
@@ -230,6 +237,53 @@ export function ProfileNutritionPage() {
           </p>
         </GlassCard>
 
+        {/* Premium Upgrade CTA for free users */}
+        {!isPremium && (
+          <motion.button
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => {
+              hapticFeedback('medium');
+              navigate('/upgrade');
+            }}
+            className="w-full p-5 rounded-[20px] bg-gradient-to-br from-[#6c5ce7] to-[#a29bfe] relative overflow-hidden"
+            style={{ boxShadow: '0 8px 32px rgba(108,92,231,0.3)' }}
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/[0.06] rounded-full -translate-y-1/2 translate-x-1/2" />
+            <div className="relative flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                <Crown className="w-7 h-7 text-white" />
+              </div>
+              <div className="flex-1 text-left">
+                <p className="text-white font-semibold text-base mb-0.5">Upgrade to Premium</p>
+                <p className="text-white/70 text-sm">Unlimited scans, meal plans & more</p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-white/60" />
+            </div>
+          </motion.button>
+        )}
+
+        {/* Premium status badge for subscribers */}
+        {isPremium && subscriptionDaysLeft > 0 && (
+          <GlassCard className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#ffd700]/15 flex items-center justify-center">
+                  <Crown className="w-5 h-5 text-[#ffd700]" />
+                </div>
+                <div>
+                  <p className="text-white font-medium text-sm">Premium Active</p>
+                  <p className="text-white/40 text-xs">{subscriptionDaysLeft} days remaining</p>
+                </div>
+              </div>
+              <div className="px-3 py-1 rounded-full bg-[#ffd700]/10 border border-[#ffd700]/20">
+                <span className="text-xs text-[#ffd700] font-medium">PRO</span>
+              </div>
+            </div>
+          </GlassCard>
+        )}
+
         {/* Menu Items */}
         <div className="space-y-2">
           {menuItems.map((item, idx) => {
@@ -287,7 +341,7 @@ export function ProfileNutritionPage() {
         <button
           onClick={() => {
             hapticFeedback('medium');
-            signOut();
+            logout();
           }}
           className="w-full p-4 rounded-[18px] bg-white/5 border border-white/10 flex items-center justify-center gap-2"
         >

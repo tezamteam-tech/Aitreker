@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — Strategic Goal Create (multi-step wizard)
+// Proper Food AI — Strategic Goal Create (multi-step wizard)
 // =============================================
 // Phase 1: Goal input (Text / Voice / Photo) → Phase 2: AI thinking
 // → Phase 3: Questions → Phase 4: Plan building

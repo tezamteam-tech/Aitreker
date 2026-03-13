@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — Goal Detail (/goals/:id)
+// Proper Food AI — Goal Detail (/goals/:id)
 // =============================================
 
 import React, { useState, useEffect, useCallback } from 'react';

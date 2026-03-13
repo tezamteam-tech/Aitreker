@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — Plan History & Drafts
+// Proper Food AI — Plan History & Drafts
 // =============================================
 // Shows: (1) unsaved drafts (generated plans not yet
 // activated), (2) activated program history.

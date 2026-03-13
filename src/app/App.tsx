@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — Main Application Entry Point
+// Proper Food AI — Main Application Entry Point
 // =============================================
 // Production entry point for Vercel deployment.
 // Telegram SDK is loaded natively by the TG client.

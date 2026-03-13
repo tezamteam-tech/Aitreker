@@ -24,6 +24,8 @@ const FocusTimerPage = React.lazy(() => import('./components/focus-timer').then(
 const JournalPage = React.lazy(() => import('./components/journal').then(m => ({ default: m.JournalPage })));
 const JournalInsightsPage = React.lazy(() => import('./components/journal-insights').then(m => ({ default: m.JournalInsightsPage })));
 const CoachChatPage = React.lazy(() => import('./components/coach-chat').then(m => ({ default: m.CoachChatPage })));
+const NutritionCoachPage = React.lazy(() => import('./components/nutrition-coach').then(m => ({ default: m.NutritionCoachPage })));
+const WeightTrackingPage = React.lazy(() => import('./components/weight-tracking').then(m => ({ default: m.WeightTrackingPage })));
 const GoalsListPage = React.lazy(() => import('./components/goals-list').then(m => ({ default: m.GoalsListPage })));
 const GoalDetailPage = React.lazy(() => import('./components/goal-detail').then(m => ({ default: m.GoalDetailPage })));
 const StrategicGoalCreatePage = React.lazy(() => import('./components/strategic-goal-create').then(m => ({ default: m.StrategicGoalCreatePage })));
@@ -31,6 +33,7 @@ const StrategicGoalDetailPage = React.lazy(() => import('./components/strategic-
 const BonusesPage = React.lazy(() => import('./components/bonuses').then(m => ({ default: m.BonusesPage })));
 const AdminPage = React.lazy(() => import('./components/admin').then(m => ({ default: m.AdminPage })));
 const WalletPage = React.lazy(() => import('./components/wallet').then(m => ({ default: m.WalletPage })));
+const UpgradePremiumPage = React.lazy(() => import('./components/upgrade-premium').then(m => ({ default: m.UpgradePremiumPage })));
 
 // ---- Suspense wrapper for lazy routes ----
 function LazyPage({ children }: { children: React.ReactNode }) {
@@ -113,12 +116,15 @@ export const router = createBrowserRouter([
       { path: 'journal', Component: lazy(JournalPage) },
       { path: 'journal/insights', Component: lazy(JournalInsightsPage) },
       { path: 'coach', Component: lazy(CoachChatPage) },
+      { path: 'nutrition-coach', Component: lazy(NutritionCoachPage) },
+      { path: 'weight', Component: lazy(WeightTrackingPage) },
       { path: 'goals', Component: lazy(GoalsListPage) },
       { path: 'goals/:id', Component: lazy(GoalDetailPage) },
       { path: 'strategic-goal/create', Component: lazy(StrategicGoalCreatePage) },
       { path: 'strategic-goal/:id', Component: lazy(StrategicGoalDetailPage) },
       { path: 'bonuses', Component: lazy(BonusesPage) },
       { path: 'wallet', Component: lazy(WalletPage) },
+      { path: 'upgrade', Component: lazy(UpgradePremiumPage) },
       { path: 'admin', Component: lazy(AdminPage) },
       { path: '*', Component: NotFound },
     ],

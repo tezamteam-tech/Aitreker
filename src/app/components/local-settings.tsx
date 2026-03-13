@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — Local Settings Reader
+// Proper Food AI — Local Settings Reader
 // =============================================
 // Shared utility for reading localStorage-based settings
 // from both React components and non-React utility functions.

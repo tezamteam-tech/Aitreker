@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — Admin Panel (/admin)
+// PROPER FOOD AI — Admin Panel (/admin)
 // =============================================
 // Admin dashboard for @tezam_by (tgId: 7879078497)
 // Features: user list, subscription management,

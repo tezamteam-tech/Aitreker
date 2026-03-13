@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — Shared Types (packages/shared)
+// Proper Food AI — Shared Types (packages/shared)
 // These types mirror Prisma models and are used
 // across frontend and backend.
 // =============================================

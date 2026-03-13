@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — Telegram Bot API Helper
+// Proper Food AI — Telegram Bot API Helper
 // =============================================
 // Wrapper around Telegram Bot API for sending
 // messages, inline keyboards, callback answers,
@@ -314,7 +314,7 @@ export async function setChatMenuButton(webAppUrl?: string): Promise<any> {
   return botApi("setChatMenuButton", {
     menu_button: {
       type: "web_app",
-      text: "Open BECOME",
+      text: "Open Proper Food AI",
       web_app: { url },
     },
   });
@@ -356,13 +356,13 @@ export async function setMyCommands(): Promise<any> {
   // Set English commands as default
   await botApi("setMyCommands", {
     commands: [
-      { command: "start", description: "Start BECOME & open the app" },
+      { command: "start", description: "Start Proper Food AI & open the app" },
       { command: "progress", description: "View your current progress" },
       { command: "today", description: "See today's tasks" },
       { command: "coach", description: "Get AI coaching advice" },
       { command: "challenge", description: "View your challenges" },
       { command: "payment", description: "Subscribe or top up balance" },
-      { command: "help", description: "How to use BECOME" },
+      { command: "help", description: "How to use Proper Food AI" },
       { command: "settings", description: "Change language & tone" },
       { command: "paysupport", description: "Payment support & disputes" },
     ],
@@ -371,15 +371,15 @@ export async function setMyCommands(): Promise<any> {
   // Set Russian commands for ru language
   await botApi("setMyCommands", {
     commands: [
-      { command: "start", description: "\u0417\u0430\u043F\u0443\u0441\u0442\u0438\u0442\u044C BECOME" },
-      { command: "progress", description: "\u041F\u043E\u0441\u043C\u043E\u0442\u0440\u0435\u0442\u044C \u043F\u0440\u043E\u0433\u0440\u0435\u0441\u0441" },
-      { command: "today", description: "\u0417\u0430\u0434\u0430\u043D\u0438\u044F \u043D\u0430 \u0441\u0435\u0433\u043E\u0434\u043D\u044F" },
-      { command: "coach", description: "AI-\u043A\u043E\u0443\u0447\u0438\u043D\u0433" },
-      { command: "challenge", description: "\u0427\u0435\u043B\u043B\u0435\u043D\u0434\u0436\u0438" },
-      { command: "payment", description: "\u041F\u043E\u0434\u043F\u0438\u0441\u043A\u0430 \u0438\u043B\u0438 \u043F\u043E\u043F\u043E\u043B\u043D\u0435\u043D\u0438\u0435" },
-      { command: "help", description: "\u041A\u0430\u043A \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u044C\u0441\u044F BECOME" },
-      { command: "settings", description: "\u042F\u0437\u044B\u043A \u0438 \u0442\u043E\u043D \u043A\u043E\u0443\u0447\u0430" },
-      { command: "paysupport", description: "\u041F\u043E\u0434\u0434\u0435\u0440\u0436\u043A\u0430 \u043F\u043E \u043E\u043F\u043B\u0430\u0442\u0435" },
+      { command: "start", description: "Запустить Proper Food AI" },
+      { command: "progress", description: "Посмотреть прогресс" },
+      { command: "today", description: "Задания на сегодня" },
+      { command: "coach", description: "AI-коучинг" },
+      { command: "challenge", description: "Челленджи" },
+      { command: "payment", description: "Подписка или пополнение баланса" },
+      { command: "help", description: "Как пользоваться Proper Food AI" },
+      { command: "settings", description: "Язык и тон коучинга" },
+      { command: "paysupport", description: "Поддержка по оплате" },
     ],
     language_code: "ru",
   });
@@ -392,7 +392,7 @@ export async function setMyCommands(): Promise<any> {
 /**
  * Build the welcome message for NEW users.
  * Creates account from TG data — no contact sharing needed.
- * Shows a single "Open BECOME" inline button (blue web_app).
+ * Shows a single "Open Proper Food" inline button (blue web_app).
  */
 export function buildNewUserWelcomeMessage(user: TgUser, appUrl?: string): {
   text: string;
@@ -444,8 +444,8 @@ export function buildReturningStartMessage(user: TgUser, deepLinkParam?: string,
         `\u{1F44B} <b>${t("welcome_returning", lang, { name })}</b>`,
         ``,
         lang === "ru"
-          ? "\u{1F4F1} Нажми кнопку <b>«Открыть BECOME»</b> на клавиатуре внизу \u{1F447} или кнопку <b>Меню</b> (\u2630) слева от поля ввода."
-          : "\u{1F4F1} Tap <b>«Open BECOME»</b> on the keyboard below \u{1F447} or the <b>Menu</b> button (\u2630) next to the text field.",
+          ? "\u{1F4F1} Нажми кнопку <b>«Открыть Proper Food»</b> на клавиатуре внизу \u{1F447} или кнопку <b>Меню</b> (\u2630) слева от поля ввода."
+          : "\u{1F4F1} Tap <b>«Open Proper Food»</b> on the keyboard below \u{1F447} or the <b>Menu</b> button (\u2630) next to the text field.",
       ].join("\n")
     : [
         `\u{1F44B} <b>${t("welcome_returning", lang, { name })}</b>`,
@@ -549,14 +549,14 @@ export function buildWelcomeMessage(user: TgUser, deepLinkParam?: string): {
 
 /**
  * Build the reply keyboard (persistent at bottom of chat) for authenticated users.
- * Contains only the "Open BECOME" button — no contact sharing.
+ * Contains only the "Open Proper Food" button — no contact sharing.
  */
 export function buildReplyKeyboard(lang: Lang = "en", appUrl?: string): ReplyKeyboardMarkup {
   const miniAppUrl = appUrl || getMiniAppUrl();
   const keyboard: ReplyKeyboardButton[][] = [];
 
   if (miniAppUrl) {
-    // Single row: "Open BECOME" — primary/blue style
+    // Single row: "Open Proper Food" — primary/blue style
     keyboard.push([
       { text: t("btn_open_app", lang), web_app: { url: miniAppUrl }, style: "primary" },
     ]);
@@ -567,8 +567,8 @@ export function buildReplyKeyboard(lang: Lang = "en", appUrl?: string): ReplyKey
     resize_keyboard: true,
     is_persistent: true,
     input_field_placeholder: lang === "ru"
-      ? "Нажми «Открыть BECOME» ⬆️"
-      : "Tap «Open BECOME» above ⬆️",
+      ? "Нажми «Открыть Proper Food» ⬆️"
+      : "Tap «Open Proper Food» above ⬆️",
   };
 }
 
@@ -579,7 +579,7 @@ export function buildHelpMessage(lang: Lang = "en"): { text: string; reply_marku
   const miniAppUrl = getMiniAppUrl();
 
   const text = lang === "ru" ? [
-    `<b>\u{2753} \u041F\u043E\u043C\u043E\u0449\u044C BECOME</b>`,
+    `<b>\u{2753} Помощь Proper Food AI</b>`,
     ``,
     `<b>\u041A\u043E\u043C\u0430\u043D\u0434\u044B:</b>`,
     `/start - \u041F\u0440\u0438\u0432\u0435\u0442\u0441\u0442\u0432\u0438\u0435 \u0438 \u0433\u043B\u0430\u0432\u043D\u043E\u0435 \u043C\u0435\u043D\u044E`,
@@ -603,7 +603,7 @@ export function buildHelpMessage(lang: Lang = "en"): { text: string; reply_marku
     `\u2022 \u0421\u043F\u0440\u0430\u0448\u0438\u0432\u0430\u0439 AI-\u043A\u043E\u0443\u0447\u0430 \u043F\u043E\u0441\u043B\u0435 \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043D\u0438\u044F \u0434\u043D\u044F`,
     `\u2022 \u0414\u0435\u043B\u0438\u0441\u044C \u0447\u0435\u043B\u043B\u0435\u043D\u0434\u0436\u0430\u043C\u0438 \u0441 \u0434\u0440\u0443\u0437\u044C\u044F\u043C\u0438`,
   ].join("\n") : [
-    `<b>\u{2753} BECOME Help</b>`,
+    `<b>\u{2753} Proper Food AI Help</b>`,
     ``,
     `<b>Commands:</b>`,
     `/start - Welcome screen & main menu`,

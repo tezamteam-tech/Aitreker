@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — Compact Centered Page Header
+// Proper Food AI — Compact Centered Page Header
 // =============================================
 // Renders a centered title that fits between
 // Telegram's native left/right header buttons.

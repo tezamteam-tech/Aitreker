@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — Day View (/day/:dayNumber)
+// Proper Food AI — Day View (/day/:dayNumber)
 // =============================================
 // Full day experience: tasks, done/skip, reflection
 // modal, XP gain, toast feedback, back to home.

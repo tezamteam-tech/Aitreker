@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — Seed Data for "7-Day Focus" Program
+// Proper Food AI — Seed Data for "7-Day Focus" Program
 // Bilingual (EN/RU). Stored in KV on first request.
 // =============================================
 
@@ -346,7 +346,7 @@ export async function ensureSeedData(): Promise<void> {
       return;
     }
 
-    console.log(`Seeding BECOME program data (${SEED_VERSION})...`);
+    console.log(`Seeding Proper Food AI program data (${SEED_VERSION})...`);
 
     // Store program
     await kv.set(`become:program:${PROGRAM.id}`, PROGRAM);

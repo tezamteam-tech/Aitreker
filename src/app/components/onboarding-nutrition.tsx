@@ -247,7 +247,7 @@ export function OnboardingNutritionPage() {
               <Zap className="w-4.5 h-4.5 text-white" />
             </div>
             <span className="text-white/80 tracking-widest" style={{ fontSize: '0.8125rem', fontWeight: 600, letterSpacing: '0.18em' }}>
-              BECOME
+              PROPER FOOD
             </span>
           </div>
 

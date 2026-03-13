@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — Challenge Detail (/challenges/:id)
+// Proper Food AI — Challenge Detail (/challenges/:id)
 // =============================================
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -38,6 +38,7 @@ import type { ChallengeWithMembers, ChallengeMember, ChallengeType } from './typ
 import { hapticFeedback, hapticSuccess, shareTelegram } from './telegram';
 import { useTranslation } from './i18n';
 import { PageHeader } from './page-header';
+import { buildStartLink } from './bot-config';
 
 const TYPE_CONFIG: Record<ChallengeType, { label: string; icon: typeof UserIcon; color: string; bgColor: string }> = {
   solo: { label: 'Solo', icon: UserIcon, color: 'text-[#a29bfe]', bgColor: 'bg-[#a29bfe]/15' },
@@ -119,7 +120,7 @@ export function ChallengeDetailPage() {
   }, [id, showToast, t, lang]);
 
   const inviteLink = challenge
-    ? `https://t.me/BECOMEAI_BOT?start=challenge_${challenge.id}`
+    ? buildStartLink(`challenge_${challenge.id}`)
     : '';
 
   const handleCopy = useCallback(() => {

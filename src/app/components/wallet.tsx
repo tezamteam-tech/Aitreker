@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — Wallet Page (/wallet)
+// Proper Food AI — Wallet Page (/wallet)
 // =============================================
 // Full wallet: balance top-up (Stars & TON),
 // subscription purchase from balance or direct,

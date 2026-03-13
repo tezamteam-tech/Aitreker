@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — Unified Goals Hub (/goals)
+// Proper Food AI — Unified Goals Hub (/goals)
 // =============================================
 // Shows ALL goals in one place:
 //   0. Overview card with total progress

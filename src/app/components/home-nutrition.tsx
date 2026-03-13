@@ -19,12 +19,17 @@ import {
   Utensils,
   Dumbbell,
   TrendingUp,
+  TrendingDown,
   Target,
   Plus,
   Clock,
   CheckCircle2,
   AlertCircle,
   Zap,
+  Crown,
+  Salad,
+  MessageCircle,
+  Scale,
 } from 'lucide-react';
 import { GlassCard } from './glass-card';
 import { useAuth } from './auth-context';
@@ -33,6 +38,8 @@ import { hapticFeedback } from './telegram';
 import { useTranslation } from './i18n';
 import { PageHeader } from './page-header';
 import { calculateCalories, type CalorieResult } from './calorie-calculator';
+import { PremiumBadge } from './premium-gate';
+import { StreakShareCard } from './streak-share-card';
 
 interface NutritionData {
   caloriesConsumed: number;
@@ -59,7 +66,7 @@ interface WorkoutPlanItem {
 }
 
 export function HomeNutritionPage() {
-  const { user } = useAuth();
+  const { user, subscriptionActive, subscriptionDaysLeft } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
 
@@ -68,7 +75,15 @@ export function HomeNutritionPage() {
   const [bmr, setBmr] = useState<number>(0);
   const [maintenanceCalories, setMaintenanceCalories] = useState<number>(0);
   const [profileLoaded, setProfileLoaded] = useState(false);
+  const [scansRemaining, setScansRemaining] = useState<number | null>(null);
   
+  // Weight tracking state
+  const [latestWeight, setLatestWeight] = useState<{ weight: number; date: string } | null>(null);
+  const [weeklyWeightChange, setWeeklyWeightChange] = useState<number | null>(null);
+  
+  // Streak milestone state
+  const [streakMilestone, setStreakMilestone] = useState<{ milestone: number; streak: number } | null>(null);
+
   const [nutritionData, setNutritionData] = useState<NutritionData>({
     caloriesConsumed: 1240,
     caloriesGoal: 2000,
@@ -151,6 +166,57 @@ export function HomeNutritionPage() {
     });
   }, [user]);
 
+  // Load usage data for free tier banner
+  useEffect(() => {
+    if (!user || subscriptionActive) return;
+    api.getUsage().then((usage) => {
+      if (usage.scans.remaining !== null) {
+        setScansRemaining(usage.scans.remaining);
+      }
+    }).catch(() => {});
+  }, [user, subscriptionActive]);
+
+  // Load weight tracking data
+  useEffect(() => {
+    if (!user) return;
+    api.getWeightHistory(30).then((data) => {
+      const entries = data.entries || [];
+      if (entries.length > 0) {
+        const latest = entries[0];
+        setLatestWeight({ weight: latest.weight, date: latest.date });
+        
+        // Calculate weekly weight change
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        const weekAgoStr = oneWeekAgo.toISOString().slice(0, 10);
+        const weekOldEntry = entries.find((e: any) => e.date <= weekAgoStr);
+        if (weekOldEntry) {
+          setWeeklyWeightChange(latest.weight - weekOldEntry.weight);
+        } else if (entries.length >= 2) {
+          // If no entry older than a week, use oldest available
+          setWeeklyWeightChange(latest.weight - entries[entries.length - 1].weight);
+        }
+      }
+    }).catch((err) => {
+      console.warn('[HomeNutrition] Failed to load weight history:', err);
+    });
+
+    // Fire-and-forget: check if we should send a weigh-in reminder via Telegram
+    api.checkWeighInReminder().catch(() => {});
+  }, [user]);
+
+  // Check nutrition streak for milestone share card
+  useEffect(() => {
+    if (!user) return;
+    api.getNutritionStreak().then((data) => {
+      if (data.pending_milestone) {
+        setStreakMilestone({ milestone: data.pending_milestone, streak: data.streak });
+      }
+    }).catch((err) => {
+      console.warn('[HomeNutrition] Failed to load streak:', err);
+    });
+  }, [user]);
+
   const caloriesRemaining = nutritionData.caloriesGoal - nutritionData.caloriesConsumed;
   const percentConsumed = Math.round((nutritionData.caloriesConsumed / nutritionData.caloriesGoal) * 100);
 
@@ -166,6 +232,54 @@ export function HomeNutritionPage() {
 
       <div className="px-4 space-y-4">
         
+        {/* Subscription expiry warning for premium users (≤3 days left) */}
+        {subscriptionActive && subscriptionDaysLeft > 0 && subscriptionDaysLeft <= 3 && (
+          <motion.button
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            onClick={() => { hapticFeedback('medium'); navigate('/upgrade'); }}
+            className="w-full flex items-center gap-3 p-3.5 rounded-2xl bg-gradient-to-r from-[#e17055]/15 to-[#ff6b6b]/10 border border-[#e17055]/20"
+          >
+            <div className="w-10 h-10 rounded-xl bg-[#e17055]/20 flex items-center justify-center flex-shrink-0">
+              <AlertCircle className="w-5 h-5 text-[#e17055]" />
+            </div>
+            <div className="flex-1 text-left">
+              <p className="text-white" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
+                Premium expires in {subscriptionDaysLeft} day{subscriptionDaysLeft !== 1 ? 's' : ''}
+              </p>
+              <p className="text-white/40" style={{ fontSize: '0.6875rem' }}>
+                Tap to renew and keep unlimited access
+              </p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-[#e17055]" />
+          </motion.button>
+        )}
+
+        {/* Premium upgrade banner for free users */}
+        {!subscriptionActive && scansRemaining !== null && (
+          <motion.button
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            onClick={() => { hapticFeedback('medium'); navigate('/upgrade'); }}
+            className="w-full flex items-center gap-3 p-3.5 rounded-2xl bg-gradient-to-r from-[#6c5ce7]/15 to-[#a29bfe]/10 border border-[#6c5ce7]/20"
+          >
+            <div className="w-10 h-10 rounded-xl bg-[#6c5ce7]/20 flex items-center justify-center flex-shrink-0">
+              <Crown className="w-5 h-5 text-[#a29bfe]" />
+            </div>
+            <div className="flex-1 text-left">
+              <p className="text-white" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
+                {scansRemaining > 0
+                  ? `${scansRemaining}/5 free scans left today`
+                  : 'Daily scan limit reached'}
+              </p>
+              <p className="text-white/40" style={{ fontSize: '0.6875rem' }}>
+                Upgrade to Premium for unlimited access
+              </p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-[#a29bfe]" />
+          </motion.button>
+        )}
+
         {/* Daily Calorie Overview */}
         <GlassCard className="p-5">
           <div className="flex items-start justify-between mb-4">
@@ -284,6 +398,61 @@ export function HomeNutritionPage() {
           <ChevronRight className="w-5 h-5 text-white/80" />
         </motion.button>
 
+        {/* AI Nutrition Coach Card */}
+        <motion.button
+          whileTap={{ scale: 0.98 }}
+          onClick={() => { hapticFeedback('medium'); navigate('/nutrition-coach'); }}
+          className="w-full p-4 rounded-[20px] bg-gradient-to-br from-[#00b894]/15 to-[#00cec9]/10 border border-[#00b894]/20 flex items-center justify-between"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#00b894] to-[#00cec9] flex items-center justify-center">
+              <Salad className="w-5.5 h-5.5 text-white" />
+            </div>
+            <div className="text-left">
+              <div className="flex items-center gap-2">
+                <p className="text-white font-medium" style={{ fontSize: '0.9375rem' }}>
+                  {t('nutri_coach_home_title')}
+                </p>
+                <PremiumBadge />
+              </div>
+              <p className="text-white/40" style={{ fontSize: '0.75rem' }}>
+                {t('nutri_coach_home_desc')}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <MessageCircle className="w-4 h-4 text-[#00b894]/60" />
+            <ChevronRight className="w-4 h-4 text-[#00b894]/60" />
+          </div>
+        </motion.button>
+
+        {/* Weight Tracking Quick Action */}
+        <motion.button
+          whileTap={{ scale: 0.98 }}
+          onClick={() => { hapticFeedback('medium'); navigate('/weight'); }}
+          className="w-full p-4 rounded-[20px] bg-gradient-to-br from-[#74b9ff]/15 to-[#0984e3]/10 border border-[#74b9ff]/20 flex items-center justify-between"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#74b9ff] to-[#0984e3] flex items-center justify-center">
+              <Scale className="w-5.5 h-5.5 text-white" />
+            </div>
+            <div className="text-left">
+              <p className="text-white font-medium" style={{ fontSize: '0.9375rem' }}>
+                {t('weight_home_title') || 'Weight Tracking'}
+              </p>
+              <p className="text-white/40" style={{ fontSize: '0.75rem' }}>
+                {latestWeight
+                  ? `${latestWeight.weight} kg${weeklyWeightChange !== null ? ` (${weeklyWeightChange >= 0 ? '+' : ''}${weeklyWeightChange.toFixed(1)} this week)` : ''}`
+                  : (t('weight_home_desc') || 'Log your weight & track progress')}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Plus className="w-4 h-4 text-[#74b9ff]/60" />
+            <ChevronRight className="w-4 h-4 text-[#74b9ff]/60" />
+          </div>
+        </motion.button>
+
         {/* Today's Meal Plan */}
         <GlassCard className="p-5">
           <div className="flex items-center justify-between mb-4">
@@ -387,7 +556,7 @@ export function HomeNutritionPage() {
               <TrendingUp className="w-4 h-4 text-[#00cec9]" />
               <span className="text-xs text-white/50">This Week</span>
             </div>
-            <p className="text-xl text-white font-semibold">-0.5 kg</p>
+            <p className="text-xl text-white font-semibold">{weeklyWeightChange !== null ? `${weeklyWeightChange.toFixed(1)} kg` : '-0.5 kg'}</p>
             <p className="text-xs text-white/40 mt-1">Weight progress</p>
           </GlassCard>
 
@@ -402,6 +571,15 @@ export function HomeNutritionPage() {
         </div>
 
       </div>
+
+      {/* Streak Milestone Share Modal */}
+      {streakMilestone && (
+        <StreakShareCard
+          milestone={streakMilestone.milestone}
+          streak={streakMilestone.streak}
+          onClose={() => setStreakMilestone(null)}
+        />
+      )}
     </div>
   );
 }

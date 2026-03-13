@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — XP Sound Effects (Web Audio API)
+// Proper Food AI — XP Sound Effects (Web Audio API)
 // =============================================
 // Synthesized audio cues for XP rewards.
 // No external audio files needed — pure oscillators.

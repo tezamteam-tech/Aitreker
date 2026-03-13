@@ -24,6 +24,7 @@ import {
   AlertCircle,
   Plus,
   ChevronDown,
+  Crown,
 } from 'lucide-react';
 import { GlassCard } from './glass-card';
 import { useAuth } from './auth-context';
@@ -62,7 +63,7 @@ function detectLanguage(): string {
 // ---- Component ----
 export function ScanFoodPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, subscriptionActive, isAdmin, isDevMode } = useAuth();
   const lang = detectLanguage();
 
   const [step, setStep] = useState<ScanStep>('capture');
@@ -70,6 +71,9 @@ export function ScanFoodPage() {
   const [result, setResult] = useState<FoodResult | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [isAdding, setIsAdding] = useState(false);
+  const [limitReached, setLimitReached] = useState(false);
+  const [scansUsed, setScansUsed] = useState(0);
+  const [scansLimit, setScansLimit] = useState(5);
   const [addedSuccess, setAddedSuccess] = useState(false);
   const [selectedMeal, setSelectedMeal] = useState<MealType>(() => {
     const hour = new Date().getHours();
@@ -128,6 +132,7 @@ export function ScanFoodPage() {
     if (!imageData) return;
     hapticFeedback('medium');
     setStep('analyzing');
+    setLimitReached(false);
 
     try {
       const base64 = imageData.split(',')[1];
@@ -138,9 +143,22 @@ export function ScanFoodPage() {
       hapticSuccess();
     } catch (err: any) {
       console.error('[ScanFood] Analysis error:', err);
-      setErrorMessage(
-        err?.message || (lang === 'ru' ? 'Не удалось распознать еду' : 'Could not analyze food')
-      );
+
+      // Check if limit reached (429)
+      if (err?.code === 'LIMIT_REACHED' || err?.status === 429 || (err?.message && err.message.includes('limit'))) {
+        setLimitReached(true);
+        setScansUsed(err?.used || 5);
+        setScansLimit(err?.limit || 5);
+        setErrorMessage(
+          lang === 'ru'
+            ? 'Достигнут дневной лимит сканирования'
+            : 'Daily scan limit reached'
+        );
+      } else {
+        setErrorMessage(
+          err?.message || (lang === 'ru' ? 'Не удалось распознать еду' : 'Could not analyze food')
+        );
+      }
       setStep('error');
       hapticError();
     }
@@ -593,46 +611,98 @@ export function ScanFoodPage() {
               exit={{ opacity: 0, y: -10 }}
               className="flex-1 flex flex-col items-center justify-center"
             >
-              <motion.div
-                initial={{ scale: 0.8 }}
-                animate={{ scale: 1 }}
-                className="w-20 h-20 rounded-full bg-[#ff6b6b]/10 flex items-center justify-center mb-5"
-              >
-                <AlertCircle className="w-9 h-9 text-[#ff6b6b]" />
-              </motion.div>
+              {limitReached ? (
+                <>
+                  <motion.div
+                    initial={{ scale: 0.8 }}
+                    animate={{ scale: 1 }}
+                    className="w-20 h-20 rounded-3xl bg-gradient-to-br from-[#6c5ce7]/20 to-[#a29bfe]/10 flex items-center justify-center mb-5 border border-white/[0.08]"
+                  >
+                    <Crown className="w-9 h-9 text-[#a29bfe]" />
+                  </motion.div>
 
-              <h2 className="text-white mb-2 text-center" style={{ fontSize: '1.25rem', fontWeight: 700 }}>
-                {lang === 'ru' ? 'Не удалось распознать' : 'Recognition failed'}
-              </h2>
-              <p className="text-white/40 text-center max-w-[280px] mb-8" style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
-                {errorMessage ||
-                  (lang === 'ru'
-                    ? 'Попробуйте сделать фото ближе и при хорошем освещении'
-                    : 'Try taking a closer photo with better lighting')}
-              </p>
+                  <h2 className="text-white mb-2 text-center" style={{ fontSize: '1.25rem', fontWeight: 700 }}>
+                    {lang === 'ru' ? 'Лимит сканирований' : 'Scan Limit Reached'}
+                  </h2>
+                  <p className="text-white/40 text-center max-w-[280px] mb-2" style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
+                    {lang === 'ru'
+                      ? `Использовано ${scansUsed}/${scansLimit} бесплатных сканирований сегодня`
+                      : `You've used ${scansUsed}/${scansLimit} free scans today`}
+                  </p>
+                  <p className="text-white/30 text-center max-w-[280px] mb-8" style={{ fontSize: '0.8125rem', lineHeight: 1.5 }}>
+                    {lang === 'ru'
+                      ? 'Перейдите на Premium для безлимитного сканирования'
+                      : 'Upgrade to Premium for unlimited scans'}
+                  </p>
 
-              <div className="w-full max-w-[320px] space-y-3">
-                <motion.button
-                  whileTap={{ scale: 0.97 }}
-                  onClick={resetCapture}
-                  className="w-full h-14 rounded-2xl bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe] flex items-center justify-center gap-2.5 shadow-lg"
-                >
-                  <RotateCcw className="w-5 h-5 text-white" />
-                  <span className="text-white" style={{ fontSize: '1.0625rem', fontWeight: 600 }}>
-                    {lang === 'ru' ? 'Попробовать снова' : 'Try again'}
-                  </span>
-                </motion.button>
+                  <div className="w-full max-w-[320px] space-y-3">
+                    <motion.button
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => { hapticFeedback('medium'); navigate('/upgrade'); }}
+                      className="w-full h-14 rounded-2xl bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe] flex items-center justify-center gap-2.5 shadow-lg"
+                      style={{ boxShadow: '0 8px 32px rgba(108,92,231,0.3)' }}
+                    >
+                      <Crown className="w-5 h-5 text-white" />
+                      <span className="text-white" style={{ fontSize: '1.0625rem', fontWeight: 600 }}>
+                        {lang === 'ru' ? 'Перейти на Premium' : 'Upgrade to Premium'}
+                      </span>
+                    </motion.button>
 
-                <motion.button
-                  whileTap={{ scale: 0.97 }}
-                  onClick={goBack}
-                  className="w-full h-12 rounded-2xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center"
-                >
-                  <span className="text-white/60" style={{ fontSize: '0.9375rem', fontWeight: 500 }}>
-                    {lang === 'ru' ? 'Назад' : 'Go back'}
-                  </span>
-                </motion.button>
-              </div>
+                    <motion.button
+                      whileTap={{ scale: 0.97 }}
+                      onClick={goBack}
+                      className="w-full h-12 rounded-2xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center"
+                    >
+                      <span className="text-white/60" style={{ fontSize: '0.9375rem', fontWeight: 500 }}>
+                        {lang === 'ru' ? 'Назад' : 'Go back'}
+                      </span>
+                    </motion.button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <motion.div
+                    initial={{ scale: 0.8 }}
+                    animate={{ scale: 1 }}
+                    className="w-20 h-20 rounded-full bg-[#ff6b6b]/10 flex items-center justify-center mb-5"
+                  >
+                    <AlertCircle className="w-9 h-9 text-[#ff6b6b]" />
+                  </motion.div>
+
+                  <h2 className="text-white mb-2 text-center" style={{ fontSize: '1.25rem', fontWeight: 700 }}>
+                    {lang === 'ru' ? 'Не удалось распознать' : 'Recognition failed'}
+                  </h2>
+                  <p className="text-white/40 text-center max-w-[280px] mb-8" style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
+                    {errorMessage ||
+                      (lang === 'ru'
+                        ? 'Попробуйте сделать фото ближе и при хорошем освещении'
+                        : 'Try taking a closer photo with better lighting')}
+                  </p>
+
+                  <div className="w-full max-w-[320px] space-y-3">
+                    <motion.button
+                      whileTap={{ scale: 0.97 }}
+                      onClick={resetCapture}
+                      className="w-full h-14 rounded-2xl bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe] flex items-center justify-center gap-2.5 shadow-lg"
+                    >
+                      <RotateCcw className="w-5 h-5 text-white" />
+                      <span className="text-white" style={{ fontSize: '1.0625rem', fontWeight: 600 }}>
+                        {lang === 'ru' ? 'Попробовать снова' : 'Try again'}
+                      </span>
+                    </motion.button>
+
+                    <motion.button
+                      whileTap={{ scale: 0.97 }}
+                      onClick={goBack}
+                      className="w-full h-12 rounded-2xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center"
+                    >
+                      <span className="text-white/60" style={{ fontSize: '0.9375rem', fontWeight: 500 }}>
+                        {lang === 'ru' ? 'Назад' : 'Go back'}
+                      </span>
+                    </motion.button>
+                  </div>
+                </>
+              )}
             </motion.div>
           )}
 

@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — SwipeableTask Component
+// Proper Food AI — SwipeableTask Component
 // =============================================
 // Drag-to-complete card for strategic tasks.
 // Swipe right to complete. Shows green reveal

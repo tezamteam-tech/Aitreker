@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — Seed Data: "7-day Focus" Program
+// Proper Food AI — Seed Data: "7-day Focus" Program
 // This mirrors what prisma/seed.ts would insert.
 // =============================================
 

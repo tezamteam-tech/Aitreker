@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — Inline Audio Player
+// Proper Food AI — Inline Audio Player
 // =============================================
 // Glassmorphism mini-player for voice notes.
 // Seekable waveform bars (tap + drag to scrub),

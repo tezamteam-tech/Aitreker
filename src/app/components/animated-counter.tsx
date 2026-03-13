@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — Animated XP Counter
+// Proper Food AI — Animated XP Counter
 // =============================================
 // Counts up/down to target value with easing.
 // Glows and pulses on increase. Pure CSS animations

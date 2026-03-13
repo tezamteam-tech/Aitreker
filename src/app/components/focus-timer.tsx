@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — Focus Timer (/focus)
+// Proper Food AI — Focus Timer (/focus)
 // =============================================
 // Features: countdown timer, presets, pause/stop,
 // completion sound (Web Audio), photo proof,

@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — Voice Input Component
+// Proper Food AI — Voice Input Component
 // =============================================
 // Reusable voice recording button with live
 // audio waveform visualization. Uses

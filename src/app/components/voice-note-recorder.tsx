@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — Voice Note Recorder (bottom-sheet)
+// Proper Food AI — Voice Note Recorder (bottom-sheet)
 // =============================================
 // Full-screen-ish modal with large pulsating mic
 // button, live waveform, duration counter.

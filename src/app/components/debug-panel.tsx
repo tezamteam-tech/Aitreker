@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — Debug Panel
+// Proper Food AI — Debug Panel
 // =============================================
 // Collapsible debug panel with:
 //   - Full auth event log with timestamps
@@ -61,7 +61,7 @@ function useDebugLog() {
 // ---- System info collector ----
 function getSystemInfo(): string {
   const lines: string[] = [];
-  lines.push(`--- BECOME Debug Report ---`);
+  lines.push(`--- Proper Food AI Debug Report ---`);
   lines.push(`Time: ${new Date().toISOString()}`);
   lines.push(`URL: ${window.location.href}`);
   lines.push(`Hash: ${window.location.hash || '(empty)'}`);
@@ -266,7 +266,7 @@ export function DebugBar() {
       <div className="flex items-center justify-between px-3 py-2 border-b border-white/[0.08] bg-black/80">
         <div className="flex items-center gap-2">
           <span className="text-white/80 font-semibold" style={{ fontSize: '0.8125rem' }}>
-            BECOME Debug
+            Proper Food Debug
           </span>
           <span className="text-white/30 font-mono" style={{ fontSize: '0.625rem' }}>
             {logEntries.length} events

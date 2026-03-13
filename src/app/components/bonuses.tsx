@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — Bonuses & Referral Page (/bonuses)
+// Proper Food AI — Bonuses & Referral Page (/bonuses)
 // =============================================
 // Subscription status, social follow bonuses,
 // referral system, and support link.
@@ -29,6 +29,7 @@ import { api } from './api-client';
 import { hapticFeedback, hapticSuccess } from './telegram';
 import { useTranslation } from './i18n';
 import { PageHeader } from './page-header';
+import { buildStartLink } from './bot-config';
 
 // Telegram SVG icon (inline)
 function TelegramIcon({ className }: { className?: string }) {
@@ -102,7 +103,7 @@ export function BonusesPage() {
   };
 
   const referralLink = data?.referral?.code
-    ? `https://t.me/BECOMEAI_BOT?start=ref_${data.referral.code}`
+    ? buildStartLink(`ref_${data.referral.code}`)
     : '';
 
   const handleShare = () => {

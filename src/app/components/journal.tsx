@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — Journal (/journal)
+// Proper Food AI — Journal (/journal)
 // =============================================
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';

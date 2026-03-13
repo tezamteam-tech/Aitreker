@@ -1,5 +1,5 @@
 // =============================================
-// BECOME — Strategic Goal Detail (/strategic-goal/:id)
+// Proper Food AI — Strategic Goal Detail (/strategic-goal/:id)
 // AI Check-in, review history, tap-to-reorder tasks
 // =============================================
 
