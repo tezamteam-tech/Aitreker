@@ -3,7 +3,7 @@
 // Bilingual (EN/RU). Stored in KV on first request.
 // =============================================
 
-import * as kv from "./kv_store.tsx";
+import * as kv from "./kv.tsx";
 
 const PROGRAM = {
   id: "prog_7day_focus",

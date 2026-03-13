@@ -1,16 +1,28 @@
 // =============================================
 // Proper Food AI — Telegram WebApp SDK Integration
 // =============================================
-// Production (Vercel): Telegram SDK is injected by TG
-// client automatically. initData is available via
-// window.Telegram.WebApp.initData.
+// Hybrid approach:
+//   1. @tma.js/sdk singletons (primary) — initialized by init.ts
+//   2. window.Telegram.WebApp fallback — for features not
+//      covered by the SDK or older TG clients
+//
+// initData is retrieved from @tma.js/sdk's retrieveRawInitData()
+// with fallback to window.Telegram.WebApp.initData.
 //
 // bot_auth fallback remains for reply keyboard links
-// (user taps "Open Proper Food" in chat → URL with bot_auth).
-//
-// Performance API capture of bot_auth is kept as safety
-// net but is rarely needed on Vercel (no URL rewriting).
+// (user taps "Open Proper Food" in chat -> URL with bot_auth).
 // =============================================
+
+import {
+  retrieveRawInitData,
+  retrieveLaunchParams,
+  miniApp as sdkMiniApp,
+  backButton as sdkBackButton,
+  hapticFeedback as sdkHapticFeedback,
+  viewport as sdkViewport,
+  isTMA,
+} from '@tma.js/sdk-react';
+import { isSdkInitialized } from '../init';
 
 // ---- Captured bot_auth token (from redirect URLs) ----
 let capturedBotAuth: string | null = null;
@@ -120,6 +132,9 @@ export async function ensureTelegramSdk(): Promise<void> {
  * Check if running inside a Telegram client (WebApp SDK available with initData).
  */
 export function isTelegramClient(): boolean {
+  // @tma.js/sdk check
+  if (isSdkInitialized()) return true;
+  // Fallback
   const wa = getTelegramWebApp();
   return !!wa && typeof wa.initData === 'string';
 }
@@ -128,39 +143,83 @@ export function isTelegramClient(): boolean {
  * Check if the app has valid Telegram initData (non-empty).
  */
 export function isTelegramEnvironment(): boolean {
+  // @tma.js/sdk check
+  if (isSdkInitialized()) {
+    try {
+      const raw = retrieveRawInitData();
+      if (raw && raw.length > 0) return true;
+    } catch {}
+  }
+  // Fallback
   const wa = getTelegramWebApp();
   return !!wa && typeof wa.initData === 'string' && wa.initData.length > 0;
 }
 
 /**
  * Get raw initData string for auth.
+ * Primary: @tma.js/sdk retrieveRawInitData() (parses from URL hash)
+ * Fallback: window.Telegram.WebApp.initData
  */
 export function getInitData(): string {
+  // 1. Try @tma.js/sdk (extracts from URL hash #tgWebAppData=...)
+  if (isSdkInitialized()) {
+    try {
+      const raw = retrieveRawInitData();
+      if (raw && raw.length > 0) {
+        console.log(`[TG] initData from @tma.js/sdk (length=${raw.length})`);
+        return raw;
+      }
+    } catch {}
+  }
+
+  // 2. Fallback: window.Telegram.WebApp.initData
   return getTelegramWebApp()?.initData || '';
 }
 
 /**
- * Get parsed user info from initDataUnsafe.
+ * Get parsed user info from initDataUnsafe or @tma.js/sdk launch params.
  */
 export function getTelegramUser(): TelegramUser | null {
+  // 1. Try @tma.js/sdk launch params
+  if (isSdkInitialized()) {
+    try {
+      const lp = retrieveLaunchParams();
+      const parsed = lp.tgWebAppData;
+      if (parsed?.user) {
+        // @tma.js/types uses snake_case (same as Telegram API)
+        return parsed.user as TelegramUser;
+      }
+    } catch {}
+  }
+
+  // 2. Fallback: window.Telegram.WebApp.initDataUnsafe
   return getTelegramWebApp()?.initDataUnsafe?.user || null;
 }
 
 /**
  * Get start_param from Telegram deep link.
  *
- * Checks two sources:
- * 1. Telegram SDK `initDataUnsafe.start_param` — set when Mini App is opened
- *    via `t.me/BOT/APP?startapp=PARAM` deep link.
- * 2. URL query param `?startapp=PARAM` — set when Mini App is opened via a
- *    `web_app: { url }` button that includes startapp in the URL.
+ * Checks sources in order:
+ * 1. @tma.js/sdk launch params
+ * 2. Telegram SDK `initDataUnsafe.start_param`
+ * 3. URL query param `?startapp=PARAM`
  */
 export function getStartParam(): string {
-  // Primary: Telegram SDK start_param
+  // 1. @tma.js/sdk
+  if (isSdkInitialized()) {
+    try {
+      const lp = retrieveLaunchParams();
+      if (lp.tgWebAppStartParam) return lp.tgWebAppStartParam;
+      // Also check initData.start_param
+      if (lp.tgWebAppData?.start_param) return lp.tgWebAppData.start_param;
+    } catch {}
+  }
+
+  // 2. window.Telegram.WebApp
   const sdkParam = getTelegramWebApp()?.initDataUnsafe?.start_param;
   if (sdkParam) return sdkParam;
 
-  // Fallback: startapp query param from URL (web_app buttons with startapp in URL)
+  // 3. URL fallback
   if (typeof window !== 'undefined') {
     try {
       const urlParams = new URLSearchParams(window.location.search);
@@ -200,7 +259,11 @@ export function closeMiniApp(): void {
  */
 export function hapticFeedback(style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft' = 'light'): void {
   try {
-    getTelegramWebApp()?.HapticFeedback?.impactOccurred(style);
+    if (isSdkInitialized()) {
+      sdkHapticFeedback.impactOccurred(style);
+    } else {
+      getTelegramWebApp()?.HapticFeedback?.impactOccurred(style);
+    }
   } catch {}
 }
 
@@ -209,7 +272,11 @@ export function hapticFeedback(style: 'light' | 'medium' | 'heavy' | 'rigid' | '
  */
 export function hapticSelection(): void {
   try {
-    getTelegramWebApp()?.HapticFeedback?.selectionChanged();
+    if (isSdkInitialized()) {
+      sdkHapticFeedback.selectionChanged();
+    } else {
+      getTelegramWebApp()?.HapticFeedback?.selectionChanged();
+    }
   } catch {}
 }
 
@@ -218,7 +285,11 @@ export function hapticSelection(): void {
  */
 export function hapticSuccess(): void {
   try {
-    getTelegramWebApp()?.HapticFeedback?.notificationOccurred('success');
+    if (isSdkInitialized()) {
+      sdkHapticFeedback.notificationOccurred('success');
+    } else {
+      getTelegramWebApp()?.HapticFeedback?.notificationOccurred('success');
+    }
   } catch {}
 }
 
@@ -227,7 +298,11 @@ export function hapticSuccess(): void {
  */
 export function hapticError(): void {
   try {
-    getTelegramWebApp()?.HapticFeedback?.notificationOccurred('error');
+    if (isSdkInitialized()) {
+      sdkHapticFeedback.notificationOccurred('error');
+    } else {
+      getTelegramWebApp()?.HapticFeedback?.notificationOccurred('error');
+    }
   } catch {}
 }
 
@@ -238,8 +313,12 @@ export function hapticError(): void {
  */
 export function showBackButton(): void {
   try {
-    if (!isVersionAtLeast('6.1')) return;
-    getTelegramWebApp()?.BackButton?.show();
+    if (isSdkInitialized()) {
+      sdkBackButton.show();
+    } else {
+      if (!isVersionAtLeast('6.1')) return;
+      getTelegramWebApp()?.BackButton?.show();
+    }
   } catch {}
 }
 
@@ -248,8 +327,12 @@ export function showBackButton(): void {
  */
 export function hideBackButton(): void {
   try {
-    if (!isVersionAtLeast('6.1')) return;
-    getTelegramWebApp()?.BackButton?.hide();
+    if (isSdkInitialized()) {
+      sdkBackButton.hide();
+    } else {
+      if (!isVersionAtLeast('6.1')) return;
+      getTelegramWebApp()?.BackButton?.hide();
+    }
   } catch {}
 }
 
@@ -258,13 +341,17 @@ export function hideBackButton(): void {
  */
 export function onBackButtonPressed(callback: () => void): () => void {
   try {
+    if (isSdkInitialized()) {
+      sdkBackButton.onClick(callback);
+      return () => {
+        try { sdkBackButton.offClick(callback); } catch {}
+      };
+    }
     if (!isVersionAtLeast('6.1')) return () => {};
     const wa = getTelegramWebApp();
     wa?.BackButton?.onClick(callback);
     return () => {
-      try {
-        wa?.BackButton?.offClick(callback);
-      } catch {}
+      try { wa?.BackButton?.offClick(callback); } catch {}
     };
   } catch {
     return () => {};

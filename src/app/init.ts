@@ -3,30 +3,58 @@
 // =============================================
 // This module MUST be imported FIRST in App.tsx.
 //
-// Production (Vercel) initialization:
-//   1. App.tsx imports this file FIRST
-//   2. App.tsx calls init(debug) before React renders
-//   3. init() loads Eruda if debug=true
-//   4. init() ensures Telegram WebApp SDK is available
-//   5. CRITICAL ORDER: requestFullscreen() → expand() → ready()
+// Uses @tma.js/sdk for Telegram Mini App initialization.
+// The SDK handles:
+//   - Launch params parsing (from URL hash + window.Telegram)
+//   - postEvent bridge setup
+//   - Feature singletons (miniApp, viewport, backButton, etc.)
 //
-// TELEGRAM SDK:
-//   - When opened from Telegram, the SDK script is injected
-//     automatically by the TG client. window.Telegram.WebApp
-//     is available immediately.
-//   - We also call ensureTelegramSdk() as a safety net.
-//   - All TG API access is via /src/app/components/telegram.tsx
+// After init(), components can use SDK singletons or hooks
+// from @tma.js/sdk-react (useSignal, useLaunchParams, etc.).
+//
+// IMPORTANT:
+//   All components access Telegram features through helper functions
+//   in telegram.tsx, which uses SDK singletons where possible
+//   with window.Telegram.WebApp fallback.
 //
 // DEBUG MODE:
 //   - Only via explicit URL param: ?tgWebAppStartParam=debug
 //   - Loads Eruda for mobile DevTools
 // =============================================
 
-import { ensureTelegramSdk, requestFullscreen, setupSafeArea } from './components/telegram';
+import {
+  init as initSDK,
+  miniApp,
+  viewport,
+  closingBehavior,
+  swipeBehavior,
+} from '@tma.js/sdk-react';
+
+// ---- SDK state ----
+let _sdkCleanup: VoidFunction | null = null;
+let _sdkInitialized = false;
+
+// ---- SDK Readiness Signal ----
+// AuthProvider MUST await this before attempting login.
+// Resolves when TMA.js SDK is initialized (or fails gracefully).
+let _sdkReadyResolve: (() => void) | null = null;
+let _sdkReady = false;
+
+export const sdkReadyPromise: Promise<void> = new Promise((resolve) => {
+  _sdkReadyResolve = resolve;
+});
+
+export function isSdkReady(): boolean {
+  return _sdkReady;
+}
+
+/** Check if @tma.js/sdk was successfully initialized */
+export function isSdkInitialized(): boolean {
+  return _sdkInitialized;
+}
 
 /**
  * Compute and set --app-tg-header-offset CSS variable.
- * This is the combined safe area top + content safe area top.
  */
 function computeAndSetHeaderOffset(): void {
   try {
@@ -45,7 +73,6 @@ function computeAndSetHeaderOffset(): void {
       return;
     }
 
-    // Fallback — CSS vars not set yet (old client)
     const platform = (wa.platform || '').toLowerCase();
     const ua = (navigator?.userAgent || '').toLowerCase();
     let fallback = 56;
@@ -59,131 +86,173 @@ function computeAndSetHeaderOffset(): void {
   } catch {}
 }
 
-// ---- SDK Readiness Signal ----
-// AuthProvider MUST await this before attempting login.
-// Resolves when Telegram SDK is loaded and configured (or fails gracefully).
-let _sdkReadyResolve: (() => void) | null = null;
-let _sdkReady = false;
+/**
+ * Basic safe area setup directly from window.Telegram.WebApp.
+ * Full setup is in telegram.tsx — this is a minimal bootstrap version.
+ */
+function bootstrapSafeArea(): void {
+  try {
+    const wa = (window as any).Telegram?.WebApp;
+    if (!wa) return;
 
-export const sdkReadyPromise: Promise<void> = new Promise((resolve) => {
-  _sdkReadyResolve = resolve;
-});
+    const sai = wa.safeAreaInset;
+    const csai = wa.contentSafeAreaInset;
 
-export function isSdkReady(): boolean {
-  return _sdkReady;
+    if (sai) {
+      document.documentElement.style.setProperty('--tg-safe-area-inset-top', `${sai.top}px`);
+      document.documentElement.style.setProperty('--tg-safe-area-inset-bottom', `${sai.bottom}px`);
+      document.documentElement.style.setProperty('--tg-safe-area-inset-left', `${sai.left}px`);
+      document.documentElement.style.setProperty('--tg-safe-area-inset-right', `${sai.right}px`);
+    }
+
+    if (csai) {
+      document.documentElement.style.setProperty('--tg-content-safe-area-inset-top', `${csai.top}px`);
+      document.documentElement.style.setProperty('--tg-content-safe-area-inset-bottom', `${csai.bottom}px`);
+    }
+
+    const saiTop = sai?.top || 0;
+    const csaiTop = csai?.top || 0;
+    const topInset = Math.max(saiTop, csaiTop, saiTop + csaiTop > 120 ? Math.max(saiTop, csaiTop) : saiTop + csaiTop);
+    const inFullscreen = wa.isFullscreen === true;
+
+    const platform = (wa.platform || '').toLowerCase();
+    const ua = (navigator?.userAgent || '').toLowerCase();
+    const android = platform.includes('android') || /android/i.test(ua);
+    const ios = platform === 'ios' || /iphone|ipad|ipod/i.test(ua);
+
+    let safeTop: number;
+    if (inFullscreen && android) {
+      safeTop = Math.max(topInset, 88);
+    } else if (inFullscreen && ios) {
+      safeTop = Math.max(topInset, 54);
+    } else {
+      safeTop = topInset > 0 ? topInset : 12;
+    }
+
+    document.documentElement.style.setProperty('--safe-area-top', `${safeTop}px`);
+    document.documentElement.style.setProperty('--tg-is-fullscreen', inFullscreen ? '1' : '0');
+  } catch {}
 }
 
 /**
  * Initializes the application and configures its dependencies.
+ * Works with @tma.js/sdk for Telegram Mini App.
  *
  * @param debug - Enable debug mode (Eruda console for mobile)
  */
 export function init(debug: boolean): void {
   console.log('[ProperFood] Initialization started');
 
-  // 1. Ensure Telegram WebApp SDK is loaded
-  ensureTelegramSdk().then(() => {
-    console.log('[ProperFood] Telegram SDK ready');
+  // 1. Initialize TMA.js SDK (synchronous — handles postEvent bridge, signals, etc.)
+  try {
+    _sdkCleanup = initSDK();
+    _sdkInitialized = true;
+    console.log('[ProperFood] @tma.js/sdk initialized successfully');
+  } catch (err) {
+    console.warn('[ProperFood] @tma.js/sdk init failed (not in Telegram?):', err);
+    _sdkInitialized = false;
+  }
 
-    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-      const wa = window.Telegram.WebApp;
-
-      // Log Telegram environment info for debugging
-      console.log(`[ProperFood] TG SDK found: platform=${wa.platform}, version=${wa.version}, initData.length=${wa.initData?.length || 0}`);
-
-      // CRITICAL ORDER — per Telegram Bot API docs:
-      // requestFullscreen() MUST be called BEFORE ready().
-
+  // 2. Configure Telegram features via SDK singletons (if initialized)
+  if (_sdkInitialized) {
+    try {
       // Step 1: expand to full height
-      try { wa.expand(); } catch {}
+      try { viewport.expand(); } catch {}
 
-      // Step 2: disable vertical swipes ASAP (prevents swipe-to-close, requires 7.7+)
+      // Step 2: disable vertical swipes (prevents swipe-to-close, v7.7+)
       try {
-        if (typeof wa.isVersionAtLeast === 'function' && wa.isVersionAtLeast('7.7') &&
-            typeof wa.disableVerticalSwipes === 'function') {
-          wa.disableVerticalSwipes();
-          console.log('[ProperFood] disableVerticalSwipes() called');
+        if (swipeBehavior.isSupported()) {
+          swipeBehavior.mount();
+          swipeBehavior.disableVertical();
+          console.log('[ProperFood] swipeBehavior.disableVertical() called');
         }
       } catch {}
 
-      // Step 3: enable closing confirmation (requires 6.2+)
+      // Step 3: enable closing confirmation (v6.2+)
       try {
-        if (typeof wa.isVersionAtLeast === 'function' && wa.isVersionAtLeast('6.2') &&
-            typeof wa.enableClosingConfirmation === 'function') {
-          wa.enableClosingConfirmation();
-        }
+        closingBehavior.mount();
+        closingBehavior.enableConfirmation();
       } catch {}
 
       // Step 4: request fullscreen (must precede ready())
       try {
-        requestFullscreen();
-        console.log('[ProperFood] requestFullscreen() called BEFORE ready()');
-      } catch (err) {
-        console.warn('[ProperFood] requestFullscreen() error:', err);
-      }
+        viewport.requestFullscreen().then(() => {
+          console.log('[ProperFood] viewport.requestFullscreen() succeeded');
+        }).catch(() => {
+          console.log('[ProperFood] viewport.requestFullscreen() not supported or failed');
+        });
+      } catch {}
 
-      // Step 5: signal app is ready to TG
-      try { wa.ready(); } catch {};
+      // Step 5: signal app is ready to Telegram
+      try { miniApp.ready(); } catch {}
 
-      // Step 6: set header color to match current theme (bg_color adapts)
-      // Version-gated: setHeaderColor requires 6.1+, setBottomBarColor requires 7.10+
+      // Step 6: set header/bottom bar colors
+      try { miniApp.setHeaderColor('bg_color'); } catch {}
+      try { miniApp.setBottomBarColor('bg_color'); } catch {}
+
+      console.log('[ProperFood] SDK features configured');
+    } catch (err) {
+      console.warn('[ProperFood] Error configuring SDK features:', err);
+    }
+  }
+
+  // 3. Fallback: try window.Telegram.WebApp if SDK init failed
+  if (!_sdkInitialized && typeof window !== 'undefined' && (window as any).Telegram?.WebApp) {
+    const wa = (window as any).Telegram.WebApp;
+    console.log(`[ProperFood] Fallback to window.Telegram.WebApp: platform=${wa.platform}, version=${wa.version}`);
+
+    try { wa.expand(); } catch {}
+
+    try {
       if (typeof wa.isVersionAtLeast === 'function') {
-        if (wa.isVersionAtLeast('6.1')) {
-          try { wa.setHeaderColor?.('bg_color'); } catch {}
+        if (wa.isVersionAtLeast('7.7') && typeof wa.disableVerticalSwipes === 'function') {
+          wa.disableVerticalSwipes();
         }
-        if (wa.isVersionAtLeast('7.10')) {
-          try { wa.setBottomBarColor?.('bg_color'); } catch {}
+        if (wa.isVersionAtLeast('6.2') && typeof wa.enableClosingConfirmation === 'function') {
+          wa.enableClosingConfirmation();
+        }
+        if (wa.isVersionAtLeast('8.0') && typeof wa.requestFullscreen === 'function') {
+          wa.requestFullscreen();
         }
       }
+    } catch {}
 
-      // Step 7: initial safe-area setup
-      setupSafeArea();
+    try { wa.ready(); } catch {}
 
-      // Step 8: compute header offset for pt-safe
-      computeAndSetHeaderOffset();
-
-      // Android boot pump: TG populates safeAreaInset asynchronously
-      const ua = (navigator?.userAgent || '').toLowerCase();
-      const isAndroid = (wa.platform || '').toLowerCase().includes('android') || /android/i.test(ua);
-      if (isAndroid) {
-        [50, 150, 400, 800, 1500, 3000].forEach(ms =>
-          setTimeout(() => {
-            setupSafeArea();
-            computeAndSetHeaderOffset();
-          }, ms)
-        );
-      } else {
-        // iOS / other: fewer retries
-        [300, 1000, 3000].forEach(ms =>
-          setTimeout(() => computeAndSetHeaderOffset(), ms)
-        );
+    try {
+      if (typeof wa.isVersionAtLeast === 'function') {
+        if (wa.isVersionAtLeast('6.1')) wa.setHeaderColor?.('bg_color');
+        if (wa.isVersionAtLeast('7.10')) wa.setBottomBarColor?.('bg_color');
       }
+    } catch {}
+  }
 
-      console.log(`[ProperFood] WebApp.ready() called. Platform: ${wa.platform}, Version: ${wa.version}`);
-    } else {
-      console.warn('[ProperFood] Telegram SDK loaded but window.Telegram.WebApp is NOT available');
-    }
+  // 4. Bootstrap safe area (minimal — full setup in telegram.tsx setupSafeArea())
+  bootstrapSafeArea();
+  computeAndSetHeaderOffset();
 
-    // Signal SDK readiness to AuthProvider
-    _sdkReady = true;
-    _sdkReadyResolve?.();
-  }).catch((err) => {
-    console.error('[ProperFood] Telegram SDK load failed:', err);
-    // Still resolve — auth will handle the absence of SDK gracefully
-    _sdkReady = true;
-    _sdkReadyResolve?.();
-  });
+  // Android boot pump: TG populates safeAreaInset asynchronously
+  const ua = (navigator?.userAgent || '').toLowerCase();
+  const wa = (window as any).Telegram?.WebApp;
+  const isAndroid = (wa?.platform || '').toLowerCase().includes('android') || /android/i.test(ua);
+  if (isAndroid) {
+    [50, 150, 400, 800, 1500, 3000].forEach(ms =>
+      setTimeout(() => {
+        bootstrapSafeArea();
+        computeAndSetHeaderOffset();
+      }, ms)
+    );
+  } else {
+    [300, 1000, 3000].forEach(ms =>
+      setTimeout(() => computeAndSetHeaderOffset(), ms)
+    );
+  }
 
-  // Safety timeout: if SDK takes >3s, resolve anyway so auth doesn't hang
-  setTimeout(() => {
-    if (!_sdkReady) {
-      console.warn('[ProperFood] SDK readiness timeout (3s) — resolving anyway');
-      _sdkReady = true;
-      _sdkReadyResolve?.();
-    }
-  }, 3000);
+  // 5. Signal SDK readiness immediately (init() is synchronous in @tma.js/sdk)
+  _sdkReady = true;
+  _sdkReadyResolve?.();
 
-  // 2. Eruda debugger (if requested)
+  // 6. Eruda debugger (if requested)
   if (debug) {
     import('eruda')
       .then((lib) => {
@@ -195,5 +264,5 @@ export function init(debug: boolean): void {
       });
   }
 
-  console.log('[ProperFood] Initialization complete (SDK loading async)');
+  console.log('[ProperFood] Initialization complete');
 }

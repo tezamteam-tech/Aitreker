@@ -8,7 +8,7 @@
 // =============================================
 
 import { sendMessage, type InlineKeyboardButton } from "./telegram-bot.tsx";
-import * as kv from "./kv_store.tsx";
+import * as kv from "./kv.tsx";
 import { t, getUserLang, type Lang } from "./i18n.tsx";
 
 // ---- Notification Types ----
