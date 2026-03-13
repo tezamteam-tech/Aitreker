@@ -74,9 +74,9 @@ function PageSkeleton() {
 function NotFound() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6">
-      <p className="text-white/20 mb-2" style={{ fontSize: '4rem', fontWeight: 700 }}>404</p>
-      <p className="text-white/40" style={{ fontSize: '0.9375rem' }}>Page not found</p>
-      <a href="/home" className="mt-6 text-[#a29bfe]" style={{ fontSize: '0.9375rem' }}>
+      <p className="text-foreground/20 mb-2" style={{ fontSize: '4rem', fontWeight: 700 }}>404</p>
+      <p className="text-muted-foreground" style={{ fontSize: '0.9375rem' }}>Page not found</p>
+      <a href="/home" className="mt-6 text-app-accent" style={{ fontSize: '0.9375rem' }}>
         Go Home
       </a>
     </div>

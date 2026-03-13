@@ -244,10 +244,10 @@ export function HomeNutritionPage() {
               <AlertCircle className="w-5 h-5 text-[#e17055]" />
             </div>
             <div className="flex-1 text-left">
-              <p className="text-white" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
+              <p className="text-foreground" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
                 Premium expires in {subscriptionDaysLeft} day{subscriptionDaysLeft !== 1 ? 's' : ''}
               </p>
-              <p className="text-white/40" style={{ fontSize: '0.6875rem' }}>
+              <p className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
                 Tap to renew and keep unlimited access
               </p>
             </div>
@@ -267,12 +267,12 @@ export function HomeNutritionPage() {
               <Crown className="w-5 h-5 text-[#a29bfe]" />
             </div>
             <div className="flex-1 text-left">
-              <p className="text-white" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
+              <p className="text-foreground" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
                 {scansRemaining > 0
                   ? `${scansRemaining}/5 free scans left today`
                   : 'Daily scan limit reached'}
               </p>
-              <p className="text-white/40" style={{ fontSize: '0.6875rem' }}>
+              <p className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
                 Upgrade to Premium for unlimited access
               </p>
             </div>
@@ -284,20 +284,20 @@ export function HomeNutritionPage() {
         <GlassCard className="p-5">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <p className="text-white/50 text-sm mb-1">Today's Calories</p>
-              <h2 className="text-3xl text-white font-semibold">
+              <p className="text-muted-foreground text-sm mb-1">Today's Calories</p>
+              <h2 className="text-3xl text-foreground font-semibold">
                 {nutritionData.caloriesConsumed}
-                <span className="text-lg text-white/40 ml-1">/ {nutritionData.caloriesGoal}</span>
+                <span className="text-lg text-muted-foreground ml-1">/ {nutritionData.caloriesGoal}</span>
               </h2>
             </div>
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#6c5ce7]/10 border border-[#6c5ce7]/20">
               <Flame className="w-4 h-4 text-[#fd79a8]" />
-              <span className="text-sm text-white/80">{percentConsumed}%</span>
+              <span className="text-sm text-foreground/80">{percentConsumed}%</span>
             </div>
           </div>
 
           {/* Progress Bar */}
-          <div className="relative h-3 rounded-full bg-white/5 overflow-hidden mb-4">
+          <div className="relative h-3 rounded-full overflow-hidden mb-4" style={{ background: 'var(--glass-bg-row)' }}>
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${Math.min(percentConsumed, 100)}%` }}
@@ -312,70 +312,70 @@ export function HomeNutritionPage() {
 
           {/* Calorie Stats Grid */}
           <div className="grid grid-cols-3 gap-3 mb-4">
-            <div className="text-center p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+            <div className="text-center p-2.5 rounded-xl" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
               <div className="flex items-center justify-center gap-1 mb-1">
                 <Target className="w-3.5 h-3.5 text-[#6c5ce7]" />
-                <span className="text-xs text-white/40">Target</span>
+                <span className="text-xs text-muted-foreground">Target</span>
               </div>
-              <p className="text-white" style={{ fontSize: '1.125rem', fontWeight: 600 }}>
+              <p className="text-foreground" style={{ fontSize: '1.125rem', fontWeight: 600 }}>
                 {nutritionData.caloriesGoal}
               </p>
-              <p className="text-white/25 text-xs mt-0.5">cal</p>
+              <p className="text-muted-foreground/50 text-xs mt-0.5">cal</p>
             </div>
-            <div className="text-center p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+            <div className="text-center p-2.5 rounded-xl" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
               <div className="flex items-center justify-center gap-1 mb-1">
                 <Flame className="w-3.5 h-3.5 text-[#fd79a8]" />
-                <span className="text-xs text-white/40">Consumed</span>
+                <span className="text-xs text-muted-foreground">Consumed</span>
               </div>
-              <p className="text-white" style={{ fontSize: '1.125rem', fontWeight: 600 }}>
+              <p className="text-foreground" style={{ fontSize: '1.125rem', fontWeight: 600 }}>
                 {nutritionData.caloriesConsumed}
               </p>
-              <p className="text-white/25 text-xs mt-0.5">cal</p>
+              <p className="text-muted-foreground/50 text-xs mt-0.5">cal</p>
             </div>
-            <div className="text-center p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+            <div className="text-center p-2.5 rounded-xl" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
               <div className="flex items-center justify-center gap-1 mb-1">
                 <TrendingUp className="w-3.5 h-3.5 text-[#00cec9]" />
-                <span className="text-xs text-white/40">Remaining</span>
+                <span className="text-xs text-muted-foreground">Remaining</span>
               </div>
               <p className={`${caloriesRemaining >= 0 ? 'text-[#00cec9]' : 'text-[#ff6b6b]'}`} style={{ fontSize: '1.125rem', fontWeight: 600 }}>
                 {caloriesRemaining >= 0 ? caloriesRemaining : 0}
               </p>
-              <p className="text-white/25 text-xs mt-0.5">cal</p>
+              <p className="text-muted-foreground/50 text-xs mt-0.5">cal</p>
             </div>
           </div>
 
           {/* BMR Info Row */}
           {bmr > 0 && (
-            <div className="flex items-center justify-between pt-3 border-t border-white/[0.06]">
+            <div className="flex items-center justify-between pt-3" style={{ borderTop: '1px solid var(--glass-border-subtle)' }}>
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 rounded-lg bg-[#e17055]/15 flex items-center justify-center">
                   <Zap className="w-3.5 h-3.5 text-[#e17055]" />
                 </div>
-                <span className="text-xs text-white/40">BMR</span>
-                <span className="text-sm text-white/70">{bmr} cal</span>
+                <span className="text-xs text-muted-foreground">BMR</span>
+                <span className="text-sm text-foreground/70">{bmr} cal</span>
               </div>
               {maintenanceCalories > 0 && (
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-white/40">TDEE</span>
-                  <span className="text-sm text-white/70">{maintenanceCalories} cal</span>
+                  <span className="text-xs text-muted-foreground">TDEE</span>
+                  <span className="text-sm text-foreground/70">{maintenanceCalories} cal</span>
                 </div>
               )}
             </div>
           )}
 
           {/* Macros */}
-          <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-white/10">
+          <div className="grid grid-cols-3 gap-3 mt-4 pt-4" style={{ borderTop: '1px solid var(--glass-border-subtle)' }}>
             <div className="text-center">
-              <p className="text-xs text-white/40 mb-1">Protein</p>
-              <p className="text-sm text-white font-medium">{nutritionData.protein}g</p>
+              <p className="text-xs text-muted-foreground mb-1">Protein</p>
+              <p className="text-sm text-foreground font-medium">{nutritionData.protein}g</p>
             </div>
             <div className="text-center">
-              <p className="text-xs text-white/40 mb-1">Carbs</p>
-              <p className="text-sm text-white font-medium">{nutritionData.carbs}g</p>
+              <p className="text-xs text-muted-foreground mb-1">Carbs</p>
+              <p className="text-sm text-foreground font-medium">{nutritionData.carbs}g</p>
             </div>
             <div className="text-center">
-              <p className="text-xs text-white/40 mb-1">Fats</p>
-              <p className="text-sm text-white font-medium">{nutritionData.fats}g</p>
+              <p className="text-xs text-muted-foreground mb-1">Fats</p>
+              <p className="text-sm text-foreground font-medium">{nutritionData.fats}g</p>
             </div>
           </div>
         </GlassCard>
@@ -410,12 +410,12 @@ export function HomeNutritionPage() {
             </div>
             <div className="text-left">
               <div className="flex items-center gap-2">
-                <p className="text-white font-medium" style={{ fontSize: '0.9375rem' }}>
+                <p className="text-foreground font-medium" style={{ fontSize: '0.9375rem' }}>
                   {t('nutri_coach_home_title')}
                 </p>
                 <PremiumBadge />
               </div>
-              <p className="text-white/40" style={{ fontSize: '0.75rem' }}>
+              <p className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>
                 {t('nutri_coach_home_desc')}
               </p>
             </div>
@@ -437,10 +437,10 @@ export function HomeNutritionPage() {
               <Scale className="w-5.5 h-5.5 text-white" />
             </div>
             <div className="text-left">
-              <p className="text-white font-medium" style={{ fontSize: '0.9375rem' }}>
+              <p className="text-foreground font-medium" style={{ fontSize: '0.9375rem' }}>
                 {t('weight_home_title') || 'Weight Tracking'}
               </p>
-              <p className="text-white/40" style={{ fontSize: '0.75rem' }}>
+              <p className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>
                 {latestWeight
                   ? `${latestWeight.weight} kg${weeklyWeightChange !== null ? ` (${weeklyWeightChange >= 0 ? '+' : ''}${weeklyWeightChange.toFixed(1)} this week)` : ''}`
                   : (t('weight_home_desc') || 'Log your weight & track progress')}
@@ -458,14 +458,14 @@ export function HomeNutritionPage() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Utensils className="w-5 h-5 text-[#fd79a8]" />
-              <h3 className="text-white font-medium">Today's Meals</h3>
+              <h3 className="text-foreground font-medium">Today's Meals</h3>
             </div>
             <button
               onClick={() => {
                 hapticFeedback('light');
                 navigate('/meal-plan');
               }}
-              className="text-sm text-[#a29bfe]"
+              className="text-sm text-app-accent"
             >
               View All
             </button>
@@ -478,24 +478,24 @@ export function HomeNutritionPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.1 }}
-                className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5"
+                className="flex items-center justify-between p-3 rounded-xl bg-glass-row"
               >
                 <div className="flex items-center gap-3">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    meal.completed ? 'bg-[#00cec9]/20' : 'bg-white/10'
+                    meal.completed ? 'bg-[#00cec9]/20' : 'bg-muted'
                   }`}>
                     {meal.completed ? (
                       <CheckCircle2 className="w-5 h-5 text-[#00cec9]" />
                     ) : (
-                      <Clock className="w-4 h-4 text-white/40" />
+                      <Clock className="w-4 h-4 text-muted-foreground" />
                     )}
                   </div>
                   <div>
-                    <p className="text-white text-sm font-medium">{meal.name}</p>
-                    <p className="text-white/40 text-xs">{meal.time}</p>
+                    <p className="text-foreground text-sm font-medium">{meal.name}</p>
+                    <p className="text-muted-foreground text-xs">{meal.time}</p>
                   </div>
                 </div>
-                <span className="text-sm text-white/60">{meal.calories} cal</span>
+                <span className="text-sm text-foreground/60">{meal.calories} cal</span>
               </motion.div>
             ))}
           </div>
@@ -506,14 +506,14 @@ export function HomeNutritionPage() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Dumbbell className="w-5 h-5 text-[#00cec9]" />
-              <h3 className="text-white font-medium">Today's Workouts</h3>
+              <h3 className="text-foreground font-medium">Today's Workouts</h3>
             </div>
             <button
               onClick={() => {
                 hapticFeedback('light');
                 navigate('/workout-plan');
               }}
-              className="text-sm text-[#a29bfe]"
+              className="text-sm text-app-accent"
             >
               View All
             </button>
@@ -526,21 +526,21 @@ export function HomeNutritionPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.1 }}
-                className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5"
+                className="flex items-center justify-between p-3 rounded-xl bg-glass-row"
               >
                 <div className="flex items-center gap-3">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    workout.completed ? 'bg-[#00cec9]/20' : 'bg-white/10'
+                    workout.completed ? 'bg-[#00cec9]/20' : 'bg-muted'
                   }`}>
                     {workout.completed ? (
                       <CheckCircle2 className="w-5 h-5 text-[#00cec9]" />
                     ) : (
-                      <Dumbbell className="w-4 h-4 text-white/40" />
+                      <Dumbbell className="w-4 h-4 text-muted-foreground" />
                     )}
                   </div>
                   <div>
-                    <p className="text-white text-sm font-medium">{workout.name}</p>
-                    <p className="text-white/40 text-xs">{workout.duration}</p>
+                    <p className="text-foreground text-sm font-medium">{workout.name}</p>
+                    <p className="text-muted-foreground text-xs">{workout.duration}</p>
                   </div>
                 </div>
                 <span className="text-sm text-[#fd79a8]">-{workout.calories} cal</span>
@@ -554,19 +554,19 @@ export function HomeNutritionPage() {
           <GlassCard className="p-4">
             <div className="flex items-center gap-2 mb-2">
               <TrendingUp className="w-4 h-4 text-[#00cec9]" />
-              <span className="text-xs text-white/50">This Week</span>
+              <span className="text-xs text-muted-foreground">This Week</span>
             </div>
-            <p className="text-xl text-white font-semibold">{weeklyWeightChange !== null ? `${weeklyWeightChange.toFixed(1)} kg` : '-0.5 kg'}</p>
-            <p className="text-xs text-white/40 mt-1">Weight progress</p>
+            <p className="text-xl text-foreground font-semibold">{weeklyWeightChange !== null ? `${weeklyWeightChange.toFixed(1)} kg` : '-0.5 kg'}</p>
+            <p className="text-xs text-muted-foreground mt-1">Weight progress</p>
           </GlassCard>
 
           <GlassCard className="p-4">
             <div className="flex items-center gap-2 mb-2">
               <Flame className="w-4 h-4 text-[#fd79a8]" />
-              <span className="text-xs text-white/50">Avg/Day</span>
+              <span className="text-xs text-muted-foreground">Avg/Day</span>
             </div>
-            <p className="text-xl text-white font-semibold">1,850</p>
-            <p className="text-xs text-white/40 mt-1">Calories burned</p>
+            <p className="text-xl text-foreground font-semibold">1,850</p>
+            <p className="text-xs text-muted-foreground mt-1">Calories burned</p>
           </GlassCard>
         </div>
 

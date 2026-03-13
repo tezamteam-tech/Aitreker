@@ -1,9 +1,66 @@
+/* =============================================
+   Proper Food AI — Theme System
+   =============================================
+   Light theme: :root (default)
+   Dark theme:  .dark class on <html>
+   
+   Tailwind v4 custom variant for class-based dark mode.
+   Glass Design System variables auto-switch.
+   ============================================= */
+
 @custom-variant dark (&:is(.dark *));
 
+/* ── Light Theme ── */
 :root {
   --font-size: 16px;
-  --background: #0a0a0f;
-  --foreground: #f5f5f7;
+
+  /* Core palette */
+  --background: #ffffff;
+  --foreground: #1a1a2e;
+  --card: #ffffff;
+  --card-foreground: #1a1a2e;
+  --popover: rgba(255, 255, 255, 0.95);
+  --popover-foreground: #1a1a2e;
+  --primary: #6c5ce7;
+  --primary-foreground: #ffffff;
+  --secondary: #f0eef9;
+  --secondary-foreground: #1a1a2e;
+  --muted: #f3f3f5;
+  --muted-foreground: #6b7280;
+  --accent: rgba(108, 92, 231, 0.1);
+  --accent-foreground: #6c5ce7;
+  --destructive: #d4183d;
+  --destructive-foreground: #ffffff;
+  --border: rgba(0, 0, 0, 0.1);
+  --input: transparent;
+  --input-background: #f3f3f5;
+  --switch-background: rgba(0, 0, 0, 0.15);
+  --ring: rgba(108, 92, 231, 0.4);
+
+  /* Brand accent — darker for light backgrounds */
+  --app-accent: #566DD6;
+  --app-accent-soft: rgba(108, 92, 231, 0.12);
+
+  /* Chart */
+  --chart-1: #6c5ce7;
+  --chart-2: #00b894;
+  --chart-3: #e17055;
+  --chart-4: #fdcb6e;
+  --chart-5: #0984e3;
+
+  --radius: 1rem;
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+
+  /* Sidebar */
+  --sidebar: rgba(248, 249, 252, 0.95);
+  --sidebar-foreground: #1a1a2e;
+  --sidebar-primary: #6c5ce7;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgba(108, 92, 231, 0.1);
+  --sidebar-accent-foreground: #6c5ce7;
+  --sidebar-border: rgba(0, 0, 0, 0.08);
+  --sidebar-ring: rgba(108, 92, 231, 0.4);
 
   /* Telegram Safe Area variables (set by SDK or JS fallback) */
   --tg-safe-area-inset-top: 0px;
@@ -13,21 +70,64 @@
   --tg-content-safe-area-inset-top: 0px;
   --tg-content-safe-area-inset-bottom: 0px;
 
-  /* Combined safe area = device (notch/status bar) + Telegram UI (header) */
+  /* Combined safe area (computed by JS) */
   --safe-area-top: 0px;
   --safe-area-bottom: 0px;
+  --app-tg-header-offset: 0px;
 
-  /* Telegram WebApp theme variables with fallbacks */
-  --tg-bg: #0a0a0f;
-  --tg-text: #f5f5f7;
-  --tg-hint: rgba(255, 255, 255, 0.4);
-  --tg-button: #6c5ce7;
-  --tg-button-text: #ffffff;
-  --tg-secondary-bg: #141420;
-  --tg-accent: #a29bfe;
-  --tg-section-bg: rgba(255, 255, 255, 0.04);
-  --tg-header-bg: #0a0a0f;
+  /* Keyboard (computed by JS) */
+  --kb-height: 0px;
+  --visual-viewport-height: 100vh;
+  --kb-open: 0;
 
+  /* ── Glass Design System (Light) ── */
+  --glass-bg:          rgba(255, 255, 255, 0.45);
+  --glass-bg-card:     rgba(255, 255, 255, 0.50);
+  --glass-bg-row:      rgba(255, 255, 255, 0.35);
+  --glass-bg-button:   rgba(255, 255, 255, 0.40);
+  --glass-bg-panel:    rgba(245, 247, 252, 0.85);
+  --glass-bg-toast:    rgba(245, 247, 252, 0.80);
+  --glass-bg-dropdown: rgba(248, 248, 252, 0.88);
+
+  --glass-border:        rgba(0, 0, 0, 0.08);
+  --glass-border-subtle: rgba(0, 0, 0, 0.05);
+
+  --glass-shadow-card:  inset 0 0.5px 0 0 rgba(255,255,255,0.6), 0 4px 16px rgba(0,0,0,0.06);
+  --glass-shadow-sheet: inset 0 1px 0 0 rgba(255,255,255,0.7), 0 -8px 32px rgba(0,0,0,0.12);
+
+  --glass-noise-opacity: 0.025;
+
+  --glass-blur-base:   4px;
+  --glass-blur-card:   4px;
+  --glass-blur-panel:  12px;
+  --glass-blur-row:    4px;
+  --glass-blur-button: 4px;
+
+  /* Specular highlight on glass sheets */
+  --glass-highlight: rgba(255,255,255,0.5);
+  --glass-highlight-strong: rgba(255,255,255,0.7);
+
+  /* Tab bar colors */
+  --tab-active: #6c5ce7;
+  --tab-inactive: rgba(0, 0, 0, 0.3);
+  --tab-indicator: #6c5ce7;
+  --tab-crown-bg: #ffffff;
+
+  /* Mesh gradient — light, airy, pastel */
+  --mesh-gradient:
+    radial-gradient(ellipse 80% 50% at 20% 80%, rgba(108, 92, 231, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 60% at 80% 20%, rgba(162, 155, 254, 0.05) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 40% at 50% 50%, rgba(85, 163, 248, 0.04) 0%, transparent 50%),
+    linear-gradient(160deg, rgba(252, 253, 255, 1) 0%, rgba(248, 250, 254, 1) 100%);
+
+  /* Pattern overlay opacity */
+  --pattern-opacity: 0.25;
+}
+
+/* ── Dark Theme ── */
+.dark {
+  --background: #0a0a0f;
+  --foreground: #f5f5f7;
   --card: rgba(255, 255, 255, 0.06);
   --card-foreground: #f5f5f7;
   --popover: rgba(30, 30, 40, 0.95);
@@ -46,15 +146,18 @@
   --input: transparent;
   --input-background: rgba(255, 255, 255, 0.06);
   --switch-background: rgba(255, 255, 255, 0.15);
-  --font-weight-medium: 500;
-  --font-weight-normal: 400;
   --ring: rgba(108, 92, 231, 0.5);
+
+  /* Brand accent — lighter for dark backgrounds */
+  --app-accent: #7B8FE8;
+  --app-accent-soft: rgba(162, 155, 254, 0.15);
+
   --chart-1: #6c5ce7;
   --chart-2: #00cec9;
   --chart-3: #fd79a8;
   --chart-4: #ffeaa7;
   --chart-5: #55a3f8;
-  --radius: 1rem;
+
   --sidebar: rgba(15, 15, 25, 0.95);
   --sidebar-foreground: #f5f5f7;
   --sidebar-primary: #6c5ce7;
@@ -63,45 +166,45 @@
   --sidebar-accent-foreground: #a29bfe;
   --sidebar-border: rgba(255, 255, 255, 0.08);
   --sidebar-ring: rgba(108, 92, 231, 0.5);
+
+  /* ── Glass Design System (Dark) ── */
+  --glass-bg:          rgba(255, 255, 255, 0.04);
+  --glass-bg-card:     rgba(255, 255, 255, 0.06);
+  --glass-bg-row:      rgba(255, 255, 255, 0.03);
+  --glass-bg-button:   rgba(255, 255, 255, 0.04);
+  --glass-bg-panel:    rgba(18, 18, 30, 0.72);
+  --glass-bg-toast:    rgba(26, 26, 46, 0.70);
+  --glass-bg-dropdown: rgba(22, 22, 38, 0.75);
+
+  --glass-border:        rgba(255, 255, 255, 0.12);
+  --glass-border-subtle: rgba(255, 255, 255, 0.06);
+
+  --glass-shadow-card:  inset 0 0.5px 0 0 rgba(255,255,255,0.08), 0 4px 16px rgba(0,0,0,0.25);
+  --glass-shadow-sheet: inset 0 1px 0 0 rgba(255,255,255,0.12), 0 -8px 32px rgba(0,0,0,0.4);
+
+  --glass-noise-opacity: 0.05;
+
+  /* Specular highlight */
+  --glass-highlight: rgba(255,255,255,0.3);
+  --glass-highlight-strong: rgba(255,255,255,0.45);
+
+  /* Tab bar colors */
+  --tab-active: #A29BFE;
+  --tab-inactive: rgba(255, 255, 255, 0.25);
+  --tab-indicator: #6c5ce7;
+  --tab-crown-bg: #0a0a0f;
+
+  /* Mesh gradient — deep, rich, subtle */
+  --mesh-gradient:
+    radial-gradient(ellipse 80% 50% at 20% 80%, rgba(108, 92, 231, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 60% at 80% 20%, rgba(85, 70, 200, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 40% at 50% 50%, rgba(55, 55, 100, 0.05) 0%, transparent 50%),
+    linear-gradient(160deg, rgba(14, 14, 22, 1) 0%, rgba(8, 8, 16, 1) 100%);
+
+  --pattern-opacity: 0.15;
 }
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
-  --font-weight-medium: 500;
-  --font-weight-normal: 400;
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
-}
-
+/* ── Tailwind v4 theme mapping ── */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -124,6 +227,8 @@
   --color-input-background: var(--input-background);
   --color-switch-background: var(--switch-background);
   --color-ring: var(--ring);
+  --color-app-accent: var(--app-accent);
+  --color-app-accent-soft: var(--app-accent-soft);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -143,6 +248,7 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* ── Base styles ── */
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -164,11 +270,6 @@
     overflow: hidden;
     overscroll-behavior: none;
   }
-
-  /**
-  * Default typography styles for HTML elements (h1-h4, p, label, button, input).
-  * These are in @layer base, so Tailwind utility classes (like text-sm, text-lg) automatically override them.
-  */
 
   h1 {
     font-size: var(--text-2xl);
@@ -211,62 +312,132 @@
     font-weight: var(--font-weight-normal);
     line-height: 1.5;
   }
+
+  /* Safe area top padding (accounts for Telegram header + notch) */
+  .pt-safe {
+    padding-top: calc(var(--app-tg-header-offset, var(--safe-area-top, 0px)) + 12px);
+  }
+  .pt-safe-sm {
+    padding-top: calc(var(--app-tg-header-offset, var(--safe-area-top, 0px)) + 6px);
+  }
+
+  /* Visual viewport height (shrinks when keyboard is open) */
+  .h-visual-viewport {
+    height: var(--visual-viewport-height, 100vh);
+  }
+
+  /* Bottom padding safe for keyboard */
+  .pb-kb-safe {
+    padding-bottom: calc(var(--kb-height, 0px) + 8px);
+  }
+
+  /* Stick above keyboard */
+  .bottom-kb {
+    bottom: var(--kb-height, 0px);
+  }
+
+  /* Form input — theme-aware */
+  .form-input {
+    @apply w-full px-3.5 py-2.5 rounded-xl text-sm;
+    background: var(--input-background);
+    border: 1px solid var(--glass-border-subtle);
+    color: var(--foreground);
+    outline: none;
+    transition: border-color 0.2s ease;
+  }
+  .form-input:focus {
+    border-color: var(--primary);
+  }
 }
 
-/* ── Liquid Glass ── */
+/* ── Liquid Glass Surfaces ── */
 
 .bg-liquid-glass {
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(var(--glass-blur-base));
+  -webkit-backdrop-filter: blur(var(--glass-blur-base));
+  background: var(--glass-bg);
+}
+
+.bg-glass-card {
+  backdrop-filter: blur(var(--glass-blur-card));
+  -webkit-backdrop-filter: blur(var(--glass-blur-card));
+  background: var(--glass-bg-card);
 }
 
 .bg-liquid-glass-panel {
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  background: rgba(18, 18, 30, 0.72);
+  backdrop-filter: blur(var(--glass-blur-panel));
+  -webkit-backdrop-filter: blur(var(--glass-blur-panel));
+  background: var(--glass-bg-panel);
+}
+
+.bg-glass-row {
+  backdrop-filter: blur(var(--glass-blur-row));
+  background: var(--glass-bg-row);
+  border: 1px solid var(--glass-border-subtle);
+}
+
+.bg-glass-button {
+  backdrop-filter: blur(var(--glass-blur-button));
+  background: var(--glass-bg-button);
+  border: 1px solid var(--glass-border-subtle);
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+.bg-glass-button:active {
+  background: var(--glass-bg-row);
 }
 
 .bg-liquid-glass-toast {
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  background: rgba(26, 26, 46, 0.7);
+  background: var(--glass-bg-toast);
 }
 
 .bg-liquid-glass-dropdown {
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  background: rgba(22, 22, 38, 0.75);
+  background: var(--glass-bg-dropdown);
 }
 
+/* Mesh gradient background */
+.bg-mesh-gradient {
+  background: var(--mesh-gradient);
+}
+
+/* SVG displacement filter enhancement — non-Safari only */
 @supports not (hanging-punctuation: first) {
   .bg-liquid-glass {
+    backdrop-filter: url(#liquidGlassFilter) blur(2px);
+  }
+  .bg-glass-card {
     backdrop-filter: url(#liquidGlassFilter) blur(2px);
   }
   .bg-liquid-glass-panel {
     backdrop-filter: url(#liquidGlassFilter) blur(6px);
   }
+  .bg-glass-row {
+    backdrop-filter: url(#liquidGlassFilter) blur(2px);
+  }
+  .bg-glass-button {
+    backdrop-filter: url(#liquidGlassFilter) blur(2px);
+  }
   .bg-liquid-glass-toast {
-    backdrop-filter: url(#liquidGlassFilter) blur(8px);
+    backdrop-filter: url(#liquidGlassFilter) blur(4px);
   }
   .bg-liquid-glass-dropdown {
-    backdrop-filter: url(#liquidGlassFilter) blur(8px);
+    backdrop-filter: url(#liquidGlassFilter) blur(4px);
   }
 }
 
-/* ── Glass Sheet (bottom sheets & modals with liquid glass effect) ── */
+/* ── Glass Sheet (bottom sheets & modals) ── */
 
 .glass-sheet {
   position: relative;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow:
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.2),
-    inset 0 -1px 0 0 rgba(255, 255, 255, 0.05),
-    0 -8px 32px rgba(0, 0, 0, 0.3),
-    0 0 0 0.5px rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow-sheet);
 }
 
+/* Top specular highlight */
 .glass-sheet::before {
   content: '';
   position: absolute;
@@ -277,9 +448,9 @@
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 255, 255, 0.3) 30%,
-    rgba(255, 255, 255, 0.45) 50%,
-    rgba(255, 255, 255, 0.3) 70%,
+    var(--glass-highlight) 30%,
+    var(--glass-highlight-strong) 50%,
+    var(--glass-highlight) 70%,
     transparent
   );
   pointer-events: none;
@@ -298,4 +469,27 @@
     inset 0 -1px 0 0 rgba(255, 255, 255, 0.05),
     0 8px 48px rgba(0, 0, 0, 0.4),
     0 0 0 0.5px rgba(255, 255, 255, 0.1);
+}
+
+/* Glass card border utility */
+.glass-card-border {
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow-card);
+}
+
+/* Glass noise texture */
+.glass-noise {
+  position: relative;
+}
+.glass-noise::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: var(--glass-noise-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 128px 128px;
+  mix-blend-mode: overlay;
 }

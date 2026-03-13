@@ -309,7 +309,7 @@ export function WorkoutPlanPage() {
             >
               {/* Workout Location */}
               <div>
-                <p className="text-white/50 mb-3 px-1" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
+                <p className="text-muted-foreground mb-3 px-1" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
                   {lang === 'ru' ? 'Где тренируетесь?' : 'Where do you work out?'}
                 </p>
                 <div className="grid grid-cols-2 gap-3">
@@ -340,10 +340,10 @@ export function WorkoutPlanPage() {
                       <Target className="w-5 h-5 text-[#a29bfe]" />
                     </div>
                     <div>
-                      <p className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
+                      <p className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
                         {lang === 'ru' ? 'Ваш профиль' : 'Your Profile'}
                       </p>
-                      <p className="text-white/40" style={{ fontSize: '0.75rem' }}>
+                      <p className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>
                         {lang === 'ru' ? 'AI создаст план на основе этих данных' : 'AI will tailor workouts to your level'}
                       </p>
                     </div>
@@ -377,11 +377,11 @@ export function WorkoutPlanPage() {
                 <GlassCard className="!p-5">
                   <div className="flex items-center gap-3 mb-3">
                     <AlertCircle className="w-6 h-6 text-[#fdcb6e]" />
-                    <p className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
+                    <p className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
                       {lang === 'ru' ? 'Заполните профиль' : 'Complete your profile'}
                     </p>
                   </div>
-                  <p className="text-white/40" style={{ fontSize: '0.8125rem', lineHeight: 1.5 }}>
+                  <p className="text-muted-foreground" style={{ fontSize: '0.8125rem', lineHeight: 1.5 }}>
                     {lang === 'ru'
                       ? 'Пройдите онбординг для персонализированного плана тренировок.'
                       : 'Complete onboarding for a personalized workout plan.'}
@@ -391,7 +391,7 @@ export function WorkoutPlanPage() {
 
               {/* Plan length */}
               <div>
-                <p className="text-white/50 mb-3 px-1" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
+                <p className="text-muted-foreground mb-3 px-1" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
                   {lang === 'ru' ? 'Длительность плана' : 'Plan length'}
                 </p>
                 <div className="space-y-3">

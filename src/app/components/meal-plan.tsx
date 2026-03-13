@@ -344,10 +344,10 @@ export function MealPlanPage() {
                       <Target className="w-5 h-5 text-[#a29bfe]" />
                     </div>
                     <div>
-                      <p className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
+                      <p className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
                         {lang === 'ru' ? 'Ваш профиль' : 'Your Profile'}
                       </p>
-                      <p className="text-white/40" style={{ fontSize: '0.75rem' }}>
+                      <p className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>
                         {lang === 'ru' ? 'На основе этих данных AI создаст план' : 'AI will create a plan based on this'}
                       </p>
                     </div>
@@ -387,11 +387,11 @@ export function MealPlanPage() {
                 <GlassCard className="!p-5">
                   <div className="flex items-center gap-3 mb-3">
                     <AlertCircle className="w-6 h-6 text-[#fdcb6e]" />
-                    <p className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
+                    <p className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
                       {lang === 'ru' ? 'Заполните профиль' : 'Complete your profile'}
                     </p>
                   </div>
-                  <p className="text-white/40" style={{ fontSize: '0.8125rem', lineHeight: 1.5 }}>
+                  <p className="text-muted-foreground" style={{ fontSize: '0.8125rem', lineHeight: 1.5 }}>
                     {lang === 'ru'
                       ? 'Пройдите онбординг, чтобы AI мог создать персонализированный план питания.'
                       : 'Complete the onboarding to let AI create a personalized meal plan for you.'}
@@ -401,7 +401,7 @@ export function MealPlanPage() {
 
               {/* Plan length selector */}
               <div>
-                <p className="text-white/50 mb-3 px-1" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
+                <p className="text-muted-foreground mb-3 px-1" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
                   {lang === 'ru' ? 'Выберите длительность плана' : 'Choose plan length'}
                 </p>
                 <div className="space-y-3">
@@ -416,22 +416,23 @@ export function MealPlanPage() {
                       className={`w-full p-4 rounded-2xl flex items-center gap-4 transition-all ${
                         selectedLength === opt.length
                           ? 'bg-[#6c5ce7]/10 border-2 border-[#6c5ce7]/30'
-                          : 'bg-white/[0.03] border-2 border-white/[0.06]'
+                          : 'border-2'
                       }`}
+                      style={selectedLength !== opt.length ? { background: 'var(--glass-bg-row)', borderColor: 'var(--glass-border-subtle)' } : undefined}
                     >
                       <div
                         className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
                         style={{ backgroundColor: `${opt.color}15` }}
                       >
-                        <span className="text-white" style={{ fontSize: '1.25rem', fontWeight: 800 }}>
+                        <span className="text-foreground" style={{ fontSize: '1.25rem', fontWeight: 800 }}>
                           {opt.length}
                         </span>
                       </div>
                       <div className="text-left flex-1">
-                        <p className="text-white" style={{ fontSize: '1rem', fontWeight: 600 }}>
+                        <p className="text-foreground" style={{ fontSize: '1rem', fontWeight: 600 }}>
                           {lang === 'ru' ? opt.labelRu : opt.label}
                         </p>
-                        <p className="text-white/40" style={{ fontSize: '0.8125rem' }}>
+                        <p className="text-muted-foreground" style={{ fontSize: '0.8125rem' }}>
                           {lang === 'ru' ? opt.descRu : opt.desc}
                         </p>
                       </div>
@@ -439,7 +440,7 @@ export function MealPlanPage() {
                         className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
                           selectedLength === opt.length
                             ? 'border-[#6c5ce7] bg-[#6c5ce7]'
-                            : 'border-white/20'
+                            : 'border-muted-foreground/40'
                         }`}
                       >
                         {selectedLength === opt.length && (
@@ -722,11 +723,11 @@ export function MealPlanPage() {
 // ---- Profile summary pill ----
 function ProfilePill({ label, value, color }: { label: string; value: string; color: string }) {
   return (
-    <div className="rounded-xl bg-white/[0.03] border border-white/[0.05] p-2.5">
-      <p className="text-white/35 mb-0.5" style={{ fontSize: '0.625rem', fontWeight: 500 }}>
+    <div className="rounded-xl p-2.5" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
+      <p className="text-muted-foreground mb-0.5" style={{ fontSize: '0.625rem', fontWeight: 500 }}>
         {label}
       </p>
-      <p className="text-white truncate" style={{ fontSize: '0.8125rem', fontWeight: 600, color }}>
+      <p className="truncate" style={{ fontSize: '0.8125rem', fontWeight: 600, color }}>
         {value}
       </p>
     </div>
@@ -736,14 +737,14 @@ function ProfilePill({ label, value, color }: { label: string; value: string; co
 // ---- Macro pill ----
 function MacroPill({ label, value, color }: { label: string; value: number; color: string }) {
   return (
-    <div className="text-center rounded-xl bg-white/[0.03] border border-white/[0.05] py-2.5 px-2">
+    <div className="text-center rounded-xl py-2.5 px-2" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
       <div className="flex items-center justify-center gap-1.5 mb-1">
         <div className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
-        <span className="text-white/40" style={{ fontSize: '0.6875rem' }}>{label}</span>
+        <span className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>{label}</span>
       </div>
-      <p className="text-white" style={{ fontSize: '1rem', fontWeight: 700 }}>
+      <p className="text-foreground" style={{ fontSize: '1rem', fontWeight: 700 }}>
         {Math.round(value)}
-        <span className="text-white/30 ml-0.5" style={{ fontSize: '0.6875rem', fontWeight: 500 }}>g</span>
+        <span className="text-muted-foreground/50 ml-0.5" style={{ fontSize: '0.6875rem', fontWeight: 500 }}>g</span>
       </p>
     </div>
   );

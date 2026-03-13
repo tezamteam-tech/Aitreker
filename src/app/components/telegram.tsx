@@ -390,9 +390,10 @@ export function applyTelegramTheme(): void {
     const wa = getTelegramWebApp();
     if (!wa) return;
 
-    // Set header and background colors to match our dark theme
-    try { wa.setHeaderColor('#0a0a0f'); } catch {}
-    try { wa.setBackgroundColor('#0a0a0f'); } catch {}
+    // Set header and background colors to match current theme (adapts to dark/light)
+    try { wa.setHeaderColor('bg_color'); } catch {}
+    try { wa.setBackgroundColor('bg_color'); } catch {}
+    try { wa.setBottomBarColor?.('bg_color'); } catch {}
 
     // Enable closing confirmation for safety
     try { wa.enableClosingConfirmation(); } catch {}

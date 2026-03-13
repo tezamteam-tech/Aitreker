@@ -1,15 +1,11 @@
-import React from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router';
-import { motion, AnimatePresence } from 'motion/react';
-import { Monitor, Crown } from 'lucide-react';
-import { hapticFeedback, getStartParam, showBackButton, hideBackButton, onBackButtonPressed, isTelegramClient } from './telegram';
+import { hapticFeedback, getStartParam, showBackButton, hideBackButton, onBackButtonPressed, isTelegramClient, isTelegramEnvironment } from './telegram';
 import { useAuth, AuthProvider } from './auth-context';
-import { useEffect, useRef, useCallback, useState, useMemo } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { useTranslation } from './i18n';
-import { api } from './api-client';
-import { setupSafeArea, listenSafeAreaChanges, applyTelegramTheme } from './telegram';
+import { setupSafeArea, listenSafeAreaChanges } from './telegram';
 import { useTelegramFullscreen } from './use-telegram-fullscreen';
 import { BottomSheetProvider, useAnyBottomSheetOpen } from './bottom-sheet-context';
+import { ThemeSync } from './theme-sync';
 import svgPaths from '../../imports/svg-hg8um85cbx';
 import patternSvgPaths from '../../imports/svg-769x92ozth';
 
@@ -17,7 +13,8 @@ import patternSvgPaths from '../../imports/svg-769x92ozth';
 
 function NavIcon({ pathData, active, clipPaths }: { pathData: string | string[]; active: boolean; clipPaths?: boolean }) {
   const paths = Array.isArray(pathData) ? pathData : [pathData];
-  const color = active ? '#A29BFE' : 'rgba(255,255,255,0.25)';
+  // Use CSS variables for theme-aware colors
+  const color = active ? 'var(--tab-active)' : 'var(--tab-inactive)';
   return (
     <svg width="20" height="20" viewBox="0 0 19.9816 19.9816" fill="none">
       {paths.map((d, i) => (
@@ -113,7 +110,6 @@ function useKeyboardVisible(): boolean {
     };
 
     const hide = () => {
-      // Small delay so switching between inputs doesn't flicker
       hideTimerRef.current = setTimeout(() => {
         const active = document.activeElement;
         if (!active || !INPUT_TAGS.has(active.tagName)) {
@@ -142,11 +138,9 @@ function useKeyboardVisible(): boolean {
     const onVvResize = () => {
       if (!vv) return;
       const current = vv.height;
-      // If viewport shrank by >120px the keyboard is likely open
       if (baseHeight - current > 120) {
         show();
       } else {
-        // Viewport restored — check no input is focused before hiding
         const active = document.activeElement;
         if (!active || !INPUT_TAGS.has(active.tagName)) {
           hide();
@@ -168,11 +162,6 @@ function useKeyboardVisible(): boolean {
   return visible;
 }
 
-// ---- SVG Displacement Filter for Liquid Glass ----
-// Using feTurbulence for organic "liquid" distortion.
-// feColorMatrix rotates displacement direction ~30° so refraction looks angled,
-// not straight vertical. Scale is kept low (20) for a subtle glass-like effect.
-
 // ---- Liquid Glass Tab Bar ----
 
 function GlassTabBar({ keyboardVisible }: { keyboardVisible: boolean }) {
@@ -181,6 +170,7 @@ function GlassTabBar({ keyboardVisible }: { keyboardVisible: boolean }) {
   const { t } = useTranslation();
   const { subscriptionActive } = useAuth();
   const activeTab = getActiveTab(location.pathname);
+  const isTelegram = isTelegramEnvironment();
 
   // Hide when any bottom sheet is open
   const anySheetOpen = useAnyBottomSheetOpen();
@@ -200,7 +190,9 @@ function GlassTabBar({ keyboardVisible }: { keyboardVisible: boolean }) {
           transition={{ type: 'spring', stiffness: 400, damping: 35 }}
           className="fixed bottom-0 left-0 right-0 z-50"
           style={{
-            paddingBottom: 'max(env(safe-area-inset-bottom, 0px), var(--tg-safe-area-inset-bottom, 0px))',
+            paddingBottom: isTelegram
+              ? 'calc(max(var(--tg-safe-area-inset-bottom, 0px), 8px) + 8px)'
+              : 'calc(max(env(safe-area-inset-bottom, 0px), 8px) + 8px)',
           }}
         >
           <div className="mx-auto max-w-md px-4 pb-2">
@@ -215,7 +207,7 @@ function GlassTabBar({ keyboardVisible }: { keyboardVisible: boolean }) {
                   hapticFeedback('light');
                   navigate('/upgrade');
                 }}
-                className="mx-auto mb-2 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-[#6c5ce7]/80 to-[#a29bfe]/80 border border-white/10"
+                className="mx-auto mb-2 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-[#6c5ce7]/80 to-[#a29bfe]/80 border border-border"
                 style={{ boxShadow: '0 4px 16px rgba(108,92,231,0.3)' }}
               >
                 <Crown className="w-3 h-3 text-[#ffd700]" />
@@ -226,20 +218,15 @@ function GlassTabBar({ keyboardVisible }: { keyboardVisible: boolean }) {
             <div
               className="bg-liquid-glass relative rounded-[28px] overflow-hidden"
               style={{
-                border: '1px solid rgba(255, 255, 255, 0.15)',
-                boxShadow: `
-                  inset 0 1px 0 0 rgba(255,255,255,0.2),
-                  inset 0 -1px 0 0 rgba(255,255,255,0.05),
-                  0 8px 32px rgba(0,0,0,0.2),
-                  0 0 0 0.5px rgba(255,255,255,0.1)
-                `,
+                border: '1px solid var(--glass-border)',
+                boxShadow: 'var(--glass-shadow-card)',
               }}
             >
-              {/* Top specular highlight — light catching the glass rim */}
+              {/* Top specular highlight */}
               <div
                 className="pointer-events-none absolute top-0 left-[8%] right-[8%] h-px"
                 style={{
-                  background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3) 30%, rgba(255,255,255,0.45) 50%, rgba(255,255,255,0.3) 70%, transparent)',
+                  background: `linear-gradient(90deg, transparent, var(--glass-highlight) 30%, var(--glass-highlight-strong) 50%, var(--glass-highlight) 70%, transparent)`,
                 }}
               />
 
@@ -262,7 +249,8 @@ function GlassTabBar({ keyboardVisible }: { keyboardVisible: boolean }) {
                       {isActive && (
                         <motion.div
                           layoutId="tab-indicator"
-                          className="absolute -top-[8px] w-6 h-[2px] rounded-full bg-[#6c5ce7]"
+                          className="absolute -top-[8px] w-6 h-[2px] rounded-full"
+                          style={{ background: 'var(--tab-indicator)' }}
                           transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                         />
                       )}
@@ -270,7 +258,10 @@ function GlassTabBar({ keyboardVisible }: { keyboardVisible: boolean }) {
                         <NavIcon pathData={tab.iconPaths} active={isActive} />
                         {/* Premium crown badge on profile tab */}
                         {tab.key === 'profile' && subscriptionActive && (
-                          <div className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 rounded-full bg-[#0a0a0f] flex items-center justify-center">
+                          <div
+                            className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 rounded-full flex items-center justify-center"
+                            style={{ background: 'var(--tab-crown-bg)' }}
+                          >
                             <Crown className="w-2.5 h-2.5 text-[#ffd700] fill-[#ffd700]" />
                           </div>
                         )}
@@ -301,20 +292,17 @@ export function AppLayout() {
   // Fullscreen + swipe protection on mobile TG clients
   useTelegramFullscreen();
 
-  // Setup Telegram theme and safe areas on mount
+  // Setup Telegram safe areas on mount
   useEffect(() => {
-    applyTelegramTheme();
     setupSafeArea();
     listenSafeAreaChanges();
   }, []);
 
-  // ── Scroll to top on every route change ──────────────────────────
+  // Scroll to top on every route change
   useEffect(() => {
-    // Scroll the app container to top
     if (scrollRef.current) {
       scrollRef.current.scrollTo(0, 0);
     }
-    // Fallback for any window-level scroll
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
@@ -342,8 +330,6 @@ export function AppLayout() {
     const startParam = getStartParam();
     if (!startParam) return;
 
-    // Deep link routing — handle startapp= parameter from Telegram
-    // Works both from onboarding (/) and from /home (if app was already open)
     const isInitialPage = location.pathname === '/' || location.pathname === '/home';
     if (!isInitialPage) return;
 
@@ -389,13 +375,15 @@ export function AppLayout() {
   return (
     <AuthProvider>
       <BottomSheetProvider>
+        {/* ThemeSync — manages .dark class + Telegram color mapping */}
+        <ThemeSync />
+
         <div
-          className="fixed inset-0 bg-[#0a0a0f] text-white overflow-hidden"
+          className="fixed inset-0 overflow-hidden bg-background text-foreground"
         >
           {/* Global SVG displacement filter for liquid glass effect */}
           <svg style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }} aria-hidden="true">
             <filter id="liquidGlassFilter" x="-10%" y="-10%" width="120%" height="120%">
-              {/* Organic fractal noise — low frequency = large flowing distortion */}
               <feTurbulence
                 type="fractalNoise"
                 baseFrequency="0.012 0.018"
@@ -403,10 +391,6 @@ export function AppLayout() {
                 seed={2}
                 result="noise"
               />
-              {/* Rotate displacement direction ~30° by mixing R↔G channels
-                  cos30°≈0.866  sin30°=0.5
-                  New R = 0.866·R + 0.5·G   (X displacement is angled)
-                  New G = −0.5·R + 0.866·G  (Y displacement is angled) */}
               <feColorMatrix
                 in="noise"
                 type="matrix"
@@ -426,7 +410,7 @@ export function AppLayout() {
             </filter>
           </svg>
 
-          {/* Scrollable content container — prevents overscroll from reaching TG */}
+          {/* Scrollable content container */}
           <div
             ref={scrollRef}
             className="h-full overflow-y-auto relative"
@@ -435,10 +419,7 @@ export function AppLayout() {
               overscrollBehaviorY: 'contain',
             }}
           >
-            {/* Pattern background — sticky inside scroll container so it lives
-                in the SAME compositing layer as the content. This is critical
-                for iOS where -webkit-overflow-scrolling creates a separate
-                compositing layer that would otherwise hide a parent-level bg. */}
+            {/* Pattern background — mesh gradient + SVG pattern */}
             <div
               className="pointer-events-none sticky top-0 left-0 right-0 h-0 z-0"
               aria-hidden="true"
@@ -453,6 +434,10 @@ export function AppLayout() {
                   overflow: 'hidden',
                 }}
               >
+                {/* Mesh gradient layer */}
+                <div className="absolute inset-0 bg-mesh-gradient" />
+
+                {/* SVG pattern overlay */}
                 <svg
                   viewBox="0 0 1928.01 1081.02"
                   fill="none"
@@ -465,15 +450,16 @@ export function AppLayout() {
                     height: '100%',
                     minWidth: '100%',
                     transform: 'translate(-50%, -50%) rotate(-90deg)',
-                    opacity: 0.5,
+                    opacity: 'var(--pattern-opacity)',
                   }}
                 >
                   <path
                     d={patternSvgPaths.p28240000}
-                    fill="#9D9D9D"
+                    fill="currentColor"
                     fillOpacity="0.2"
                     fillRule="evenodd"
                     clipRule="evenodd"
+                    className="text-muted-foreground"
                   />
                 </svg>
               </div>

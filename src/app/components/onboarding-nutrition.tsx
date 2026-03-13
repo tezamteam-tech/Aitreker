@@ -246,7 +246,7 @@ export function OnboardingNutritionPage() {
             >
               <Zap className="w-4.5 h-4.5 text-white" />
             </div>
-            <span className="text-white/80 tracking-widest" style={{ fontSize: '0.8125rem', fontWeight: 600, letterSpacing: '0.18em' }}>
+            <span className="text-foreground/80 tracking-widest" style={{ fontSize: '0.8125rem', fontWeight: 600, letterSpacing: '0.18em' }}>
               PROPER FOOD
             </span>
           </div>
@@ -257,7 +257,7 @@ export function OnboardingNutritionPage() {
               <div
                 key={i}
                 className={`h-1 rounded-full transition-all duration-300 ${
-                  i <= step ? 'bg-[#6c5ce7]' : 'bg-white/10'
+                  i <= step ? 'bg-[#6c5ce7]' : 'bg-foreground/10'
                 }`}
                 style={{ width: i === step ? 20 : 8 }}
               />
@@ -266,7 +266,7 @@ export function OnboardingNutritionPage() {
         </motion.div>
 
         {/* Progress bar */}
-        <div className="w-full h-0.5 bg-white/[0.06] rounded-full mb-6 overflow-hidden">
+        <div className="w-full h-0.5 rounded-full mb-6 overflow-hidden" style={{ background: 'var(--glass-bg-row)' }}>
           <motion.div
             className="h-full bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe] rounded-full"
             animate={{ width: `${((step + 1) / TOTAL_STEPS) * 100}%` }}
@@ -363,9 +363,10 @@ export function OnboardingNutritionPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={goBack}
-                className="w-14 h-14 rounded-2xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center"
+                className="w-14 h-14 rounded-2xl flex items-center justify-center"
+                style={{ background: 'var(--glass-bg-card)', border: '1px solid var(--glass-border)' }}
               >
-                <ArrowLeft className="w-5 h-5 text-white/50" />
+                <ArrowLeft className="w-5 h-5 text-muted-foreground" />
               </motion.button>
             )}
 
@@ -379,12 +380,13 @@ export function OnboardingNutritionPage() {
               className={`flex-1 h-14 rounded-2xl flex items-center justify-center gap-2.5 shadow-lg transition-all duration-200 ${
                 canProceed()
                   ? 'bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe] text-white'
-                  : 'bg-white/[0.06] text-white/25 border border-white/[0.06]'
+                  : 'text-muted-foreground/50'
               }`}
               style={{
                 fontSize: '1.0625rem',
                 fontWeight: 600,
                 boxShadow: canProceed() ? '0 8px 32px rgba(108,92,231,0.3)' : 'none',
+                ...(!canProceed() ? { background: 'var(--glass-bg-card)', border: '1px solid var(--glass-border-subtle)' } : {}),
               }}
             >
               {isLoading ? (
@@ -428,10 +430,10 @@ function GenderStep({ value, onChange, lang }: { value: Gender | null; onChange:
         <div className="w-12 h-12 rounded-2xl bg-[#a29bfe]/15 flex items-center justify-center mb-4">
           <User className="w-6 h-6 text-[#a29bfe]" />
         </div>
-        <h1 className="text-white mb-2" style={{ fontSize: '1.625rem', fontWeight: 700, lineHeight: 1.2 }}>
+        <h1 className="text-foreground mb-2" style={{ fontSize: '1.625rem', fontWeight: 700, lineHeight: 1.2 }}>
           {lang === 'ru' ? 'Ваш пол' : 'Your gender'}
         </h1>
-        <p className="text-white/35" style={{ fontSize: '0.9375rem', lineHeight: 1.5 }}>
+        <p className="text-muted-foreground" style={{ fontSize: '0.9375rem', lineHeight: 1.5 }}>
           {lang === 'ru' ? 'Для точного расчёта калорий и метаболизма' : 'For accurate calorie and metabolism calculation'}
         </p>
       </div>
@@ -447,11 +449,12 @@ function GenderStep({ value, onChange, lang }: { value: Gender | null; onChange:
               className={`flex-1 rounded-2xl border flex flex-col items-center justify-center gap-3 py-8 transition-all duration-200 ${
                 isActive
                   ? 'bg-[#6c5ce7]/15 border-[#6c5ce7]/40'
-                  : 'bg-white/[0.03] border-white/[0.06] active:bg-white/[0.06]'
+                  : 'active:brightness-110'
               }`}
+              style={!isActive ? { background: 'var(--glass-bg-row)', borderColor: 'var(--glass-border-subtle)' } : undefined}
             >
               <span style={{ fontSize: '2.5rem' }}>{opt.emoji}</span>
-              <span className={isActive ? 'text-white' : 'text-white/60'} style={{ fontSize: '1rem', fontWeight: 600 }}>
+              <span className={isActive ? 'text-foreground' : 'text-foreground/60'} style={{ fontSize: '1rem', fontWeight: 600 }}>
                 {opt.label}
               </span>
               {isActive && (
@@ -503,10 +506,10 @@ function NumberInputStep({
         <div className="w-12 h-12 rounded-2xl bg-white/[0.06] flex items-center justify-center mb-4">
           {icon}
         </div>
-        <h1 className="text-white mb-2" style={{ fontSize: '1.625rem', fontWeight: 700, lineHeight: 1.2 }}>
+        <h1 className="text-foreground mb-2" style={{ fontSize: '1.625rem', fontWeight: 700, lineHeight: 1.2 }}>
           {title}
         </h1>
-        <p className="text-white/35" style={{ fontSize: '0.9375rem', lineHeight: 1.5 }}>
+        <p className="text-muted-foreground" style={{ fontSize: '0.9375rem', lineHeight: 1.5 }}>
           {subtitle}
         </p>
       </div>
@@ -522,18 +525,18 @@ function NumberInputStep({
               onChange(v);
             }}
             placeholder={placeholder}
-            className={`w-full text-center bg-white/[0.04] border rounded-2xl px-4 py-5 text-white outline-none transition-all duration-200 ${
+            className={`w-full text-center border rounded-2xl px-4 py-5 text-foreground outline-none transition-all duration-200 ${
               !isValid
                 ? 'border-red-400/50 bg-red-500/5'
                 : value
                 ? 'border-[#6c5ce7]/40 bg-[#6c5ce7]/5'
-                : 'border-white/[0.08] focus:border-[#6c5ce7]/40'
+                : 'focus:border-[#6c5ce7]/40'
             }`}
-            style={{ fontSize: '2rem', fontWeight: 700, caretColor: '#a29bfe' }}
+            style={{ fontSize: '2rem', fontWeight: 700, caretColor: '#a29bfe', ...(!value && isValid ? { background: 'var(--glass-bg-card)', borderColor: 'var(--glass-border)' } : {}) }}
             autoFocus
           />
           <span
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30"
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground"
             style={{ fontSize: '1rem', fontWeight: 500 }}
           >
             {unit}
@@ -597,10 +600,10 @@ function ActivityStep({
         <div className="w-12 h-12 rounded-2xl bg-[#00cec9]/15 flex items-center justify-center mb-4">
           <Flame className="w-6 h-6 text-[#00cec9]" />
         </div>
-        <h1 className="text-white mb-2" style={{ fontSize: '1.625rem', fontWeight: 700, lineHeight: 1.2 }}>
+        <h1 className="text-foreground mb-2" style={{ fontSize: '1.625rem', fontWeight: 700, lineHeight: 1.2 }}>
           {lang === 'ru' ? 'Уровень активности' : 'Activity level'}
         </h1>
-        <p className="text-white/35" style={{ fontSize: '0.9375rem', lineHeight: 1.5 }}>
+        <p className="text-muted-foreground" style={{ fontSize: '0.9375rem', lineHeight: 1.5 }}>
           {lang === 'ru' ? 'Как часто вы занимаетесь спортом?' : 'How often do you exercise?'}
         </p>
       </div>
@@ -616,27 +619,29 @@ function ActivityStep({
               className={`w-full text-left rounded-xl border px-4 py-3.5 flex items-center gap-3 transition-all duration-200 ${
                 isActive
                   ? 'bg-[#6c5ce7]/15 border-[#6c5ce7]/40'
-                  : 'bg-white/[0.03] border-white/[0.06] active:bg-white/[0.06]'
+                  : 'active:brightness-110'
               }`}
+              style={!isActive ? { background: 'var(--glass-bg-row)', borderColor: 'var(--glass-border-subtle)' } : undefined}
             >
               <div
                 className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all ${
-                  isActive ? 'bg-[#6c5ce7]/25' : 'bg-white/[0.04]'
+                  isActive ? 'bg-[#6c5ce7]/25' : ''
                 }`}
+                style={!isActive ? { background: 'var(--glass-bg-card)' } : undefined}
               >
                 <span style={{ fontSize: '1.25rem' }}>{opt.emoji}</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className={isActive ? 'text-white' : 'text-white/60'} style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
+                <p className={isActive ? 'text-foreground' : 'text-foreground/60'} style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
                   {opt.label}
                 </p>
-                <p className="text-white/30 mt-0.5" style={{ fontSize: '0.75rem', lineHeight: 1.4 }}>
+                <p className="text-muted-foreground mt-0.5" style={{ fontSize: '0.75rem', lineHeight: 1.4 }}>
                   {opt.desc}
                 </p>
               </div>
               <div
                 className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
-                  isActive ? 'border-[#6c5ce7] bg-[#6c5ce7]' : 'border-white/15'
+                  isActive ? 'border-[#6c5ce7] bg-[#6c5ce7]' : 'border-muted-foreground/30'
                 }`}
               >
                 {isActive && <Check className="w-3 h-3 text-white" />}
@@ -688,10 +693,10 @@ function GoalStep({
         <div className="w-12 h-12 rounded-2xl bg-[#e17055]/15 flex items-center justify-center mb-4">
           <Target className="w-6 h-6 text-[#e17055]" />
         </div>
-        <h1 className="text-white mb-2" style={{ fontSize: '1.625rem', fontWeight: 700, lineHeight: 1.2 }}>
+        <h1 className="text-foreground mb-2" style={{ fontSize: '1.625rem', fontWeight: 700, lineHeight: 1.2 }}>
           {lang === 'ru' ? 'Ваша цель' : 'Your goal'}
         </h1>
-        <p className="text-white/35" style={{ fontSize: '0.9375rem', lineHeight: 1.5 }}>
+        <p className="text-muted-foreground" style={{ fontSize: '0.9375rem', lineHeight: 1.5 }}>
           {lang === 'ru' ? 'Чего вы хотите достичь?' : 'What do you want to achieve?'}
         </p>
       </div>
@@ -707,8 +712,9 @@ function GoalStep({
               className={`w-full text-left rounded-2xl border px-4 py-4 flex items-center gap-3.5 transition-all duration-200 ${
                 isActive
                   ? 'bg-[#6c5ce7]/15 border-[#6c5ce7]/40'
-                  : 'bg-white/[0.03] border-white/[0.06] active:bg-white/[0.06]'
+                  : 'active:brightness-110'
               }`}
+              style={!isActive ? { background: 'var(--glass-bg-row)', borderColor: 'var(--glass-border-subtle)' } : undefined}
             >
               <div
                 className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
@@ -717,10 +723,10 @@ function GoalStep({
                 <span style={{ fontSize: '1.5rem' }}>{opt.emoji}</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className={isActive ? 'text-white' : 'text-white/70'} style={{ fontSize: '1rem', fontWeight: 600 }}>
+                <p className={isActive ? 'text-foreground' : 'text-foreground/70'} style={{ fontSize: '1rem', fontWeight: 600 }}>
                   {opt.label}
                 </p>
-                <p className="text-white/30 mt-0.5" style={{ fontSize: '0.8125rem', lineHeight: 1.4 }}>
+                <p className="text-muted-foreground mt-0.5" style={{ fontSize: '0.8125rem', lineHeight: 1.4 }}>
                   {opt.desc}
                 </p>
               </div>

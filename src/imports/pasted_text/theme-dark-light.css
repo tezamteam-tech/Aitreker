@@ -1,0 +1,267 @@
+# 03. Система тем (Dark / Light) и CSS-переменные
+
+## Принцип работы
+
+Тёмная тема активируется через **CSS-класс `.dark` на `<html>`**. Все компоненты реагируют автоматически через:
+1. CSS-переменные (`:root` / `.dark`) — основные цвета
+2. Tailwind `dark:` вариант — ручные переопределения в JSX
+3. Glass переменные — автоматически переключаются
+
+## 1. Tailwind v4: кастомный dark вариант
+
+В Tailwind v4 (в отличие от v3) `dark:` по умолчанию использует `@media (prefers-color-scheme: dark)`. Мы переопределяем на **класс**, чтобы управлять программно:
+
+```css
+/* В начале theme.css — ДО всего остального */
+@custom-variant dark (&:is(.dark *));
+```
+
+Теперь `dark:text-white` сработает когда `<html class="dark">`.
+
+## 2. CSS-переменные: два набора в theme.css
+
+### Light тема (`:root`)
+
+```css
+:root {
+  /* Основные цвета */
+  --background: #ffffff;
+  --foreground: oklch(0.145 0 0);         /* почти чёрный */
+  --card: #ffffff;
+  --card-foreground: oklch(0.145 0 0);
+  --primary: #030213;
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.95 0.0058 264.53);
+  --secondary-foreground: #030213;
+  --muted: #ececf0;
+  --muted-foreground: #555566;
+  --accent: #e9ebef;
+  --accent-foreground: #030213;
+  --destructive: #d4183d;
+  --destructive-foreground: #ffffff;
+  --border: rgba(0, 0, 0, 0.12);
+  --input: transparent;
+  --input-background: #f3f3f5;
+  --ring: oklch(0.708 0 0);
+
+  /* Фирменный акцент — темнее для светлого фона */
+  --app-accent: #566DD6;
+}
+```
+
+### Dark тема (`.dark`)
+
+```css
+.dark {
+  --background: oklch(0.145 0 0);          /* почти чёрный */
+  --foreground: oklch(0.985 0 0);          /* почти белый */
+  --card: oklch(0.145 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.985 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --border: oklch(0.269 0 0);
+  --input: oklch(0.269 0 0);
+
+  /* Фирменный акцент — светлее для тёмного фона */
+  --app-accent: #7B8FE8;
+}
+```
+
+**Важно**: `--app-accent` меняется между темами для контраста.
+
+## 3. Маппинг CSS vars -> Tailwind утилиты
+
+Блок `@theme inline` в `theme.css` связывает переменные с Tailwind:
+
+```css
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-background: var(--input-background);
+  --color-ring: var(--ring);
+  --color-app-accent: var(--app-accent);
+  /* radius, sidebar, chart — аналогично */
+}
+```
+
+После этого работают утилиты: `bg-background`, `text-foreground`, `text-app-accent`, `border-border` и т.д.
+
+## 4. Базовые стили (@layer base)
+
+```css
+@layer base {
+  * { @apply border-border outline-ring/50; }
+  body { @apply bg-transparent text-foreground; }
+
+  /* Кастомный класс для инпутов — разный фон для тем */
+  .form-input {
+    @apply w-full px-3.5 py-2.5 rounded-xl text-sm ...;
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+  }
+  .dark .form-input {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+}
+```
+
+## 5. ThemeSync.tsx — переключение темы
+
+Компонент-sideeffect (рендерит `null`). Размещается в `MainLayout`.
+
+### Логика переключения `.dark` класса
+
+```tsx
+useEffect(() => {
+  const root = document.documentElement;
+
+  if (isTelegram) {
+    // ВНУТРИ Telegram — следуем за color scheme Telegram
+    if (colorScheme === "dark") {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+  } else {
+    // ВНЕ Telegram (веб-сайт) — следуем за системной настройкой
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const apply = (e) => {
+      e.matches ? root.classList.add("dark") : root.classList.remove("dark");
+    };
+    apply(mq);
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }
+}, [isTelegram, colorScheme]);
+```
+
+### Маппинг Telegram-цветов -> CSS переменных
+
+Telegram присылает свои конкретные цвета (hex), которые могут отличаться от дефолтных. Мы их подставляем:
+
+```tsx
+const THEME_TO_CSS: Record<string, string> = {
+  bgColor:               "--background",
+  textColor:             "--foreground",
+  hintColor:             "--muted-foreground",
+  linkColor:             "--primary",
+  buttonColor:           "--primary",
+  buttonTextColor:       "--primary-foreground",
+  secondaryBgColor:      "--secondary",
+  headerBgColor:         "--card",
+  accentTextColor:       "--accent-foreground",
+  sectionBgColor:        "--card",
+  sectionHeaderTextColor:"--foreground",
+  sectionSeparatorColor: "--border",
+  subtitleTextColor:     "--muted-foreground",
+  destructiveTextColor:  "--destructive",
+  bottomBarBgColor:      "--sidebar",
+};
+
+useEffect(() => {
+  if (!isTelegram) return;
+  const root = document.documentElement;
+  const applied: string[] = [];
+
+  for (const [themeKey, cssVar] of Object.entries(THEME_TO_CSS)) {
+    const value = theme[themeKey];
+    if (value) {
+      root.style.setProperty(cssVar, value); // Перезаписываем дефолт
+      applied.push(cssVar);
+    }
+  }
+
+  return () => {
+    for (const cssVar of applied) {
+      root.style.removeProperty(cssVar); // Восстанавливаем дефолт
+    }
+  };
+}, [isTelegram, theme]);
+```
+
+## 6. Предотвращение FOUC (Flash of Unstyled Content)
+
+В `App.tsx` — **синхронный** скрипт до рендера React:
+
+```tsx
+// Выполняется при загрузке модуля, ДО React.render()
+(() => {
+  const root = document.documentElement;
+  if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    root.classList.add("dark");
+  }
+})();
+```
+
+Позже `ThemeSync` может переключить на основе Telegram SDK, но начальный рендер уже корректный.
+
+## 7. Как использовать в компонентах
+
+### Автоматически через Tailwind (предпочтительно)
+```tsx
+<div className="bg-background text-foreground">       {/* авто-переключение */}
+<p className="text-muted-foreground">                  {/* приглушённый текст */}
+<span className="text-app-accent">                     {/* фирменный цвет */}
+<div className="border-border">                        {/* границы */}
+```
+
+### Ручное переключение через `dark:`
+```tsx
+<p className="text-green-600 dark:text-green-400">     {/* разные оттенки */}
+<div className="bg-white/30 dark:bg-black/30">         {/* прозрачность */}
+```
+
+### Через Glass CSS-классы (автоматически через переменные)
+```tsx
+<div className="bg-glass-card">         {/* карточка */}
+<div className="bg-liquid-glass-panel"> {/* тяжёлая панель */}
+<div className="bg-glass-button">       {/* кнопка */}
+<div className="bg-mesh-gradient">      {/* фон приложения */}
+```
+
+## 8. Переделка в другом проекте
+
+1. В `theme.css`:
+   - Первая строка: `@custom-variant dark (&:is(.dark *));`
+   - Два блока переменных: `:root { ... }` и `.dark { ... }`
+   - Маппинг: `@theme inline { ... }`
+   - Базовые стили: `@layer base { ... }`
+
+2. Создать `ThemeSync.tsx`:
+   - Если Telegram: `colorScheme === "dark"` -> `.dark`
+   - Если браузер: `matchMedia("(prefers-color-scheme: dark)")` -> `.dark`
+   - Маппинг Telegram-цветов в CSS vars (опционально, если нужна точная интеграция)
+
+3. В `App.tsx`:
+   - Синхронный скрипт для предотвращения FOUC
+
+4. В `tailwind.css`:
+   ```css
+   @import 'tailwindcss' source(none);
+   @source '../**/*.{js,ts,jsx,tsx}';
+   ```
+
+5. В `index.css`:
+   ```css
+   @import './fonts.css';
+   @import './tailwind.css';
+   @import './theme.css';
+   ```

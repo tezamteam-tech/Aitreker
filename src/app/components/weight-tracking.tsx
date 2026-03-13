@@ -273,10 +273,10 @@ export function WeightTrackingPage() {
           <GlassCard className="p-5">
             <div className="flex items-start justify-between mb-3">
               <div>
-                <p className="text-white/50 text-xs mb-1">{t('weight_current') || 'Current Weight'}</p>
+                <p className="text-muted-foreground text-xs mb-1">{t('weight_current') || 'Current Weight'}</p>
                 <div className="flex items-baseline gap-2">
-                  <h2 className="text-3xl text-white font-semibold">{stats.current}</h2>
-                  <span className="text-lg text-white/40">kg</span>
+                  <h2 className="text-3xl text-foreground font-semibold">{stats.current}</h2>
+                  <span className="text-lg text-muted-foreground">kg</span>
                 </div>
               </div>
               <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full ${
@@ -307,25 +307,25 @@ export function WeightTrackingPage() {
 
             {/* Quick Stats Grid */}
             <div className="grid grid-cols-3 gap-3">
-              <div className="text-center p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-                <p className="text-xs text-white/40 mb-1">{t('weight_week') || 'Week'}</p>
+              <div className="text-center p-2.5 rounded-xl" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
+                <p className="text-xs text-muted-foreground mb-1">{t('weight_week') || 'Week'}</p>
                 <p className={`font-semibold text-sm ${
                   stats.weeklyChange !== null
-                    ? stats.weeklyChange < 0 ? 'text-[#00cec9]' : stats.weeklyChange > 0 ? 'text-[#ff6b6b]' : 'text-white/60'
-                    : 'text-white/30'
+                    ? stats.weeklyChange < 0 ? 'text-[#00cec9]' : stats.weeklyChange > 0 ? 'text-[#ff6b6b]' : 'text-foreground/60'
+                    : 'text-muted-foreground'
                 }`}>
                   {stats.weeklyChange !== null
                     ? `${stats.weeklyChange > 0 ? '+' : ''}${stats.weeklyChange.toFixed(1)} kg`
                     : '—'}
                 </p>
               </div>
-              <div className="text-center p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-                <p className="text-xs text-white/40 mb-1">{t('weight_avg') || 'Average'}</p>
-                <p className="text-white/80 font-semibold text-sm">{stats.avg} kg</p>
+              <div className="text-center p-2.5 rounded-xl" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
+                <p className="text-xs text-muted-foreground mb-1">{t('weight_avg') || 'Average'}</p>
+                <p className="text-foreground/80 font-semibold text-sm">{stats.avg} kg</p>
               </div>
-              <div className="text-center p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-                <p className="text-xs text-white/40 mb-1">{t('weight_entries') || 'Entries'}</p>
-                <p className="text-white/80 font-semibold text-sm">{stats.entryCount}</p>
+              <div className="text-center p-2.5 rounded-xl" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
+                <p className="text-xs text-muted-foreground mb-1">{t('weight_entries') || 'Entries'}</p>
+                <p className="text-foreground/80 font-semibold text-sm">{stats.entryCount}</p>
               </div>
             </div>
           </GlassCard>
@@ -336,7 +336,7 @@ export function WeightTrackingPage() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Activity className="w-4 h-4 text-[#a29bfe]" />
-              <h3 className="text-white font-medium text-sm">{t('weight_trend') || 'Weight Trend'}</h3>
+              <h3 className="text-foreground font-medium text-sm">{t('weight_trend') || 'Weight Trend'}</h3>
             </div>
 
             {/* Time Range Selector */}

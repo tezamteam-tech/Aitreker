@@ -139,10 +139,10 @@ export function ProfileNutritionPage() {
               <User className="w-8 h-8 text-white" />
             </div>
             <div className="flex-1">
-              <h2 className="text-xl text-white font-semibold mb-1">
+              <h2 className="text-xl text-foreground font-semibold mb-1">
                 {user?.firstName || 'User'}
               </h2>
-              <p className="text-sm text-white/50">@{user?.username || 'username'}</p>
+              <p className="text-sm text-muted-foreground">@{user?.username || 'username'}</p>
             </div>
             {isPremium && (
               <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-gradient-to-r from-[#ffd700]/20 to-[#ffa500]/20 border border-[#ffd700]/30">
@@ -152,18 +152,18 @@ export function ProfileNutritionPage() {
             )}
           </div>
 
-          <div className="grid grid-cols-3 gap-3 pt-3 border-t border-white/10">
+          <div className="grid grid-cols-3 gap-3 pt-3" style={{ borderTop: '1px solid var(--glass-border-subtle)' }}>
             <div className="text-center">
-              <p className="text-xs text-white/40 mb-1">Weight</p>
-              <p className="text-sm text-white font-medium">{metrics.weight} kg</p>
+              <p className="text-xs text-muted-foreground mb-1">Weight</p>
+              <p className="text-sm text-foreground font-medium">{metrics.weight} kg</p>
             </div>
             <div className="text-center">
-              <p className="text-xs text-white/40 mb-1">Height</p>
-              <p className="text-sm text-white font-medium">{metrics.height} cm</p>
+              <p className="text-xs text-muted-foreground mb-1">Height</p>
+              <p className="text-sm text-foreground font-medium">{metrics.height} cm</p>
             </div>
             <div className="text-center">
-              <p className="text-xs text-white/40 mb-1">BMI</p>
-              <p className="text-sm text-white font-medium">{bmi}</p>
+              <p className="text-xs text-muted-foreground mb-1">BMI</p>
+              <p className="text-sm text-foreground font-medium">{bmi}</p>
             </div>
           </div>
         </GlassCard>
@@ -171,18 +171,18 @@ export function ProfileNutritionPage() {
         {/* Goal Progress */}
         <GlassCard className="p-5">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-white font-medium">Current Goal</h3>
-            <button className="text-sm text-[#a29bfe]">
+            <h3 className="text-foreground font-medium">Current Goal</h3>
+            <button className="text-sm text-app-accent">
               <Edit2 className="w-4 h-4" />
             </button>
           </div>
 
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-white/60">Target Weight</span>
-            <span className="text-sm text-white font-medium">{targetWeight} kg</span>
+            <span className="text-sm text-muted-foreground">Target Weight</span>
+            <span className="text-sm text-foreground font-medium">{targetWeight} kg</span>
           </div>
 
-          <div className="relative h-2 rounded-full bg-white/5 overflow-hidden mb-2">
+          <div className="relative h-2 rounded-full overflow-hidden mb-2" style={{ background: 'var(--glass-bg-row)' }}>
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${((targetWeight / metrics.weight) * 100)}%` }}
@@ -192,7 +192,7 @@ export function ProfileNutritionPage() {
 
           <div className="flex items-center gap-2">
             <TrendingDown className="w-4 h-4 text-[#00cec9]" />
-            <span className="text-xs text-white/50">
+            <span className="text-xs text-muted-foreground">
               {weightToLose > 0 ? `${weightToLose.toFixed(1)} kg to go` : 'Goal reached!'}
             </span>
           </div>
@@ -203,19 +203,19 @@ export function ProfileNutritionPage() {
           <GlassCard className="p-4">
             <div className="flex items-center gap-2 mb-2">
               <Award className="w-4 h-4 text-[#ffd700]" />
-              <span className="text-xs text-white/50">Streak</span>
+              <span className="text-xs text-muted-foreground">Streak</span>
             </div>
-            <p className="text-2xl text-white font-semibold">14</p>
-            <p className="text-xs text-white/40 mt-1">Days logged</p>
+            <p className="text-2xl text-foreground font-semibold">14</p>
+            <p className="text-xs text-muted-foreground mt-1">Days logged</p>
           </GlassCard>
 
           <GlassCard className="p-4">
             <div className="flex items-center gap-2 mb-2">
               <Activity className="w-4 h-4 text-[#00cec9]" />
-              <span className="text-xs text-white/50">Workouts</span>
+              <span className="text-xs text-muted-foreground">Workouts</span>
             </div>
-            <p className="text-2xl text-white font-semibold">23</p>
-            <p className="text-xs text-white/40 mt-1">This month</p>
+            <p className="text-2xl text-foreground font-semibold">23</p>
+            <p className="text-xs text-muted-foreground mt-1">This month</p>
           </GlassCard>
         </div>
 
@@ -224,15 +224,15 @@ export function ProfileNutritionPage() {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Target className="w-5 h-5 text-[#fd79a8]" />
-              <h3 className="text-white font-medium">Daily Calorie Goal</h3>
+              <h3 className="text-foreground font-medium">Daily Calorie Goal</h3>
             </div>
-            <button className="text-sm text-[#a29bfe]">
+            <button className="text-sm text-app-accent">
               <Edit2 className="w-4 h-4" />
             </button>
           </div>
 
-          <p className="text-3xl text-white font-semibold mb-2">{calorieGoal}</p>
-          <p className="text-sm text-white/50">
+          <p className="text-3xl text-foreground font-semibold mb-2">{calorieGoal}</p>
+          <p className="text-sm text-muted-foreground">
             Based on your {metrics.activityLevel} activity level
           </p>
         </GlassCard>
@@ -273,8 +273,8 @@ export function ProfileNutritionPage() {
                   <Crown className="w-5 h-5 text-[#ffd700]" />
                 </div>
                 <div>
-                  <p className="text-white font-medium text-sm">Premium Active</p>
-                  <p className="text-white/40 text-xs">{subscriptionDaysLeft} days remaining</p>
+                  <p className="text-foreground font-medium text-sm">Premium Active</p>
+                  <p className="text-muted-foreground text-xs">{subscriptionDaysLeft} days remaining</p>
                 </div>
               </div>
               <div className="px-3 py-1 rounded-full bg-[#ffd700]/10 border border-[#ffd700]/20">
@@ -309,9 +309,9 @@ export function ProfileNutritionPage() {
                       >
                         <Icon className="w-5 h-5" style={{ color: item.color }} />
                       </div>
-                      <span className="text-white font-medium">{item.label}</span>
+                      <span className="text-foreground font-medium">{item.label}</span>
                     </div>
-                    <ChevronRight className="w-5 h-5 text-white/40" />
+                    <ChevronRight className="w-5 h-5 text-muted-foreground" />
                   </div>
                 </GlassCard>
               </motion.button>
@@ -343,10 +343,11 @@ export function ProfileNutritionPage() {
             hapticFeedback('medium');
             logout();
           }}
-          className="w-full p-4 rounded-[18px] bg-white/5 border border-white/10 flex items-center justify-center gap-2"
+          className="w-full p-4 rounded-[18px] flex items-center justify-center gap-2"
+          style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border)' }}
         >
-          <LogOut className="w-5 h-5 text-white/60" />
-          <span className="text-white/80">Sign Out</span>
+          <LogOut className="w-5 h-5 text-muted-foreground" />
+          <span className="text-foreground/80">Sign Out</span>
         </button>
 
       </div>

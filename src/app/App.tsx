@@ -6,12 +6,38 @@
 // Debug mode: only via explicit URL parameter.
 // =============================================
 
+// ── FOUC Prevention ──────────────────────────────────────
+// Executed SYNCHRONOUSLY before React renders.
+// Sets .dark class based on Telegram color scheme or system preference.
+// ThemeSync will later refine this, but initial render is correct.
+(() => {
+  if (typeof window === 'undefined') return;
+  const root = document.documentElement;
+
+  // 1. Check Telegram color scheme first
+  try {
+    const wa = (window as any).Telegram?.WebApp;
+    if (wa?.colorScheme) {
+      if (wa.colorScheme === 'dark') {
+        root.classList.add('dark');
+      } else {
+        root.classList.remove('dark');
+      }
+      return;
+    }
+  } catch {}
+
+  // 2. Fallback: system preference
+  if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    root.classList.add('dark');
+  } else {
+    root.classList.remove('dark');
+  }
+})();
+
 import { init } from './init';
 
 // Debug mode — ONLY via explicit URL parameter.
-// On production (Vercel), import.meta.env.DEV is always false.
-// To enable debug: open the app with ?tgWebAppStartParam=debug
-// or send /start debug to the bot.
 const isDebugMode = (() => {
   if (typeof window === 'undefined') return false;
   const urlParams = new URLSearchParams(window.location.search);
