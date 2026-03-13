@@ -65,17 +65,7 @@ const MEAL_CONFIG: Record<
 
 const MEAL_ORDER: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack'];
 
-// ---- Mock data ----
-const INITIAL_ENTRIES: FoodEntry[] = [
-  { id: '1', name: 'Oatmeal with Berries', calories: 320, protein: 12, carbs: 54, fats: 8, mealType: 'breakfast', time: '08:15' },
-  { id: '2', name: 'Greek Yogurt', calories: 130, protein: 15, carbs: 10, fats: 4, mealType: 'breakfast', time: '08:30' },
-  { id: '3', name: 'Cappuccino', calories: 80, protein: 4, carbs: 8, fats: 3, mealType: 'breakfast', time: '08:35' },
-  { id: '4', name: 'Grilled Chicken Salad', calories: 450, protein: 42, carbs: 28, fats: 18, mealType: 'lunch', time: '13:10' },
-  { id: '5', name: 'Brown Rice', calories: 215, protein: 5, carbs: 45, fats: 2, mealType: 'lunch', time: '13:10' },
-  { id: '6', name: 'Protein Bar', calories: 200, protein: 20, carbs: 24, fats: 8, mealType: 'snack', time: '16:00' },
-  { id: '7', name: 'Apple', calories: 95, protein: 0, carbs: 25, fats: 0, mealType: 'snack', time: '16:30' },
-  { id: '8', name: 'Salmon with Vegetables', calories: 520, protein: 38, carbs: 22, fats: 28, mealType: 'dinner', time: '19:15' },
-];
+// No mock data — entries loaded from API
 
 // ---- Helper: detect lang ----
 function useLang() {
@@ -92,11 +82,12 @@ export function CaloriesPage() {
   const lang = useLang();
 
   // State
-  const [entries, setEntries] = useState<FoodEntry[]>(INITIAL_ENTRIES);
+  const [entries, setEntries] = useState<FoodEntry[]>([]);
   const [calorieTarget, setCalorieTarget] = useState<number>(2000);
   const [showAddSheet, setShowAddSheet] = useState(false);
   const [editingEntry, setEditingEntry] = useState<FoodEntry | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [isLoadingEntries, setIsLoadingEntries] = useState(true);
 
   useBottomSheetLifecycle(showAddSheet || editingEntry !== null);
 
@@ -113,6 +104,31 @@ export function CaloriesPage() {
     }).catch(() => {});
   }, [user]);
 
+  // Load today's food entries from API
+  const loadEntries = useCallback(() => {
+    if (!user) { setIsLoadingEntries(false); return; }
+    const today = new Date().toISOString().slice(0, 10);
+    api.getFoodEntries(today).then((data) => {
+      const apiEntries = (data.entries || []).map((e: any) => ({
+        id: e.id,
+        name: e.food_name,
+        calories: e.calories || 0,
+        protein: e.protein || 0,
+        carbs: e.carbs || 0,
+        fats: e.fat || 0,
+        mealType: (e.meal_type || 'snack') as MealType,
+        time: e.created_at
+          ? new Date(e.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          : '--:--',
+      }));
+      setEntries(apiEntries);
+    }).catch((err) => {
+      console.warn('[Calories] Failed to load food entries:', err);
+    }).finally(() => setIsLoadingEntries(false));
+  }, [user]);
+
+  useEffect(() => { loadEntries(); }, [loadEntries]);
+
   // Computed
   const totalCalories = entries.reduce((s, e) => s + e.calories, 0);
   const totalProtein = entries.reduce((s, e) => s + e.protein, 0);
@@ -128,17 +144,20 @@ export function CaloriesPage() {
     return acc;
   }, {} as Record<string, FoodEntry[]>);
 
-  // Handlers
+  // Handlers — wired to real API
   const handleDelete = useCallback(
     (id: string) => {
       hapticSuccess();
       setDeletingId(id);
-      setTimeout(() => {
-        setEntries((prev) => prev.filter((e) => e.id !== id));
-        setDeletingId(null);
-      }, 300);
+      // Optimistic delete
+      setEntries((prev) => prev.filter((e) => e.id !== id));
+      api.deleteFoodEntry(id).catch((err) => {
+        console.error('[Calories] Delete failed:', err);
+        loadEntries();
+      });
+      setTimeout(() => setDeletingId(null), 300);
     },
-    []
+    [loadEntries]
   );
 
   const handleEditSave = useCallback(
@@ -152,13 +171,40 @@ export function CaloriesPage() {
 
   const handleAddEntry = useCallback(
     (entry: Omit<FoodEntry, 'id'>) => {
-      hapticSuccess();
-      const newEntry: FoodEntry = {
-        ...entry,
-        id: `manual_${Date.now()}`,
-      };
-      setEntries((prev) => [...prev, newEntry]);
-      setShowAddSheet(false);
+      hapticFeedback('medium');
+      api.addFoodEntry({
+        food_name: entry.name,
+        calories: entry.calories,
+        protein: entry.protein,
+        carbs: entry.carbs,
+        fat: entry.fats,
+        meal_type: entry.mealType,
+      }).then((saved) => {
+        hapticSuccess();
+        const newEntry: FoodEntry = {
+          id: saved.id,
+          name: saved.food_name,
+          calories: saved.calories,
+          protein: saved.protein,
+          carbs: saved.carbs,
+          fats: saved.fat,
+          mealType: (saved.meal_type || 'snack') as MealType,
+          time: saved.created_at
+            ? new Date(saved.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        };
+        setEntries((prev) => [...prev, newEntry]);
+        setShowAddSheet(false);
+      }).catch((err) => {
+        console.error('[Calories] Add entry failed:', err);
+        hapticError();
+        const newEntry: FoodEntry = {
+          ...entry,
+          id: `local_${Date.now()}`,
+        };
+        setEntries((prev) => [...prev, newEntry]);
+        setShowAddSheet(false);
+      });
     },
     []
   );

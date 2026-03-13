@@ -220,7 +220,7 @@ async function notifyReferrerNewJoin(referrerUserId: string, newUserName: string
 
     const lang = referrer.language === "ru" ? "ru" : "en";
     const text = lang === "ru"
-      ? `👋 <b>Новый реферал!</b>\n\n<b>${newUserName}</b> присоединился по вашей ссылке.\nКогда друг оформит подписку, вы получите <b>+${REFERRAL_BONUS_DAYS} дней</b> Premium!\n\n📊 Всего приглашено: <b>${referrer.referralCount || 0}</b>`
+      ? `👋 <b>Новый реферал!</b>\n\n<b>${newUserName}</b> присоединился по вашей ссылке.\nКогда друг оформит подписку, ��ы получите <b>+${REFERRAL_BONUS_DAYS} дней</b> Premium!\n\n📊 Всего приглашено: <b>${referrer.referralCount || 0}</b>`
       : `👋 <b>New Referral!</b>\n\n<b>${newUserName}</b> joined through your link.\nWhen they subscribe, you'll earn <b>+${REFERRAL_BONUS_DAYS} days</b> Premium!\n\n📊 Total invited: <b>${referrer.referralCount || 0}</b>`;
 
     const deepLink = buildTgDeepLink("referrals");
@@ -8852,11 +8852,21 @@ app.get(`${PREFIX}/food/entries`, async (c) => {
     const date = c.req.query("date") || new Date().toISOString().slice(0, 10);
     const indexKey = `become:food_idx:${auth.userId}:${date}`;
     const index: string[] = (await kv.get(indexKey)) || [];
-    if (index.length === 0) return c.json([]);
+    if (index.length === 0) return c.json({ entries: [], totals: { calories: 0, protein: 0, carbs: 0, fat: 0 } });
 
     const keys = index.map((id: string) => `become:food:${auth.userId}:${id}`);
-    const entries = await kv.mget(keys);
-    return c.json(entries.filter((e: any) => e && e.id).sort((a: any, b: any) => a.created_at > b.created_at ? 1 : -1));
+    const rawEntries = await kv.mget(keys);
+    const entries = rawEntries.filter((e: any) => e && e.id).sort((a: any, b: any) => a.created_at > b.created_at ? 1 : -1);
+
+    // Compute totals
+    const totals = entries.reduce((acc: any, e: any) => ({
+      calories: acc.calories + (e.calories || 0),
+      protein: acc.protein + (e.protein || 0),
+      carbs: acc.carbs + (e.carbs || 0),
+      fat: acc.fat + (e.fat || 0),
+    }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
+
+    return c.json({ entries, totals });
   } catch (err) {
     console.log("GET /food/entries error:", err);
     return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
@@ -9012,6 +9022,132 @@ app.delete(`${PREFIX}/meal-plans/:id`, async (c) => {
     return c.json({ success: true });
   } catch (err) {
     console.log("DELETE /meal-plans/:id error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// =============================================
+// WORKOUT PLAN ENDPOINTS
+// =============================================
+
+// ---- POST /workout-plans/generate ----
+app.post(`${PREFIX}/workout-plans/generate`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const body = await c.req.json();
+    const { plan_length, workout_type, goal, gender, activity_level } = body;
+    const days = plan_length || 7;
+    const wType = workout_type || "home";
+
+    const openaiKey = Deno.env.get("OPENAI_API_KEY");
+    if (!openaiKey) return c.json({ message: "OpenAI not configured", code: "CONFIG_ERROR", status: 500 }, 500);
+
+    const userProfile = await kv.get(`become:user_profile:${auth.telegramId}`);
+    const userGoal = goal || userProfile?.goal || "stay fit";
+    const userGender = gender || userProfile?.gender || "not specified";
+    const userActivity = activity_level || userProfile?.activity_level || "moderate";
+    const batchDays = Math.min(days, 7);
+
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${openaiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: `You are a certified fitness trainer. Create a detailed ${wType} workout plan. Return ONLY a JSON object: { "days": [ { "day": 1, "workout_type": "upper body|lower body|cardio|full body|rest|hiit|flexibility", "name": "...", "duration_min": N, "calories_burn": N, "exercises": [ { "name": "...", "sets": N, "reps": "...", "rest_sec": N, "notes": "..." } ] } ] }. Include 1-2 rest days per week. No other text.` },
+          { role: "user", content: `Create a ${batchDays}-day ${wType} workout plan for a ${userGender} with ${userActivity} activity level. Goal: ${userGoal}. Make workouts varied and progressive.` },
+        ],
+        max_tokens: 4000,
+        temperature: 0.7,
+      }),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.log(`[Workout Plan] OpenAI error: ${response.status} ${errText}`);
+      return c.json({ message: "AI generation failed", code: "AI_ERROR", status: 502 }, 502);
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || "";
+    let workoutData: any;
+    try {
+      const jsonStr = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+      workoutData = JSON.parse(jsonStr);
+    } catch {
+      console.log("[Workout Plan] Failed to parse AI response:", content.slice(0, 500));
+      return c.json({ message: "Could not parse AI response", code: "PARSE_ERROR", status: 502 }, 502);
+    }
+
+    const planId = generateId("wplan");
+    const savedPlan = { id: planId, userId: auth.userId, plan_length: days, workout_type: wType, workout_data: workoutData, created_at: new Date().toISOString() };
+    await kv.set(`become:workout_plans:${auth.userId}:${planId}`, savedPlan);
+
+    const indexKey = `become:workout_plans_index:${auth.userId}`;
+    const plansIndex: string[] = (await kv.get(indexKey)) || [];
+    plansIndex.unshift(planId);
+    await kv.set(indexKey, plansIndex);
+
+    console.log(`[Workout Plan] Generated ${batchDays}-day ${wType} plan for user ${auth.userId}`);
+    return c.json(savedPlan);
+  } catch (err) {
+    console.log("POST /workout-plans/generate error:", err);
+    return c.json({ message: `Error generating workout plan: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- GET /workout-plans ----
+app.get(`${PREFIX}/workout-plans`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+    const indexKey = `become:workout_plans_index:${auth.userId}`;
+    const plansIndex: string[] = (await kv.get(indexKey)) || [];
+    if (plansIndex.length === 0) return c.json({ plans: [] });
+    const keys = plansIndex.map((id: string) => `become:workout_plans:${auth.userId}:${id}`);
+    const plans = (await kv.mget(keys)).filter((p: any) => p && p.id).map((p: any) => ({
+      id: p.id,
+      plan_length: p.plan_length,
+      workout_type: p.workout_type,
+      created_at: p.created_at,
+      preview: p.workout_data?.days?.[0]?.name || "Workout plan",
+    }));
+    return c.json({ plans });
+  } catch (err) {
+    console.log("GET /workout-plans error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- GET /workout-plans/:id ----
+app.get(`${PREFIX}/workout-plans/:id`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+    const plan = await kv.get(`become:workout_plans:${auth.userId}:${c.req.param("id")}`);
+    if (!plan) return c.json({ message: "Plan not found", code: "NOT_FOUND", status: 404 }, 404);
+    return c.json(plan);
+  } catch (err) {
+    console.log("GET /workout-plans/:id error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- DELETE /workout-plans/:id ----
+app.delete(`${PREFIX}/workout-plans/:id`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+    const planId = c.req.param("id");
+    await kv.del(`become:workout_plans:${auth.userId}:${planId}`);
+    const indexKey = `become:workout_plans_index:${auth.userId}`;
+    const plansIndex: string[] = (await kv.get(indexKey)) || [];
+    await kv.set(indexKey, plansIndex.filter((id: string) => id !== planId));
+    return c.json({ success: true });
+  } catch (err) {
+    console.log("DELETE /workout-plans/:id error:", err);
     return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
   }
 });

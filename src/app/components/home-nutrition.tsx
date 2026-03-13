@@ -85,24 +85,16 @@ export function HomeNutritionPage() {
   const [streakMilestone, setStreakMilestone] = useState<{ milestone: number; streak: number } | null>(null);
 
   const [nutritionData, setNutritionData] = useState<NutritionData>({
-    caloriesConsumed: 1240,
+    caloriesConsumed: 0,
     caloriesGoal: 2000,
-    protein: 85,
-    carbs: 120,
-    fats: 45,
+    protein: 0,
+    carbs: 0,
+    fats: 0,
   });
 
-  const [todayMeals, setTodayMeals] = useState<MealPlanItem[]>([
-    { id: '1', name: 'Breakfast', time: '08:00', calories: 450, completed: true },
-    { id: '2', name: 'Lunch', time: '13:00', calories: 650, completed: true },
-    { id: '3', name: 'Snack', time: '16:00', calories: 140, completed: true },
-    { id: '4', name: 'Dinner', time: '19:00', calories: 600, completed: false },
-  ]);
+  const [todayMeals, setTodayMeals] = useState<MealPlanItem[]>([]);
 
-  const [todayWorkouts, setTodayWorkouts] = useState<WorkoutPlanItem[]>([
-    { id: '1', name: 'Morning Run', duration: '30 min', calories: 280, completed: true },
-    { id: '2', name: 'Upper Body', duration: '45 min', calories: 320, completed: false },
-  ]);
+  const [todayWorkouts, setTodayWorkouts] = useState<WorkoutPlanItem[]>([]);
 
   useEffect(() => {
     // 1. Try localStorage cache first for instant display
@@ -163,6 +155,80 @@ export function HomeNutritionPage() {
     }).catch((err) => {
       console.warn('[HomeNutrition] Failed to load profile:', err);
       setProfileLoaded(true);
+    });
+  }, [user]);
+
+  // Load today's food entries from API (real data)
+  useEffect(() => {
+    if (!user) return;
+    const today = new Date().toISOString().slice(0, 10);
+    api.getFoodEntries(today).then((data) => {
+      const entries = data.entries || [];
+      const totals = data.totals || { calories: 0, protein: 0, carbs: 0, fat: 0 };
+
+      // Update nutrition data with real totals
+      setNutritionData((prev) => ({
+        ...prev,
+        caloriesConsumed: totals.calories,
+        protein: totals.protein,
+        carbs: totals.carbs,
+        fats: totals.fat,
+      }));
+
+      // Map food entries to today's meals display
+      if (entries.length > 0) {
+        const mealItems: MealPlanItem[] = entries.map((e: any) => ({
+          id: e.id,
+          name: e.food_name,
+          time: e.created_at ? new Date(e.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--',
+          calories: e.calories || 0,
+          completed: true, // logged entries are always "completed"
+        }));
+        setTodayMeals(mealItems);
+      }
+    }).catch((err) => {
+      console.warn('[HomeNutrition] Failed to load food entries:', err);
+    });
+  }, [user]);
+
+  // Load today's workout from active workout plan
+  useEffect(() => {
+    if (!user) return;
+    api.getWorkoutPlans().then((data) => {
+      const plans = data.plans || [];
+      if (plans.length === 0) return;
+
+      // Load the latest workout plan
+      const latestPlanId = plans[0].id;
+      api.getWorkoutPlan(latestPlanId).then((plan) => {
+        if (!plan?.workout_data?.days) return;
+        const dayNum = Math.max(1, Math.min(
+          Math.ceil((Date.now() - new Date(plan.created_at).getTime()) / (24 * 60 * 60 * 1000)) + 1,
+          plan.workout_data.days.length
+        ));
+        const todayDay = plan.workout_data.days.find((d: any) => d.day === dayNum) || plan.workout_data.days[0];
+        if (todayDay) {
+          const exercises = todayDay.exercises || [];
+          const items: WorkoutPlanItem[] = exercises.length > 0
+            ? exercises.map((ex: any, i: number) => ({
+                id: `w_${i}`,
+                name: ex.name || 'Exercise',
+                duration: ex.sets ? `${ex.sets} sets × ${ex.reps || '10'}` : `${todayDay.duration_min || 30} min`,
+                calories: Math.round((todayDay.calories_burn || 200) / exercises.length),
+                completed: false,
+              }))
+            : [{
+                id: 'w_0',
+                name: todayDay.name || todayDay.workout_type || 'Workout',
+                duration: `${todayDay.duration_min || 30} min`,
+                calories: todayDay.calories_burn || 200,
+                completed: false,
+              }];
+          setTodayWorkouts(items);
+        }
+      }).catch(() => {});
+    }).catch((err) => {
+      console.warn('[HomeNutrition] Failed to load workout plans:', err);
     });
   }, [user]);
 
@@ -463,42 +529,59 @@ export function HomeNutritionPage() {
             <button
               onClick={() => {
                 hapticFeedback('light');
-                navigate('/meal-plan');
+                navigate('/calories');
               }}
               className="text-sm text-app-accent"
             >
-              View All
+              {todayMeals.length > 0 ? 'View All' : 'Log Food'}
             </button>
           </div>
 
-          <div className="space-y-2">
-            {todayMeals.slice(0, 3).map((meal, idx) => (
-              <motion.div
-                key={meal.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.1 }}
-                className="flex items-center justify-between p-3 rounded-xl bg-glass-row"
+          {todayMeals.length > 0 ? (
+            <div className="space-y-2">
+              {todayMeals.slice(0, 3).map((meal, idx) => (
+                <motion.div
+                  key={meal.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.1 }}
+                  className="flex items-center justify-between p-3 rounded-xl bg-glass-row"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      meal.completed ? 'bg-[#00cec9]/20' : 'bg-muted'
+                    }`}>
+                      {meal.completed ? (
+                        <CheckCircle2 className="w-5 h-5 text-[#00cec9]" />
+                      ) : (
+                        <Clock className="w-4 h-4 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-foreground text-sm font-medium">{meal.name}</p>
+                      <p className="text-muted-foreground text-xs">{meal.time}</p>
+                    </div>
+                  </div>
+                  <span className="text-sm text-foreground/60">{meal.calories} cal</span>
+                </motion.div>
+              ))}
+              {todayMeals.length > 3 && (
+                <p className="text-center text-muted-foreground text-xs pt-1">
+                  +{todayMeals.length - 3} more entries
+                </p>
+              )}
+            </div>
+          ) : (
+            <div className="text-center py-6">
+              <p className="text-muted-foreground text-sm">No food logged yet today</p>
+              <button
+                onClick={() => { hapticFeedback('medium'); navigate('/calories/scan'); }}
+                className="text-app-accent text-sm mt-2"
               >
-                <div className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    meal.completed ? 'bg-[#00cec9]/20' : 'bg-muted'
-                  }`}>
-                    {meal.completed ? (
-                      <CheckCircle2 className="w-5 h-5 text-[#00cec9]" />
-                    ) : (
-                      <Clock className="w-4 h-4 text-muted-foreground" />
-                    )}
-                  </div>
-                  <div>
-                    <p className="text-foreground text-sm font-medium">{meal.name}</p>
-                    <p className="text-muted-foreground text-xs">{meal.time}</p>
-                  </div>
-                </div>
-                <span className="text-sm text-foreground/60">{meal.calories} cal</span>
-              </motion.div>
-            ))}
-          </div>
+                Scan or add your first meal →
+              </button>
+            </div>
+          )}
         </GlassCard>
 
         {/* Today's Workout Plan */}
@@ -515,38 +598,50 @@ export function HomeNutritionPage() {
               }}
               className="text-sm text-app-accent"
             >
-              View All
+              {todayWorkouts.length > 0 ? 'View All' : 'Create Plan'}
             </button>
           </div>
 
-          <div className="space-y-2">
-            {todayWorkouts.map((workout, idx) => (
-              <motion.div
-                key={workout.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.1 }}
-                className="flex items-center justify-between p-3 rounded-xl bg-glass-row"
+          {todayWorkouts.length > 0 ? (
+            <div className="space-y-2">
+              {todayWorkouts.map((workout, idx) => (
+                <motion.div
+                  key={workout.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.1 }}
+                  className="flex items-center justify-between p-3 rounded-xl bg-glass-row"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      workout.completed ? 'bg-[#00cec9]/20' : 'bg-muted'
+                    }`}>
+                      {workout.completed ? (
+                        <CheckCircle2 className="w-5 h-5 text-[#00cec9]" />
+                      ) : (
+                        <Dumbbell className="w-4 h-4 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-foreground text-sm font-medium">{workout.name}</p>
+                      <p className="text-muted-foreground text-xs">{workout.duration}</p>
+                    </div>
+                  </div>
+                  <span className="text-sm text-[#fd79a8]">-{workout.calories} cal</span>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-6">
+              <p className="text-muted-foreground text-sm">No workout plan yet</p>
+              <button
+                onClick={() => { hapticFeedback('medium'); navigate('/workout-plan'); }}
+                className="text-app-accent text-sm mt-2"
               >
-                <div className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    workout.completed ? 'bg-[#00cec9]/20' : 'bg-muted'
-                  }`}>
-                    {workout.completed ? (
-                      <CheckCircle2 className="w-5 h-5 text-[#00cec9]" />
-                    ) : (
-                      <Dumbbell className="w-4 h-4 text-muted-foreground" />
-                    )}
-                  </div>
-                  <div>
-                    <p className="text-foreground text-sm font-medium">{workout.name}</p>
-                    <p className="text-muted-foreground text-xs">{workout.duration}</p>
-                  </div>
-                </div>
-                <span className="text-sm text-[#fd79a8]">-{workout.calories} cal</span>
-              </motion.div>
-            ))}
-          </div>
+                Generate your AI workout plan →
+              </button>
+            </div>
+          )}
         </GlassCard>
 
         {/* Quick Stats */}
@@ -556,20 +651,27 @@ export function HomeNutritionPage() {
               <TrendingUp className="w-4 h-4 text-[#00cec9]" />
               <span className="text-xs text-muted-foreground">This Week</span>
             </div>
-            <p className="text-xl text-foreground font-semibold">{weeklyWeightChange !== null ? `${weeklyWeightChange.toFixed(1)} kg` : '-0.5 kg'}</p>
+            <p className="text-xl text-foreground font-semibold">
+              {weeklyWeightChange !== null
+                ? `${weeklyWeightChange >= 0 ? '+' : ''}${weeklyWeightChange.toFixed(1)} kg`
+                : '—'}
+            </p>
             <p className="text-xs text-muted-foreground mt-1">Weight progress</p>
           </GlassCard>
 
           <GlassCard className="p-4">
             <div className="flex items-center gap-2 mb-2">
               <Flame className="w-4 h-4 text-[#fd79a8]" />
-              <span className="text-xs text-muted-foreground">Avg/Day</span>
+              <span className="text-xs text-muted-foreground">Today</span>
             </div>
-            <p className="text-xl text-foreground font-semibold">1,850</p>
-            <p className="text-xs text-muted-foreground mt-1">Calories burned</p>
+            <p className="text-xl text-foreground font-semibold">
+              {nutritionData.caloriesConsumed > 0
+                ? nutritionData.caloriesConsumed.toLocaleString()
+                : '—'}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">Calories consumed</p>
           </GlassCard>
         </div>
-
       </div>
 
       {/* Streak Milestone Share Modal */}
