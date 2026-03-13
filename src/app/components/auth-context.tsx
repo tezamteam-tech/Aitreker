@@ -29,9 +29,91 @@ import {
 import {
   getInitData,
   getBotAuthToken,
+  getStartParam,
   isTelegramClient,
+} from './telegram';
+
+// ---- Offline-first user cache ----
+const USER_CACHE_KEY = 'pfai_cached_user';
+const SUB_CACHE_KEY = 'pfai_cached_sub';
+
+function getCachedUser(): User | null {
+  try {
+    const raw = localStorage.getItem(USER_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed.id === 'string' && typeof parsed.telegramId === 'number') {
+      return parsed as User;
+    }
+  } catch {}
+  return null;
 }
- from './telegram';
+
+function setCachedUser(user: User): void {
+  try {
+    localStorage.setItem(USER_CACHE_KEY, JSON.stringify(user));
+  } catch {}
+}
+
+function clearCachedUser(): void {
+  try {
+    localStorage.removeItem(USER_CACHE_KEY);
+    localStorage.removeItem(SUB_CACHE_KEY);
+  } catch {}
+}
+
+function getCachedSub(): { active: boolean; daysLeft: number } | null {
+  try {
+    const raw = localStorage.getItem(SUB_CACHE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
+function setCachedSub(active: boolean, daysLeft: number): void {
+  try {
+    localStorage.setItem(SUB_CACHE_KEY, JSON.stringify({ active, daysLeft }));
+  } catch {}
+}
+
+// ---- Auth phase tracking (for splash progress indicator) ----
+export type AuthPhase =
+  | 'restoring'       // loading cached session
+  | 'connecting'      // first auth attempt in progress
+  | 'retrying'        // retry attempt after failure
+  | 'authenticating'  // auth succeeded, fetching user profile
+  | null;             // auth complete (success or failure)
+
+// ---- Retry with exponential backoff ----
+const MAX_LOGIN_RETRIES = 3;
+const RETRY_BASE_DELAY_MS = 800; // 800ms, 2400ms, 7200ms
+
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  label: string,
+  onRetry?: (attempt: number, maxRetries: number) => void,
+  maxRetries = MAX_LOGIN_RETRIES,
+): Promise<T> {
+  let lastError: any;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (err: any) {
+      lastError = err;
+      // Don't retry on 4xx auth errors — only on network / 5xx
+      const status = err?.status || err?.response?.status;
+      if (status && status >= 400 && status < 500) {
+        throw err; // auth error, don't retry
+      }
+      if (attempt < maxRetries) {
+        const delay = RETRY_BASE_DELAY_MS * Math.pow(3, attempt); // 800, 2400, 7200
+        console.warn(`[Auth] ${label} attempt ${attempt + 1} failed, retrying in ${delay}ms...`, err);
+        onRetry?.(attempt + 1, maxRetries);
+        await new Promise(r => setTimeout(r, delay));
+      }
+    }
+  }
+  throw lastError;
+}
 
 // ---- ADMIN Telegram IDs ----
 // These users get isAdmin=true (your own Telegram ID + testers)
@@ -51,6 +133,9 @@ interface AuthContextValue {
   isDevMode: boolean;
   subscriptionActive: boolean;
   subscriptionDaysLeft: number;
+  authPhase: AuthPhase;
+  retryAttempt: number;
+  isCachedSession: boolean;
   login: () => Promise<void>;
   logout: () => void;
   updateUser: (partial: Partial<User>) => void;
@@ -71,6 +156,9 @@ const AUTH_DEFAULT: AuthContextValue = {
   isDevMode: false,
   subscriptionActive: false,
   subscriptionDaysLeft: 0,
+  authPhase: 'connecting',
+  retryAttempt: 0,
+  isCachedSession: false,
   login: async () => {},
   logout: () => {},
   updateUser: () => {},
@@ -99,6 +187,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [noInitDataWarning, setNoInitDataWarning] = useState(false);
   const [subscriptionActive, setSubscriptionActive] = useState(false);
   const [subscriptionDaysLeft, setSubscriptionDaysLeft] = useState(0);
+  const [authPhase, setAuthPhase] = useState<AuthPhase>('restoring');
+  const [retryAttempt, setRetryAttempt] = useState(0);
+  const [isCachedSession, setIsCachedSession] = useState(false);
   const loginAttempted = useRef(false);
 
   const isAuthenticated = !!user;
@@ -116,6 +207,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const status = await api.getSubscriptionStatus();
       setSubscriptionActive(status.isActive || status.isAdmin);
       setSubscriptionDaysLeft(status.daysLeft);
+      // Cache subscription status
+      setCachedSub(status.isActive || status.isAdmin, status.daysLeft);
       
       // Fire-and-forget: if subscription is expiring within 3 days, trigger server-side
       // Telegram notification (deduped daily on the server)
@@ -132,6 +225,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const me = await api.me();
       setUser(me);
+      setCachedUser(me); // Persist for offline-first next launch
+      setIsCachedSession(false); // We have a fresh server response
       setUserLang(me.language || 'en');
       refreshSubscription();
       return me;
@@ -141,11 +236,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [refreshSubscription]);
 
+  // ---- Retry state callback for withRetry ----
+  const handleRetry = useCallback((attempt: number, _max: number) => {
+    setAuthPhase('retrying');
+    setRetryAttempt(attempt);
+  }, []);
+
   // ---- Login flow ----
   const login = useCallback(async () => {
     setIsLoading(true);
     setAuthError(null);
     setNoInitDataWarning(false);
+    setAuthPhase('connecting');
+    setRetryAttempt(0);
 
     try {
       // 1. Try bot_auth token from URL
@@ -153,10 +256,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (botAuth) {
         console.log('[Auth] Attempting bot_auth login');
         try {
-          const res = await api.authBotToken(botAuth);
+          const res = await withRetry(() => api.authBotToken(botAuth), 'bot_auth', handleRetry);
           if (res.token) {
+            setAuthPhase('authenticating');
             if (res.deviceToken) setDeviceToken(res.deviceToken);
             await fetchMe();
+            setAuthPhase(null);
             return;
           }
         } catch (err) {
@@ -165,14 +270,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // 2. Try Telegram initData
+      setAuthPhase('connecting');
+      setRetryAttempt(0);
       const initData = getInitData();
       if (initData) {
         console.log('[Auth] Attempting initData login');
         try {
-          const res = await api.authTelegram(initData);
+          const startParam = getStartParam();
+          const res = await withRetry(
+            () => api.authTelegram(initData, startParam || undefined),
+            'initData',
+            handleRetry,
+          );
           if (res.token) {
+            setAuthPhase('authenticating');
             if (res.deviceToken) setDeviceToken(res.deviceToken);
             await fetchMe();
+            setAuthPhase(null);
             return;
           }
         } catch (err) {
@@ -181,14 +295,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // 3. Try device token refresh
+      setAuthPhase('connecting');
+      setRetryAttempt(0);
       const deviceToken = getDeviceToken();
       if (deviceToken) {
         console.log('[Auth] Attempting device token refresh');
         try {
-          const res = await api.authRefresh(deviceToken);
+          const res = await withRetry(() => api.authRefresh(deviceToken), 'device_token', handleRetry);
           if (res.token) {
+            setAuthPhase('authenticating');
             if (res.deviceToken) setDeviceToken(res.deviceToken);
             await fetchMe();
+            setAuthPhase(null);
             return;
           }
         } catch (err) {
@@ -201,12 +319,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const existingToken = getToken();
       if (existingToken) {
         console.log('[Auth] Attempting existing token');
+        setAuthPhase('authenticating');
         const me = await fetchMe();
-        if (me) return;
+        if (me) {
+          setAuthPhase(null);
+          return;
+        }
         clearToken();
       }
 
       // No auth method worked
+      setAuthPhase(null);
       if (!initData && isTelegramClient()) {
         setNoInitDataWarning(true);
       }
@@ -215,16 +338,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (err: any) {
       console.error('[Auth] Login error:', err);
       setAuthError(err?.message || 'Authentication failed');
+      setAuthPhase(null);
     } finally {
       setIsLoading(false);
     }
-  }, [fetchMe]);
+  }, [fetchMe, handleRetry]);
 
   // ---- Logout ----
   const logout = useCallback(() => {
     setUser(null);
     clearToken();
     clearDeviceToken();
+    clearCachedUser();
+    setIsCachedSession(false);
     setSubscriptionActive(false);
     setSubscriptionDaysLeft(0);
     localStorage.removeItem('become_onboarded');
@@ -236,6 +362,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!prev) return prev;
       const updated = { ...prev, ...partial };
       if (partial.language) setUserLang(partial.language);
+      setCachedUser(updated); // Keep cache in sync
       return updated;
     });
 
@@ -249,10 +376,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (loginAttempted.current) return;
     loginAttempted.current = true;
 
-    // Start login immediately — AuthGate shows splash screen while in progress
+    // Phase 1: Restore cached user for instant display (offline-first)
+    const cached = getCachedUser();
+    if (cached) {
+      console.log('[Auth] Restored cached user:', cached.id);
+      setUser(cached);
+      setIsCachedSession(true);
+      setUserLang(cached.language || 'en');
+      // Restore cached subscription status
+      const cachedSub = getCachedSub();
+      if (cachedSub) {
+        setSubscriptionActive(cachedSub.active);
+        setSubscriptionDaysLeft(cachedSub.daysLeft);
+      }
+    }
+
+    // Phase 2: Do real auth in background (replaces cached data when done)
+    setAuthPhase(cached ? 'restoring' : 'connecting');
     login().catch((err) => {
       console.warn('[Auth] Auto-login failed:', err);
-      setIsLoading(false);
+      // If we have a cached user, keep showing it even if re-auth fails
+      if (!cached) {
+        setIsLoading(false);
+      }
+      setAuthPhase(null);
     });
   }, [login]);
 
@@ -266,6 +413,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isDevMode,
     subscriptionActive,
     subscriptionDaysLeft,
+    authPhase,
+    retryAttempt,
+    isCachedSession,
     login,
     logout,
     updateUser,

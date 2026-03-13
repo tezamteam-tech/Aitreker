@@ -155,8 +155,8 @@ export const api = {
   },
 
   // Telegram auth
-  async authTelegram(initData: string): Promise<AuthResponse> {
-    const res = await request<AuthResponse>('POST', '/auth/telegram', { initData });
+  async authTelegram(initData: string, startParam?: string): Promise<AuthResponse> {
+    const res = await request<AuthResponse>('POST', '/auth/telegram', { initData, startParam: startParam || undefined });
     setToken(res.token);
     return res;
   },

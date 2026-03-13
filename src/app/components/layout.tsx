@@ -282,10 +282,67 @@ function GlassTabBar({ keyboardVisible }: { keyboardVisible: boolean }) {
 }
 
 // ---- Splash / Loading Screen ----
+// Reads Telegram themeParams for instant color-matched splash before CSS vars load.
+
+function useTelegramSplashColors() {
+  const [colors, setColors] = useState<{ bg: string; text: string; hint: string } | null>(null);
+
+  useEffect(() => {
+    try {
+      const wa = (window as any).Telegram?.WebApp;
+      const tp = wa?.themeParams;
+      if (tp) {
+        setColors({
+          bg: tp.bg_color || tp.secondary_bg_color || '',
+          text: tp.text_color || '',
+          hint: tp.hint_color || tp.subtitle_text_color || '',
+        });
+      }
+    } catch {}
+  }, []);
+
+  return colors;
+}
 
 function AuthSplash() {
+  const tgColors = useTelegramSplashColors();
+  const { authPhase, retryAttempt, isCachedSession } = useAuth();
+  const lang = typeof navigator !== 'undefined' && navigator.language?.startsWith('ru') ? 'ru' : 'en';
+
+  // Use Telegram themeParams as inline overrides for instant color match,
+  // falling back to CSS variables (bg-background, text-foreground) once theme.css loads.
+  const bgStyle = tgColors?.bg ? { backgroundColor: tgColors.bg } : undefined;
+  const hintStyle = tgColors?.hint ? { color: tgColors.hint } : undefined;
+
+  // Progress label based on auth phase
+  const getProgressLabel = (): string => {
+    if (isCachedSession) {
+      return lang === 'ru' ? 'Синхронизация...' : 'Syncing...';
+    }
+    switch (authPhase) {
+      case 'restoring':
+        return lang === 'ru' ? 'Восстановление...' : 'Restoring session...';
+      case 'connecting':
+        return lang === 'ru' ? 'Подключение...' : 'Connecting...';
+      case 'retrying':
+        return lang === 'ru'
+          ? `Повторная попытка ${retryAttempt}/3...`
+          : `Retrying ${retryAttempt}/3...`;
+      case 'authenticating':
+        return lang === 'ru' ? 'Авторизация...' : 'Authenticating...';
+      default:
+        return lang === 'ru' ? 'Загрузка...' : 'Loading...';
+    }
+  };
+
+  // Show warning dot for retrying phase
+  const isRetrying = authPhase === 'retrying';
+
   return (
-    <div className="fixed inset-0 z-[999] flex flex-col items-center justify-center bg-background">
+    <div
+      className="fixed inset-0 z-[999] flex flex-col items-center justify-center bg-background"
+      style={bgStyle}
+    >
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -303,19 +360,35 @@ function AuthSplash() {
           </div>
         </div>
 
-        {/* Spinner */}
+        {/* Spinner — color shifts to amber during retries */}
         <div className="relative w-8 h-8 mt-4">
           <div
             className="absolute inset-0 rounded-full border-2 border-transparent animate-spin"
             style={{
-              borderTopColor: '#00b894',
-              borderRightColor: 'rgba(0,184,148,0.3)',
-              animationDuration: '0.8s',
+              borderTopColor: isRetrying ? '#f0a500' : '#00b894',
+              borderRightColor: isRetrying ? 'rgba(240,165,0,0.3)' : 'rgba(0,184,148,0.3)',
+              animationDuration: isRetrying ? '0.5s' : '0.8s',
             }}
           />
         </div>
 
-        <p className="text-muted-foreground text-sm mt-1">Loading…</p>
+        {/* Progress label with animated transition */}
+        <AnimatePresence mode="wait">
+          <motion.p
+            key={authPhase ?? 'done'}
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.15 }}
+            className="text-muted-foreground text-sm mt-1 flex items-center gap-1.5"
+            style={hintStyle}
+          >
+            {isRetrying && (
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+            )}
+            {getProgressLabel()}
+          </motion.p>
+        </AnimatePresence>
       </motion.div>
     </div>
   );
@@ -374,14 +447,17 @@ function TelegramRequiredScreen({ onRetry }: { onRetry: () => void }) {
 // ---- Auth Gate: renders splash → error → or children ----
 
 function AuthGate({ children }: { children: ReactNode }) {
-  const { isLoading, isAuthenticated, authError, noInitDataWarning, login } = useAuth();
+  const { isLoading, isAuthenticated, authError, noInitDataWarning, login, isCachedSession } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const deepLinkProcessed = useRef(false);
 
   // After auth completes, process deep links and onboarding redirect
   useEffect(() => {
-    if (isLoading || deepLinkProcessed.current) return;
+    if (deepLinkProcessed.current) return;
+    // Wait for auth to complete, OR proceed immediately if we have a cached session
+    const authReady = !isLoading || (isCachedSession && isAuthenticated);
+    if (!authReady) return;
     if (!isAuthenticated) return;
 
     deepLinkProcessed.current = true;
@@ -424,12 +500,17 @@ function AuthGate({ children }: { children: ReactNode }) {
           target = '/home';
         }
         // Handle referral deep links: startapp=ref_XXXXXX
+        // Note: referral is already processed server-side during /auth/telegram,
+        // but we keep a client-side fallback for bot_auth / device_token sessions.
         else if (startParam.startsWith('ref_')) {
           const refCode = startParam.replace('ref_', '');
           if (refCode) {
-            // Fire-and-forget referral registration
             api.registerReferral(refCode).catch((err) => {
-              console.warn('[AuthGate] Referral registration failed (non-critical):', err);
+              // Expected to return 409 "Already referred" when server already processed it
+              const status = (err as any)?.status;
+              if (status !== 409) {
+                console.warn('[AuthGate] Referral fallback failed (non-critical):', err);
+              }
             });
           }
           target = '/home';
@@ -451,8 +532,9 @@ function AuthGate({ children }: { children: ReactNode }) {
     }
   }, [isLoading, isAuthenticated, navigate, location.pathname]);
 
-  // Show splash while authenticating
-  if (isLoading) {
+  // Show splash while authenticating — but skip if we have a cached session
+  // (user sees the app immediately with cached data, auth refreshes in background)
+  if (isLoading && !isCachedSession) {
     return <AuthSplash />;
   }
 

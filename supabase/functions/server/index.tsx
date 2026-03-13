@@ -567,6 +567,75 @@ app.get(`${PREFIX}/health`, async (c) => {
   });
 });
 
+// ---- Referral helpers (used by /auth/telegram for inline referral processing) ----
+
+/**
+ * Process referral for an EXISTING user who hasn't been referred yet.
+ * Called when an existing user re-authenticates with a ref_ startParam.
+ */
+async function processReferralInline(userId: string, user: any, refCode: string): Promise<void> {
+  const referrerUserId = await kv.get(`become:referral:${refCode}`);
+  if (!referrerUserId || referrerUserId === userId) return;
+
+  user.referredBy = referrerUserId;
+  user.updatedAt = new Date().toISOString();
+  await kv.set(`become:user:${userId}`, user);
+
+  await processReferralBonus(referrerUserId as string, userId, user.firstName || "A friend");
+  console.log(`[Auth] Inline referral: existing user ${userId} referred by ${referrerUserId}`);
+}
+
+/**
+ * Grant referral bonus to the referrer: increment count, check milestones,
+ * log the referral, add to invited list, and notify.
+ */
+async function processReferralBonus(referrerUserId: string, newUserId: string, newUserName: string): Promise<void> {
+  const referrer = await kv.get(`become:user:${referrerUserId}`);
+  if (!referrer) return;
+
+  referrer.referralCount = (referrer.referralCount || 0) + 1;
+  referrer.updatedAt = new Date().toISOString();
+
+  // +7 premium days per referral
+  const REFERRAL_BONUS_DAYS = 7;
+  const currentExpiry = referrer.subscriptionExpiresAt ? new Date(referrer.subscriptionExpiresAt).getTime() : Date.now();
+  const base = Math.max(currentExpiry, Date.now());
+  referrer.subscriptionExpiresAt = new Date(base + REFERRAL_BONUS_DAYS * 24 * 60 * 60 * 1000).toISOString();
+  console.log(`[Auth] Referral bonus: +${REFERRAL_BONUS_DAYS} days for referrer ${referrerUserId}, total referrals=${referrer.referralCount}`);
+
+  // Check milestone bonuses (every 10 referrals → +30 extra days)
+  const prevRewards = await kv.get(`become:bonus:ref_rewards:${referrerUserId}`) || 0;
+  const newMilestones = Math.floor(referrer.referralCount / 10);
+  if (newMilestones > (prevRewards as number)) {
+    const milestoneDays = (newMilestones - (prevRewards as number)) * 30;
+    const milestoneBase = new Date(referrer.subscriptionExpiresAt).getTime();
+    referrer.subscriptionExpiresAt = new Date(milestoneBase + milestoneDays * 24 * 60 * 60 * 1000).toISOString();
+    await kv.set(`become:bonus:ref_rewards:${referrerUserId}`, newMilestones);
+    console.log(`[Auth] Referral milestone! user=${referrerUserId}, count=${referrer.referralCount}, +${milestoneDays} milestone days`);
+  }
+
+  await kv.set(`become:user:${referrerUserId}`, referrer);
+
+  // Log the referral
+  await kv.set(`become:referral:log:${newUserId}`, { referrerId: referrerUserId, registeredAt: new Date().toISOString() });
+
+  // Add to referrer's invited list
+  const invitedKey = `become:referral:invited:${referrerUserId}`;
+  const existingInvited: any[] = (await kv.get(invitedKey) as any[]) || [];
+  existingInvited.push({
+    userId: newUserId,
+    firstName: newUserName,
+    username: null,
+    joinedAt: new Date().toISOString(),
+    isSubscribed: false,
+    bonusDaysGranted: REFERRAL_BONUS_DAYS,
+  });
+  await kv.set(invitedKey, existingInvited);
+
+  // Notify referrer
+  notifyReferrerNewJoin(referrerUserId, newUserName).catch(() => {});
+}
+
 // ---- POST /auth/telegram ----
 app.post(`${PREFIX}/auth/telegram`, async (c) => {
   await triggerSeed();
@@ -574,7 +643,7 @@ app.post(`${PREFIX}/auth/telegram`, async (c) => {
 
   try {
     const body = await c.req.json();
-    const { initData } = body;
+    const { initData, startParam } = body;
 
     if (!initData) {
       return c.json(
@@ -625,10 +694,34 @@ app.post(`${PREFIX}/auth/telegram`, async (c) => {
       }
       if (user.referralCount === undefined) user.referralCount = 0;
       await kv.set(`become:user:${userId}`, user);
+
+      // Process referral for existing user who hasn't been referred yet
+      if (startParam && typeof startParam === 'string' && startParam.startsWith('ref_') && !user.referredBy) {
+        const refCode = startParam.replace('ref_', '');
+        if (refCode) {
+          processReferralInline(userId, user, refCode).catch((err: any) => {
+            console.log(`[Auth] Inline referral for existing user failed (non-critical): ${err}`);
+          });
+        }
+      }
     } else {
       userId = generateId("user");
       const referralCode = generateId("ref").replace("ref_", "").slice(0, 10);
       const subExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+
+      // Resolve referrer from startParam (e.g. startapp=ref_XXXXXX)
+      let referredBy: string | null = null;
+      if (startParam && typeof startParam === 'string' && startParam.startsWith('ref_')) {
+        const refCode = startParam.replace('ref_', '');
+        if (refCode) {
+          const referrerUserId = await kv.get(`become:referral:${refCode}`);
+          if (referrerUserId && referrerUserId !== userId) {
+            referredBy = referrerUserId as string;
+            console.log(`[Auth] New user referred by ${referrerUserId} via startParam=${startParam}`);
+          }
+        }
+      }
+
       user = {
         id: userId,
         telegramId: tgUser.id,
@@ -646,7 +739,7 @@ app.post(`${PREFIX}/auth/telegram`, async (c) => {
         subscriptionExpiresAt: subExpiresAt,
         referralCode,
         referralCount: 0,
-        referredBy: null,
+        referredBy,
         createdAt: now,
         updatedAt: now,
       };
@@ -671,6 +764,13 @@ app.post(`${PREFIX}/auth/telegram`, async (c) => {
           console.log("[Notifications] Error sending welcome:", notifErr);
         }
       })();
+
+      // Fire-and-forget: process referral bonus for the referrer (new user registration)
+      if (referredBy) {
+        processReferralBonus(referredBy, userId, user.firstName || "A friend").catch((err: any) => {
+          console.log(`[Auth] Referral bonus for referrer ${referredBy} failed (non-critical): ${err}`);
+        });
+      }
     }
 
     const token = generateToken();
@@ -684,8 +784,8 @@ app.post(`${PREFIX}/auth/telegram`, async (c) => {
     // Generate long-lived device token for session refresh
     const deviceToken = await generateDeviceToken(userId, tgId);
 
-    console.log(`Auth success: user ${userId} (tg:${tgId})`);
-    return c.json({ user, token, deviceToken });
+    console.log(`Auth success: user ${userId} (tg:${tgId})${user.referredBy ? `, referredBy=${user.referredBy}` : ''}`);
+    return c.json({ user, token, deviceToken, referralProcessed: !!user.referredBy });
   } catch (err) {
     console.log("Auth error:", err);
     return c.json(
