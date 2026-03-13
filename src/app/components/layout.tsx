@@ -1,6 +1,9 @@
 import { hapticFeedback, getStartParam, showBackButton, hideBackButton, onBackButtonPressed, isTelegramClient, isTelegramEnvironment } from './telegram';
 import { useAuth, AuthProvider } from './auth-context';
 import { useEffect, useRef, useCallback, useState } from 'react';
+import { useNavigate, useLocation, Outlet } from 'react-router';
+import { motion, AnimatePresence } from 'motion/react';
+import { Crown } from 'lucide-react';
 import { useTranslation } from './i18n';
 import { setupSafeArea, listenSafeAreaChanges } from './telegram';
 import { useTelegramFullscreen } from './use-telegram-fullscreen';
