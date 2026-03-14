@@ -7,7 +7,7 @@
 // Supports en/ru based on user's language setting.
 // =============================================
 
-import { sendMessage, type InlineKeyboardButton } from "./telegram-bot.tsx";
+import { sendMessage, buildTgDeepLink, type InlineKeyboardButton } from "./telegram-bot.tsx";
 import * as kv from "./kv.tsx";
 import { t, getUserLang, type Lang } from "./i18n.tsx";
 
@@ -106,14 +106,12 @@ function buildTgDeepLink(startapp?: string): string {
 
 /**
  * Build an inline keyboard button that opens the Mini App.
- * Uses web_app type (direct URL) which Telegram opens natively.
- * The startapp parameter is appended as a query string for deep linking.
+ * Uses url: t.me deep link — Telegram intercepts natively, opens Mini App.
+ * style: "primary" makes the button blue.
  */
 function appButton(label: string, startapp?: string): InlineKeyboardButton[] {
-  const url = miniAppUrl();
-  if (!url) return [];
-  const finalUrl = startapp ? `${url}?startapp=${encodeURIComponent(startapp)}` : url;
-  return [{ text: label, web_app: { url: finalUrl } }];
+  const deepLink = startapp ? buildTgDeepLink(startapp) : buildTgDeepLink();
+  return [{ text: label, url: deepLink, style: "primary" }];
 }
 
 // ---- Notification senders ----
