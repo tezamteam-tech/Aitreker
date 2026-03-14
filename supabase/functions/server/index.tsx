@@ -328,13 +328,13 @@ function buildAppUrlWithAuth(botAuthToken: string, deepLinkParam?: string): stri
  * This bypasses any SSL issues on the direct web URL and always opens
  * as a proper Mini App within Telegram, not a browser tab.
  *
- * Format: https://t.me/ProperFoodAI_bot/app?startapp=PARAM
+ * Format: https://t.me/ProperFoodAi_bot/app?startapp=PARAM
  *
  * Use this for `url:` type inline buttons instead of direct Vercel URLs.
  * Telegram treats t.me links as trusted and opens them natively.
  */
 function buildTgDeepLink(startapp?: string): string {
-  const botUsername = Deno.env.get("TELEGRAM_BOT_USERNAME") || "ProperFoodAI_bot";
+  const botUsername = Deno.env.get("TELEGRAM_BOT_USERNAME") || "ProperFoodAi_bot";
   const appShortName = Deno.env.get("TELEGRAM_MINIAPP_SHORT_NAME") || "app";
   const base = `https://t.me/${botUsername}/${appShortName}`;
   if (startapp) {
@@ -354,19 +354,13 @@ async function sendDeepLinkMessage(
   chatId: number,
   lang: string,
   deepLinkParam: string,
-  baseAppUrl?: string
+  _baseAppUrl?: string
 ): Promise<void> {
   try {
-    const miniAppUrl = baseAppUrl || getProperMiniAppUrl();
-    if (!miniAppUrl) return;
-
-    // Build web_app URL with startapp parameter for deep routing
-    const appUrlWithParam = miniAppUrl.includes("?")
-      ? `${miniAppUrl}&startapp=${encodeURIComponent(deepLinkParam)}`
-      : `${miniAppUrl}?startapp=${encodeURIComponent(deepLinkParam)}`;
+    // Use t.me deep link with startapp parameter — always works natively
+    const deepLink = buildTgDeepLink(deepLinkParam);
 
     if (deepLinkParam.startsWith("challenge_")) {
-      // Challenge deep link: fetch challenge title if possible
       const challengeId = deepLinkParam.replace("challenge_", "");
       let challengeTitle = "";
       try {
@@ -379,15 +373,10 @@ async function sendDeepLinkMessage(
         : `🏆 <b>${challengeTitle ? `Challenge: ${challengeTitle}` : "You've been invited to a challenge!"}</b>\n\nTap the button below to open it in the app:`;
 
       const keyboard: InlineKeyboardButton[][] = [[
-        {
-          text: lang === "ru" ? "🚀 Открыть челлендж" : "🚀 Open Challenge",
-          web_app: { url: appUrlWithParam },
-        },
+        { text: lang === "ru" ? "🚀 Открыть челлендж" : "🚀 Open Challenge", url: deepLink },
       ]];
 
-      await sendMessage(chatId, text, {
-        reply_markup: { inline_keyboard: keyboard },
-      });
+      await sendMessage(chatId, text, { reply_markup: { inline_keyboard: keyboard } });
       console.log(`[TG Bot] Sent deep link message for challenge: ${challengeId}`);
 
     } else if (deepLinkParam === "strategic_goals" || deepLinkParam === "goals") {
@@ -396,15 +385,10 @@ async function sendDeepLinkMessage(
         : "🎯 <b>Strategic Goals</b>\n\nOpen the app to view your goals:";
 
       const keyboard: InlineKeyboardButton[][] = [[
-        {
-          text: lang === "ru" ? "🎯 Открыть цели" : "🎯 Open Goals",
-          web_app: { url: appUrlWithParam },
-        },
+        { text: lang === "ru" ? "🎯 Открыть цели" : "🎯 Open Goals", url: deepLink },
       ]];
 
-      await sendMessage(chatId, text, {
-        reply_markup: { inline_keyboard: keyboard },
-      });
+      await sendMessage(chatId, text, { reply_markup: { inline_keyboard: keyboard } });
       console.log(`[TG Bot] Sent deep link message for strategic goals`);
 
     } else if (deepLinkParam === "coach") {
@@ -413,17 +397,11 @@ async function sendDeepLinkMessage(
         : "🤖 <b>AI Coach</b>\n\nOpen the app to chat with your coach:";
 
       const keyboard: InlineKeyboardButton[][] = [[
-        {
-          text: lang === "ru" ? "🤖 Открыть коуча" : "🤖 Open Coach",
-          web_app: { url: appUrlWithParam },
-        },
+        { text: lang === "ru" ? "🤖 Открыть коуча" : "🤖 Open Coach", url: deepLink },
       ]];
 
-      await sendMessage(chatId, text, {
-        reply_markup: { inline_keyboard: keyboard },
-      });
+      await sendMessage(chatId, text, { reply_markup: { inline_keyboard: keyboard } });
     }
-    // Other deep links (journal, focus, etc.) — silently ignore, the main welcome is enough
   } catch (err) {
     console.log(`[TG Bot] Deep link message error (non-critical):`, err);
   }
@@ -4935,11 +4913,9 @@ async function handleProgressCommand(msg: TgMessage): Promise<void> {
   ].join("\n");
 
   const keyboard: InlineKeyboardButton[][] = [];
-  if (miniAppUrl) {
-    keyboard.push([
-      { text: lang === "ru" ? "\uD83C\uDFAF \u041E\u0442\u043A\u0440\u044B\u0442\u044C" : "\uD83C\uDFAF Open App", web_app: { url: miniAppUrl } },
-    ]);
-  }
+  keyboard.push([
+    { text: lang === "ru" ? "\uD83C\uDFAF \u041E\u0442\u043A\u0440\u044B\u0442\u044C" : "\uD83C\uDFAF Open App", url: buildTgDeepLink() },
+  ]);
   keyboard.push([
     { text: lang === "ru" ? "\uD83D\uDCCB \u0417\u0430\u0434\u0430\u043D\u0438\u044F" : "\uD83D\uDCCB Today's Tasks", callback_data: "cmd_today" },
     { text: lang === "ru" ? "\u25C0\uFE0F \u041C\u0435\u043D\u044E" : "\u25C0\uFE0F Menu", callback_data: "cmd_menu" },
@@ -4990,14 +4966,12 @@ async function handleTodayCommand(msg: TgMessage): Promise<void> {
   ].join("\n");
 
   const keyboard: InlineKeyboardButton[][] = [];
-  if (miniAppUrl) {
-    keyboard.push([{
-      text: lang === "ru"
-        ? `\uD83C\uDFAF \u041D\u0430\u0447\u0430\u0442\u044C \u0434\u0435\u043D\u044C ${todayData.dayNumber}`
-        : `\uD83C\uDFAF Start Day ${todayData.dayNumber}`,
-      web_app: { url: miniAppUrl },
-    }]);
-  }
+  keyboard.push([{
+    text: lang === "ru"
+      ? `\uD83C\uDFAF \u041D\u0430\u0447\u0430\u0442\u044C \u0434\u0435\u043D\u044C ${todayData.dayNumber}`
+      : `\uD83C\uDFAF Start Day ${todayData.dayNumber}`,
+    url: buildTgDeepLink("today"),
+  }]);
   keyboard.push([
     { text: lang === "ru" ? "\uD83D\uDCCA \u041F\u0440\u043E\u0433\u0440\u0435\u0441\u0441" : "\uD83D\uDCCA Progress", callback_data: "cmd_progress" },
     { text: lang === "ru" ? "\u25C0\uFE0F \u041C\u0435\u043D\u044E" : "\u25C0\uFE0F Menu", callback_data: "cmd_menu" },
@@ -5053,7 +5027,7 @@ async function handleCoachCommand(msg: TgMessage): Promise<void> {
   if (miniAppUrl) {
     keyboard.push([{
       text: lang === "ru" ? "\uD83C\uDFAF \u041E\u0442\u043A\u0440\u044B\u0442\u044C" : "\uD83C\uDFAF Open App",
-      web_app: { url: miniAppUrl }
+      url: buildTgDeepLink("coach")
     }]);
   }
   keyboard.push([{
@@ -5123,7 +5097,7 @@ async function handleChallengeCommand(msg: TgMessage): Promise<void> {
   if (miniAppUrl) {
     keyboard.push([{
       text: lang === "ru" ? "\uD83C\uDFC6 \u0421\u043C\u043E\u0442\u0440\u0435\u0442\u044C" : "\uD83C\uDFC6 View Challenges",
-      web_app: { url: miniAppUrl }
+      url: buildTgDeepLink("challenge")
     }]);
   }
   keyboard.push([
@@ -5212,7 +5186,7 @@ async function handleCallbackQuery(cbq: TgCallbackQuery): Promise<void> {
         if (miniAppUrl) {
           pKeyboard.push([{
             text: pLang === "ru" ? "\uD83C\uDFAF \u041E\u0442\u043A\u0440\u044B\u0442\u044C" : "\uD83C\uDFAF Open App",
-            web_app: { url: miniAppUrl }
+            url: buildTgDeepLink()
           }]);
         }
         pKeyboard.push([
@@ -5270,7 +5244,7 @@ async function handleCallbackQuery(cbq: TgCallbackQuery): Promise<void> {
             text: tLang === "ru"
               ? `\uD83C\uDFAF \u041D\u0430\u0447\u0430\u0442\u044C \u0434\u0435\u043D\u044C ${todayData.dayNumber}`
               : `\uD83C\uDFAF Start Day ${todayData.dayNumber}`,
-            web_app: { url: miniAppUrl },
+            url: buildTgDeepLink("today"),
           }]);
         }
         tKeyboard.push([
@@ -5311,7 +5285,7 @@ async function handleCallbackQuery(cbq: TgCallbackQuery): Promise<void> {
         if (miniAppUrl) {
           cKeyboard.push([{
             text: cLang === "ru" ? "\uD83C\uDFAF \u041E\u0442\u043A\u0440\u044B\u0442\u044C" : "\uD83C\uDFAF Open App",
-            web_app: { url: miniAppUrl }
+            url: buildTgDeepLink("challenge")
           }]);
         }
         cKeyboard.push([{
@@ -9620,7 +9594,7 @@ app.post(`${PREFIX}/subscription/create-ton-invoice`, async (c) => {
     });
 
     // The invoiceUrl links to the bot with payment command
-    const botUsername = Deno.env.get("TELEGRAM_BOT_USERNAME") || "ProperFoodAI_bot";
+    const botUsername = Deno.env.get("TELEGRAM_BOT_USERNAME") || "ProperFoodAi_bot";
     const invoiceUrl = `https://t.me/${botUsername}?start=tonpay_${paymentId}`;
 
     console.log(`[Payment] Created TON invoice for user ${auth.userId}, plan=${plan}, ton=${planData.tonAmount}`);

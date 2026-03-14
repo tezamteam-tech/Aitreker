@@ -95,7 +95,7 @@ function miniAppUrl(): string {
  * Uses Telegram's native mechanism — no SSL dependency, no "untrusted site" dialogs.
  */
 function buildTgDeepLink(startapp?: string): string {
-  const botUsername = Deno.env.get("TELEGRAM_BOT_USERNAME") || "ProperFoodAI_bot";
+  const botUsername = Deno.env.get("TELEGRAM_BOT_USERNAME") || "ProperFoodAi_bot";
   const appShortName = Deno.env.get("TELEGRAM_MINIAPP_SHORT_NAME") || "app";
   const base = `https://t.me/${botUsername}/${appShortName}`;
   if (startapp) {
