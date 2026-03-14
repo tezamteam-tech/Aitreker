@@ -9418,9 +9418,10 @@ app.post(`${PREFIX}/meal-plans/generate`, async (c) => {
     }
 
     const body = await c.req.json();
-    const { plan_length, goal, daily_calories, gender, activity_level, age, height, weight, imageBase64, mimeType, language } = body;
+    const { plan_length, goal, daily_calories, gender, activity_level, age, height, weight, imageBase64, mimeType, language, user_wishes } = body;
     const days = plan_length || 7;
     const lang = language || "en";
+    const userWishes = (user_wishes || "").trim();
 
     const openaiKey = Deno.env.get("OPENAI_API_KEY");
     if (!openaiKey) return c.json({ message: "OpenAI not configured", code: "CONFIG_ERROR", status: 500 }, 500);
@@ -9451,7 +9452,14 @@ app.post(`${PREFIX}/meal-plans/generate`, async (c) => {
         : "\nClient provided a body photo for body composition assessment. Consider visible body type, estimated body fat, and physique when creating the meal plan.")
       : "";
 
-    console.log(`[Meal Plan] ${days}d, photo=${useVision}, lang=${lang}, body=${!!bodyMetrics}, user=${auth.userId}`);
+    // User wishes / preferences (free-text input from user)
+    const wishesInstruction = userWishes
+      ? (lang === "ru"
+        ? `\n\nОСОБЫЕ ПОЖЕЛАНИЯ КЛИЕНТА (ОБЯЗАТЕЛЬНО УЧТИ ВСЕ):\n"${userWishes}"\nЭто приоритетные пожелания — план питания ДОЛЖЕН максимально соответствовать этим требованиям.`
+        : `\n\nCLIENT'S SPECIAL PREFERENCES (MUST BE FULLY CONSIDERED):\n"${userWishes}"\nThese are priority preferences — the meal plan MUST align with these requirements as much as possible.`)
+      : "";
+
+    console.log(`[Meal Plan] ${days}d, photo=${useVision}, wishes=${!!userWishes}, lang=${lang}, body=${!!bodyMetrics}, user=${auth.userId}`);
 
     // ====== Normalizer ======
     const MEAL_TYPES_NORM = ['breakfast', 'lunch', 'dinner', 'snack'] as const;
@@ -9595,8 +9603,8 @@ app.post(`${PREFIX}/meal-plans/generate`, async (c) => {
       }
 
       const batchSys = lang === "ru"
-        ? `Ты профессиональный диетолог-нутрициолог. Составь детальный план питания на дни ${bs}-${be}. ${bodyMetrics ? `Метрики клиента: ${bodyMetrics}` : ""}${bi === 0 ? photoInstruction : ""}${prevCtx}\nОтветь ТОЛЬКО JSON: { "days": [{ "day": ${bs}, "meals": [{ "meal_type": "breakfast", "items": [{ "food_name": "...", "calories": N, "protein": N, "carbs": N, "fat": N, "quantity": N, "unit": "g|ml|piece" }] }, { "meal_type": "lunch", "items": [...] }, { "meal_type": "dinner", "items": [...] }, { "meal_type": "snack", "items": [...] }] }] }`
-        : `You are a professional nutritionist. Create a detailed meal plan for days ${bs}-${be}. ${bodyMetrics ? `Client metrics: ${bodyMetrics}` : ""}${bi === 0 ? photoInstruction : ""}${prevCtx}\nReturn ONLY JSON: { "days": [{ "day": ${bs}, "meals": [{ "meal_type": "breakfast", "items": [{ "food_name": "...", "calories": N, "protein": N, "carbs": N, "fat": N, "quantity": N, "unit": "g|ml|piece" }] }, { "meal_type": "lunch", "items": [...] }, { "meal_type": "dinner", "items": [...] }, { "meal_type": "snack", "items": [...] }] }] }`;
+        ? `Ты профессиональный диетолог-нутрициолог. Составь детальный план питания на дни ${bs}-${be}. ${bodyMetrics ? `Метрики клиента: ${bodyMetrics}` : ""}${bi === 0 ? photoInstruction : ""}${wishesInstruction}${prevCtx}\nОтветь ТОЛЬКО JSON: { "days": [{ "day": ${bs}, "meals": [{ "meal_type": "breakfast", "items": [{ "food_name": "...", "calories": N, "protein": N, "carbs": N, "fat": N, "quantity": N, "unit": "g|ml|piece" }] }, { "meal_type": "lunch", "items": [...] }, { "meal_type": "dinner", "items": [...] }, { "meal_type": "snack", "items": [...] }] }] }`
+        : `You are a professional nutritionist. Create a detailed meal plan for days ${bs}-${be}. ${bodyMetrics ? `Client metrics: ${bodyMetrics}` : ""}${bi === 0 ? photoInstruction : ""}${wishesInstruction}${prevCtx}\nReturn ONLY JSON: { "days": [{ "day": ${bs}, "meals": [{ "meal_type": "breakfast", "items": [{ "food_name": "...", "calories": N, "protein": N, "carbs": N, "fat": N, "quantity": N, "unit": "g|ml|piece" }] }, { "meal_type": "lunch", "items": [...] }, { "meal_type": "dinner", "items": [...] }, { "meal_type": "snack", "items": [...] }] }] }`;
 
       const batchUser = lang === "ru"
         ? `Дни ${bs}-${be} (${bc} дн) для ${userGender === "male" ? "мужчины" : "женщины"}, активность: ${userActivity}. Цель: ${userGoal}. Норма: ${calTarget} ккал/день. Разнообразные, практичные блюда.`
@@ -9628,7 +9636,7 @@ app.post(`${PREFIX}/meal-plans/generate`, async (c) => {
     const planData = { days: allDays };
     console.log(`[Meal Plan] Generated ${allDays.length}/${days} days for user ${auth.userId}, photo=${useVision}`);
     const planId = generateId("mplan");
-    const savedPlan = { id: planId, userId: auth.userId, plan_length: allDays.length, plan_data: planData, created_at: new Date().toISOString() };
+    const savedPlan = { id: planId, userId: auth.userId, plan_length: allDays.length, plan_data: planData, created_at: new Date().toISOString(), ...(userWishes ? { user_wishes: userWishes } : {}) };
     await kv.set(`become:mealplan:${auth.userId}:${planId}`, savedPlan);
 
     const plansIndexKey = `become:mealplans:${auth.userId}`;
@@ -9708,10 +9716,11 @@ app.post(`${PREFIX}/workout-plans/generate`, async (c) => {
       imageBase64, mimeType,
       daily_calorie_target, calories_consumed_today,
       target_protein, target_carbs, target_fat,
-      has_meal_plan, meal_plan_summary, language,
+      has_meal_plan, meal_plan_summary, language, user_wishes,
     } = body;
     const days = plan_length || 7;
     const wType = workout_type || "home";
+    const userWishes = (user_wishes || "").trim();
 
     const openaiKey = Deno.env.get("OPENAI_API_KEY");
     if (!openaiKey) return c.json({ message: "OpenAI not configured", code: "CONFIG_ERROR", status: 500 }, 500);
@@ -9770,7 +9779,14 @@ app.post(`${PREFIX}/workout-plans/generate`, async (c) => {
         : "\nClient provided a body photo for composition assessment. Consider visual data when creating the plan.")
       : "";
 
-    console.log(`[Workout Plan] ${days}d ${wType}, photo=${useVision}, nutrition=${!!nutritionContext}, lang=${lang}, user=${auth.userId}`);
+    // User wishes / preferences (free-text input from user)
+    const wishesInstruction = userWishes
+      ? (lang === "ru"
+        ? `\n\nОСОБЫЕ ПОЖЕЛАНИЯ КЛИЕНТА (ОБЯЗАТЕЛЬНО УЧТИ ВСЕ):\n"${userWishes}"\nЭто приоритетные пожелания — план тренировок ДОЛЖЕН максимально соответствовать этим требованиям (оборудование, цели, интенсивность, ограничения).`
+        : `\n\nCLIENT'S SPECIAL PREFERENCES (MUST BE FULLY CONSIDERED):\n"${userWishes}"\nThese are priority preferences — the workout plan MUST align with these requirements (equipment, goals, intensity, constraints).`)
+      : "";
+
+    console.log(`[Workout Plan] ${days}d ${wType}, photo=${useVision}, wishes=${!!userWishes}, nutrition=${!!nutritionContext}, lang=${lang}, user=${auth.userId}`);
 
     // ====== Helper: call OpenAI for a batch of days ======
     async function callBatch(
@@ -9843,8 +9859,8 @@ app.post(`${PREFIX}/workout-plans/generate`, async (c) => {
     // For long plans (30+), generate phase structure first
     if (days > 14) {
       const phaseP = lang === "ru"
-        ? `Ты CPT. Клиент: ${days}-дневный ${wType === "home" ? "домашний" : "зальный"} план.${bodyContext}\nАктивность: ${userActivity}. Цель: ${userGoal}.\nСоздай структуру фаз (~2-4 нед каждая) и контрольные точки для фото прогресса.\nJSON: { "phases": [{ "phase": 1, "name": "...", "week_start": 1, "week_end": 4, "focus": "...", "intensity": "low|medium|high" }], "milestones": [{ "day": 30, "type": "progress_photo", "title": "..." }], "nutrition_tips": ["..."] }`
-        : `You are a CPT. Client: ${days}-day ${wType} plan.${bodyContext}\nActivity: ${userActivity}. Goal: ${userGoal}.\nCreate phase structure (~2-4 weeks each) and progress photo milestones.\nJSON: { "phases": [{ "phase": 1, "name": "...", "week_start": 1, "week_end": 4, "focus": "...", "intensity": "low|medium|high" }], "milestones": [{ "day": 30, "type": "progress_photo", "title": "..." }], "nutrition_tips": ["..."] }`;
+        ? `Ты CPT. Клиент: ${days}-дневный ${wType === "home" ? "домашний" : "зальный"} план.${bodyContext}\nАктивность: ${userActivity}. Цель: ${userGoal}.${wishesInstruction}\nСоздай структуру фаз (~2-4 нед каждая) и контрольные точки для фото прогресса.\nJSON: { "phases": [{ "phase": 1, "name": "...", "week_start": 1, "week_end": 4, "focus": "...", "intensity": "low|medium|high" }], "milestones": [{ "day": 30, "type": "progress_photo", "title": "..." }], "nutrition_tips": ["..."] }`
+        : `You are a CPT. Client: ${days}-day ${wType} plan.${bodyContext}\nActivity: ${userActivity}. Goal: ${userGoal}.${wishesInstruction}\nCreate phase structure (~2-4 weeks each) and progress photo milestones.\nJSON: { "phases": [{ "phase": 1, "name": "...", "week_start": 1, "week_end": 4, "focus": "...", "intensity": "low|medium|high" }], "milestones": [{ "day": 30, "type": "progress_photo", "title": "..." }], "nutrition_tips": ["..."] }`;
       const pr = await callBatch([
         { role: "system", content: phaseP },
         { role: "user", content: lang === "ru" ? `Структура ${days}-дневного плана.` : `Structure for ${days}-day plan.` },
@@ -9887,8 +9903,8 @@ app.post(`${PREFIX}/workout-plans/generate`, async (c) => {
       }
 
       const bSys = lang === "ru"
-        ? `Ты CPT в фитнес-приложении. Составь дни ${bs}-${be} плана. ВСЕ ТЕКСТЫ НА РУССКОМ. ${photoInstruction}${nutritionContext}${phCtx}${prevCtx}\nJSON: { "days": [{ "day": ${bs}, "workout_type": "strength|cardio|flexibility|hiit|rest", "focus": "...", "duration_minutes": N, "estimated_calories_burn": N, "exercises": [{ "exercise_name": "...", "sets": N, "reps": "12", "rest_seconds": N, "muscle_group": "...", "notes": "..." }] }]${bi === 0 && allTips.length === 0 ? ', "nutrition_tips": ["..."]' : ""} }`
-        : `You are a CPT in a fitness app. Create days ${bs}-${be}. ${photoInstruction}${nutritionContext}${phCtx}${prevCtx}\nJSON: { "days": [{ "day": ${bs}, "workout_type": "strength|cardio|flexibility|hiit|rest", "focus": "...", "duration_minutes": N, "estimated_calories_burn": N, "exercises": [{ "exercise_name": "...", "sets": N, "reps": "12", "rest_seconds": N, "muscle_group": "...", "notes": "..." }] }]${bi === 0 && allTips.length === 0 ? ', "nutrition_tips": ["..."]' : ""} }`;
+        ? `Ты CPT в фитнес-приложении. Составь дни ${bs}-${be} плана. ВСЕ ТЕКСТЫ НА РУССКОМ. ${photoInstruction}${wishesInstruction}${nutritionContext}${phCtx}${prevCtx}\nJSON: { "days": [{ "day": ${bs}, "workout_type": "strength|cardio|flexibility|hiit|rest", "focus": "...", "duration_minutes": N, "estimated_calories_burn": N, "exercises": [{ "exercise_name": "...", "sets": N, "reps": "12", "rest_seconds": N, "muscle_group": "...", "notes": "..." }] }]${bi === 0 && allTips.length === 0 ? ', "nutrition_tips": ["..."]' : ""} }`
+        : `You are a CPT in a fitness app. Create days ${bs}-${be}. ${photoInstruction}${wishesInstruction}${nutritionContext}${phCtx}${prevCtx}\nJSON: { "days": [{ "day": ${bs}, "workout_type": "strength|cardio|flexibility|hiit|rest", "focus": "...", "duration_minutes": N, "estimated_calories_burn": N, "exercises": [{ "exercise_name": "...", "sets": N, "reps": "12", "rest_seconds": N, "muscle_group": "...", "notes": "..." }] }]${bi === 0 && allTips.length === 0 ? ', "nutrition_tips": ["..."]' : ""} }`;
 
       const bUser = lang === "ru"
         ? `Дни ${bs}-${be} (${bc} дн). ${wType === "home" ? "Дома" : "Зал"}.${bodyContext}\nАктивность: ${userActivity}. Цель: ${userGoal}. 1-2 дня отдыха/нед.`
@@ -9922,6 +9938,7 @@ app.post(`${PREFIX}/workout-plans/generate`, async (c) => {
       workout_data: cleanWorkoutData, nutrition_tips: nutritionTips,
       nutrition_context: { daily_calorie_target: userCalTarget, had_photo: useVision, had_meal_plan: !!has_meal_plan },
       created_at: new Date().toISOString(),
+      ...(userWishes ? { user_wishes: userWishes } : {}),
     };
     await kv.set(`become:workout_plans:${auth.userId}:${planId}`, savedPlan);
 

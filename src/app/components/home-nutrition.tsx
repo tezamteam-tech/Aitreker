@@ -422,25 +422,6 @@ export function HomeNutritionPage() {
             </div>
           </div>
 
-          {/* BMR Info Row */}
-          {bmr > 0 && (
-            <div className="flex items-center justify-between pt-3" style={{ borderTop: '1px solid var(--glass-border-subtle)' }}>
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-[#e17055]/15 flex items-center justify-center">
-                  <Zap className="w-3.5 h-3.5 text-[#e17055]" />
-                </div>
-                <span className="text-xs text-muted-foreground">{t('hn_bmr')}</span>
-                <span className="text-sm text-foreground/70">{bmr} {t('hn_cal_unit')}</span>
-              </div>
-              {maintenanceCalories > 0 && (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">{t('hn_tdee')}</span>
-                  <span className="text-sm text-foreground/70">{maintenanceCalories} {t('hn_cal_unit')}</span>
-                </div>
-              )}
-            </div>
-          )}
-
           {/* Potential Weight Change Indicator */}
           {(() => {
             const totalExpenditure = (maintenanceCalories || bmr || 0) + burnedToday;

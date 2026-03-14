@@ -43,6 +43,7 @@ import {
   Ruler,
   User,
   Lightbulb,
+  MessageSquare,
 } from 'lucide-react';
 import { GlassCard } from './glass-card';
 import { useAuth } from './auth-context';
@@ -87,6 +88,7 @@ interface SavedPlan {
   workout_data: WorkoutPlanData;
   nutrition_tips?: string[];
   created_at: string;
+  user_wishes?: string;
 }
 
 // ---- Workout type config ----
@@ -153,6 +155,26 @@ export function WorkoutPlanPage() {
   const [bodyPhoto, setBodyPhoto] = useState<string | null>(null);
   const [showCamera, setShowCamera] = useState(false);
   const [showPhotoPicker, setShowPhotoPicker] = useState(false);
+
+  // User wishes / preferences (persisted in localStorage)
+  const [userWishes, setUserWishes] = useState(() => localStorage.getItem('wp_user_wishes') || '');
+
+  // Persist wishes to localStorage
+  useEffect(() => {
+    localStorage.setItem('wp_user_wishes', userWishes);
+  }, [userWishes]);
+
+  // Quick chip toggle helper
+  const toggleChip = (chipText: string) => {
+    setUserWishes((prev) => {
+      const trimmed = prev.trim();
+      if (trimmed.includes(chipText)) {
+        return trimmed.replace(chipText, '').replace(/,\s*,/g, ',').replace(/^,\s*|,\s*$/g, '').trim();
+      }
+      return trimmed ? `${trimmed}, ${chipText}` : chipText;
+    });
+    hapticFeedback('light');
+  };
 
   // Progress photos state
   const [progressPhotos, setProgressPhotos] = useState<Array<{ id: string; url: string; plan_id: string | null; day_number: number | null; note: string; created_at: string }>>([]);
@@ -310,6 +332,7 @@ export function WorkoutPlanPage() {
         has_meal_plan: nutritionCtx.hasMealPlan,
         meal_plan_summary: nutritionCtx.mealPlanSummary,
         language: lang,
+        user_wishes: userWishes,
       });
       hapticSuccess();
       setCurrentPlan(result);
@@ -322,7 +345,7 @@ export function WorkoutPlanPage() {
       setErrorMsg(err?.message || 'Failed to generate workout plan');
       setViewState('error');
     }
-  }, [profile, selectedLength, workoutLocation, bodyPhoto, nutritionCtx, lang]);
+  }, [profile, selectedLength, workoutLocation, bodyPhoto, nutritionCtx, lang, userWishes]);
 
   // Toggle exercise
   const toggleExercise = (dayNum: number, exerciseIdx: number) => {
@@ -696,6 +719,60 @@ export function WorkoutPlanPage() {
                     </div>
                   </div>
                 </GlassCard>
+              )}
+
+              {/* ---- USER WISHES section ---- */}
+              {profile && (
+                <div>
+                  <div className="flex items-center gap-2.5 mb-2 px-1">
+                    <Sparkles className="w-4 h-4 text-[#fdcb6e]" />
+                    <p className="text-muted-foreground" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
+                      {t('wp_wishes_title')}
+                    </p>
+                    <span className="text-white/15 ml-auto" style={{ fontSize: '0.625rem' }}>
+                      {t('shared_optional')}
+                    </span>
+                  </div>
+                  <p className="text-white/25 mb-2 px-1" style={{ fontSize: '0.6875rem', lineHeight: 1.4 }}>
+                    {t('wp_wishes_desc')}
+                  </p>
+                  <textarea
+                    value={userWishes}
+                    onChange={(e) => setUserWishes(e.target.value)}
+                    placeholder={t('wp_wishes_placeholder')}
+                    rows={3}
+                    className="w-full rounded-xl px-4 py-3 bg-white/[0.03] border border-white/[0.08] text-white placeholder:text-white/15 outline-none resize-none focus:border-[#fdcb6e]/30 transition-colors"
+                    style={{ fontSize: '0.875rem', lineHeight: 1.5 }}
+                    maxLength={500}
+                  />
+                  {/* Quick chip suggestions */}
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {(['wp_chip_no_equipment', 'wp_chip_dumbbells', 'wp_chip_kettlebell', 'wp_chip_bands', 'wp_chip_intense', 'wp_chip_gentle', 'wp_chip_30min', 'wp_chip_lose10'] as const).map((chipKey) => {
+                      const chipText = t(chipKey);
+                      const isActive = userWishes.includes(chipText);
+                      return (
+                        <motion.button
+                          key={chipKey}
+                          whileTap={{ scale: 0.93 }}
+                          onClick={() => toggleChip(chipText)}
+                          className={`px-2.5 py-1 rounded-full border transition-all ${
+                            isActive
+                              ? 'bg-[#fdcb6e]/15 border-[#fdcb6e]/30 text-[#fdcb6e]'
+                              : 'bg-white/[0.02] border-white/[0.08] text-white/35'
+                          }`}
+                          style={{ fontSize: '0.6875rem', fontWeight: 500 }}
+                        >
+                          {chipText}
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                  {userWishes.length > 0 && (
+                    <p className="text-white/15 text-right mt-1 px-1" style={{ fontSize: '0.625rem' }}>
+                      {userWishes.length}/500
+                    </p>
+                  )}
+                </div>
               )}
 
               {/* Generate */}
@@ -1643,6 +1720,14 @@ function HistorySheet({
                   year: 'numeric',
                 })}
               </p>
+              {plan.user_wishes && (
+                <div className="flex items-center gap-1.5 mt-1.5">
+                  <MessageSquare className="w-3 h-3 text-[#fdcb6e]/60 flex-shrink-0" />
+                  <p className="text-[#fdcb6e]/50 truncate" style={{ fontSize: '0.6875rem' }}>
+                    {plan.user_wishes}
+                  </p>
+                </div>
+              )}
             </button>
             <motion.button
               whileTap={{ scale: 0.85 }}

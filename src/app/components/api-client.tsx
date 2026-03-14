@@ -898,7 +898,8 @@ export const api = {
     // Photo for AI body analysis (optional)
     imageBase64?: string;
     mimeType?: string;
-    // Language
+    // User preferences / wishes (optional — free-text)
+    user_wishes?: string;
     language?: string;
   }): Promise<{
     id: string;
@@ -961,6 +962,8 @@ export const api = {
     target_fat?: number;
     has_meal_plan?: boolean;
     meal_plan_summary?: string;
+    // User preferences / wishes (optional — free-text)
+    user_wishes?: string;
     language?: string;
   }): Promise<{
     id: string;

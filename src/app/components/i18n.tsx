@@ -1062,7 +1062,7 @@ const translations: Record<string, Record<Lang, string>> = {
   cal_carbs: { en: 'Carbs', ru: 'Углеводы' },
   cal_fat: { en: 'Fat', ru: 'Жиры' },
   cal_unit: { en: 'cal', ru: 'ккал' },
-  cal_scan: { en: 'Scan Food', ru: 'Сканировать' },
+  cal_scan: { en: 'Scan Food', ru: 'Скан' },
   cal_add_manual: { en: 'Add manually', ru: 'Добавить вручную' },
   cal_empty: { en: 'No entries today', ru: 'Нет записей на сегодня' },
   cal_empty_desc: { en: 'Scan food or add entries manually', ru: 'Сканируйте еду или добавляйте вручную' },
@@ -1169,6 +1169,7 @@ const translations: Record<string, Record<Lang, string>> = {
   cc_deposit_frozen_info: { en: 'Deposit is frozen in your balance until challenge ends', ru: 'Депозит замораживается на балансе до конца челленджа' },
 
   // ---- Shared profile labels (used by meal-plan, workout-plan) ----
+  shared_optional: { en: 'Optional', ru: 'Необязательно' },
   shared_your_profile: { en: 'Your Profile', ru: 'Ваш профиль' },
   shared_ai_plan_based: { en: 'AI will create a plan based on this', ru: 'На основе этих данных AI создаст план' },
   shared_ai_tailor: { en: 'AI will tailor workouts to your level', ru: 'AI создаст план на основе этих данных' },
@@ -1220,6 +1221,20 @@ const translations: Record<string, Record<Lang, string>> = {
   mp_photo_hint: { en: 'Optional — AI will personalize your meals', ru: 'Необязательно — AI персонализирует план' },
   mp_remove_photo: { en: 'Remove', ru: 'Убрать' },
   mp_gen_analyzing_photo: { en: 'Analyzing your body photo...', ru: 'Анализируем фото тела...' },
+
+  // Meal plan — User wishes
+  mp_wishes_title: { en: 'Your Preferences', ru: 'Ваши пожелания' },
+  mp_wishes_desc: { en: 'Tell AI about your diet preferences — it will tailor the plan for you', ru: 'Расскажите AI о своих предпочтениях — план будет составлен под вас' },
+  mp_wishes_placeholder: { en: 'E.g.: Strict diet to lose weight fast, mainly fruits and cottage cheese, limited budget, live in Belarus...', ru: 'Напр.: Строгая диета для быстрого похудения, в основном фрукты и творог, ограниченный бюджет, живу в Беларуси...' },
+  mp_chip_strict: { en: 'Strict diet', ru: 'Строгая диета' },
+  mp_chip_budget: { en: 'Budget-friendly', ru: 'Бюджетный' },
+  mp_chip_vegetarian: { en: 'Vegetarian', ru: 'Вегетарианское' },
+  mp_chip_high_protein: { en: 'High protein', ru: 'Высокий белок' },
+  mp_chip_no_sugar: { en: 'No sugar', ru: 'Без сахара' },
+  mp_chip_local: { en: 'Local products', ru: 'Местные продукты' },
+  mp_chip_simple: { en: 'Simple recipes', ru: 'Простые рецепты' },
+  mp_chip_no_lactose: { en: 'Lactose-free', ru: 'Без лактозы' },
+  mp_history_wishes: { en: 'Preferences', ru: 'Пожелания' },
 
   // ---- Shared Photo Picker ----
   photo_choose_source: { en: 'Add Photo', ru: 'Добавить фото' },
@@ -1299,6 +1314,20 @@ const translations: Record<string, Record<Lang, string>> = {
   wp_photo_added: { en: 'Photo added', ru: 'Фото добавлено' },
   wp_photo_hint: { en: 'Optional — AI will analyze your body composition', ru: 'Необязательно — AI проанализирует телосложение' },
   wp_remove_photo: { en: 'Remove', ru: 'Убрать' },
+
+  // Workout plan — User wishes
+  wp_wishes_title: { en: 'Your Preferences', ru: 'Ваши пожелания' },
+  wp_wishes_desc: { en: 'Tell AI about your goals, equipment, and preferences', ru: 'Расскажите AI о целях, оборудовании и предпочтениях' },
+  wp_wishes_placeholder: { en: 'E.g.: I have a kettlebell, resistance bands, and a mat at home. Goal: lose 10 kg in a month...', ru: 'Напр.: Дома есть гиря, резинки и коврик. Цель: сбросить 10 кг за месяц, нужна интенсивная программа...' },
+  wp_chip_no_equipment: { en: 'No equipment', ru: 'Без оборудования' },
+  wp_chip_dumbbells: { en: 'Have dumbbells', ru: 'Есть гантели' },
+  wp_chip_kettlebell: { en: 'Have kettlebell', ru: 'Есть гиря' },
+  wp_chip_bands: { en: 'Resistance bands', ru: 'Есть резинки' },
+  wp_chip_intense: { en: 'Maximum intensity', ru: 'Максимум интенсивности' },
+  wp_chip_gentle: { en: 'Gentle start', ru: 'Мягкий старт' },
+  wp_chip_30min: { en: '30 min max', ru: 'Макс 30 мин' },
+  wp_chip_lose10: { en: 'Lose 10 kg', ru: 'Сбросить 10 кг' },
+  wp_history_wishes: { en: 'Preferences', ru: 'Пожелания' },
   wp_age_label: { en: 'Age', ru: 'Возраст' },
   wp_height_label: { en: 'Height', ru: 'Рост' },
   wp_weight_label: { en: 'Weight', ru: 'Вес' },
