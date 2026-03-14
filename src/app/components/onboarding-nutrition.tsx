@@ -131,6 +131,18 @@ export function OnboardingNutritionPage() {
       localStorage.setItem('nutrition_calorie_target', String(calorieResult.targetCalories));
       localStorage.setItem('nutrition_bmr', String(calorieResult.bmr));
       localStorage.setItem('nutrition_maintenance', String(calorieResult.dailyCalories));
+      // Cache profile data for immediate Profile screen use
+      localStorage.setItem('nutrition_profile', JSON.stringify({
+        gender: data.gender,
+        age: Number(data.age),
+        height: Number(data.height),
+        weight: Number(data.weight),
+        activity_level: data.activityLevel,
+        goal: data.goal,
+        daily_calorie_target: calorieResult.targetCalories,
+        bmr: calorieResult.bmr,
+        daily_maintenance_calories: calorieResult.dailyCalories,
+      }));
 
       hapticSuccess();
       localStorage.setItem('nutrition_onboarded', 'true');

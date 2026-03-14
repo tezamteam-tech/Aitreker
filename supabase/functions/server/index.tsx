@@ -10624,7 +10624,7 @@ app.post(`${PREFIX}/user-profile`, async (c) => {
     }
 
     const body = await c.req.json();
-    const { gender, age, height, weight, activity_level, goal } = body;
+    const { gender, age, height, weight, activity_level, goal, daily_calorie_target, bmr, daily_maintenance_calories } = body;
 
     // Validate required fields
     if (!gender || !age || !height || !weight || !activity_level || !goal) {
@@ -10634,6 +10634,9 @@ app.post(`${PREFIX}/user-profile`, async (c) => {
       );
     }
 
+    // Load existing profile to preserve created_at on updates
+    const existing = await kv.get(`become:user_profile:${auth.telegramId}`);
+
     const profile = {
       telegram_id: auth.telegramId,
       gender,
@@ -10642,7 +10645,10 @@ app.post(`${PREFIX}/user-profile`, async (c) => {
       weight: Number(weight),
       activity_level,
       goal,
-      created_at: new Date().toISOString(),
+      daily_calorie_target: daily_calorie_target ? Number(daily_calorie_target) : (existing?.daily_calorie_target || null),
+      bmr: bmr ? Number(bmr) : (existing?.bmr || null),
+      daily_maintenance_calories: daily_maintenance_calories ? Number(daily_maintenance_calories) : (existing?.daily_maintenance_calories || null),
+      created_at: existing?.created_at || new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
 
