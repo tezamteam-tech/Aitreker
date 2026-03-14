@@ -4445,34 +4445,22 @@ async function handleStartCommand(msg: TgMessage): Promise<void> {
       console.log(`[TG Bot] bot_auth generation error (non-critical):`, err);
     }
 
-    // Step 1: FORCE remove any old reply keyboard (e.g. legacy "Share contact" button)
-    // Without explicit removal, old persistent keyboards survive even after /start
-    try {
-      await sendMessage(chatId,
-        lang === "ru" ? "\u{1F504} \u041E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0435..." : "\u{1F504} Updating...",
-        { reply_markup: { remove_keyboard: true } as any }
-      );
-    } catch (rmErr) {
-      console.log(`[TG Bot] remove_keyboard error (non-critical):`, rmErr);
-    }
+    // Step 1: Send welcome-back message with inline "Открыть" button (blue, primary)
+    const returning = buildReturningStartMessage(user, deepLinkParam, undefined, false);
+    const plainMiniAppUrl = getProperMiniAppUrl();
+    console.log(`[TG Bot] Reply keyboard web_app URL for returning user: ${plainMiniAppUrl || "(EMPTY — PROPERFOOD_MINIAPP_URL not set!)"}`);
+    const replyKb = buildReplyKeyboard(lang, plainMiniAppUrl || undefined);
 
-    // Step 2: Send welcome-back inline message
-    // skipOpenButton=true: "Open Proper Food" will be in the reply keyboard below
-    const returning = buildReturningStartMessage(user, deepLinkParam, undefined, true);
+    // Send inline message with "Открыть" + "Обновить данные" buttons
     await sendMessage(chatId, returning.text, {
       reply_markup: returning.reply_markup,
     });
 
-    // Step 3: Send NEW persistent reply keyboard with PLAIN miniAppUrl (no ?bot_auth= params)
-    // Using the clean base URL avoids "Something went wrong" errors in Telegram WebView.
-    // Auth is handled by Telegram initData when the Mini App opens — bot_auth in URL is unnecessary.
-    const plainMiniAppUrl = getProperMiniAppUrl();
-    console.log(`[TG Bot] Reply keyboard web_app URL for returning user: ${plainMiniAppUrl || "(EMPTY — PROPERFOOD_MINIAPP_URL not set!)"}`);
-    const replyKb = buildReplyKeyboard(lang, plainMiniAppUrl || undefined);
+    // Step 2: Attach persistent reply keyboard (blue web_app button at bottom)
     await sendMessage(chatId,
       lang === "ru"
-        ? "\u{2328}\uFE0F \u041A\u043B\u0430\u0432\u0438\u0430\u0442\u0443\u0440\u0430 \u0431\u044B\u0441\u0442\u0440\u044B\u0445 \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0439 \u0430\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u043D\u0430."
-        : "\u{2328}\uFE0F Quick actions keyboard activated.",
+        ? "\u{1F447} \u041D\u0430\u0436\u043C\u0438 \u043A\u043D\u043E\u043F\u043A\u0443 \u043D\u0438\u0436\u0435:"
+        : "\u{1F447} Tap the button below:",
       { reply_markup: replyKb }
     );
 
@@ -4608,7 +4596,7 @@ async function handleStartCommand(msg: TgMessage): Promise<void> {
     // Send persistent reply keyboard with clean URL
     const replyKb = buildReplyKeyboard(lang, miniAppUrl || undefined);
     await sendMessage(chatId,
-      lang === "ru" ? "⌨️ Клавиатура быстрого доступа активирована." : "⌨️ Quick access keyboard activated.",
+      lang === "ru" ? "⌨️ Клавиатура быстрого доступа активирована." : "��️ Quick access keyboard activated.",
       { reply_markup: replyKb }
     );
 
