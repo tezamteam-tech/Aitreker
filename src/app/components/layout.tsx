@@ -9,6 +9,7 @@ import { useTelegramFullscreen } from './use-telegram-fullscreen';
 import { BottomSheetProvider, useAnyBottomSheetOpen } from './bottom-sheet-context';
 import { ThemeSync } from './theme-sync';
 import { api } from './api-client';
+import { WebLoginScreen } from './web-login-screen';
 import svgPaths from '../../imports/svg-hg8um85cbx';
 import patternSvgPaths from '../../imports/svg-769x92ozth';
 
@@ -545,7 +546,16 @@ function AuthGate({ children }: { children: ReactNode }) {
     // Not on onboarding and not authenticated — check if we should show TG required screen
     const inTelegram = isTelegramClient() || isTelegramEnvironment();
     if (!inTelegram) {
-      return <TelegramRequiredScreen onRetry={login} />;
+      // Web user: show interactive "Login via Telegram Bot" screen with polling
+      return (
+        <WebLoginScreen
+          onAuthConfirmed={() => {
+            // Re-trigger the full login flow — it will pick up the new token from localStorage
+            login();
+          }}
+          onRetry={login}
+        />
+      );
     }
 
     // In Telegram but auth failed — show error with retry
@@ -554,184 +564,109 @@ function AuthGate({ children }: { children: ReactNode }) {
     }
   }
 
+  // Web users on onboarding page also need to authenticate first
+  if (!isAuthenticated && location.pathname === '/') {
+    const inTelegram = isTelegramClient() || isTelegramEnvironment();
+    if (!inTelegram && !isLoading) {
+      return (
+        <WebLoginScreen
+          onAuthConfirmed={() => login()}
+          onRetry={login}
+        />
+      );
+    }
+  }
+
   return <>{children}</>;
 }
 
-// ---- App Layout (root route component) ----
+// ---- Main Layout with safe area, back button, tab bar ----
 
-export function AppLayout() {
+function LayoutInner() {
   const navigate = useNavigate();
   const location = useLocation();
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  // Keyboard detection — hides tab bar when keyboard is open
   const keyboardVisible = useKeyboardVisible();
 
-  // Fullscreen + swipe protection on mobile TG clients
+  // Fullscreen handling for Telegram
   useTelegramFullscreen();
 
-  // Setup Telegram safe areas on mount — with retry cascade
-  // TG SDK may not report correct safe areas immediately, so we
-  // re-run setupSafeArea() on a progressive schedule to catch
-  // delayed values from both iOS and Android clients.
+  // ---- Safe area setup with retry cascade ----
+  const safeAreaApplied = useRef(false);
   useEffect(() => {
-    setupSafeArea();
-    listenSafeAreaChanges();
+    const delays = [100, 300, 600, 1000, 2000, 4000];
+    const timers: ReturnType<typeof setTimeout>[] = [];
 
-    // Retry cascade to catch late SDK initialization
-    const timers = [100, 300, 600, 1000, 2000, 4000].map((ms) =>
-      setTimeout(() => setupSafeArea(), ms)
-    );
+    const tryApply = () => {
+      try {
+        setupSafeArea();
+        safeAreaApplied.current = true;
+      } catch (e) {
+        console.warn('[Layout] Safe area setup attempt failed:', e);
+      }
+    };
 
-    return () => timers.forEach(clearTimeout);
+    tryApply();
+    for (const delay of delays) {
+      timers.push(setTimeout(tryApply, delay));
+    }
+
+    const unsub = listenSafeAreaChanges();
+
+    return () => {
+      timers.forEach(clearTimeout);
+      if (typeof unsub === 'function') unsub();
+    };
   }, []);
 
-  // Scroll to top on every route change
+  // ---- Back button logic ----
+  const navDepthRef = useRef(0);
+
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTo(0, 0);
-    }
-    window.scrollTo(0, 0);
+    navDepthRef.current += 1;
   }, [location.pathname]);
 
-  // Track navigation history depth to handle direct-link edge case
-  const historyDepthRef = useRef(0);
   useEffect(() => {
-    historyDepthRef.current += 1;
-  }, [location.pathname]);
-
-  // Telegram Back Button integration
-  useEffect(() => {
-    const showBack = shouldShowBackButton(location.pathname);
-    console.log(`[Layout BackButton] path=${location.pathname} showBack=${showBack} historyDepth=${historyDepthRef.current}`);
-
-    if (showBack) {
+    const show = shouldShowBackButton(location.pathname);
+    if (show) {
       showBackButton();
-      const unsub = onBackButtonPressed(() => {
-        hapticFeedback('light');
-        console.log(`[Layout BackButton] pressed! historyDepth=${historyDepthRef.current}`);
-        // If user opened a deep link directly (no history), go to /home instead
-        if (historyDepthRef.current <= 1) {
+      const cleanup = onBackButtonPressed(() => {
+        if (navDepthRef.current <= 1) {
+          // Deep-linked into a sub-page — go to /home instead of leaving app
           navigate('/home', { replace: true });
         } else {
           navigate(-1);
         }
       });
       return () => {
-        unsub();
         hideBackButton();
+        if (typeof cleanup === 'function') cleanup();
       };
     } else {
       hideBackButton();
     }
   }, [location.pathname, navigate]);
 
-  // Determine if tab bar should have extra bottom padding
-  const hasTabBar = isTabPage(location.pathname);
+  return (
+    <div
+      className="relative min-h-screen bg-background text-foreground overflow-y-auto"
+      style={{
+        paddingTop: 'var(--safe-area-top, 0px)',
+      }}
+    >
+      <AuthGate>
+        <Outlet />
+        <GlassTabBar keyboardVisible={keyboardVisible} />
+      </AuthGate>
+    </div>
+  );
+}
 
+export function AppLayout() {
   return (
     <AuthProvider>
       <BottomSheetProvider>
-        {/* ThemeSync — manages .dark class + Telegram color mapping */}
         <ThemeSync />
-
-        <div
-          className="fixed inset-0 overflow-hidden bg-background text-foreground"
-        >
-          {/* Global SVG displacement filter for liquid glass effect */}
-          <svg style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }} aria-hidden="true">
-            <filter id="liquidGlassFilter" x="-10%" y="-10%" width="120%" height="120%">
-              <feTurbulence
-                type="fractalNoise"
-                baseFrequency="0.012 0.018"
-                numOctaves={3}
-                seed={2}
-                result="noise"
-              />
-              <feColorMatrix
-                in="noise"
-                type="matrix"
-                values="0.866 0.5 0 0 0
-                        -0.5 0.866 0 0 0
-                        0 0 1 0 0
-                        0 0 0 1 0"
-                result="rotatedNoise"
-              />
-              <feDisplacementMap
-                in="SourceGraphic"
-                in2="rotatedNoise"
-                scale={18}
-                xChannelSelector="R"
-                yChannelSelector="G"
-              />
-            </filter>
-          </svg>
-
-          {/* Scrollable content container */}
-          <div
-            ref={scrollRef}
-            className="h-full overflow-y-auto relative"
-            style={{
-              paddingBottom: hasTabBar && !keyboardVisible ? '90px' : '0px',
-              overscrollBehaviorY: 'contain',
-            }}
-          >
-            {/* Pattern background — mesh gradient + SVG pattern */}
-            <div
-              className="pointer-events-none sticky top-0 left-0 right-0 h-0 z-0"
-              aria-hidden="true"
-            >
-              <div
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  height: '100vh',
-                  overflow: 'hidden',
-                }}
-              >
-                {/* Mesh gradient layer */}
-                <div className="absolute inset-0 bg-mesh-gradient" />
-
-                {/* SVG pattern overlay */}
-                <svg
-                  viewBox="0 0 1928.01 1081.02"
-                  fill="none"
-                  preserveAspectRatio="xMidYMid slice"
-                  style={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    width: 'auto',
-                    height: '100%',
-                    minWidth: '100%',
-                    transform: 'translate(-50%, -50%) rotate(-90deg)',
-                    opacity: 'var(--pattern-opacity)',
-                  }}
-                >
-                  <path
-                    d={patternSvgPaths.p28240000}
-                    fill="currentColor"
-                    fillOpacity="0.2"
-                    fillRule="evenodd"
-                    clipRule="evenodd"
-                    className="text-muted-foreground"
-                  />
-                </svg>
-              </div>
-            </div>
-
-            <div className="relative z-[1]">
-              <AuthGate>
-                <Outlet />
-              </AuthGate>
-            </div>
-          </div>
-
-          {/* Glass morphism tab bar — hides when keyboard is open */}
-          <GlassTabBar keyboardVisible={keyboardVisible} />
-        </div>
+        <LayoutInner />
       </BottomSheetProvider>
     </AuthProvider>
   );

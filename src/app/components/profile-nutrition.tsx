@@ -8,7 +8,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import {
   User,
   Scale,
@@ -27,14 +27,16 @@ import {
   Loader2,
   Ruler,
   Flame,
+  Sparkles,
 } from 'lucide-react';
 import { GlassCard } from './glass-card';
 import { useAuth } from './auth-context';
 import { hapticFeedback, hapticSuccess } from './telegram';
 import { useTranslation } from './i18n';
 import { PageHeader } from './page-header';
-import { api } from './api-client';
+import { api, getUserLang } from './api-client';
 import { calculateCalories } from './calorie-calculator';
+import { AiCalorieAdvisor } from './ai-calorie-advisor';
 
 type Gender = 'male' | 'female';
 type ActivityLevel = 'low' | 'medium' | 'high' | 'athlete';
@@ -88,6 +90,7 @@ export function ProfileNutritionPage() {
   const [editGoal, setEditGoal] = useState<Goal>('maintain_weight');
   const [editActivity, setEditActivity] = useState<ActivityLevel>('medium');
   const [editCalories, setEditCalories] = useState('');
+  const [showAiAdvisor, setShowAiAdvisor] = useState(false);
 
   // Load profile from API
   useEffect(() => {
@@ -513,15 +516,16 @@ export function ProfileNutritionPage() {
             </div>
 
             {editing === 'calories' ? (
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
                   <input
                     type="number"
+                    inputMode="numeric"
                     value={editCalories}
                     onChange={(e) => setEditCalories(e.target.value)}
-                    className="flex-1 bg-white/[0.06] border border-white/[0.1] rounded-xl px-4 py-3 text-foreground text-2xl font-semibold text-center outline-none focus:border-[#6c5ce7]/50"
+                    className="flex-1 bg-white/[0.06] border border-white/[0.1] rounded-xl px-3 py-2.5 text-foreground text-xl font-semibold text-center outline-none focus:border-[#6c5ce7]/50"
                   />
-                  <span className="text-muted-foreground text-sm">{t('scan_calories_unit')}</span>
+                  <span className="text-muted-foreground text-xs flex-shrink-0">{t('cal_unit')}</span>
                 </div>
                 <p className="text-xs text-muted-foreground text-center">
                   {t('pn_calorie_hint')}
@@ -529,28 +533,71 @@ export function ProfileNutritionPage() {
               </div>
             ) : (
               <>
-                <p className="text-3xl text-foreground font-semibold mb-1">
-                  {profile.daily_calorie_target || '—'}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {t('pn_activity_based', { level: t(ACTIVITY_LABELS[profile.activity_level]) })}
-                </p>
-                {profile.bmr && (
-                  <div className="flex items-center gap-4 mt-3 pt-3" style={{ borderTop: '1px solid var(--glass-border-subtle)' }}>
-                    <div>
-                      <p className="text-xs text-muted-foreground">BMR</p>
-                      <p className="text-sm text-foreground font-medium">{profile.bmr}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">{t('pn_maintenance')}</p>
-                      <p className="text-sm text-foreground font-medium">{profile.daily_maintenance_calories}</p>
-                    </div>
+                <div className="flex items-end justify-between">
+                  <div>
+                    <p className="text-3xl text-foreground font-semibold">
+                      {profile.daily_calorie_target || '—'}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {t('pn_activity_based', { level: t(ACTIVITY_LABELS[profile.activity_level]) })}
+                    </p>
                   </div>
-                )}
+                  {profile.bmr && (
+                    <div className="flex items-center gap-3 text-right">
+                      <div>
+                        <p className="text-[0.625rem] text-muted-foreground">BMR</p>
+                        <p className="text-xs text-foreground font-medium">{profile.bmr}</p>
+                      </div>
+                      <div>
+                        <p className="text-[0.625rem] text-muted-foreground">{t('pn_maintenance')}</p>
+                        <p className="text-xs text-foreground font-medium">{profile.daily_maintenance_calories}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* AI Advisor CTA */}
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => {
+                    hapticFeedback('medium');
+                    setShowAiAdvisor(true);
+                  }}
+                  className="w-full mt-3 p-3 rounded-xl flex items-center gap-3 relative overflow-hidden"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(108,92,231,0.1), rgba(0,206,201,0.06))',
+                    border: '1px solid rgba(108,92,231,0.2)',
+                  }}
+                >
+                  <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#6c5ce7]/20 to-[#a29bfe]/20 flex items-center justify-center flex-shrink-0">
+                    <Sparkles className="w-4 h-4 text-[#a29bfe]" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="text-foreground text-sm font-medium">{t('pn_ask_ai')}</p>
+                    <p className="text-muted-foreground text-xs leading-snug">{t('pn_ask_ai_desc')}</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-[#a29bfe]/60 flex-shrink-0" />
+                </motion.button>
               </>
             )}
           </GlassCard>
         )}
+
+        {/* AI Calorie Advisor Bottom Sheet */}
+        <AnimatePresence>
+          {showAiAdvisor && profile && (
+            <AiCalorieAdvisor
+              profile={profile}
+              currentTarget={profile.daily_calorie_target || 2000}
+              language={getUserLang()}
+              onApply={(calories) => {
+                saveProfile({ daily_calorie_target: calories });
+                setShowAiAdvisor(false);
+              }}
+              onClose={() => setShowAiAdvisor(false)}
+            />
+          )}
+        </AnimatePresence>
 
         {/* Premium Upgrade CTA for free users */}
         {!isPremium && (

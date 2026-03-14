@@ -761,6 +761,32 @@ export const api = {
 
   // ---- Food Scanning & Entries ----
 
+  /** AI body composition analysis — returns personalized calorie recommendation */
+  async aiBodyAnalysis(params: {
+    gender: string;
+    age: number;
+    height: number;
+    weight: number;
+    activityLevel: string;
+    goal: string;
+    imageBase64?: string;
+    mimeType?: string;
+    language?: string;
+  }): Promise<{
+    recommended_calories: number;
+    recommended_protein: number;
+    recommended_carbs: number;
+    recommended_fat: number;
+    bmr_estimate: number;
+    tdee_estimate: number;
+    body_fat_estimate: string | null;
+    body_assessment: string;
+    recommendation_reason: string;
+    tips: string[];
+  }> {
+    return request('POST', '/nutrition/ai-body-analysis', params);
+  },
+
   /** Send food photo to AI for recognition (Edge Function → OpenAI Vision) */
   async scanFood(imageBase64: string, mimeType?: string): Promise<{
     food_name: string;
@@ -1165,6 +1191,35 @@ export const api = {
     const res = await request<AuthResponse>('POST', '/auth/refresh', { deviceToken });
     setToken(res.token);
     return res;
+  },
+
+  // ---- Web Auth: Login via Telegram Bot (for web users) ----
+  async webAuthInit(): Promise<{ code: string; botLink: string }> {
+    return request('POST', '/auth/web-init', {});
+  },
+
+  async webAuthCheck(code: string): Promise<{
+    status: 'pending' | 'confirmed' | 'expired' | 'error';
+    token?: string;
+    deviceToken?: string;
+    user?: any;
+  }> {
+    // This is an auth endpoint — needs to bypass the token guard
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${publicAnonKey}`,
+    };
+    const url = `${API_BASE}/auth/web-check/${encodeURIComponent(code)}`;
+    const res = await fetch(url, { headers });
+    if (!res.ok) {
+      return { status: 'error' };
+    }
+    const data = await res.json();
+    if (data.status === 'confirmed' && data.token) {
+      setToken(data.token);
+      if (data.deviceToken) setDeviceToken(data.deviceToken);
+    }
+    return data;
   },
 };
 

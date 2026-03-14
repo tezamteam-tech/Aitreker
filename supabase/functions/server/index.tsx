@@ -257,6 +257,7 @@ const SESSION_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
 const SESSION_REFRESH_THRESHOLD = 3 * 24 * 60 * 60 * 1000; // refresh when < 3 days left
 const PHONE_CODE_TTL = 5 * 60 * 1000; // 5 minutes
 const PHONE_SESSION_TTL = 180 * 24 * 60 * 60 * 1000; // 180 days — long-lived for phone auth
+const WEBAUTH_TTL = 5 * 60 * 1000; // 5 minutes — pending web auth session expires quickly
 
 // ---- Phone normalization ----
 function normalizePhone(phone: string): string {
@@ -986,6 +987,71 @@ app.post(`${PREFIX}/auth/refresh`, async (c) => {
       { message: `Error refreshing session: ${err}`, code: "INTERNAL_ERROR", status: 500 },
       500
     );
+  }
+});
+
+// ---- POST /auth/web-init ----
+// Create a pending web auth session. Frontend polls /auth/web-check/:code.
+// User confirms by sending /start webauth_CODE to the bot.
+app.post(`${PREFIX}/auth/web-init`, async (c) => {
+  try {
+    // Generate a short 8-char code (URL-safe)
+    const rand = crypto.getRandomValues(new Uint8Array(6));
+    const code = Array.from(rand).map(b => b.toString(36).padStart(2, '0')).join('').slice(0, 8);
+    
+    await kv.set(`become:webauth:${code}`, {
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + WEBAUTH_TTL).toISOString(),
+    });
+
+    const botUsername = Deno.env.get("TELEGRAM_BOT_USERNAME") || "ProperFoodAi_bot";
+    const botLink = `https://t.me/${botUsername}?start=webauth_${code}`;
+
+    console.log(`[WebAuth] Created pending session: ${code}`);
+    return c.json({ code, botLink });
+  } catch (err) {
+    console.log("[WebAuth] Error creating web auth session:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- GET /auth/web-check/:code ----
+// Poll this endpoint to check if web auth has been confirmed by the bot.
+app.get(`${PREFIX}/auth/web-check/:code`, async (c) => {
+  try {
+    const code = c.req.param("code");
+    if (!code) {
+      return c.json({ status: "invalid" });
+    }
+
+    const data = await kv.get(`become:webauth:${code}`);
+    if (!data) {
+      return c.json({ status: "expired" });
+    }
+
+    // Check expiry
+    if (data.expiresAt && new Date(data.expiresAt) < new Date()) {
+      await kv.del(`become:webauth:${code}`);
+      return c.json({ status: "expired" });
+    }
+
+    if (data.status === "confirmed") {
+      // Clean up: delete the webauth record (one-time use)
+      await kv.del(`become:webauth:${code}`);
+      console.log(`[WebAuth] Code ${code} confirmed, returning token for user ${data.userId}`);
+      return c.json({
+        status: "confirmed",
+        token: data.sessionToken,
+        deviceToken: data.deviceToken,
+        user: data.user,
+      });
+    }
+
+    return c.json({ status: "pending" });
+  } catch (err) {
+    console.log("[WebAuth] Error checking web auth:", err);
+    return c.json({ status: "error", message: String(err) });
   }
 });
 
@@ -4382,6 +4448,104 @@ async function handleStartCommand(msg: TgMessage): Promise<void> {
   // Check if user already exists
   const tgId = String(user.id);
   const existingUserId = await kv.get(`become:user:tg:${tgId}`);
+
+  // ---- Web Auth: confirm pending web login session ----
+  if (deepLinkParam && deepLinkParam.startsWith("webauth_")) {
+    const webCode = deepLinkParam.replace("webauth_", "");
+    console.log(`[WebAuth] Bot received webauth code: ${webCode} from tg:${tgId}`);
+    
+    const webData = await kv.get(`become:webauth:${webCode}`);
+    if (!webData || webData.status !== "pending") {
+      const lang = detectLang(user.language_code);
+      await sendMessage(chatId,
+        lang === "ru"
+          ? "❌ <b>Ссылка устарела или уже использована.</b>\n\nПопробуйте снова на сайте."
+          : "❌ <b>This link has expired or was already used.</b>\n\nPlease try again on the website."
+      );
+      return;
+    }
+
+    // Check expiry
+    if (webData.expiresAt && new Date(webData.expiresAt) < new Date()) {
+      await kv.del(`become:webauth:${webCode}`);
+      const lang = detectLang(user.language_code);
+      await sendMessage(chatId,
+        lang === "ru"
+          ? "⏰ <b>Время входа истекло.</b>\n\nПерезагрузите страницу и попробуйте снова."
+          : "⏰ <b>Login session expired.</b>\n\nPlease refresh the page and try again."
+      );
+      return;
+    }
+
+    // User exists — create session; doesn't exist — create user first
+    let userId = existingUserId;
+    if (!userId) {
+      // Auto-create user from Telegram data
+      userId = generateId("user");
+      const newUser = {
+        id: userId,
+        telegramId: Number(tgId),
+        firstName: user.first_name || "User",
+        lastName: user.last_name || null,
+        username: user.username || null,
+        photoUrl: null,
+        language: user.language_code === "ru" ? "ru" : "en",
+        tone: "supportive",
+        selectedGoal: null,
+        xp: 0,
+        dailyReminderTime: null,
+        utcOffset: null,
+        activeProgramId: null,
+        subscriptionExpiresAt: null,
+        referralCode: null,
+        referralCount: 0,
+        referredBy: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      await kv.set(`become:user:${userId}`, newUser);
+      await kv.set(`become:user:tg:${tgId}`, userId);
+      console.log(`[WebAuth] Auto-created user ${userId} for tg:${tgId}`);
+    }
+
+    // Create session + device token
+    const sessionToken = generateToken();
+    const expiresAt = new Date(Date.now() + SESSION_TTL).toISOString();
+    await kv.set(`become:session:${sessionToken}`, {
+      userId,
+      telegramId: Number(tgId),
+      createdAt: new Date().toISOString(),
+      expiresAt,
+    });
+
+    const deviceTokenStr = await generateDeviceToken(userId, tgId);
+    
+    // Load user data
+    const userData = await kv.get(`become:user:${userId}`);
+
+    // Confirm the web auth session
+    await kv.set(`become:webauth:${webCode}`, {
+      status: "confirmed",
+      userId,
+      telegramId: Number(tgId),
+      sessionToken,
+      deviceToken: deviceTokenStr,
+      user: userData,
+      confirmedAt: new Date().toISOString(),
+      // Keep the original expiry for cleanup
+      expiresAt: new Date(Date.now() + 2 * 60 * 1000).toISOString(), // 2 min for frontend to pick up
+    });
+
+    console.log(`[WebAuth] Confirmed code ${webCode} for user ${userId} (tg:${tgId})`);
+
+    const lang = detectLang(user.language_code);
+    await sendMessage(chatId,
+      lang === "ru"
+        ? "✅ <b>Вход подтверждён!</b>\n\nВернитесь на сайт — он автоматически авторизуется."
+        : "✅ <b>Login confirmed!</b>\n\nGo back to the website — it will log you in automatically."
+    );
+    return;
+  }
 
   // ---- Server-side referral tracking ----
   if (deepLinkParam && deepLinkParam.startsWith("ref_")) {
@@ -8887,6 +9051,110 @@ app.post(`${PREFIX}/food/scan`, async (c) => {
   } catch (err) {
     console.log("POST /food/scan error:", err);
     return c.json({ message: `Error scanning food: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- POST /nutrition/ai-body-analysis ----
+app.post(`${PREFIX}/nutrition/ai-body-analysis`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const body = await c.req.json();
+    const { gender, age, height, weight, activityLevel, goal, imageBase64, mimeType, language } = body;
+
+    if (!gender || !age || !height || !weight) {
+      return c.json({ message: "Missing required metrics", code: "BAD_REQUEST", status: 400 }, 400);
+    }
+
+    const apiKey = Deno.env.get("OPENAI_API_KEY");
+    if (!apiKey) {
+      return c.json({ message: "AI service not configured", code: "AI_NOT_CONFIGURED", status: 503 }, 503);
+    }
+
+    const lang = language === "ru" ? "ru" : "en";
+    const goalLabels: Record<string, Record<string, string>> = {
+      lose_weight: { en: "lose weight", ru: "похудеть" },
+      maintain_weight: { en: "maintain weight", ru: "поддержать вес" },
+      gain_muscle: { en: "gain muscle", ru: "набрать мышечную массу" },
+    };
+    const activityLabels: Record<string, Record<string, string>> = {
+      low: { en: "sedentary", ru: "малоподвижный" },
+      medium: { en: "lightly active (2-3x/week)", ru: "лёгкая активность (2-3 тренировки/нед)" },
+      high: { en: "moderately active (4-5x/week)", ru: "средняя активность (4-5 тренировок/нед)" },
+      athlete: { en: "very active (daily)", ru: "высокая активность (ежедневно)" },
+    };
+
+    const goalText = goalLabels[goal]?.[lang] || goal || "not specified";
+    const activityText = activityLabels[activityLevel]?.[lang] || activityLevel || "not specified";
+    const bmi = (weight / ((height / 100) ** 2)).toFixed(1);
+
+    const photoInstruction = imageBase64
+      ? (lang === "ru"
+        ? "Тебе предоставлено фото тела. Оцени визуально: лишний жир (бока, живот, бёдра), мышечную массу, телосложение."
+        : "You have a body photo. Assess visually: excess fat (love handles, belly, thighs), muscle mass, body composition.")
+      : "";
+
+    const systemPrompt = lang === "ru"
+      ? `Ты — профессиональный диетолог и фитнес-тренер. Проанализируй данные и дай персонализированную рекомендацию по дневной норме калорий. ${photoInstruction}
+Верни СТРОГО JSON (без markdown): {"recommended_calories":число,"recommended_protein":число,"recommended_carbs":число,"recommended_fat":число,"bmr_estimate":число,"tdee_estimate":число,"body_fat_estimate":"% или null","body_assessment":"оценка телосложения 2-3 предложения","recommendation_reason":"объяснение 3-5 предложений","tips":["совет1","совет2","совет3"]}`
+      : `You are a professional dietitian and fitness coach. Analyze the data and provide a personalized daily calorie recommendation. ${photoInstruction}
+Return STRICTLY JSON (no markdown): {"recommended_calories":number,"recommended_protein":number,"recommended_carbs":number,"recommended_fat":number,"bmr_estimate":number,"tdee_estimate":number,"body_fat_estimate":"% or null","body_assessment":"body composition assessment 2-3 sentences","recommendation_reason":"detailed explanation 3-5 sentences","tips":["tip1","tip2","tip3"]}`;
+
+    const userMetrics = lang === "ru"
+      ? `Пол: ${gender === "male" ? "мужской" : "женский"}, Возраст: ${age}, Рост: ${height}см, Вес: ${weight}кг, ИМТ: ${bmi}, Активность: ${activityText}, Цель: ${goalText}`
+      : `Gender: ${gender}, Age: ${age}, Height: ${height}cm, Weight: ${weight}kg, BMI: ${bmi}, Activity: ${activityText}, Goal: ${goalText}`;
+
+    const messages: any[] = [{ role: "system", content: systemPrompt }];
+    if (imageBase64) {
+      const imgMime = mimeType || "image/jpeg";
+      messages.push({ role: "user", content: [
+        { type: "text", text: userMetrics },
+        { type: "image_url", image_url: { url: `data:${imgMime};base64,${imageBase64}` } },
+      ]});
+    } else {
+      messages.push({ role: "user", content: userMetrics });
+    }
+
+    console.log(`[AI Body] Analyzing user ${auth.userId}, hasPhoto=${!!imageBase64}, goal=${goal}`);
+
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model: imageBase64 ? "gpt-4o" : "gpt-4o-mini",
+        messages,
+        temperature: 0.4,
+        max_tokens: 1000,
+      }),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.log(`[AI Body] OpenAI error: ${response.status} ${errText}`);
+      return c.json({ message: "AI analysis failed", code: "AI_ERROR", status: 502 }, 502);
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) {
+      return c.json({ message: "AI returned empty response", code: "AI_EMPTY", status: 502 }, 502);
+    }
+
+    let parsed;
+    try {
+      const jsonStr = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+      parsed = JSON.parse(jsonStr);
+    } catch {
+      console.log("[AI Body] Parse failed:", content);
+      return c.json({ message: "Could not parse AI response", code: "PARSE_ERROR", status: 502 }, 502);
+    }
+
+    console.log(`[AI Body] Success: ${parsed.recommended_calories} cal for user ${auth.userId}`);
+    return c.json(parsed);
+  } catch (err) {
+    console.log("POST /nutrition/ai-body-analysis error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
   }
 });
 
