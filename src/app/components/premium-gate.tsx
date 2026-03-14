@@ -95,7 +95,7 @@ export function PremiumGate({ feature, children }: PremiumGateProps) {
   ];
 
   return (
-    <div className="min-h-screen px-5 pb-28" style={{ paddingTop: 'var(--safe-area-top, 56px)' }}>
+    <div className="min-h-screen px-5 pb-28" style={{ paddingTop: '6px' }}>
       <div className="max-w-md mx-auto">
         {/* Hero */}
         <div className="text-center mb-8">

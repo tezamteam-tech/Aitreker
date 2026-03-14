@@ -28,7 +28,7 @@ interface PageHeaderProps {
  */
 export function PageHeader({ title, subtitle, actions, mb = 'mb-3' }: PageHeaderProps) {
   return (
-    <div className={mb} style={{ paddingTop: 'var(--safe-area-top, 56px)' }}>
+    <div className={mb} style={{ paddingTop: '6px' }}>
       {/* Row 1: Centered title — fits between TG Close/Back and ... */}
       <motion.div
         initial={{ opacity: 0, y: -6 }}

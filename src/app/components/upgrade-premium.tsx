@@ -162,7 +162,7 @@ export function UpgradePremiumPage() {
   // Already premium
   if (subscriptionActive && !usageLoading) {
     return (
-      <div className="min-h-screen px-5 pb-28" style={{ paddingTop: 'var(--safe-area-top, 56px)' }}>
+      <div className="min-h-screen px-5 pb-28" style={{ paddingTop: '6px' }}>
         <div className="max-w-md mx-auto text-center pt-12">
           <div className="w-20 h-20 mx-auto mb-5 rounded-3xl bg-gradient-to-br from-[#ffd700]/20 to-[#ffd700]/5 flex items-center justify-center border border-[#ffd700]/20">
             <Crown className="w-10 h-10 text-[#ffd700]" />

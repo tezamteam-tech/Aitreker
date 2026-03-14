@@ -249,7 +249,7 @@ export function ScanFoodPage() {
       {/* Header */}
       <div
         className="relative z-10 flex items-center justify-between px-4"
-        style={{ paddingTop: 'var(--safe-area-top, 56px)' }}
+        style={{ paddingTop: '6px' }}
       >
         <motion.button
           whileTap={{ scale: 0.9 }}

@@ -167,7 +167,7 @@ export function ChallengeCreatePage() {
           <div className="absolute -top-32 right-0 w-72 h-72 rounded-full bg-[#6c5ce7]/15 blur-[120px]" />
         </div>
 
-        <div className="relative z-10 px-5 pb-8 flex flex-col items-center" style={{ paddingTop: 'var(--safe-area-top, 56px)' /* success screen — no PageHeader */ }}>
+        <div className="relative z-10 px-5 pb-8 flex flex-col items-center" style={{ paddingTop: '6px' /* success screen — no PageHeader */ }}>
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}

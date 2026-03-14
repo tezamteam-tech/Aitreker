@@ -57,7 +57,7 @@ export function AdminPage() {
     <div className="min-h-screen pb-24">
       {/* Header */}
       <div className="sticky top-0 z-30 bg-liquid-glass-panel border-b border-white/[0.06]">
-        <div className="px-5 pb-3 flex items-center justify-center" style={{ paddingTop: 'var(--safe-area-top, 56px)' }}>
+        <div className="px-5 pb-3 flex items-center justify-center" style={{ paddingTop: '6px' }}>
           <div className="flex items-center gap-2">
             <Shield className="w-4 h-4 text-[#a29bfe]" />
             <h1 className="text-white/90" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>

@@ -204,7 +204,7 @@ export function NutritionCoachPage() {
       </div>
 
       {/* Header */}
-      <div className="relative z-10 px-5 shrink-0" style={{ paddingTop: 'var(--safe-area-top, 56px)', paddingBottom: '0.5rem' }}>
+      <div className="relative z-10 px-5 shrink-0" style={{ paddingTop: '6px', paddingBottom: '0.5rem' }}>
         <div className="flex items-center justify-between mb-0">
           <div className="flex items-center gap-3">
             <div>

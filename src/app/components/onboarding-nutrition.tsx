@@ -216,7 +216,7 @@ export function OnboardingNutritionPage() {
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-72 h-72 rounded-full bg-[#00cec9]/8 blur-[150px]" />
       </div>
 
-      <div className="relative z-10 flex-1 flex flex-col px-6 pb-8" style={{ paddingTop: 'var(--safe-area-top, 56px)' }}>
+      <div className="relative z-10 flex-1 flex flex-col px-6 pb-8" style={{ paddingTop: '6px' }}>
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -15 }}
