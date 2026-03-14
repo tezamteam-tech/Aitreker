@@ -12625,6 +12625,8 @@ Return ONLY JSON.`;
       ];
     }
 
+    console.log(`[Activity] Calling GPT for user=${auth.userId}, input_type=${image_base64 ? "photo" : (voice_base64 ? "voice" : "text")}, text_len=${activityDescription.length}, model=${image_base64 ? "gpt-4o" : "gpt-4o-mini"}`);
+
     const gptRes = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: { "Authorization": `Bearer ${openaiKey}`, "Content-Type": "application/json" },

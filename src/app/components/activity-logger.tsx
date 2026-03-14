@@ -173,11 +173,13 @@ export function ActivityLogger({
       if (!textInput.trim()) return;
       input.text = textInput.trim();
     } else if (inputMode === 'voice') {
-      if (voiceBase64) {
+      // Prefer already-transcribed text (VoiceInput handles Whisper internally)
+      // Only send raw audio if no transcript available yet
+      if (voiceTranscript) {
+        input.text = voiceTranscript;
+      } else if (voiceBase64) {
         input.voice_base64 = voiceBase64;
         input.voice_mime = voiceMime;
-      } else if (voiceTranscript) {
-        input.text = voiceTranscript;
       } else {
         return;
       }
