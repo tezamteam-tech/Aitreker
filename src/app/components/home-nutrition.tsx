@@ -42,6 +42,7 @@ import { calculateCalories, type CalorieResult } from './calorie-calculator';
 import { PremiumBadge } from './premium-gate';
 import { StreakShareCard } from './streak-share-card';
 import { SmartBurnCard } from './smart-burn-card';
+import { ActivityLogger } from './activity-logger';
 
 interface NutritionData {
   caloriesConsumed: number;
@@ -673,6 +674,14 @@ export function HomeNutritionPage() {
             onBurnUpdate={(total) => setBurnedToday(total)}
           />
         )}
+
+        {/* Activity Logger — Log any activity, AI estimates burn */}
+        <ActivityLogger
+          profile={profileData}
+          caloriesConsumed={nutritionData.caloriesConsumed}
+          calorieTarget={nutritionData.caloriesGoal}
+          onBurnUpdate={(total) => setBurnedToday(total)}
+        />
 
         {/* Weekly Analytics Navigation Card */}
         <motion.button

@@ -36,6 +36,7 @@ import { PageHeader } from './page-header';
 import { api, getUserLang } from './api-client';
 import { calculateCalories } from './calorie-calculator';
 import { AiCalorieAdvisor } from './ai-calorie-advisor';
+import { SwipeableBottomSheet } from './ui/swipeable-bottom-sheet';
 
 type Gender = 'male' | 'female';
 type ActivityLevel = 'low' | 'medium' | 'high' | 'athlete';
@@ -74,59 +75,6 @@ const ACTIVITY_LABELS: Record<ActivityLevel, string> = {
   high: 'pn_activity_high',
   athlete: 'pn_activity_athlete',
 };
-
-// ---- Bottom Sheet Component ----
-function BottomSheet({
-  open,
-  onClose,
-  title,
-  children,
-}: {
-  open: boolean;
-  onClose: () => void;
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <AnimatePresence>
-      {open && (
-        <>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-50"
-            onClick={onClose}
-          />
-          <motion.div
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '100%' }}
-            transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl max-h-[85vh] overflow-y-auto"
-            style={{ background: 'var(--glass-bg-solid, #1a1a2e)', border: '1px solid var(--glass-border)' }}
-          >
-            <div className="flex justify-center pt-3 pb-1">
-              <div className="w-10 h-1 rounded-full bg-white/20" />
-            </div>
-            <div className="px-5 pb-2 flex items-center justify-between">
-              <h3 className="text-lg text-foreground font-semibold">{title}</h3>
-              <button
-                onClick={onClose}
-                className="w-8 h-8 rounded-full bg-white/[0.06] flex items-center justify-center"
-              >
-                <X className="w-4 h-4 text-muted-foreground" />
-              </button>
-            </div>
-            <div className="px-5 pb-8">
-              {children}
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
-  );
-}
 
 export function ProfileNutritionPage() {
   const { user, logout, subscriptionActive, subscriptionDaysLeft } = useAuth();
@@ -645,7 +593,7 @@ export function ProfileNutritionPage() {
       {/* ======== BOTTOM SHEETS ======== */}
 
       {/* Metrics Bottom Sheet */}
-      <BottomSheet
+      <SwipeableBottomSheet
         open={sheetType === 'metrics'}
         onClose={closeSheet}
         title={t('pn_edit_metrics')}
@@ -702,10 +650,10 @@ export function ProfileNutritionPage() {
             {t('pn_save')}
           </button>
         </div>
-      </BottomSheet>
+      </SwipeableBottomSheet>
 
       {/* Goal Bottom Sheet */}
-      <BottomSheet
+      <SwipeableBottomSheet
         open={sheetType === 'goal'}
         onClose={closeSheet}
         title={t('pn_edit_goal')}
@@ -764,10 +712,10 @@ export function ProfileNutritionPage() {
             {t('pn_save')}
           </button>
         </div>
-      </BottomSheet>
+      </SwipeableBottomSheet>
 
       {/* Calories Bottom Sheet */}
-      <BottomSheet
+      <SwipeableBottomSheet
         open={sheetType === 'calories'}
         onClose={closeSheet}
         title={t('pn_edit_calories')}
@@ -829,7 +777,7 @@ export function ProfileNutritionPage() {
             {t('pn_save')}
           </button>
         </div>
-      </BottomSheet>
+      </SwipeableBottomSheet>
 
       {/* AI Calorie Advisor Bottom Sheet */}
       <AnimatePresence>

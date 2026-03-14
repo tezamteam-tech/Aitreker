@@ -53,6 +53,7 @@ import { PageHeader } from './page-header';
 import { useBottomSheetLifecycle } from './bottom-sheet-context';
 import { CameraCapture } from './camera-capture';
 import { PhotoSourcePicker } from './photo-source-picker';
+import { SwipeableBottomSheet } from './ui/swipeable-bottom-sheet';
 
 // ---- Types ----
 type PlanLength = 7 | 30 | 100;
@@ -165,8 +166,6 @@ export function WorkoutPlanPage() {
     caloriesConsumed: 0,
     hasMealPlan: false,
   });
-
-  useBottomSheetLifecycle(showHistory);
 
   // Load profile with full metrics
   useEffect(() => {
@@ -1607,93 +1606,54 @@ function HistorySheet({
 }) {
   const { t } = useTranslation();
   return (
-    <>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-        className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
-      />
-      <motion.div
-        initial={{ y: '100%' }}
-        animate={{ y: 0 }}
-        exit={{ y: '100%' }}
-        transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-        className="fixed left-0 right-0 bottom-0 z-50 rounded-t-[1.5rem] max-h-[70vh] overflow-auto"
-        style={{
-          paddingBottom: 'calc(1.5rem + var(--safe-area-bottom, 0px))',
-          background: 'rgba(18,18,30,0.98)',
-          borderTop: '1px solid rgba(255,255,255,0.08)',
-        }}
-      >
-        <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 rounded-full bg-white/15" />
-        </div>
+    <SwipeableBottomSheet open={true} onClose={onClose} title={t('wp_my_plans')} maxHeight="70vh">
+      {plans.length === 0 && (
+        <p className="text-white/30 text-center py-8" style={{ fontSize: '0.875rem' }}>
+          {t('wp_no_plans')}
+        </p>
+      )}
 
-        <div className="px-5 pt-2 pb-4">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="text-white" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
-              {t('wp_my_plans')}
-            </h2>
+      <div className="space-y-2">
+        {plans.map((plan) => (
+          <div
+            key={plan.id}
+            className="flex items-center gap-3 p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06]"
+          >
+            <WorkoutTypeIcon type="strength" />
+            <button onClick={() => onSelect(plan)} className="flex-1 text-left">
+              <div className="flex items-center gap-2">
+                <p className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
+                  {plan.plan_length} {t('wp_days_count')}
+                </p>
+                <span
+                  className="text-xs px-2 py-0.5 rounded-full"
+                  style={{
+                    backgroundColor: plan.workout_type === 'home' ? '#00cec915' : '#6c5ce715',
+                    color: plan.workout_type === 'home' ? '#00cec9' : '#6c5ce7',
+                    fontWeight: 500,
+                  }}
+                >
+                  {plan.workout_type === 'home' ? t('wp_home_short') : t('wp_gym_short')}
+                </span>
+              </div>
+              <p className="text-white/30" style={{ fontSize: '0.75rem' }}>
+                {new Date(plan.created_at).toLocaleDateString(t('locale_code'), {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric',
+                })}
+              </p>
+            </button>
             <motion.button
-              whileTap={{ scale: 0.9 }}
-              onClick={onClose}
-              className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center"
+              whileTap={{ scale: 0.85 }}
+              onClick={() => onDelete(plan.id)}
+              className="w-9 h-9 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center"
             >
-              <X className="w-4 h-4 text-white/50" />
+              <Trash2 className="w-4 h-4 text-white/30" />
             </motion.button>
           </div>
-
-          {plans.length === 0 && (
-            <p className="text-white/30 text-center py-8" style={{ fontSize: '0.875rem' }}>
-              {t('wp_no_plans')}
-            </p>
-          )}
-
-          <div className="space-y-2">
-            {plans.map((plan) => (
-              <div
-                key={plan.id}
-                className="flex items-center gap-3 p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06]"
-              >
-                <WorkoutTypeIcon type="strength" />
-                <button onClick={() => onSelect(plan)} className="flex-1 text-left">
-                  <div className="flex items-center gap-2">
-                    <p className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
-                      {plan.plan_length} {t('wp_days_count')}
-                    </p>
-                    <span
-                      className="text-xs px-2 py-0.5 rounded-full"
-                      style={{
-                        backgroundColor: plan.workout_type === 'home' ? '#00cec915' : '#6c5ce715',
-                        color: plan.workout_type === 'home' ? '#00cec9' : '#6c5ce7',
-                        fontWeight: 500,
-                      }}
-                    >
-                      {plan.workout_type === 'home' ? t('wp_home_short') : t('wp_gym_short')}
-                    </span>
-                  </div>
-                  <p className="text-white/30" style={{ fontSize: '0.75rem' }}>
-                    {new Date(plan.created_at).toLocaleDateString(t('locale_code'), {
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric',
-                    })}
-                  </p>
-                </button>
-                <motion.button
-                  whileTap={{ scale: 0.85 }}
-                  onClick={() => onDelete(plan.id)}
-                  className="w-9 h-9 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center"
-                >
-                  <Trash2 className="w-4 h-4 text-white/30" />
-                </motion.button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </motion.div>
-    </>
+        ))}
+      </div>
+    </SwipeableBottomSheet>
   );
 }

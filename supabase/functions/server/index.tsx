@@ -12518,6 +12518,273 @@ app.get(`${PREFIX}/smartburn/history`, async (c) => {
 });
 
 // ============================================================
+// ACTIVITY BURN LOGGING — AI-powered calorie burn estimation
+// Accepts text, voice, or photo input (smartwatch screenshots)
+// ============================================================
+
+// ---- POST /activity/log — AI-analyze activity and log burned calories ----
+app.post(`${PREFIX}/activity/log`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const body = await c.req.json();
+    const { text, voice_base64, voice_mime, image_base64, image_mime, language, gender, age, weight, activity_level } = body;
+
+    if (!text && !voice_base64 && !image_base64) {
+      return c.json({ message: "Provide text, voice_base64, or image_base64", code: "BAD_REQUEST", status: 400 }, 400);
+    }
+
+    const openaiKey = Deno.env.get("OPENAI_API_KEY");
+    if (!openaiKey) return c.json({ message: "OpenAI not configured", code: "CONFIG_ERROR", status: 500 }, 500);
+
+    const lang = language === "ru" ? "ru" : "en";
+    let activityDescription = text || "";
+
+    // Step 1: If voice input, transcribe first via Whisper
+    if (voice_base64 && !text) {
+      try {
+        const vMime = voice_mime || "audio/webm";
+        let ext = "webm";
+        if (vMime.includes("mp4") || vMime.includes("m4a")) ext = "m4a";
+        else if (vMime.includes("ogg")) ext = "ogg";
+        else if (vMime.includes("wav")) ext = "wav";
+        else if (vMime.includes("mp3") || vMime.includes("mpeg")) ext = "mp3";
+
+        const bytes = Uint8Array.from(atob(voice_base64), (ch) => ch.charCodeAt(0));
+        const formData = new FormData();
+        const blob = new Blob([bytes], { type: vMime });
+        formData.append("file", blob, `voice.${ext}`);
+        formData.append("model", "whisper-1");
+        if (lang) formData.append("language", lang);
+
+        const whisperRes = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${openaiKey}` },
+          body: formData,
+        });
+
+        if (whisperRes.ok) {
+          const whisperData = await whisperRes.json();
+          activityDescription = whisperData.text || "";
+          console.log(`[Activity] Whisper transcription: "${activityDescription}"`);
+        } else {
+          console.log(`[Activity] Whisper error: ${whisperRes.status}`);
+          return c.json({ message: "Voice transcription failed", code: "WHISPER_ERROR", status: 502 }, 502);
+        }
+      } catch (whisperErr) {
+        console.log(`[Activity] Whisper exception: ${whisperErr}`);
+        return c.json({ message: "Voice transcription failed", code: "WHISPER_ERROR", status: 502 }, 502);
+      }
+    }
+
+    // Step 2: Build context for GPT analysis
+    const userContext = [
+      gender ? `Gender: ${gender}` : null,
+      age ? `Age: ${age}` : null,
+      weight ? `Weight: ${weight}kg` : null,
+      activity_level ? `Activity level: ${activity_level}` : null,
+    ].filter(Boolean).join(", ");
+
+    const systemPrompt = lang === "ru"
+      ? `Ты — эксперт по фитнесу и расходу калорий. Пользователь описывает свою физическую активность за день (или часть дня). Проанализируй описание и оцени сожжённые калории.
+${userContext ? `Данные пользователя: ${userContext}.` : ""}
+ВАЖНО: Учитывай базовый метаболизм (BMR) — даже сидячая работа сжигает калории. Если человек описывает сидячую работу 8 часов — оцени калории от базового метаболизма за это время.
+Верни JSON: { "activities": [{ "name": "название активности", "duration_minutes": число, "calories_burned": число, "type": "exercise"|"walking"|"work"|"household"|"other", "emoji": "подходящий эмодзи" }], "total_calories": число (сумма всех), "summary": "краткое описание на русском" }
+Верни ТОЛЬКО JSON.`
+      : `You are a fitness and calorie expenditure expert. The user describes their physical activity for the day (or part of it). Analyze and estimate calories burned.
+${userContext ? `User data: ${userContext}.` : ""}
+IMPORTANT: Account for BMR — even sedentary desk work burns calories. If someone describes 8 hours of desk work, estimate the BMR calories for that period.
+Return JSON: { "activities": [{ "name": "activity name", "duration_minutes": number, "calories_burned": number, "type": "exercise"|"walking"|"work"|"household"|"other", "emoji": "relevant emoji" }], "total_calories": number (sum of all), "summary": "brief description" }
+Return ONLY JSON.`;
+
+    // Step 3: Call GPT — with or without image
+    let messages: any[];
+
+    if (image_base64) {
+      const imgMime = image_mime || "image/jpeg";
+      const userPrompt = lang === "ru"
+        ? `Проанализируй это изображение (скриншот фитнес-трекера, смарт-часов или фото активности) и оцени сожжённые калории.${activityDescription ? ` Дополнительный контекст: ${activityDescription}` : ""}`
+        : `Analyze this image (fitness tracker screenshot, smartwatch, or activity photo) and estimate calories burned.${activityDescription ? ` Additional context: ${activityDescription}` : ""}`;
+
+      messages = [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: [
+          { type: "text", text: userPrompt },
+          { type: "image_url", image_url: { url: `data:${imgMime};base64,${image_base64}` } },
+        ] },
+      ];
+    } else {
+      const userPrompt = lang === "ru"
+        ? `Моя активность: ${activityDescription}`
+        : `My activity: ${activityDescription}`;
+
+      messages = [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ];
+    }
+
+    const gptRes = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${openaiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: image_base64 ? "gpt-4o" : "gpt-4o-mini",
+        messages,
+        max_tokens: 800,
+      }),
+    });
+
+    if (!gptRes.ok) {
+      const errText = await gptRes.text();
+      console.log(`[Activity] GPT error: ${gptRes.status} ${errText}`);
+      return c.json({ message: "AI analysis failed", code: "AI_ERROR", status: 502 }, 502);
+    }
+
+    const gptData = await gptRes.json();
+    const content = gptData.choices?.[0]?.message?.content || "";
+    let parsed: any;
+    try {
+      const jsonStr = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+      parsed = JSON.parse(jsonStr);
+    } catch {
+      console.log("[Activity] Failed to parse GPT response:", content);
+      return c.json({ message: "Could not parse AI response", code: "PARSE_ERROR", status: 502 }, 502);
+    }
+
+    const activities = (parsed.activities || []).map((a: any) => ({
+      name: a.name || "Activity",
+      duration_minutes: a.duration_minutes || 0,
+      calories_burned: a.calories_burned || 0,
+      type: a.type || "other",
+      emoji: a.emoji || "\u{1F3C3}",
+    }));
+    const totalCalories = parsed.total_calories || activities.reduce((s: number, a: any) => s + a.calories_burned, 0);
+    const summary = parsed.summary || "";
+
+    // Step 4: Save to KV
+    const now = new Date().toISOString();
+    const today = now.slice(0, 10);
+    const entryId = generateId("act");
+
+    const entry = {
+      id: entryId,
+      userId: auth.userId,
+      activities,
+      total_calories: totalCalories,
+      summary,
+      input_type: image_base64 ? "photo" : (voice_base64 ? "voice" : "text"),
+      raw_input: activityDescription.slice(0, 500),
+      date: today,
+      created_at: now,
+    };
+
+    await kv.set(`become:activity:${auth.userId}:${entryId}`, entry);
+
+    const indexKey = `become:activity_idx:${auth.userId}:${today}`;
+    const index: string[] = (await kv.get(indexKey)) || [];
+    index.push(entryId);
+    await kv.set(indexKey, index);
+
+    const totalsKey = `become:activity_totals:${auth.userId}:${today}`;
+    const totals = (await kv.get(totalsKey)) || { calories: 0, duration: 0, count: 0 };
+    totals.calories += totalCalories;
+    totals.duration += activities.reduce((s: number, a: any) => s + (a.duration_minutes || 0), 0);
+    totals.count += 1;
+    await kv.set(totalsKey, totals);
+
+    console.log(`[Activity] Logged: user=${auth.userId}, calories=${totalCalories}, activities=${activities.length}, input=${entry.input_type}`);
+    return c.json({ ...entry, daily_totals: totals });
+  } catch (err) {
+    console.log("POST /activity/log error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- GET /activity/today — Get all activity + smartburn burns for today ----
+app.get(`${PREFIX}/activity/today`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const today = new Date().toISOString().slice(0, 10);
+
+    const actIndexKey = `become:activity_idx:${auth.userId}:${today}`;
+    const actIndex: string[] = (await kv.get(actIndexKey)) || [];
+    let actEntries: any[] = [];
+    if (actIndex.length > 0) {
+      const keys = actIndex.map((id: string) => `become:activity:${auth.userId}:${id}`);
+      actEntries = (await kv.mget(keys)).filter((e: any) => e && e.id);
+    }
+
+    const actTotalsKey = `become:activity_totals:${auth.userId}:${today}`;
+    const actTotals = (await kv.get(actTotalsKey)) || { calories: 0, duration: 0, count: 0 };
+
+    const sbIndexKey = `become:smartburn_idx:${auth.userId}:${today}`;
+    const sbIndex: string[] = (await kv.get(sbIndexKey)) || [];
+    let sbEntries: any[] = [];
+    if (sbIndex.length > 0) {
+      const sbKeys = sbIndex.map((id: string) => `become:smartburn:${auth.userId}:${id}`);
+      sbEntries = (await kv.mget(sbKeys)).filter((e: any) => e && e.id);
+    }
+
+    const sbTotalsKey = `become:smartburn_totals:${auth.userId}:${today}`;
+    const sbTotals = (await kv.get(sbTotalsKey)) || { calories: 0, duration: 0, count: 0 };
+
+    const wcKey = `become:workout_completion:${auth.userId}:${today}`;
+    const wcData = await kv.get(wcKey);
+    const workoutCalories = wcData?.calories_burned || 0;
+
+    const combinedCalories = actTotals.calories + sbTotals.calories + workoutCalories;
+
+    return c.json({
+      activity_entries: actEntries,
+      smartburn_entries: sbEntries,
+      activity_totals: actTotals,
+      smartburn_totals: sbTotals,
+      workout_calories: workoutCalories,
+      combined_burned: combinedCalories,
+      date: today,
+    });
+  } catch (err) {
+    console.log("GET /activity/today error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- DELETE /activity/:id — Delete an activity entry ----
+app.delete(`${PREFIX}/activity/:id`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const entryId = c.req.param("id");
+    const entry: any = await kv.get(`become:activity:${auth.userId}:${entryId}`);
+    if (!entry) return c.json({ message: "Entry not found", code: "NOT_FOUND", status: 404 }, 404);
+
+    const indexKey = `become:activity_idx:${auth.userId}:${entry.date}`;
+    const index: string[] = (await kv.get(indexKey)) || [];
+    const newIndex = index.filter((id: string) => id !== entryId);
+    await kv.set(indexKey, newIndex);
+
+    const totalsKey = `become:activity_totals:${auth.userId}:${entry.date}`;
+    const totals = (await kv.get(totalsKey)) || { calories: 0, duration: 0, count: 0 };
+    totals.calories = Math.max(0, totals.calories - (entry.total_calories || 0));
+    totals.duration = Math.max(0, totals.duration - (entry.activities || []).reduce((s: number, a: any) => s + (a.duration_minutes || 0), 0));
+    totals.count = Math.max(0, totals.count - 1);
+    await kv.set(totalsKey, totals);
+
+    await kv.del(`become:activity:${auth.userId}:${entryId}`);
+
+    console.log(`[Activity] Deleted: user=${auth.userId}, entry=${entryId}`);
+    return c.json({ ok: true, daily_totals: totals });
+  } catch (err) {
+    console.log("DELETE /activity/:id error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ============================================================
 // WEEKLY ANALYTICS — Nutrition vs Workout correlation
 // ============================================================
 
@@ -12559,10 +12826,13 @@ app.get(`${PREFIX}/analytics/weekly`, async (c) => {
       // Workout plan completion totals
       const wTotals = (await kv.get(`become:workout_day_totals:${auth.userId}:${dateStr}`)) || { calories: 0, duration: 0, count: 0 };
 
-      // Combined burned = SmartBurn + Workout completions
-      const totalBurned = sbTotals.calories + wTotals.calories;
-      const totalBurnCount = sbTotals.count + wTotals.count;
-      const totalBurnDuration = sbTotals.duration + wTotals.duration;
+      // Activity burn totals (custom logged activities)
+      const actTotals = (await kv.get(`become:activity_totals:${auth.userId}:${dateStr}`)) || { calories: 0, duration: 0, count: 0 };
+
+      // Combined burned = SmartBurn + Workout completions + Activity burns
+      const totalBurned = sbTotals.calories + wTotals.calories + actTotals.calories;
+      const totalBurnCount = sbTotals.count + wTotals.count + actTotals.count;
+      const totalBurnDuration = sbTotals.duration + wTotals.duration + actTotals.duration;
 
       // Net balance
       const netBalance = foodTotals.calories - calorieTarget - totalBurned;
@@ -12837,10 +13107,11 @@ app.get(`${PREFIX}/analytics/extended`, async (c) => {
         }
       }
 
-      // SmartBurn + Workout totals
+      // SmartBurn + Workout + Activity totals
       const sbTotals = (await kv.get(`become:smartburn_totals:${auth.userId}:${dateStr}`)) || { calories: 0, duration: 0, count: 0 };
       const wTotals = (await kv.get(`become:workout_day_totals:${auth.userId}:${dateStr}`)) || { calories: 0, duration: 0, count: 0 };
-      const totalBurned = sbTotals.calories + wTotals.calories;
+      const actTotals = (await kv.get(`become:activity_totals:${auth.userId}:${dateStr}`)) || { calories: 0, duration: 0, count: 0 };
+      const totalBurned = sbTotals.calories + wTotals.calories + actTotals.calories;
 
       dailyData.push({
         date: dateStr,

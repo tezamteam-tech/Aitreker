@@ -1111,6 +1111,78 @@ export const api = {
     return request('GET', `/smartburn/history?days=${days}`);
   },
 
+  // ---- Activity Burn Logging ----
+
+  /** Log activity via text, voice, or photo — AI estimates calories burned */
+  async logActivity(input: {
+    text?: string;
+    voice_base64?: string;
+    voice_mime?: string;
+    image_base64?: string;
+    image_mime?: string;
+    language?: string;
+    gender?: string;
+    age?: number;
+    weight?: number;
+    activity_level?: string;
+  }): Promise<{
+    id: string;
+    activities: Array<{
+      name: string;
+      duration_minutes: number;
+      calories_burned: number;
+      type: 'exercise' | 'walking' | 'work' | 'household' | 'other';
+      emoji: string;
+    }>;
+    total_calories: number;
+    summary: string;
+    input_type: 'text' | 'voice' | 'photo';
+    date: string;
+    daily_totals: { calories: number; duration: number; count: number };
+  }> {
+    return request('POST', '/activity/log', input);
+  },
+
+  /** Get today's all burns (activity + smartburn + workout) */
+  async getActivityToday(): Promise<{
+    activity_entries: Array<{
+      id: string;
+      activities: Array<{
+        name: string;
+        duration_minutes: number;
+        calories_burned: number;
+        type: string;
+        emoji: string;
+      }>;
+      total_calories: number;
+      summary: string;
+      input_type: string;
+      date: string;
+      created_at: string;
+    }>;
+    smartburn_entries: Array<{
+      id: string;
+      exercise_name: string;
+      calories_burned: number;
+      duration_minutes: number;
+      intensity: string;
+      emoji: string;
+      date: string;
+    }>;
+    activity_totals: { calories: number; duration: number; count: number };
+    smartburn_totals: { calories: number; duration: number; count: number };
+    workout_calories: number;
+    combined_burned: number;
+    date: string;
+  }> {
+    return request('GET', '/activity/today');
+  },
+
+  /** Delete an activity entry */
+  async deleteActivity(id: string): Promise<{ ok: boolean; daily_totals: { calories: number; duration: number; count: number } }> {
+    return request('DELETE', `/activity/${id}`);
+  },
+
   // ---- Weekly Analytics ----
 
   /** Get 7-day nutrition + workout + smartburn correlation data */
