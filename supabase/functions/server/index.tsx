@@ -9527,7 +9527,55 @@ app.post(`${PREFIX}/meal-plans/generate`, async (c) => {
       return c.json({ message: "AI generation failed after 3 attempts", code: "AI_ERROR", status: 502 }, 502);
     }
 
-    const planData = result.parsed;
+    // Normalize GPT response to frontend-expected format
+    // GPT may return: { days: [{ day, meals: { breakfast: {name,calories,...}, ... }, total_calories }] }
+    // Frontend expects: { days: [{ day, meals: [{ meal_type, items: [{ food_name, calories, protein, carbs, fat, quantity, unit }] }] }] }
+    const MEAL_TYPES_NORM = ['breakfast', 'lunch', 'dinner', 'snack'] as const;
+    function normalizeMealPlan(raw: any): any {
+      if (!raw?.days || !Array.isArray(raw.days)) return raw;
+      return {
+        ...raw,
+        days: raw.days.map((day: any) => {
+          // Already an array — normalize each item to ensure items[] exists
+          if (Array.isArray(day.meals)) {
+            return {
+              ...day,
+              meals: day.meals.map((m: any) => ({
+                meal_type: m.meal_type || 'snack',
+                items: Array.isArray(m.items) ? m.items : (m.food_name || m.name ? [{
+                  food_name: m.food_name || m.name || 'Meal',
+                  calories: m.calories || 0, protein: m.protein || 0, carbs: m.carbs || 0, fat: m.fat || 0,
+                  quantity: m.quantity || 1, unit: m.unit || 'piece',
+                }] : []),
+              })),
+            };
+          }
+          // meals is object { breakfast: {...}, lunch: {...} }
+          if (day.meals && typeof day.meals === 'object') {
+            const mealsArr = MEAL_TYPES_NORM.map((mt) => {
+              const meal = day.meals[mt];
+              if (!meal) return null;
+              const items = Array.isArray(meal.items) ? meal.items.map((it: any) => ({
+                food_name: it.food_name || it.name || 'Item',
+                calories: it.calories || 0, protein: it.protein || 0, carbs: it.carbs || 0, fat: it.fat || 0,
+                quantity: it.quantity || 1, unit: it.unit || 'piece',
+              })) : [{
+                food_name: meal.name || meal.food_name || mt,
+                calories: meal.calories || 0, protein: meal.protein || 0, carbs: meal.carbs || 0, fat: meal.fat || 0,
+                quantity: meal.quantity || 1, unit: meal.unit || 'piece',
+                ingredients: meal.ingredients, instructions: meal.instructions,
+              }];
+              return { meal_type: mt, items };
+            }).filter(Boolean);
+            return { day: day.day, meals: mealsArr };
+          }
+          return day;
+        }),
+      };
+    }
+
+    const planData = normalizeMealPlan(result.parsed);
+    console.log(`[Meal Plan] Normalized: ${planData.days?.length} days, first day meals: ${planData.days?.[0]?.meals?.length}`);
     const planId = generateId("mplan");
     const savedPlan = { id: planId, userId: auth.userId, plan_length: days, plan_data: planData, created_at: new Date().toISOString() };
     await kv.set(`become:mealplan:${auth.userId}:${planId}`, savedPlan);

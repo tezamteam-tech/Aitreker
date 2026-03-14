@@ -285,11 +285,33 @@ export function MealPlanPage() {
   const dayData = currentPlan?.plan_data?.days?.find((d) => d.day === selectedDay);
   const totalDays = currentPlan?.plan_length || 0;
 
+  // Normalize meals to array defensively (GPT may return object)
+  const dayMeals: MealPlanData['days'][0]['meals'] = React.useMemo(() => {
+    if (!dayData) return [];
+    const m = dayData.meals;
+    if (Array.isArray(m)) return m;
+    // Object format: { breakfast: {...}, lunch: {...}, ... }
+    if (m && typeof m === 'object') {
+      return (['breakfast', 'lunch', 'dinner', 'snack'] as const).map((mt) => {
+        const meal = (m as any)[mt];
+        if (!meal) return null;
+        const items = Array.isArray(meal.items) ? meal.items : [{
+          food_name: meal.name || meal.food_name || mt,
+          calories: meal.calories || 0, protein: meal.protein || 0,
+          carbs: meal.carbs || 0, fat: meal.fat || 0,
+          quantity: meal.quantity || 1, unit: (meal.unit || 'piece') as any,
+        }];
+        return { meal_type: mt as any, items };
+      }).filter(Boolean) as any;
+    }
+    return [];
+  }, [dayData]);
+
   // Day totals
-  const dayTotals = dayData
-    ? dayData.meals.reduce(
+  const dayTotals = dayMeals.length > 0
+    ? dayMeals.reduce(
         (acc, meal) => {
-          const mealTotals = meal.items.reduce(
+          const mealTotals = (meal.items || []).reduce(
             (a, item) => ({
               calories: a.calories + item.calories,
               protein: a.protein + item.protein,
@@ -668,7 +690,7 @@ export function MealPlanPage() {
                           {t('mp_day_label', { n: selectedDay })}
                         </p>
                         <p className="text-white/30" style={{ fontSize: '0.6875rem' }}>
-                          {t('mp_meals_count', { n: dayData.meals.length })}
+                          {t('mp_meals_count', { n: dayMeals.length })}
                         </p>
                       </div>
                     </div>
@@ -707,8 +729,8 @@ export function MealPlanPage() {
               {dayData && (
                 <div className="space-y-3">
                   {MEAL_ORDER.map((mealType) => {
-                    const mealData = dayData.meals.find((m) => m.meal_type === mealType);
-                    if (!mealData || mealData.items.length === 0) return null;
+                    const mealData = dayMeals.find((m) => m.meal_type === mealType);
+                    if (!mealData || !mealData.items || mealData.items.length === 0) return null;
 
                     const config = MEAL_CONFIG[mealType];
                     const Icon = config.icon;
