@@ -9122,15 +9122,15 @@ app.post(`${PREFIX}/nutrition/ai-body-analysis`, async (c) => {
 
     const photoInstruction = imageBase64
       ? (lang === "ru"
-        ? "Тебе предоставлено фото тела. Оцени визуально: лишний жир (бока, живот, бёдра), мышечную массу, телосложение."
-        : "You have a body photo. Assess visually: excess fat (love handles, belly, thighs), muscle mass, body composition.")
+        ? "Клиент предоставил фото для оценки композиции тела. Используй его для уточнения рекомендаций по калориям и макронутриентам. Оцени примерный процент жира и мышечную массу."
+        : "The client has provided a photo for body composition assessment. Use it to refine your calorie and macronutrient recommendations. Estimate approximate body fat percentage and muscle mass.")
       : "";
 
     const systemPrompt = lang === "ru"
-      ? `Ты — профессиональный диетолог и фитнес-тренер. Проанализируй данные и дай персонализированную рекомендацию по дневной норме калорий. ${photoInstruction}
-Верни СТРОГО JSON (без markdown): {"recommended_calories":число,"recommended_protein":число,"recommended_carbs":число,"recommended_fat":число,"bmr_estimate":число,"tdee_estimate":число,"body_fat_estimate":"% или null","body_assessment":"оценка телосложения 2-3 предложения","recommendation_reason":"объяснение 3-5 предложений","tips":["совет1","совет2","совет3"]}`
-      : `You are a professional dietitian and fitness coach. Analyze the data and provide a personalized daily calorie recommendation. ${photoInstruction}
-Return STRICTLY JSON (no markdown): {"recommended_calories":number,"recommended_protein":number,"recommended_carbs":number,"recommended_fat":number,"bmr_estimate":number,"tdee_estimate":number,"body_fat_estimate":"% or null","body_assessment":"body composition assessment 2-3 sentences","recommendation_reason":"detailed explanation 3-5 sentences","tips":["tip1","tip2","tip3"]}`;
+      ? `Ты — сертифицированный нутрициолог (RD) в мобильном приложении для отслеживания питания. Твоя задача — рассчитать персонализированную дневную норму калорий и макронутриентов на основе антропометрических данных клиента. Это стандартная клиническая задача по нутрициологии. ${photoInstruction}
+Ответь ТОЛЬКО в формате JSON: {"recommended_calories":число,"recommended_protein":число,"recommended_carbs":число,"recommended_fat":число,"bmr_estimate":число,"tdee_estimate":число,"body_fat_estimate":"процент или null","body_assessment":"краткая оценка 2-3 предложения","recommendation_reason":"обоснование 3-5 предложений","tips":["совет1","совет2","совет3"]}`
+      : `You are a certified registered dietitian (RD) working in a nutrition tracking mobile app. Your task is to calculate personalized daily calorie and macronutrient targets based on the client's anthropometric data. This is a standard clinical nutrition calculation. ${photoInstruction}
+Respond ONLY in JSON format: {"recommended_calories":number,"recommended_protein":number,"recommended_carbs":number,"recommended_fat":number,"bmr_estimate":number,"tdee_estimate":number,"body_fat_estimate":"percentage or null","body_assessment":"brief assessment 2-3 sentences","recommendation_reason":"detailed rationale 3-5 sentences","tips":["tip1","tip2","tip3"]}`;
 
     const userMetrics = lang === "ru"
       ? `Пол: ${gender === "male" ? "мужской" : "женский"}, Возраст: ${age}, Рост: ${height}см, Вес: ${weight}кг, ИМТ: ${bmi}, Активность: ${activityText}, Цель: ${goalText}`
@@ -9149,37 +9149,76 @@ Return STRICTLY JSON (no markdown): {"recommended_calories":number,"recommended_
 
     console.log(`[AI Body] Analyzing user ${auth.userId}, hasPhoto=${!!imageBase64}, goal=${goal}`);
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
-      body: JSON.stringify({
-        model: imageBase64 ? "gpt-4o" : "gpt-4o-mini",
-        messages,
-        temperature: 0.4,
-        max_tokens: 1000,
-      }),
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      console.log(`[AI Body] OpenAI error: ${response.status} ${errText}`);
-      return c.json({ message: "AI analysis failed", code: "AI_ERROR", status: 502 }, 502);
+    // Helper: call OpenAI and parse JSON response
+    async function callAI(msgs: any[], usePhoto: boolean): Promise<{ ok: boolean; parsed?: any; error?: string; refusal?: boolean }> {
+      const resp = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+        body: JSON.stringify({
+          model: usePhoto ? "gpt-4o" : "gpt-4o-mini",
+          messages: msgs,
+          temperature: 0.3,
+          max_tokens: 1200,
+          ...(usePhoto ? {} : { response_format: { type: "json_object" } }),
+        }),
+      });
+      if (!resp.ok) {
+        const errText = await resp.text();
+        console.log(`[AI Body] OpenAI error: ${resp.status} ${errText}`);
+        return { ok: false, error: `OpenAI ${resp.status}` };
+      }
+      const d = await resp.json();
+      const refusalField = d.choices?.[0]?.message?.refusal;
+      if (refusalField) {
+        console.log(`[AI Body] Model refusal field: ${refusalField}`);
+        return { ok: false, refusal: true, error: refusalField };
+      }
+      const ct = d.choices?.[0]?.message?.content;
+      if (!ct) return { ok: false, error: "empty response" };
+      const lc = ct.toLowerCase();
+      if ((lc.includes("не могу помочь") || lc.includes("i can't") || lc.includes("i cannot") || lc.includes("извините")) && !lc.includes("recommended_calories")) {
+        console.log(`[AI Body] Text refusal: ${ct.slice(0, 150)}`);
+        return { ok: false, refusal: true, error: ct.slice(0, 200) };
+      }
+      try {
+        const jsonStr = ct.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+        const p = JSON.parse(jsonStr);
+        if (!p.recommended_calories) return { ok: false, error: "missing recommended_calories" };
+        return { ok: true, parsed: p };
+      } catch {
+        console.log("[AI Body] Parse failed:", ct.slice(0, 300));
+        return { ok: false, error: "JSON parse failed" };
+      }
     }
 
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content;
-    if (!content) {
-      return c.json({ message: "AI returned empty response", code: "AI_EMPTY", status: 502 }, 502);
+    // Attempt 1: with photo if available
+    let result = await callAI(messages, !!imageBase64);
+
+    // Attempt 2: if refusal with photo, retry WITHOUT photo (text-only)
+    if (!result.ok && imageBase64 && result.refusal) {
+      console.log(`[AI Body] Photo refusal — retrying text-only for user ${auth.userId}`);
+      const txtSysPrompt = systemPrompt.replace(photoInstruction, "").trim();
+      result = await callAI([
+        { role: "system", content: txtSysPrompt },
+        { role: "user", content: userMetrics },
+      ], false);
     }
 
-    let parsed;
-    try {
-      const jsonStr = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-      parsed = JSON.parse(jsonStr);
-    } catch {
-      console.log("[AI Body] Parse failed:", content);
-      return c.json({ message: "Could not parse AI response", code: "PARSE_ERROR", status: 502 }, 502);
+    // Attempt 3: simplest possible prompt
+    if (!result.ok) {
+      console.log(`[AI Body] Retry #3 simplified prompt for user ${auth.userId}`);
+      result = await callAI([
+        { role: "system", content: `Calculate daily calorie and macronutrient targets for the client. You must respond with JSON: {"recommended_calories":number,"recommended_protein":number,"recommended_carbs":number,"recommended_fat":number,"bmr_estimate":number,"tdee_estimate":number,"body_fat_estimate":null,"body_assessment":"brief","recommendation_reason":"reason","tips":["t1","t2","t3"]}` },
+        { role: "user", content: userMetrics },
+      ], false);
     }
+
+    if (!result.ok || !result.parsed) {
+      console.log(`[AI Body] All attempts failed for user ${auth.userId}: ${result.error}`);
+      return c.json({ message: "Could not parse AI response", code: "PARSE_ERROR", status: 502, detail: result.error }, 502);
+    }
+
+    const parsed = result.parsed;
 
     // Save analysis to history
     const analysisRecord = {

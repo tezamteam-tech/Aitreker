@@ -53,20 +53,28 @@ async function botApi(method: string, body: Record<string, unknown>): Promise<an
 
   console.log(`[TG Bot] API call: ${method}`);
 
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  if (!data.ok) {
+    if (data.ok) return data.result;
+
+    // Handle 429 Too Many Requests — retry after delay
+    if (data.error_code === 429 && attempt < 2) {
+      const retryAfter = data.parameters?.retry_after || 2;
+      console.log(`[TG Bot] Rate limited (429) in ${method}, retry after ${retryAfter}s (attempt ${attempt + 1})`);
+      await new Promise(r => setTimeout(r, retryAfter * 1000));
+      continue;
+    }
+
     console.log(`[TG Bot] API error in ${method}:`, JSON.stringify(data));
     throw new Error(`Telegram API error: ${data.description || "Unknown"}`);
   }
-
-  return data.result;
 }
 
 // ---- Inline Keyboard Types ----
