@@ -52,6 +52,7 @@ import { useTranslation } from './i18n';
 import { PageHeader } from './page-header';
 import { useBottomSheetLifecycle } from './bottom-sheet-context';
 import { CameraCapture } from './camera-capture';
+import { PhotoSourcePicker } from './photo-source-picker';
 
 // ---- Types ----
 type PlanLength = 7 | 30 | 100;
@@ -150,10 +151,12 @@ export function WorkoutPlanPage() {
   // Body photo state
   const [bodyPhoto, setBodyPhoto] = useState<string | null>(null);
   const [showCamera, setShowCamera] = useState(false);
+  const [showPhotoPicker, setShowPhotoPicker] = useState(false);
 
   // Progress photos state
   const [progressPhotos, setProgressPhotos] = useState<Array<{ id: string; url: string; plan_id: string | null; day_number: number | null; note: string; created_at: string }>>([]);
   const [showProgressCamera, setShowProgressCamera] = useState(false);
+  const [showProgressPhotoPicker, setShowProgressPhotoPicker] = useState(false);
   const [progressNote, setProgressNote] = useState('');
   const [uploadingProgress, setUploadingProgress] = useState(false);
 
@@ -631,7 +634,7 @@ export function WorkoutPlanPage() {
                       </motion.button>
                     </div>
                   ) : (
-                    <motion.button whileTap={{ scale: 0.97 }} onClick={() => { hapticFeedback('light'); setShowCamera(true); }} className="w-full p-3 rounded-xl border-2 border-dashed border-white/10 flex items-center justify-center gap-2 bg-white/[0.01]">
+                    <motion.button whileTap={{ scale: 0.97 }} onClick={() => { hapticFeedback('light'); setShowPhotoPicker(true); }} className="w-full p-3 rounded-xl border-2 border-dashed border-white/10 flex items-center justify-center gap-2 bg-white/[0.01]">
                       <Camera className="w-4 h-4 text-[#fd79a8]" />
                       <span className="text-white/50" style={{ fontSize: '0.8125rem', fontWeight: 500 }}>{t('wp_add_photo')}</span>
                     </motion.button>
@@ -952,7 +955,7 @@ export function WorkoutPlanPage() {
                     {!hasPhotoForDay ? (
                       <motion.button
                         whileTap={{ scale: 0.97 }}
-                        onClick={() => { hapticFeedback('light'); setShowProgressCamera(true); }}
+                        onClick={() => { hapticFeedback('light'); setShowProgressPhotoPicker(true); }}
                         className="w-full h-11 rounded-xl bg-gradient-to-r from-[#fd79a8] to-[#e17055] flex items-center justify-center gap-2"
                       >
                         <Camera className="w-4 h-4 text-white" />
@@ -1024,7 +1027,7 @@ export function WorkoutPlanPage() {
                     </div>
                     <motion.button
                       whileTap={{ scale: 0.9 }}
-                      onClick={() => { hapticFeedback('light'); setShowProgressCamera(true); }}
+                      onClick={() => { hapticFeedback('light'); setShowProgressPhotoPicker(true); }}
                       className="w-8 h-8 rounded-lg bg-[#fd79a8]/15 flex items-center justify-center"
                     >
                       <Camera className="w-4 h-4 text-[#fd79a8]" />
@@ -1115,6 +1118,14 @@ export function WorkoutPlanPage() {
         )}
       </AnimatePresence>
 
+      {/* Photo source picker for body photo */}
+      <PhotoSourcePicker
+        open={showPhotoPicker}
+        onClose={() => setShowPhotoPicker(false)}
+        onPickCamera={() => setShowCamera(true)}
+        onPickGallery={(dataUrl) => setBodyPhoto(dataUrl)}
+      />
+
       {/* Camera for body photo (plan generation) */}
       <CameraCapture
         open={showCamera}
@@ -1123,6 +1134,14 @@ export function WorkoutPlanPage() {
           setShowCamera(false);
         }}
         onClose={() => setShowCamera(false)}
+      />
+
+      {/* Photo source picker for progress photo */}
+      <PhotoSourcePicker
+        open={showProgressPhotoPicker}
+        onClose={() => setShowProgressPhotoPicker(false)}
+        onPickCamera={() => setShowProgressCamera(true)}
+        onPickGallery={(dataUrl) => handleUploadProgressPhoto(dataUrl)}
       />
 
       {/* Camera for progress photo */}

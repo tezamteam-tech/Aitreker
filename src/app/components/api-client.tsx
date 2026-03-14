@@ -891,6 +891,15 @@ export const api = {
     daily_calories: number;
     gender: string;
     activity_level: string;
+    // Body metrics (optional — enhances AI context)
+    age?: number;
+    height?: number;
+    weight?: number;
+    // Photo for AI body analysis (optional)
+    imageBase64?: string;
+    mimeType?: string;
+    // Language
+    language?: string;
   }): Promise<{
     id: string;
     plan_length: number;

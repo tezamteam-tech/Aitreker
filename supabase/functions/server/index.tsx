@@ -9408,8 +9408,9 @@ app.post(`${PREFIX}/meal-plans/generate`, async (c) => {
     }
 
     const body = await c.req.json();
-    const { plan_length, goal, daily_calories, gender, activity_level } = body;
+    const { plan_length, goal, daily_calories, gender, activity_level, age, height, weight, imageBase64, mimeType, language } = body;
     const days = plan_length || 7;
+    const lang = language || "en";
 
     const openaiKey = Deno.env.get("OPENAI_API_KEY");
     if (!openaiKey) return c.json({ message: "OpenAI not configured", code: "CONFIG_ERROR", status: 500 }, 500);
@@ -9419,39 +9420,114 @@ app.post(`${PREFIX}/meal-plans/generate`, async (c) => {
     const userGoal = goal || userProfile?.goal || "maintain weight";
     const userGender = gender || userProfile?.gender || "not specified";
     const userActivity = activity_level || userProfile?.activity_level || "moderate";
+    const userAge = age || userProfile?.age;
+    const userHeight = height || userProfile?.height;
+    const userWeight = weight || userProfile?.weight;
     const batchDays = Math.min(days, 7);
+    const useVision = !!imageBase64;
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: { "Authorization": `Bearer ${openaiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: 'You are a professional nutritionist. Create a detailed meal plan. Return ONLY a JSON object: { "days": [ { "day": 1, "meals": { "breakfast": { "name": "...", "calories": N, "protein": N, "carbs": N, "fat": N, "ingredients": ["..."], "instructions": "..." }, "lunch": {...}, "dinner": {...}, "snack": {...} }, "total_calories": N } ] }. No other text.' },
-          { role: "user", content: `Create a ${batchDays}-day meal plan for a ${userGender} with ${userActivity} activity level. Goal: ${userGoal}. Daily calorie target: ${calTarget} calories. Make meals varied, practical, and nutritious.` },
-        ],
-        max_tokens: 4000,
-        temperature: 0.7,
-      }),
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      console.log(`[Meal Plan] OpenAI error: ${response.status} ${errText}`);
-      return c.json({ message: "AI generation failed", code: "AI_ERROR", status: 502 }, 502);
+    // Build body metrics string
+    let bodyMetrics = "";
+    if (userAge) bodyMetrics += `Age: ${userAge}. `;
+    if (userHeight) bodyMetrics += `Height: ${userHeight}cm. `;
+    if (userWeight) bodyMetrics += `Weight: ${userWeight}kg. `;
+    if (userHeight && userWeight) {
+      const bmi = (userWeight / ((userHeight / 100) ** 2)).toFixed(1);
+      bodyMetrics += `BMI: ${bmi}. `;
     }
 
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || "";
-    let planData: any;
-    try {
-      const jsonStr = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-      planData = JSON.parse(jsonStr);
-    } catch {
-      console.log("[Meal Plan] Failed to parse AI response:", content.slice(0, 500));
-      return c.json({ message: "Could not parse AI response", code: "PARSE_ERROR", status: 502 }, 502);
+    const photoInstruction = useVision
+      ? (lang === "ru"
+        ? "\nКлиент предоставил фото тела для оценки телосложения. Учти визуальные данные при составлении плана питания — подбери рацион под видимый тип телосложения и процент жира."
+        : "\nClient provided a body photo for body composition assessment. Consider visible body type, estimated body fat, and physique when creating the meal plan.")
+      : "";
+
+    const systemPrompt = lang === "ru"
+      ? `Ты профессиональный диетолог-нутрициолог. Составь детальный план питания. ${bodyMetrics ? `Метрики клиента: ${bodyMetrics}` : ""}${photoInstruction} Ответь ТОЛЬКО JSON объектом: { "days": [ { "day": 1, "meals": { "breakfast": { "name": "...", "calories": N, "protein": N, "carbs": N, "fat": N, "ingredients": ["..."], "instructions": "..." }, "lunch": {...}, "dinner": {...}, "snack": {...} }, "total_calories": N } ] }. Никакого другого текста.`
+      : `You are a professional nutritionist and dietitian. Create a detailed meal plan. ${bodyMetrics ? `Client metrics: ${bodyMetrics}` : ""}${photoInstruction} Return ONLY a JSON object: { "days": [ { "day": 1, "meals": { "breakfast": { "name": "...", "calories": N, "protein": N, "carbs": N, "fat": N, "ingredients": ["..."], "instructions": "..." }, "lunch": {...}, "dinner": {...}, "snack": {...} }, "total_calories": N } ] }. No other text.`;
+
+    const userMessage = lang === "ru"
+      ? `Составь план питания на ${batchDays} дней для ${userGender === "male" ? "мужчины" : "женщины"} с уровнем активности: ${userActivity}. Цель: ${userGoal}. Дневная норма калорий: ${calTarget} ккал. Сделай блюда разнообразными, практичными и питательными.`
+      : `Create a ${batchDays}-day meal plan for a ${userGender} with ${userActivity} activity level. Goal: ${userGoal}. Daily calorie target: ${calTarget} calories. Make meals varied, practical, and nutritious.`;
+
+    console.log(`[Meal Plan] ${days}d, photo=${useVision}, lang=${lang}, body=${!!bodyMetrics}, user=${auth.userId}`);
+
+    // Helper: call OpenAI
+    async function callMealPlanAI(
+      msgs: any[], withPhoto: boolean, maxTok: number
+    ): Promise<{ ok: boolean; parsed?: any; error?: string; refusal?: boolean }> {
+      const resp = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${openaiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: withPhoto ? "gpt-4o" : "gpt-4o-mini",
+          messages: msgs, max_tokens: maxTok, temperature: 0.7,
+          ...(withPhoto ? {} : { response_format: { type: "json_object" } }),
+        }),
+      });
+      if (!resp.ok) {
+        const errText = await resp.text();
+        console.log(`[Meal Plan] OpenAI ${resp.status}: ${errText.slice(0, 200)}`);
+        return { ok: false, error: `OpenAI ${resp.status}` };
+      }
+      const d = await resp.json();
+      if (d.choices?.[0]?.message?.refusal) {
+        return { ok: false, refusal: true, error: d.choices[0].message.refusal };
+      }
+      const ct = d.choices?.[0]?.message?.content || "";
+      const lc = ct.toLowerCase();
+      if ((lc.includes("i'm sorry") || lc.includes("i can't") || lc.includes("не могу помочь") || lc.includes("извините")) && !lc.includes('"days"')) {
+        return { ok: false, refusal: true, error: ct.slice(0, 200) };
+      }
+      try {
+        const jsonStr = ct.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+        const p = JSON.parse(jsonStr);
+        if (!p.days || !Array.isArray(p.days) || p.days.length === 0) return { ok: false, error: "no days array" };
+        return { ok: true, parsed: p };
+      } catch {
+        console.log("[Meal Plan] Parse fail:", ct.slice(0, 200));
+        return { ok: false, error: "JSON parse failed" };
+      }
     }
 
+    // ====== 3-step retry strategy ======
+    // Attempt 1: with photo (GPT-4o Vision) if available, else GPT-4o-mini
+    const m1: any[] = [{ role: "system", content: systemPrompt }];
+    if (useVision) {
+      m1.push({ role: "user", content: [
+        { type: "text", text: userMessage },
+        { type: "image_url", image_url: { url: `data:${mimeType || "image/jpeg"};base64,${imageBase64}` } },
+      ]});
+    } else {
+      m1.push({ role: "user", content: userMessage });
+    }
+    let result = await callMealPlanAI(m1, useVision, 4000);
+
+    // Attempt 2: text-only fallback (GPT-4o-mini) if photo caused refusal
+    if (!result.ok && useVision && result.refusal) {
+      console.log("[Meal Plan] Attempt 1 refusal, trying text-only fallback");
+      result = await callMealPlanAI([
+        { role: "system", content: systemPrompt.replace(photoInstruction, "").trim() },
+        { role: "user", content: userMessage },
+      ], false, 4000);
+    }
+
+    // Attempt 3: simplified English prompt as last resort
+    if (!result.ok) {
+      console.log("[Meal Plan] Attempt 2 failed, trying simplified English");
+      const minSys = `You are a nutritionist. Create a meal plan. Respond JSON: { "days": [{ "day": 1, "meals": { "breakfast": { "name": "Oatmeal", "calories": 350, "protein": 12, "carbs": 50, "fat": 8, "ingredients": ["oats"], "instructions": "Cook oats" }, "lunch": {...}, "dinner": {...}, "snack": {...} }, "total_calories": 2000 }] }`;
+      result = await callMealPlanAI([
+        { role: "system", content: minSys },
+        { role: "user", content: `Create a ${batchDays}-day meal plan. Goal: ${userGoal}. Daily calories: ${calTarget}. Gender: ${userGender}. Activity: ${userActivity}.` },
+      ], false, 4000);
+    }
+
+    if (!result.ok) {
+      console.log("[Meal Plan] All 3 attempts failed:", result.error);
+      return c.json({ message: "AI generation failed after 3 attempts", code: "AI_ERROR", status: 502 }, 502);
+    }
+
+    const planData = result.parsed;
     const planId = generateId("mplan");
     const savedPlan = { id: planId, userId: auth.userId, plan_length: days, plan_data: planData, created_at: new Date().toISOString() };
     await kv.set(`become:mealplan:${auth.userId}:${planId}`, savedPlan);
@@ -9462,7 +9538,7 @@ app.post(`${PREFIX}/meal-plans/generate`, async (c) => {
     await kv.set(plansIndexKey, plansIndex);
 
     await incrementWeeklyMealPlanCount(auth.userId);
-    console.log(`[Meal Plan] Generated ${batchDays}-day plan for user ${auth.userId}`);
+    console.log(`[Meal Plan] Generated ${batchDays}-day plan for user ${auth.userId}, photo=${useVision}`);
     return c.json(savedPlan);
   } catch (err) {
     console.log("POST /meal-plans/generate error:", err);

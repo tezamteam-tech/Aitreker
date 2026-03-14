@@ -34,6 +34,8 @@ import {
   AlertCircle,
   RefreshCw,
   Crown,
+  Camera,
+  User,
 } from 'lucide-react';
 import { GlassCard } from './glass-card';
 import { useAuth } from './auth-context';
@@ -42,6 +44,8 @@ import { hapticFeedback, hapticSuccess, hapticError } from './telegram';
 import { useTranslation } from './i18n';
 import { PageHeader } from './page-header';
 import { useBottomSheetLifecycle } from './bottom-sheet-context';
+import { CameraCapture } from './camera-capture';
+import { PhotoSourcePicker } from './photo-source-picker';
 
 // ---- Types ----
 type PlanLength = 7 | 30 | 100;
@@ -53,6 +57,9 @@ interface UserProfile {
   daily_calorie_target: number;
   gender: string;
   activity_level: string;
+  age?: number;
+  height?: number;
+  weight?: number;
 }
 
 interface SavedPlan {
@@ -119,6 +126,11 @@ export function MealPlanPage() {
   const [limitReached, setLimitReached] = useState(false);
   const genIntervalRef = useRef<ReturnType<typeof setInterval>>();
 
+  // Body photo state
+  const [bodyPhoto, setBodyPhoto] = useState<string | null>(null);
+  const [showCamera, setShowCamera] = useState(false);
+  const [showPhotoPicker, setShowPhotoPicker] = useState(false);
+
   useBottomSheetLifecycle(showHistory);
 
   // Load profile
@@ -145,6 +157,9 @@ export function MealPlanPage() {
         goal: p.goal || 'maintain_weight',
         gender: p.gender || 'male',
         activity_level: p.activity_level || 'medium',
+        age: p.age,
+        height: p.height,
+        weight: p.weight,
       };
       setProfile(prof);
       localStorage.setItem('nutrition_calorie_target', String(prof.daily_calorie_target));
@@ -202,17 +217,35 @@ export function MealPlanPage() {
     setErrorMsg('');
 
     try {
+      // Extract base64 from body photo data URL
+      let imageBase64: string | undefined;
+      let mimeType: string | undefined;
+      if (bodyPhoto) {
+        const match = bodyPhoto.match(/^data:(.+?);base64,(.+)$/);
+        if (match) {
+          mimeType = match[1];
+          imageBase64 = match[2];
+        }
+      }
+
       const result = await api.generateMealPlan({
         plan_length: selectedLength,
         goal: profile.goal,
         daily_calories: profile.daily_calorie_target,
         gender: profile.gender,
         activity_level: profile.activity_level,
+        age: profile.age,
+        height: profile.height,
+        weight: profile.weight,
+        imageBase64,
+        mimeType,
+        language: lang,
       });
 
       hapticSuccess();
       setCurrentPlan(result);
       setSelectedDay(1);
+      setBodyPhoto(null);
       setViewState('viewing');
     } catch (err: any) {
       hapticError();
@@ -227,7 +260,7 @@ export function MealPlanPage() {
       }
       setViewState('error');
     }
-  }, [profile, selectedLength]);
+  }, [profile, selectedLength, bodyPhoto, lang]);
 
   // Load saved plans for history
   const handleShowHistory = useCallback(async () => {
@@ -379,6 +412,64 @@ export function MealPlanPage() {
                   <p className="text-muted-foreground" style={{ fontSize: '0.8125rem', lineHeight: 1.5 }}>
                     {t('mp_complete_onboarding')}
                   </p>
+                </GlassCard>
+              )}
+
+              {/* ---- BODY PHOTO section ---- */}
+              {profile && (
+                <GlassCard className="!p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#fd79a8]/20 to-[#e17055]/20 flex items-center justify-center">
+                      <User className="w-5 h-5 text-[#fd79a8]" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>{t('mp_your_body')}</p>
+                      <p className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>{t('mp_body_desc')}</p>
+                    </div>
+                  </div>
+
+                  {/* Metrics row */}
+                  <div className="grid grid-cols-3 gap-2 mb-3">
+                    {profile.age ? (
+                      <div className="rounded-xl bg-white/[0.03] border border-white/[0.05] p-2 text-center">
+                        <p className="text-white/35" style={{ fontSize: '0.5625rem' }}>{t('wp_age_label')}</p>
+                        <p className="text-white" style={{ fontSize: '0.875rem', fontWeight: 700 }}>{profile.age}</p>
+                      </div>
+                    ) : null}
+                    {profile.height ? (
+                      <div className="rounded-xl bg-white/[0.03] border border-white/[0.05] p-2 text-center">
+                        <p className="text-white/35" style={{ fontSize: '0.5625rem' }}>{t('wp_height_label')}</p>
+                        <p className="text-white" style={{ fontSize: '0.875rem', fontWeight: 700 }}>{profile.height}<span className="text-white/30 text-[0.625rem]">cm</span></p>
+                      </div>
+                    ) : null}
+                    {profile.weight ? (
+                      <div className="rounded-xl bg-white/[0.03] border border-white/[0.05] p-2 text-center">
+                        <p className="text-white/35" style={{ fontSize: '0.5625rem' }}>{t('wp_weight_label')}</p>
+                        <p className="text-white" style={{ fontSize: '0.875rem', fontWeight: 700 }}>{profile.weight}<span className="text-white/30 text-[0.625rem]">kg</span></p>
+                      </div>
+                    ) : null}
+                  </div>
+
+                  {/* Photo added / Add photo */}
+                  {bodyPhoto ? (
+                    <div className="flex items-center gap-3 p-3 rounded-xl bg-[#00cec9]/8 border border-[#00cec9]/20">
+                      <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0">
+                        <img src={bodyPhoto} alt="Body" className="w-full h-full object-cover" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-[#00cec9]" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{t('mp_photo_added')}</p>
+                        <p className="text-white/30" style={{ fontSize: '0.6875rem' }}>{t('mp_photo_hint')}</p>
+                      </div>
+                      <motion.button whileTap={{ scale: 0.9 }} onClick={() => { hapticFeedback('light'); setBodyPhoto(null); }} className="px-2.5 py-1 rounded-lg bg-white/[0.06]">
+                        <span className="text-white/40" style={{ fontSize: '0.6875rem' }}>{t('mp_remove_photo')}</span>
+                      </motion.button>
+                    </div>
+                  ) : (
+                    <motion.button whileTap={{ scale: 0.97 }} onClick={() => { hapticFeedback('light'); setShowPhotoPicker(true); }} className="w-full p-3 rounded-xl border-2 border-dashed border-white/10 flex items-center justify-center gap-2 bg-white/[0.01]">
+                      <Camera className="w-4 h-4 text-[#fd79a8]" />
+                      <span className="text-white/50" style={{ fontSize: '0.8125rem', fontWeight: 500 }}>{t('mp_add_photo')}</span>
+                    </motion.button>
+                  )}
                 </GlassCard>
               )}
 
@@ -688,6 +779,24 @@ export function MealPlanPage() {
           />
         )}
       </AnimatePresence>
+
+      {/* Photo source picker */}
+      <PhotoSourcePicker
+        open={showPhotoPicker}
+        onClose={() => setShowPhotoPicker(false)}
+        onPickCamera={() => setShowCamera(true)}
+        onPickGallery={(dataUrl) => setBodyPhoto(dataUrl)}
+      />
+
+      {/* Camera for body photo */}
+      <CameraCapture
+        open={showCamera}
+        onCapture={(dataUrl) => {
+          setBodyPhoto(dataUrl);
+          setShowCamera(false);
+        }}
+        onClose={() => setShowCamera(false)}
+      />
     </div>
   );
 }
@@ -740,6 +849,7 @@ function CalendarNavigator({
   planCreatedAt: string;
   lang: string;
 }) {
+  const { t } = useTranslation();
   const scrollRef = useRef<HTMLDivElement>(null);
   const DAYS_PER_PAGE = 7;
 
@@ -867,6 +977,7 @@ function MealCard({
   totalFat: number;
   lang: string;
 }) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(true);
   const Icon = config.icon;
 
@@ -1056,6 +1167,7 @@ function HistorySheet({
   onDelete: (planId: string) => void;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <>
       <motion.div

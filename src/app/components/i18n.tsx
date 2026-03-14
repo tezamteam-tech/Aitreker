@@ -761,7 +761,7 @@ const translations: Record<string, Record<Lang, string>> = {
   goal_tasks_count: { en: '{done}/{total} tasks', ru: '{done}/{total} \u0437\u0430\u0434\u0430\u0447' },
   goal_no_tasks: { en: 'No tasks yet', ru: 'Задач пока нет' },
   // Unified goals hub
-  goals_my_path: { en: 'MY PATH', ru: 'МОЙ ПУТЬ' },
+  goals_my_path: { en: 'MY PATH', ru: 'МОЙ П��ТЬ' },
   goals_my_path_desc: { en: 'Active development program', ru: 'Активная программа развития' },
   goals_day_n: { en: 'Day {n} of {total}', ru: 'День {n} из {total}' },
   goals_completed_badge: { en: 'Completed', ru: 'Завершена' },
@@ -1023,7 +1023,7 @@ const translations: Record<string, Record<Lang, string>> = {
 
   // ---- Onboarding Nutrition ----
   obn_gender_title: { en: 'Your gender', ru: 'Ваш пол' },
-  obn_gender_desc: { en: 'For accurate calorie and metabolism calculation', ru: 'Для точного расчёта калорий и метаболизма' },
+  obn_gender_desc: { en: 'For accurate calorie and metabolism calculation', ru: 'Для точного расчёта калори�� и метаболизма' },
   obn_male: { en: 'Male', ru: 'Мужской' },
   obn_female: { en: 'Female', ru: 'Женский' },
   obn_age_title: { en: 'How old are you?', ru: 'Сколько вам лет?' },
@@ -1213,6 +1213,22 @@ const translations: Record<string, Record<Lang, string>> = {
   mp_gen_4: { en: 'Adding variety and flavor...', ru: 'Добавляем разнообразие...' },
   mp_gen_5: { en: 'Optimizing calorie distribution...', ru: 'Оптимизируем калории...' },
   mp_gen_6: { en: 'Finalizing your personalized plan...', ru: 'Финализируем ваш план...' },
+
+  // ---- Meal Plan — Body Photo & AI Vision ----
+  mp_your_body: { en: 'Your Body', ru: 'Ваше тело' },
+  mp_body_desc: { en: 'AI uses your body data for a personalized plan', ru: 'AI использует ваши данные для персонализации' },
+  mp_add_photo: { en: 'Add Body Photo', ru: 'Добавить фото тела' },
+  mp_photo_added: { en: 'Photo added', ru: 'Фото добавлено' },
+  mp_photo_hint: { en: 'Optional — AI will personalize your meals', ru: 'Необязательно — AI персонализирует план' },
+  mp_remove_photo: { en: 'Remove', ru: 'Убрать' },
+  mp_gen_analyzing_photo: { en: 'Analyzing your body photo...', ru: 'Анализируем фото тела...' },
+
+  // ---- Shared Photo Picker ----
+  photo_choose_source: { en: 'Add Photo', ru: 'Добавить фото' },
+  photo_take_camera: { en: 'Take Photo', ru: 'Сделать фото' },
+  photo_from_gallery: { en: 'Choose from Gallery', ru: 'Выбрать из галереи' },
+  photo_cancel: { en: 'Cancel', ru: 'Отмена' },
+
   mp_day_label: { en: 'Day {n}', ru: 'День {n}' },
   mp_meals_count: { en: '{n} meals', ru: '{n} приёмов пищи' },
   mp_protein: { en: 'Protein', ru: 'Белки' },
@@ -1229,7 +1245,7 @@ const translations: Record<string, Record<Lang, string>> = {
   wp_at_home: { en: 'At Home', ru: 'Дома' },
   wp_no_equip: { en: 'No equipment needed', ru: 'Без оборудования' },
   wp_at_gym: { en: 'At Gym', ru: 'В зале' },
-  wp_full_equip: { en: 'Full equipment', ru: 'Полное оборудование' },
+  wp_full_equip: { en: 'Full equipment', ru: 'Полное обо��удование' },
   wp_complete_onboarding: { en: 'Complete onboarding for a personalized workout plan.', ru: 'Пройдите онбординг для персонализированного плана тренировок.' },
   wp_plan_length: { en: 'Plan length', ru: 'Длительность плана' },
   wp_plan_7_label: { en: '1 Week', ru: '1 Неделя' },
