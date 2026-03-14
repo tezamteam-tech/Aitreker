@@ -1443,7 +1443,7 @@ const translations: Record<string, Record<Lang, string>> = {
   chd_insufficient_balance: { en: 'Insufficient balance', ru: 'Недостаточно средств на балансе' },
 
   // ---- Coach Chat — insight prefix ----
-  coach_insights_prefix: { en: "Here are my AI insights from the journal. Help me understand and create an action plan:\n\n", ru: 'Вот мои AI-инсайты из журнала. Помоги мне разобраться и составить план действий:\n\n' },
+  coach_insights_prefix: { en: "Here are my AI insights from the journal. Help me understand and create an action plan:\n\n", ru: 'Вот мои AI-инсайты из журнала. Помоги мне разобратьс�� и составить план действий:\n\n' },
 
   // ---- Onboarding — splash ----
   ob_splash_syncing: { en: 'Syncing your goals and tasks...', ru: 'Синхронизируем ваши цели и задачи...' },
@@ -1520,6 +1520,14 @@ const translations: Record<string, Record<Lang, string>> = {
   hn_cal_unit: { en: 'cal', ru: 'ккал' },
   hn_bmr: { en: 'BMR', ru: 'БМ' },
   hn_tdee: { en: 'TDEE', ru: 'TDEE' },
+  hn_wc_title: { en: 'Est. weight change today', ru: 'Прогноз веса за день' },
+  hn_wc_deficit: { en: 'Calorie balance', ru: 'Баланс калорий' },
+  hn_wc_disclaimer: {
+    en: '* Estimate based on TDEE + tracked activity vs consumed. Actual results depend on metabolism, water balance, and other factors.',
+    ru: '* Оценка на основе TDEE + трекинга активности vs потребления. Реальные результаты зависят от метаболизма, водного баланса и других факторов.'
+  },
+  hn_wc_g: { en: 'g', ru: 'г' },
+  hn_wc_kg: { en: 'kg', ru: 'кг' },
   hn_protein: { en: 'Protein', ru: 'Белки' },
   hn_carbs: { en: 'Carbs', ru: 'Углеводы' },
   hn_fats: { en: 'Fats', ru: 'Жиры' },
@@ -1546,6 +1554,14 @@ const translations: Record<string, Record<Lang, string>> = {
   hn_upgrade_premium: { en: 'Upgrade to Premium for unlimited access', ru: 'Перейдите на Premium для безлимитного доступа' },
   hn_go_premium: { en: 'Go Premium', ru: 'Перейти на Premium' },
   hn_weight_subtitle: { en: '{weight} kg ({change} this week)', ru: '{weight} кг ({change} за неделю)' },
+  hn_qa_scan: { en: 'Scan Food', ru: 'Скан еды' },
+  hn_qa_coach: { en: 'AI Coach', ru: 'AI-коуч' },
+  hn_qa_weight: { en: 'Weight', ru: 'Вес' },
+  hn_qa_analytics: { en: 'Analytics', ru: 'Аналитика' },
+  hn_qa_meals: { en: 'Meal Plan', ru: 'План питания' },
+  hn_qa_workout: { en: 'Workout', ru: 'Тренировка' },
+  hn_qa_activity: { en: 'Activity', ru: 'Активность' },
+  hn_qa_burned: { en: 'Burned: {cal}', ru: 'Сожжено: {cal}' },
 
   // ---- Units ----
   unit_kg: { en: 'kg', ru: 'кг' },

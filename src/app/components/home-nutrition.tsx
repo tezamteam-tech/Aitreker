@@ -21,16 +21,13 @@ import {
   TrendingUp,
   TrendingDown,
   Target,
-  Plus,
-  Clock,
-  CheckCircle2,
   AlertCircle,
   Zap,
   Crown,
   Salad,
-  MessageCircle,
   Scale,
   BarChart3,
+  Activity,
 } from 'lucide-react';
 import { GlassCard } from './glass-card';
 import { useAuth } from './auth-context';
@@ -39,7 +36,6 @@ import { hapticFeedback } from './telegram';
 import { useTranslation } from './i18n';
 import { PageHeader } from './page-header';
 import { calculateCalories, type CalorieResult } from './calorie-calculator';
-import { PremiumBadge } from './premium-gate';
 import { StreakShareCard } from './streak-share-card';
 import { SmartBurnCard } from './smart-burn-card';
 import { ActivityLogger } from './activity-logger';
@@ -445,6 +441,66 @@ export function HomeNutritionPage() {
             </div>
           )}
 
+          {/* Potential Weight Change Indicator */}
+          {(() => {
+            const totalExpenditure = (maintenanceCalories || bmr || 0) + burnedToday;
+            if (totalExpenditure <= 0) return null;
+            const deficit = totalExpenditure - nutritionData.caloriesConsumed;
+            // 7700 kcal ≈ 1 kg of body fat
+            const weightChangeG = Math.round((deficit / 7700) * 1000);
+            const isLoss = weightChangeG > 0;
+            const absGrams = Math.abs(weightChangeG);
+            const displayKg = absGrams >= 1000;
+            const displayValue = displayKg ? (absGrams / 1000).toFixed(1) : absGrams;
+            const displayUnit = displayKg ? t('hn_wc_kg') : t('hn_wc_g');
+
+            return (
+              <motion.div
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.4 }}
+                className="mt-3 p-3 rounded-xl"
+                style={{
+                  background: isLoss
+                    ? 'linear-gradient(135deg, rgba(0,206,201,0.06), rgba(108,92,231,0.04))'
+                    : 'linear-gradient(135deg, rgba(255,107,107,0.06), rgba(238,90,36,0.04))',
+                  border: `1px solid ${isLoss ? 'rgba(0,206,201,0.15)' : 'rgba(255,107,107,0.15)'}`,
+                }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
+                      isLoss ? 'bg-[#00cec9]/15' : 'bg-[#ff6b6b]/15'
+                    }`}>
+                      {isLoss
+                        ? <TrendingDown className="w-4 h-4 text-[#00cec9]" />
+                        : <TrendingUp className="w-4 h-4 text-[#ff6b6b]" />
+                      }
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">{t('hn_wc_title')}</p>
+                      <div className="flex items-baseline gap-1 mt-0.5">
+                        <span className={`text-lg font-bold ${isLoss ? 'text-[#00cec9]' : 'text-[#ff6b6b]'}`}>
+                          {isLoss ? '-' : '+'}{displayValue}
+                        </span>
+                        <span className="text-xs text-muted-foreground">{displayUnit}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[0.625rem] text-muted-foreground/50">{t('hn_wc_deficit')}</p>
+                    <p className={`text-sm font-semibold ${isLoss ? 'text-[#00cec9]/80' : 'text-[#ff6b6b]/80'}`}>
+                      {isLoss ? '-' : '+'}{Math.abs(deficit)} {t('hn_cal_unit')}
+                    </p>
+                  </div>
+                </div>
+                <p className="text-[0.5625rem] text-muted-foreground/40 mt-2 leading-relaxed">
+                  {t('hn_wc_disclaimer')}
+                </p>
+              </motion.div>
+            );
+          })()}
+
           {/* Macros */}
           <div className="grid grid-cols-3 gap-3 mt-4 pt-4" style={{ borderTop: '1px solid var(--glass-border-subtle)' }}>
             <div className="text-center">
@@ -462,205 +518,94 @@ export function HomeNutritionPage() {
           </div>
         </GlassCard>
 
-        {/* Scan Food Button */}
-        <motion.button
-          whileTap={{ scale: 0.98 }}
-          onClick={handleScanFood}
-          className="w-full p-5 rounded-[20px] bg-gradient-to-br from-[#6c5ce7] to-[#a29bfe] flex items-center justify-between shadow-lg"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
-              <Camera className="w-6 h-6 text-white" />
+        {/* ===== Quick Actions Grid (2×3 compact tiles) ===== */}
+        <div className="grid grid-cols-3 gap-2.5">
+          {/* Scan Food — primary action, gradient */}
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={handleScanFood}
+            className="flex flex-col items-center gap-2 p-3.5 rounded-2xl bg-gradient-to-br from-[#6c5ce7] to-[#a29bfe] shadow-lg"
+          >
+            <div className="w-11 h-11 rounded-2xl bg-white/20 flex items-center justify-center">
+              <Camera className="w-5.5 h-5.5 text-white" />
             </div>
-            <div className="text-left">
-              <p className="text-white font-medium text-base">{t('hn_scan_food')}</p>
-              <p className="text-white/70 text-sm">{t('hn_scan_food_desc')}</p>
-            </div>
-          </div>
-          <ChevronRight className="w-5 h-5 text-white/80" />
-        </motion.button>
+            <span className="text-white text-[0.6875rem] font-medium leading-tight text-center">{t('hn_qa_scan')}</span>
+          </motion.button>
 
-        {/* AI Nutrition Coach Card */}
-        <motion.button
-          whileTap={{ scale: 0.98 }}
-          onClick={() => { hapticFeedback('medium'); navigate('/nutrition-coach'); }}
-          className="w-full p-4 rounded-[20px] bg-gradient-to-br from-[#00b894]/15 to-[#00cec9]/10 border border-[#00b894]/20 flex items-center justify-between"
-        >
-          <div className="flex items-center gap-3">
+          {/* AI Coach */}
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={() => { hapticFeedback('medium'); navigate('/nutrition-coach'); }}
+            className="flex flex-col items-center gap-2 p-3.5 rounded-2xl border"
+            style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border-subtle)' }}
+          >
             <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#00b894] to-[#00cec9] flex items-center justify-center">
               <Salad className="w-5.5 h-5.5 text-white" />
             </div>
-            <div className="text-left">
-              <div className="flex items-center gap-2">
-                <p className="text-foreground font-medium" style={{ fontSize: '0.9375rem' }}>
-                  {t('nutri_coach_home_title')}
-                </p>
-                <PremiumBadge />
-              </div>
-              <p className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>
-                {t('nutri_coach_home_desc')}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <MessageCircle className="w-4 h-4 text-[#00b894]/60" />
-            <ChevronRight className="w-4 h-4 text-[#00b894]/60" />
-          </div>
-        </motion.button>
+            <span className="text-foreground text-[0.6875rem] font-medium leading-tight text-center">{t('hn_qa_coach')}</span>
+          </motion.button>
 
-        {/* Weight Tracking Quick Action */}
-        <motion.button
-          whileTap={{ scale: 0.98 }}
-          onClick={() => { hapticFeedback('medium'); navigate('/weight'); }}
-          className="w-full p-4 rounded-[20px] bg-gradient-to-br from-[#74b9ff]/15 to-[#0984e3]/10 border border-[#74b9ff]/20 flex items-center justify-between"
-        >
-          <div className="flex items-center gap-3">
+          {/* Weight */}
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={() => { hapticFeedback('medium'); navigate('/weight'); }}
+            className="flex flex-col items-center gap-2 p-3.5 rounded-2xl relative"
+            style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border-subtle)' }}
+          >
             <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#74b9ff] to-[#0984e3] flex items-center justify-center">
               <Scale className="w-5.5 h-5.5 text-white" />
             </div>
-            <div className="text-left">
-              <p className="text-foreground font-medium" style={{ fontSize: '0.9375rem' }}>
-                {t('weight_home_title')}
-              </p>
-              <p className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>
-                {latestWeight
-                  ? (weeklyWeightChange !== null
-                    ? t('hn_weight_subtitle', { weight: latestWeight.weight, change: `${weeklyWeightChange >= 0 ? '+' : ''}${weeklyWeightChange.toFixed(1)}` })
-                    : `${latestWeight.weight} ${t('unit_kg')}`)
-                  : t('weight_home_desc')}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Plus className="w-4 h-4 text-[#74b9ff]/60" />
-            <ChevronRight className="w-4 h-4 text-[#74b9ff]/60" />
-          </div>
-        </motion.button>
+            <span className="text-foreground text-[0.6875rem] font-medium leading-tight text-center">{t('hn_qa_weight')}</span>
+            {latestWeight && (
+              <span className="text-[0.5625rem] text-muted-foreground/60 -mt-1">{latestWeight.weight}{t('unit_kg')}</span>
+            )}
+          </motion.button>
 
-        {/* Today's Meal Plan */}
-        <GlassCard className="p-5">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Utensils className="w-5 h-5 text-[#fd79a8]" />
-              <h3 className="text-foreground font-medium">{t('hn_todays_meals')}</h3>
+          {/* Meal Plan */}
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={() => { hapticFeedback('medium'); navigate('/meal-plan'); }}
+            className="flex flex-col items-center gap-2 p-3.5 rounded-2xl relative"
+            style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border-subtle)' }}
+          >
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#fd79a8] to-[#e84393] flex items-center justify-center">
+              <Utensils className="w-5.5 h-5.5 text-white" />
             </div>
-            <button
-              onClick={() => {
-                hapticFeedback('light');
-                navigate('/calories');
-              }}
-              className="text-sm text-app-accent"
-            >
-              {todayMeals.length > 0 ? t('hn_view_all') : t('hn_log_food')}
-            </button>
-          </div>
+            <span className="text-foreground text-[0.6875rem] font-medium leading-tight text-center">{t('hn_qa_meals')}</span>
+            {todayMeals.length > 0 && (
+              <span className="absolute top-2 right-2 w-5 h-5 rounded-full bg-[#fd79a8] text-white text-[0.625rem] font-bold flex items-center justify-center">{todayMeals.length}</span>
+            )}
+          </motion.button>
 
-          {todayMeals.length > 0 ? (
-            <div className="space-y-2">
-              {todayMeals.slice(0, 3).map((meal, idx) => (
-                <motion.div
-                  key={meal.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.1 }}
-                  className="flex items-center justify-between p-3 rounded-xl bg-glass-row"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                      meal.completed ? 'bg-[#00cec9]/20' : 'bg-muted'
-                    }`}>
-                      {meal.completed ? (
-                        <CheckCircle2 className="w-5 h-5 text-[#00cec9]" />
-                      ) : (
-                        <Clock className="w-4 h-4 text-muted-foreground" />
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-foreground text-sm font-medium">{meal.name}</p>
-                      <p className="text-muted-foreground text-xs">{meal.time}</p>
-                    </div>
-                  </div>
-                  <span className="text-sm text-foreground/60">{meal.calories} {t('hn_cal_unit')}</span>
-                </motion.div>
-              ))}
-              {todayMeals.length > 3 && (
-                <p className="text-center text-muted-foreground text-xs pt-1">
-                  {t('hn_more_entries', { n: todayMeals.length - 3 })}
-                </p>
-              )}
+          {/* Workout */}
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={() => { hapticFeedback('medium'); navigate('/workout-plan'); }}
+            className="flex flex-col items-center gap-2 p-3.5 rounded-2xl relative"
+            style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border-subtle)' }}
+          >
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#00cec9] to-[#00b894] flex items-center justify-center">
+              <Dumbbell className="w-5.5 h-5.5 text-white" />
             </div>
-          ) : (
-            <div className="text-center py-6">
-              <p className="text-muted-foreground text-sm">{t('hn_no_food_logged')}</p>
-              <button
-                onClick={() => { hapticFeedback('medium'); navigate('/calories/scan'); }}
-                className="text-app-accent text-sm mt-2"
-              >
-                {t('hn_scan_or_add')}
-              </button>
-            </div>
-          )}
-        </GlassCard>
+            <span className="text-foreground text-[0.6875rem] font-medium leading-tight text-center">{t('hn_qa_workout')}</span>
+            {todayWorkouts.length > 0 && (
+              <span className="absolute top-2 right-2 w-5 h-5 rounded-full bg-[#00cec9] text-white text-[0.625rem] font-bold flex items-center justify-center">{todayWorkouts.length}</span>
+            )}
+          </motion.button>
 
-        {/* Today's Workout Plan */}
-        <GlassCard className="p-5">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Dumbbell className="w-5 h-5 text-[#00cec9]" />
-              <h3 className="text-foreground font-medium">{t('hn_todays_workouts')}</h3>
+          {/* Analytics */}
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={() => { hapticFeedback('medium'); navigate('/analytics'); }}
+            className="flex flex-col items-center gap-2 p-3.5 rounded-2xl"
+            style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border-subtle)' }}
+          >
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#a29bfe] to-[#6c5ce7] flex items-center justify-center">
+              <BarChart3 className="w-5.5 h-5.5 text-white" />
             </div>
-            <button
-              onClick={() => {
-                hapticFeedback('light');
-                navigate('/workout-plan');
-              }}
-              className="text-sm text-app-accent"
-            >
-              {todayWorkouts.length > 0 ? t('hn_view_all') : t('hn_create_plan')}
-            </button>
-          </div>
-
-          {todayWorkouts.length > 0 ? (
-            <div className="space-y-2">
-              {todayWorkouts.map((workout, idx) => (
-                <motion.div
-                  key={workout.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.1 }}
-                  className="flex items-center justify-between p-3 rounded-xl bg-glass-row"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                      workout.completed ? 'bg-[#00cec9]/20' : 'bg-muted'
-                    }`}>
-                      {workout.completed ? (
-                        <CheckCircle2 className="w-5 h-5 text-[#00cec9]" />
-                      ) : (
-                        <Dumbbell className="w-4 h-4 text-muted-foreground" />
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-foreground text-sm font-medium">{workout.name}</p>
-                      <p className="text-muted-foreground text-xs">{workout.duration}</p>
-                    </div>
-                  </div>
-                  <span className="text-sm text-[#fd79a8]">-{workout.calories} {t('hn_cal_unit')}</span>
-                </motion.div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-6">
-              <p className="text-muted-foreground text-sm">{t('hn_no_workout')}</p>
-              <button
-                onClick={() => { hapticFeedback('medium'); navigate('/workout-plan'); }}
-                className="text-app-accent text-sm mt-2"
-              >
-                {t('hn_gen_workout')}
-              </button>
-            </div>
-          )}
-        </GlassCard>
+            <span className="text-foreground text-[0.6875rem] font-medium leading-tight text-center">{t('hn_qa_analytics')}</span>
+          </motion.button>
+        </div>
 
         {/* Smart Burn Suggestions — shows when calories are over target */}
         {profileData && nutritionData.caloriesConsumed > 0 && nutritionData.caloriesGoal > 0 && (
@@ -682,60 +627,6 @@ export function HomeNutritionPage() {
           calorieTarget={nutritionData.caloriesGoal}
           onBurnUpdate={(total) => setBurnedToday(total)}
         />
-
-        {/* Weekly Analytics Navigation Card */}
-        <motion.button
-          whileTap={{ scale: 0.98 }}
-          onClick={() => { hapticFeedback('medium'); navigate('/analytics'); }}
-          className="w-full p-4 rounded-[20px] bg-gradient-to-br from-[#a29bfe]/15 to-[#6c5ce7]/10 border border-[#a29bfe]/20 flex items-center justify-between"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#a29bfe] to-[#6c5ce7] flex items-center justify-center">
-              <BarChart3 className="w-5 h-5 text-white" />
-            </div>
-            <div className="text-left">
-              <p className="text-foreground font-medium" style={{ fontSize: '0.9375rem' }}>
-                {t('ea_title')}
-              </p>
-              <p className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>
-                {burnedToday > 0
-                  ? t('hn_burned_today', { cal: burnedToday })
-                  : t('ea_subtitle')
-                }
-              </p>
-            </div>
-          </div>
-          <ChevronRight className="w-4 h-4 text-[#a29bfe]/60" />
-        </motion.button>
-
-        {/* Quick Stats */}
-        <div className="grid grid-cols-2 gap-3">
-          <GlassCard className="p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="w-4 h-4 text-[#00cec9]" />
-              <span className="text-xs text-muted-foreground">{t('hn_this_week')}</span>
-            </div>
-            <p className="text-xl text-foreground font-semibold">
-              {weeklyWeightChange !== null
-                ? `${weeklyWeightChange >= 0 ? '+' : ''}${weeklyWeightChange.toFixed(1)} kg`
-                : '—'}
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">{t('hn_weight_progress')}</p>
-          </GlassCard>
-
-          <GlassCard className="p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Flame className="w-4 h-4 text-[#fd79a8]" />
-              <span className="text-xs text-muted-foreground">{t('hn_today')}</span>
-            </div>
-            <p className="text-xl text-foreground font-semibold">
-              {nutritionData.caloriesConsumed > 0
-                ? nutritionData.caloriesConsumed.toLocaleString()
-                : '—'}
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">{t('hn_calories_consumed')}</p>
-          </GlassCard>
-        </div>
       </div>
 
       {/* Streak Milestone Share Modal */}
