@@ -480,6 +480,7 @@ export function buildReturningStartMessage(user: TgUser, deepLinkParam?: string,
 /**
  * Build the contact-received success message.
  * Clean inline keyboard: Open App (primary) + Sync Data.
+ * Reply keyboard: ONLY "Open Proper Food AI" — NO contact sharing.
  * appUrl: optional override for Mini App URL (e.g., with bot_auth token)
  */
 export function buildContactSuccessMessage(user: TgUser, appUrl?: string): {
@@ -505,7 +506,6 @@ export function buildContactSuccessMessage(user: TgUser, appUrl?: string): {
 
   // Inline keyboard: Open App + Sync Data
   const inline_keyboard: InlineKeyboardButton[][] = [];
-  // Re-enabled: Vercel deployment supports web_app buttons (Figma Sites limitation removed)
   if (miniAppUrl) {
     inline_keyboard.push([
       { text: t("btn_open_app", lang), web_app: { url: miniAppUrl } },
@@ -515,15 +515,13 @@ export function buildContactSuccessMessage(user: TgUser, appUrl?: string): {
     { text: t("btn_sync_data", lang), callback_data: "cmd_sync" },
   ]);
 
-  // Persistent reply keyboard (after auth) — quick actions
+  // Persistent reply keyboard — ONLY "Open Proper Food AI" button, NO contact sharing
+  // This is intentional: contact sharing is a legacy flow, the app creates accounts
+  // automatically from Telegram initData, so contact sharing is unnecessary.
   const replyKb: ReplyKeyboardButton[][] = [];
   if (miniAppUrl) {
-    replyKb.push([{ text: t("btn_open_app", lang), web_app: { url: miniAppUrl }, style: "primary" }]);
+    replyKb.push([{ text: t("btn_open_app", lang), web_app: { url: miniAppUrl } }]);
   }
-  replyKb.push([
-    { text: t("btn_share_contact", lang), request_contact: true, style: "danger" },
-    { text: t("btn_help", lang) },
-  ]);
 
   return {
     text,
@@ -533,8 +531,8 @@ export function buildContactSuccessMessage(user: TgUser, appUrl?: string): {
       resize_keyboard: true,
       is_persistent: true,
       input_field_placeholder: lang === "ru"
-        ? "\u0412\u044B\u0431\u0435\u0440\u0438 \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0435 \u0438\u043B\u0438 \u0432\u0432\u0435\u0434\u0438 \u043A\u043E\u043C\u0430\u043D\u0434\u0443..."
-        : "Choose an action or type a command...",
+        ? "Нажми кнопку «Открыть Proper Food» ⬆️"
+        : "Tap «Open Proper Food» above ⬆️",
     },
   };
 }

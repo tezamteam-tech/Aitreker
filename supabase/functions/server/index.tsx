@@ -4825,19 +4825,21 @@ async function handleContactMessage(msg: TgMessage): Promise<void> {
   const botAuthToken = await generateBotAuthToken(existingUserId, tgId);
   const appUrl = buildAppUrlWithAuth(botAuthToken);
 
-  // Send success message with inline keyboard + persistent reply keyboard
+  // Send success message with inline keyboard
   const success = buildContactSuccessMessage(from, appUrl || undefined);
   await sendMessage(chatId, success.text, {
     reply_markup: success.inline_markup,
   });
 
-  // Set persistent reply keyboard
+  // Set persistent reply keyboard — ALWAYS use buildReplyKeyboard() for consistency
+  // This ensures the keyboard only has "Open Proper Food AI" and never "Share contact"
   const lang = detectLang(from.language_code);
+  const replyKb = buildReplyKeyboard(lang, appUrl || undefined);
   await sendMessage(chatId,
     lang === "ru"
       ? "\u{2328}\uFE0F \u041A\u043B\u0430\u0432\u0438\u0430\u0442\u0443\u0440\u0430 \u0431\u044B\u0441\u0442\u0440\u044B\u0445 \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0439 \u0430\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u043D\u0430 \u{1F447}"
       : "\u{2328}\uFE0F Quick actions keyboard activated \u{1F447}",
-    { reply_markup: success.reply_markup }
+    { reply_markup: replyKb }
   );
 }
 
@@ -5381,24 +5383,65 @@ async function handleCallbackQuery(cbq: TgCallbackQuery): Promise<void> {
           break;
         }
 
-        // Prompt user to re-share contact for data sync
-        const contactKb = {
-          keyboard: [
-            [{ text: syncLang === "ru" ? "\u{1F4F2} \u041F\u043E\u0434\u0435\u043B\u0438\u0441\u044C \u043A\u043E\u043D\u0442\u0430\u043A\u0442\u043E\u043C" : "\u{1F4F2} Share Contact", request_contact: true }],
-          ],
-          resize_keyboard: true,
-          one_time_keyboard: true,
-          input_field_placeholder: syncLang === "ru"
-            ? "\u041D\u0430\u0436\u043C\u0438 \u043A\u043D\u043E\u043F\u043A\u0443 \u043D\u0438\u0436\u0435..."
-            : "Tap the button below...",
-        };
+        // Sync user data directly from TG info (no contact sharing needed)
+        let syncChanged = false;
+        if (from.first_name && syncUser.firstName !== from.first_name) {
+          syncUser.firstName = from.first_name;
+          syncChanged = true;
+        }
+        if (from.last_name !== undefined && syncUser.lastName !== (from.last_name || null)) {
+          syncUser.lastName = from.last_name || null;
+          syncChanged = true;
+        }
+        if (from.username && syncUser.username !== from.username) {
+          syncUser.username = from.username;
+          syncChanged = true;
+        }
+        if (from.language_code && syncUser.language !== from.language_code) {
+          syncUser.language = from.language_code;
+          syncChanged = true;
+        }
+
+        // Refresh avatar
+        try {
+          const avatarUrl = await fetchUserAvatarUrl(from.id);
+          if (avatarUrl && syncUser.photoUrl !== avatarUrl) {
+            syncUser.photoUrl = avatarUrl;
+            syncChanged = true;
+          }
+        } catch {}
+
+        if (syncChanged) {
+          syncUser.updatedAt = new Date().toISOString();
+          await kv.set(`become:user:${syncUser.id}`, syncUser);
+          console.log(`[TG Bot] Synced data for user ${syncUser.id} via cmd_sync`);
+        }
+
+        // Refresh device token + session
+        const syncTgId = String(from.id);
+        await generateDeviceToken(syncUser.id, syncTgId);
+        const syncSessionToken = generateToken();
+        await kv.set(`become:session:${syncSessionToken}`, {
+          userId: syncUser.id,
+          telegramId: syncTgId,
+          createdAt: new Date().toISOString(),
+          expiresAt: new Date(Date.now() + SESSION_TTL).toISOString(),
+        });
+
+        // Send confirmation + refresh the reply keyboard with "Open Proper Food AI"
+        const syncBotAuthToken = await generateBotAuthToken(syncUser.id, syncTgId);
+        const syncAppUrl = buildAppUrlWithAuth(syncBotAuthToken);
+        const syncReplyKb = buildReplyKeyboard(syncLang, syncAppUrl || undefined);
+
         await sendMessage(chatId,
           syncLang === "ru"
-            ? "\u{1F504} <b>\u041E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0435 \u0434\u0430\u043D\u043D\u044B\u0445</b>\n\n\u{1F447} <b>\u041D\u0430\u0436\u043C\u0438 \u043A\u043D\u043E\u043F\u043A\u0443 \u043D\u0438\u0436\u0435</b>, \u0447\u0442\u043E\u0431\u044B \u043E\u0431\u043D\u043E\u0432\u0438\u0442\u044C \u0441\u0432\u043E\u0438 \u0434\u0430\u043D\u043D\u044B\u0435 \u0438 \u0441\u0438\u043D\u0445\u0440\u043E\u043D\u0438\u0437\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u043F\u0440\u043E\u0444\u0438\u043B\u044C:"
-            : "\u{1F504} <b>Update Data</b>\n\n\u{1F447} <b>Tap the button below</b> to update your data and sync your profile:",
-          { reply_markup: contactKb }
+            ? "\u{2705} <b>\u0414\u0430\u043D\u043D\u044B\u0435 \u0441\u0438\u043D\u0445\u0440\u043E\u043D\u0438\u0437\u0438\u0440\u043E\u0432\u0430\u043D\u044B!</b>\n\n\u041F\u0440\u043E\u0444\u0438\u043B\u044C \u043E\u0431\u043D\u043E\u0432\u043B\u0451\u043D \u0438\u0437 Telegram.\n\u{1F447} \u041D\u0430\u0436\u043C\u0438 \u043A\u043D\u043E\u043F\u043A\u0443 \u043D\u0438\u0436\u0435, \u0447\u0442\u043E\u0431\u044B \u043E\u0442\u043A\u0440\u044B\u0442\u044C \u043F\u0440\u0438\u043B\u043E\u0436\u0435\u043D\u0438\u0435."
+            : "\u{2705} <b>Data synced!</b>\n\nProfile updated from Telegram.\n\u{1F447} Tap the button below to open the app.",
+          { reply_markup: syncReplyKb }
         );
-        await answerCallbackQuery(cbq.id);
+        await answerCallbackQuery(cbq.id, {
+          text: syncLang === "ru" ? "\u2705 \u0421\u0438\u043D\u0445\u0440\u043E\u043D\u0438\u0437\u0438\u0440\u043E\u0432\u0430\u043D\u043E!" : "\u2705 Synced!",
+        });
         break;
       }
 
