@@ -4454,7 +4454,7 @@ async function handleStartCommand(msg: TgMessage): Promise<void> {
     const lang = detectLang(user.language_code);
     // Update language preference
     await kv.set(`become:lang:${tgId}`, lang);
-    // Generate device token + session for robust auth via reply keyboard
+    // Generate device token + session for robust auth
     await generateDeviceToken(existingUserId, tgId);
     const sessionToken = generateToken();
     await kv.set(`become:session:${sessionToken}`, {
@@ -4464,18 +4464,37 @@ async function handleStartCommand(msg: TgMessage): Promise<void> {
       expiresAt: new Date(Date.now() + SESSION_TTL).toISOString(),
     });
 
-    // Generate bot_auth token for the reply keyboard web_app button
-    const kbBotAuthToken = await generateBotAuthToken(existingUserId, tgId);
-    const kbAppUrl = buildAppUrlWithAuth(kbBotAuthToken);
+    // Generate bot_auth token (stored server-side for /auth/bot-token endpoint)
+    try {
+      await generateBotAuthToken(existingUserId, tgId);
+    } catch (err) {
+      console.log(`[TG Bot] bot_auth generation error (non-critical):`, err);
+    }
 
-    // skipOpenButton=true: "Open Proper Food" is in the reply keyboard, not inline
+    // Step 1: FORCE remove any old reply keyboard (e.g. legacy "Share contact" button)
+    // Without explicit removal, old persistent keyboards survive even after /start
+    try {
+      await sendMessage(chatId,
+        lang === "ru" ? "\u{1F504} \u041E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0435..." : "\u{1F504} Updating...",
+        { reply_markup: { remove_keyboard: true } as any }
+      );
+    } catch (rmErr) {
+      console.log(`[TG Bot] remove_keyboard error (non-critical):`, rmErr);
+    }
+
+    // Step 2: Send welcome-back inline message
+    // skipOpenButton=true: "Open Proper Food" will be in the reply keyboard below
     const returning = buildReturningStartMessage(user, deepLinkParam, undefined, true);
     await sendMessage(chatId, returning.text, {
       reply_markup: returning.reply_markup,
     });
 
-    // Also send reply keyboard (persistent at bottom) with bot_auth in web_app URL
-    const replyKb = buildReplyKeyboard(lang, kbAppUrl || undefined);
+    // Step 3: Send NEW persistent reply keyboard with PLAIN miniAppUrl (no ?bot_auth= params)
+    // Using the clean base URL avoids "Something went wrong" errors in Telegram WebView.
+    // Auth is handled by Telegram initData when the Mini App opens — bot_auth in URL is unnecessary.
+    const plainMiniAppUrl = getProperMiniAppUrl();
+    console.log(`[TG Bot] Reply keyboard web_app URL for returning user: ${plainMiniAppUrl || "(EMPTY — PROPERFOOD_MINIAPP_URL not set!)"}`);
+    const replyKb = buildReplyKeyboard(lang, plainMiniAppUrl || undefined);
     await sendMessage(chatId,
       lang === "ru"
         ? "\u{2328}\uFE0F \u041A\u043B\u0430\u0432\u0438\u0430\u0442\u0443\u0440\u0430 \u0431\u044B\u0441\u0442\u0440\u044B\u0445 \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0439 \u0430\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u043D\u0430."
@@ -4597,15 +4616,22 @@ async function handleStartCommand(msg: TgMessage): Promise<void> {
 
     // Generate device token + bot_auth for seamless Mini App login
     await generateDeviceToken(newUserId, tgId);
-    const newBotAuthToken = await generateBotAuthToken(newUserId, tgId);
-    const newAppUrl = buildAppUrlWithAuth(newBotAuthToken);
-    const miniAppUrl = newAppUrl || getProperMiniAppUrl();
+    try {
+      await generateBotAuthToken(newUserId, tgId);
+    } catch (err) {
+      console.log(`[TG Bot] bot_auth generation for new user error (non-critical):`, err);
+    }
+
+    // Use PLAIN miniAppUrl for web_app buttons (no ?bot_auth= params)
+    // Auth is handled by Telegram initData — adding query params can cause "Something went wrong"
+    const miniAppUrl = getProperMiniAppUrl();
+    console.log(`[TG Bot] Reply keyboard web_app URL for new user: ${miniAppUrl || "(EMPTY — PROPERFOOD_MINIAPP_URL not set!)"}`);
 
     // Send welcome message with "Open Proper Food" inline button
     const welcomeMsg = buildNewUserWelcomeMessage(user, miniAppUrl || undefined);
     await sendMessage(chatId, welcomeMsg.text, { reply_markup: welcomeMsg.reply_markup });
 
-    // Send persistent reply keyboard
+    // Send persistent reply keyboard with clean URL
     const replyKb = buildReplyKeyboard(lang, miniAppUrl || undefined);
     await sendMessage(chatId,
       lang === "ru" ? "⌨️ Клавиатура быстрого доступа активирована." : "⌨️ Quick access keyboard activated.",
@@ -4821,20 +4847,34 @@ async function handleContactMessage(msg: TgMessage): Promise<void> {
     }
   })();
 
-  // Generate bot auth token for Mini App URL
-  const botAuthToken = await generateBotAuthToken(existingUserId, tgId);
-  const appUrl = buildAppUrlWithAuth(botAuthToken);
+  // Generate bot auth token (stored server-side, not in URL)
+  try {
+    await generateBotAuthToken(existingUserId, tgId);
+  } catch (err) {
+    console.log(`[TG Bot] bot_auth generation on contact error (non-critical):`, err);
+  }
 
-  // Send success message with inline keyboard
-  const success = buildContactSuccessMessage(from, appUrl || undefined);
+  // Use PLAIN miniAppUrl (no ?bot_auth= params to avoid "Something went wrong")
+  const plainUrl = getProperMiniAppUrl();
+
+  // Step 1: Remove old keyboard (legacy "Share contact")
+  try {
+    const lang0 = detectLang(from.language_code);
+    await sendMessage(chatId,
+      lang0 === "ru" ? "\u{1F504} \u041E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0435..." : "\u{1F504} Updating...",
+      { reply_markup: { remove_keyboard: true } as any }
+    );
+  } catch {}
+
+  // Step 2: Send success message with inline keyboard
+  const success = buildContactSuccessMessage(from, plainUrl || undefined);
   await sendMessage(chatId, success.text, {
     reply_markup: success.inline_markup,
   });
 
-  // Set persistent reply keyboard — ALWAYS use buildReplyKeyboard() for consistency
-  // This ensures the keyboard only has "Open Proper Food AI" and never "Share contact"
+  // Step 3: Set persistent reply keyboard with PLAIN URL
   const lang = detectLang(from.language_code);
-  const replyKb = buildReplyKeyboard(lang, appUrl || undefined);
+  const replyKb = buildReplyKeyboard(lang, plainUrl || undefined);
   await sendMessage(chatId,
     lang === "ru"
       ? "\u{2328}\uFE0F \u041A\u043B\u0430\u0432\u0438\u0430\u0442\u0443\u0440\u0430 \u0431\u044B\u0441\u0442\u0440\u044B\u0445 \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0439 \u0430\u043A\u0442\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u043D\u0430 \u{1F447}"
@@ -5429,9 +5469,12 @@ async function handleCallbackQuery(cbq: TgCallbackQuery): Promise<void> {
         });
 
         // Send confirmation + refresh the reply keyboard with "Open Proper Food AI"
-        const syncBotAuthToken = await generateBotAuthToken(syncUser.id, syncTgId);
-        const syncAppUrl = buildAppUrlWithAuth(syncBotAuthToken);
-        const syncReplyKb = buildReplyKeyboard(syncLang, syncAppUrl || undefined);
+        // Use PLAIN miniAppUrl (no ?bot_auth= to avoid "Something went wrong")
+        try {
+          await generateBotAuthToken(syncUser.id, syncTgId);
+        } catch {}
+        const syncPlainUrl = getProperMiniAppUrl();
+        const syncReplyKb = buildReplyKeyboard(syncLang, syncPlainUrl || undefined);
 
         await sendMessage(chatId,
           syncLang === "ru"

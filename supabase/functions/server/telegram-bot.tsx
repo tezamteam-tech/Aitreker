@@ -65,7 +65,6 @@ export interface ReplyKeyboardButton {
   text: string;
   request_contact?: boolean;
   web_app?: { url: string };
-  style?: "danger" | "success" | "primary";
 }
 
 export interface ReplyKeyboardMarkup {
@@ -554,9 +553,9 @@ export function buildReplyKeyboard(lang: Lang = "en", appUrl?: string): ReplyKey
   const keyboard: ReplyKeyboardButton[][] = [];
 
   if (miniAppUrl) {
-    // Single row: "Open Proper Food" — primary/blue style
+    // Single row: "Open Proper Food" web_app button
     keyboard.push([
-      { text: t("btn_open_app", lang), web_app: { url: miniAppUrl }, style: "primary" },
+      { text: t("btn_open_app", lang), web_app: { url: miniAppUrl } },
     ]);
   }
 
