@@ -255,7 +255,6 @@ const translations: Record<string, Record<Lang, string>> = {
   task_mindfulness: { en: 'mindfulness', ru: '\u043E\u0441\u043E\u0437\u043D\u0430\u043D\u043D\u043E\u0441\u0442\u044C' },
 
   // ---- Profile ----
-  profile_title: { en: 'Profile', ru: '\u041F\u0440\u043E\u0444\u0438\u043B\u044C' },
   profile_language: { en: 'Language', ru: '\u042F\u0437\u044B\u043A' },
   profile_coaching_tone: { en: 'Coaching Tone', ru: '\u0422\u043E\u043D \u043A\u043E\u0443\u0447\u0430' },
   profile_goal: { en: 'Goal', ru: '\u0426\u0435\u043B\u044C' },
@@ -303,7 +302,6 @@ const translations: Record<string, Record<Lang, string>> = {
   ob_continue: { en: 'Continue', ru: '\u0414\u0430\u043B\u0435\u0435' },
   ob_start_program: { en: 'Start Program', ru: '\u041D\u0430\u0447\u0430\u0442\u044C \u043F\u0440\u043E\u0433\u0440\u0430\u043C\u043C\u0443' },
   ob_share_contact: { en: 'Share Contact to Continue', ru: '\u041F\u043E\u0434\u0435\u043B\u0438\u0442\u044C\u0441\u044F \u043A\u043E\u043D\u0442\u0430\u043A\u0442\u043E\u043C' },
-  free_tag: { en: 'FREE', ru: '\u0411\u0415\u0421\u041F\u041B\u0410\u0422\u041D\u041E' },
 
   // ---- Onboarding: Goal descriptions ----
   goal_focus_label: { en: 'Focus', ru: '\u0424\u043E\u043A\u0443\u0441' },
@@ -642,7 +640,6 @@ const translations: Record<string, Record<Lang, string>> = {
   note_type_journal: { en: 'journal', ru: '\u0436\u0443\u0440\u043D\u0430\u043B' },
   note_today: { en: 'Today', ru: '\u0421\u0435\u0433\u043E\u0434\u043D\u044F' },
   note_yesterday: { en: 'Yesterday', ru: '\u0412\u0447\u0435\u0440\u0430' },
-  nav_journal: { en: 'Journal', ru: '\u0416\u0443\u0440\u043D\u0430\u043B' },
   audio_uploading: { en: 'Uploading audio...', ru: '\u0417\u0430\u0433\u0440\u0443\u0437\u043A\u0430 \u0430\u0443\u0434\u0438\u043E...' },
   audio_attached: { en: 'Voice attached', ru: '\u0413\u043E\u043B\u043E\u0441 \u043F\u0440\u0438\u043A\u0440\u0435\u043F\u043B\u0451\u043D' },
   audio_play: { en: 'Play', ru: '\u041F\u043B\u0435\u0439' },
@@ -815,7 +812,6 @@ const translations: Record<string, Record<Lang, string>> = {
   task_title: { en: 'Task text', ru: '\u0422\u0435\u043A\u0441\u0442 \u0437\u0430\u0434\u0430\u0447\u0438' },
   task_edit_title: { en: 'Edit Task', ru: '\u0420\u0435\u0434\u0430\u043A\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0437\u0430\u0434\u0430\u0447\u0443' },
   task_updated: { en: 'Task updated!', ru: '\u0417\u0430\u0434\u0430\u0447\u0430 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0430!' },
-  nav_goals: { en: 'Goals', ru: '\u0426\u0435\u043B\u0438' },
   save_btn: { en: 'Save', ru: '\u0421\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C' },
   sg_title: { en: 'Strategic Goals', ru: '\u0421\u0442\u0440\u0430\u0442\u0435\u0433\u0438\u0447\u0435\u0441\u043A\u0438\u0435 \u0446\u0435\u043B\u0438' },
   sg_subtitle: { en: 'Long-term goals with AI strategy', ru: '\u0414\u043E\u043B\u0433\u043E\u0441\u0440\u043E\u0447\u043D\u044B\u0435 \u0446\u0435\u043B\u0438 \u0441 AI-\u0441\u0442\u0440\u0430\u0442\u0435\u0433\u0438\u0435\u0439' },
@@ -1089,7 +1085,6 @@ const translations: Record<string, Record<Lang, string>> = {
   cal_edit_entry: { en: 'Edit Entry', ru: 'Редактировать' },
   cal_save: { en: 'Save changes', ru: 'Сохранить' },
   cal_calories: { en: 'Calories', ru: 'Калории' },
-  cal_calories: { en: 'Calories', ru: 'Калории' },
   cal_delete: { en: 'Delete', ru: 'Удалить' },
   cal_meal_breakfast: { en: 'Breakfast', ru: 'Завтрак' },
   cal_meal_lunch: { en: 'Lunch', ru: 'Обед' },
@@ -1123,7 +1118,6 @@ const translations: Record<string, Record<Lang, string>> = {
   wp_empty: { en: 'No workout plan yet', ru: 'Плана тренировок пока нет' },
   wp_empty_desc: { en: 'Generate an AI workout plan based on your goals', ru: 'Сгенерируйте AI-план тренировок по вашим целям' },
   wp_sets: { en: 'sets', ru: 'подходов' },
-  wp_reps: { en: 'reps', ru: 'повторений' },
   wp_rest: { en: 'Rest', ru: 'Отдых' },
   wp_day_n: { en: 'Day {n}', ru: 'День {n}' },
   wp_premium_required: { en: 'Premium required for AI workout plans', ru: 'Для AI-плана тренировок нужен Premium' },
@@ -1213,6 +1207,10 @@ const translations: Record<string, Record<Lang, string>> = {
   mp_gen_4: { en: 'Adding variety and flavor...', ru: 'Добавляем разнообразие...' },
   mp_gen_5: { en: 'Optimizing calorie distribution...', ru: 'Оптимизируем калории...' },
   mp_gen_6: { en: 'Finalizing your personalized plan...', ru: 'Финализируем ваш план...' },
+  mp_gen_batch2: { en: 'Generating next week of meals...', ru: 'Генерируем следующую неделю...' },
+  mp_gen_batch3: { en: 'Ensuring meal variety...', ru: 'Обеспечиваем разнообразие...' },
+  mp_gen_batch4: { en: 'Balancing nutrients across weeks...', ru: 'Балансируем нутриенты по неделям...' },
+  mp_gen_batch5: { en: 'Almost done, adding final touches...', ru: 'Почти готово, финальные штрихи...' },
 
   // ---- Meal Plan — Body Photo & AI Vision ----
   mp_your_body: { en: 'Your Body', ru: 'Ваше тело' },
@@ -1466,23 +1464,6 @@ const translations: Record<string, Record<Lang, string>> = {
   mp_generating_desc: { en: '{n} days of personalized nutrition', ru: '{n} дней персонализированного питания' },
   mp_my_plans: { en: 'My Plans', ru: 'Мои планы' },
   mp_no_plans: { en: 'No saved plans yet', ru: 'Нет сохранённых планов' },
-
-  // ---- Workout Plan extra ----
-  wp_week_label: { en: 'Week', ru: 'Неделя' },
-  wp_rest: { en: 'rest', ru: 'отдых' },
-  wp_sets: { en: 'Sets', ru: 'Подходы' },
-  wp_duration: { en: 'Duration', ru: 'Время' },
-  wp_reps: { en: 'Reps', ru: 'Повторения' },
-  wp_rest_label: { en: 'Rest', ru: 'Отдых' },
-  wp_building_title: { en: 'Building Plan', ru: 'Создаём план' },
-  wp_building_desc_days: { en: '{n} days', ru: '{n} дней' },
-  wp_home_workouts: { en: 'Home Workouts', ru: 'Домашние тренировки' },
-  wp_gym_workouts: { en: 'Gym Workouts', ru: 'Тренировки в зале' },
-  wp_my_plans: { en: 'My Plans', ru: 'Мои планы' },
-  wp_no_plans: { en: 'No saved plans yet', ru: 'Нет сохранённых планов' },
-  wp_days_count: { en: 'Days', ru: 'дней' },
-  wp_home_short: { en: 'Home', ru: 'Дома' },
-  wp_gym_short: { en: 'Gym', ru: 'Зал' },
 
   // ---- Referrals ----
   ref_title: { en: 'Referrals', ru: 'Рефералы' },

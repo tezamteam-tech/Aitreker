@@ -9021,22 +9021,32 @@ app.post(`${PREFIX}/food/scan`, async (c) => {
       }
     }
 
-    const { imageBase64, mimeType } = await c.req.json();
+    const { imageBase64, mimeType, language } = await c.req.json();
     if (!imageBase64) return c.json({ message: "imageBase64 is required", code: "BAD_REQUEST", status: 400 }, 400);
 
     const openaiKey = Deno.env.get("OPENAI_API_KEY");
     if (!openaiKey) return c.json({ message: "OpenAI not configured", code: "CONFIG_ERROR", status: 500 }, 500);
 
+    const lang = language === "ru" ? "ru" : "en";
     const imgMime = mimeType || "image/jpeg";
+
+    const systemPrompt = lang === "ru"
+      ? "Ты — эксперт по питанию. Проанализируй еду на изображении и верни JSON объект с полями: food_name (строка, название блюда на русском языке), estimated_calories (число), protein (число, граммы), carbs (число, граммы), fat (число, граммы). Верни ТОЛЬКО JSON, без другого текста. Все названия блюд должны быть на русском языке."
+      : "You are a nutrition expert. Analyze the food in the image and return a JSON object with exactly these fields: food_name (string), estimated_calories (number), protein (number, grams), carbs (number, grams), fat (number, grams). Return ONLY the JSON, no other text.";
+
+    const userPrompt = lang === "ru"
+      ? "Что это за еда? Оцени калории и макронутриенты. Назови блюдо на русском языке."
+      : "What food is this? Estimate the calories and macronutrients.";
+
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: { "Authorization": `Bearer ${openaiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "gpt-4o-mini",
         messages: [
-          { role: "system", content: "You are a nutrition expert. Analyze the food in the image and return a JSON object with exactly these fields: food_name (string), estimated_calories (number), protein (number, grams), carbs (number, grams), fat (number, grams). Return ONLY the JSON, no other text." },
+          { role: "system", content: systemPrompt },
           { role: "user", content: [
-            { type: "text", text: "What food is this? Estimate the calories and macronutrients." },
+            { type: "text", text: userPrompt },
             { type: "image_url", image_url: { url: `data:${imgMime};base64,${imageBase64}` } },
           ] },
         ],
@@ -9122,7 +9132,7 @@ app.post(`${PREFIX}/nutrition/ai-body-analysis`, async (c) => {
 
     const photoInstruction = imageBase64
       ? (lang === "ru"
-        ? "Клиент предоставил фото для оценки композиции тела. Используй его для уточнения рекомендаций по калориям и макронутриентам. Оцени примерный процент жира и мышечную массу."
+        ? "Клиент предоставил фото для оценки композиции тела. Исп��льзуй его для уточнения рекомендаций по калориям и макронутриентам. Оцени примерный процент жира и мышечную массу."
         : "The client has provided a photo for body composition assessment. Use it to refine your calorie and macronutrient recommendations. Estimate approximate body fat percentage and muscle mass.")
       : "";
 
@@ -9423,7 +9433,6 @@ app.post(`${PREFIX}/meal-plans/generate`, async (c) => {
     const userAge = age || userProfile?.age;
     const userHeight = height || userProfile?.height;
     const userWeight = weight || userProfile?.weight;
-    const batchDays = Math.min(days, 7);
     const useVision = !!imageBase64;
 
     // Build body metrics string
@@ -9442,17 +9451,49 @@ app.post(`${PREFIX}/meal-plans/generate`, async (c) => {
         : "\nClient provided a body photo for body composition assessment. Consider visible body type, estimated body fat, and physique when creating the meal plan.")
       : "";
 
-    const systemPrompt = lang === "ru"
-      ? `Ты профессиональный диетолог-нутрициолог. Составь детальный план питания. ${bodyMetrics ? `Метрики клиента: ${bodyMetrics}` : ""}${photoInstruction} Ответь ТОЛЬКО JSON объектом: { "days": [ { "day": 1, "meals": { "breakfast": { "name": "...", "calories": N, "protein": N, "carbs": N, "fat": N, "ingredients": ["..."], "instructions": "..." }, "lunch": {...}, "dinner": {...}, "snack": {...} }, "total_calories": N } ] }. Никакого другого текста.`
-      : `You are a professional nutritionist and dietitian. Create a detailed meal plan. ${bodyMetrics ? `Client metrics: ${bodyMetrics}` : ""}${photoInstruction} Return ONLY a JSON object: { "days": [ { "day": 1, "meals": { "breakfast": { "name": "...", "calories": N, "protein": N, "carbs": N, "fat": N, "ingredients": ["..."], "instructions": "..." }, "lunch": {...}, "dinner": {...}, "snack": {...} }, "total_calories": N } ] }. No other text.`;
-
-    const userMessage = lang === "ru"
-      ? `Составь план питания на ${batchDays} дней для ${userGender === "male" ? "мужчины" : "женщины"} с уровнем активности: ${userActivity}. Цель: ${userGoal}. Дневная норма калорий: ${calTarget} ккал. Сделай блюда разнообразными, практичными и питательными.`
-      : `Create a ${batchDays}-day meal plan for a ${userGender} with ${userActivity} activity level. Goal: ${userGoal}. Daily calorie target: ${calTarget} calories. Make meals varied, practical, and nutritious.`;
-
     console.log(`[Meal Plan] ${days}d, photo=${useVision}, lang=${lang}, body=${!!bodyMetrics}, user=${auth.userId}`);
 
-    // Helper: call OpenAI
+    // ====== Normalizer ======
+    const MEAL_TYPES_NORM = ['breakfast', 'lunch', 'dinner', 'snack'] as const;
+    function normalizeBatchDays(raw: any): any[] {
+      if (!raw?.days || !Array.isArray(raw.days)) return [];
+      return raw.days.map((day: any) => {
+        if (Array.isArray(day.meals)) {
+          return {
+            ...day,
+            meals: day.meals.map((m: any) => ({
+              meal_type: m.meal_type || 'snack',
+              items: Array.isArray(m.items) ? m.items : (m.food_name || m.name ? [{
+                food_name: m.food_name || m.name || 'Meal',
+                calories: m.calories || 0, protein: m.protein || 0, carbs: m.carbs || 0, fat: m.fat || 0,
+                quantity: m.quantity || 1, unit: m.unit || 'piece',
+              }] : []),
+            })),
+          };
+        }
+        if (day.meals && typeof day.meals === 'object') {
+          const mealsArr = MEAL_TYPES_NORM.map((mt) => {
+            const meal = day.meals[mt];
+            if (!meal) return null;
+            const items = Array.isArray(meal.items) ? meal.items.map((it: any) => ({
+              food_name: it.food_name || it.name || 'Item',
+              calories: it.calories || 0, protein: it.protein || 0, carbs: it.carbs || 0, fat: it.fat || 0,
+              quantity: it.quantity || 1, unit: it.unit || 'piece',
+            })) : [{
+              food_name: meal.name || meal.food_name || mt,
+              calories: meal.calories || 0, protein: meal.protein || 0, carbs: meal.carbs || 0, fat: meal.fat || 0,
+              quantity: meal.quantity || 1, unit: meal.unit || 'piece',
+              ingredients: meal.ingredients, instructions: meal.instructions,
+            }];
+            return { meal_type: mt, items };
+          }).filter(Boolean);
+          return { day: day.day, meals: mealsArr };
+        }
+        return day;
+      });
+    }
+
+    // ====== OpenAI caller ======
     async function callMealPlanAI(
       msgs: any[], withPhoto: boolean, maxTok: number
     ): Promise<{ ok: boolean; parsed?: any; error?: string; refusal?: boolean }> {
@@ -9490,94 +9531,104 @@ app.post(`${PREFIX}/meal-plans/generate`, async (c) => {
       }
     }
 
-    // ====== 3-step retry strategy ======
-    // Attempt 1: with photo (GPT-4o Vision) if available, else GPT-4o-mini
-    const m1: any[] = [{ role: "system", content: systemPrompt }];
-    if (useVision) {
-      m1.push({ role: "user", content: [
-        { type: "text", text: userMessage },
-        { type: "image_url", image_url: { url: `data:${mimeType || "image/jpeg"};base64,${imageBase64}` } },
-      ]});
-    } else {
-      m1.push({ role: "user", content: userMessage });
-    }
-    let result = await callMealPlanAI(m1, useVision, 4000);
+    // 3-step retry for a single batch
+    async function genMealBatch(
+      sysPrompt: string, userMsg: string, withImage: boolean, imgB64?: string, imgMime?: string
+    ): Promise<{ ok: boolean; parsed?: any; error?: string }> {
+      const m1: any[] = [{ role: "system", content: sysPrompt }];
+      if (withImage && imgB64) {
+        m1.push({ role: "user", content: [
+          { type: "text", text: userMsg },
+          { type: "image_url", image_url: { url: `data:${imgMime || "image/jpeg"};base64,${imgB64}` } },
+        ]});
+      } else {
+        m1.push({ role: "user", content: userMsg });
+      }
+      let result = await callMealPlanAI(m1, withImage && !!imgB64, 4000);
 
-    // Attempt 2: text-only fallback (GPT-4o-mini) if photo caused refusal
-    if (!result.ok && useVision && result.refusal) {
-      console.log("[Meal Plan] Attempt 1 refusal, trying text-only fallback");
-      result = await callMealPlanAI([
-        { role: "system", content: systemPrompt.replace(photoInstruction, "").trim() },
-        { role: "user", content: userMessage },
-      ], false, 4000);
-    }
+      // Attempt 2: text-only fallback if photo caused refusal
+      if (!result.ok && withImage && imgB64 && result.refusal) {
+        console.log("[Meal Plan] Batch attempt 1 refusal, text-only fallback");
+        result = await callMealPlanAI([
+          { role: "system", content: sysPrompt.replace(photoInstruction, "").trim() },
+          { role: "user", content: userMsg },
+        ], false, 4000);
+      }
 
-    // Attempt 3: simplified English prompt as last resort
-    if (!result.ok) {
-      console.log("[Meal Plan] Attempt 2 failed, trying simplified English");
-      const minSys = `You are a nutritionist. Create a meal plan. Respond JSON: { "days": [{ "day": 1, "meals": { "breakfast": { "name": "Oatmeal", "calories": 350, "protein": 12, "carbs": 50, "fat": 8, "ingredients": ["oats"], "instructions": "Cook oats" }, "lunch": {...}, "dinner": {...}, "snack": {...} }, "total_calories": 2000 }] }`;
-      result = await callMealPlanAI([
-        { role: "system", content: minSys },
-        { role: "user", content: `Create a ${batchDays}-day meal plan. Goal: ${userGoal}. Daily calories: ${calTarget}. Gender: ${userGender}. Activity: ${userActivity}.` },
-      ], false, 4000);
-    }
+      // Attempt 3: simplified English
+      if (!result.ok) {
+        console.log("[Meal Plan] Batch attempt 2 failed, simplified English");
+        const dayMatch = userMsg.match(/(\d+)/);
+        const bDays = dayMatch ? dayMatch[1] : "7";
+        const minSys = `You are a nutritionist. Create a ${bDays}-day meal plan. Respond JSON: { "days": [{ "day": 1, "meals": [{ "meal_type": "breakfast", "items": [{ "food_name": "Oatmeal", "calories": 350, "protein": 12, "carbs": 50, "fat": 8, "quantity": 1, "unit": "piece" }] }, { "meal_type": "lunch", "items": [...] }, { "meal_type": "dinner", "items": [...] }, { "meal_type": "snack", "items": [...] }] }] }`;
+        result = await callMealPlanAI([
+          { role: "system", content: minSys },
+          { role: "user", content: `Create ${bDays}-day meal plan. Goal: ${userGoal}. Daily calories: ${calTarget}. Gender: ${userGender}. Activity: ${userActivity}.` },
+        ], false, 4000);
+      }
 
-    if (!result.ok) {
-      console.log("[Meal Plan] All 3 attempts failed:", result.error);
-      return c.json({ message: "AI generation failed after 3 attempts", code: "AI_ERROR", status: 502 }, 502);
-    }
-
-    // Normalize GPT response to frontend-expected format
-    // GPT may return: { days: [{ day, meals: { breakfast: {name,calories,...}, ... }, total_calories }] }
-    // Frontend expects: { days: [{ day, meals: [{ meal_type, items: [{ food_name, calories, protein, carbs, fat, quantity, unit }] }] }] }
-    const MEAL_TYPES_NORM = ['breakfast', 'lunch', 'dinner', 'snack'] as const;
-    function normalizeMealPlan(raw: any): any {
-      if (!raw?.days || !Array.isArray(raw.days)) return raw;
-      return {
-        ...raw,
-        days: raw.days.map((day: any) => {
-          // Already an array — normalize each item to ensure items[] exists
-          if (Array.isArray(day.meals)) {
-            return {
-              ...day,
-              meals: day.meals.map((m: any) => ({
-                meal_type: m.meal_type || 'snack',
-                items: Array.isArray(m.items) ? m.items : (m.food_name || m.name ? [{
-                  food_name: m.food_name || m.name || 'Meal',
-                  calories: m.calories || 0, protein: m.protein || 0, carbs: m.carbs || 0, fat: m.fat || 0,
-                  quantity: m.quantity || 1, unit: m.unit || 'piece',
-                }] : []),
-              })),
-            };
-          }
-          // meals is object { breakfast: {...}, lunch: {...} }
-          if (day.meals && typeof day.meals === 'object') {
-            const mealsArr = MEAL_TYPES_NORM.map((mt) => {
-              const meal = day.meals[mt];
-              if (!meal) return null;
-              const items = Array.isArray(meal.items) ? meal.items.map((it: any) => ({
-                food_name: it.food_name || it.name || 'Item',
-                calories: it.calories || 0, protein: it.protein || 0, carbs: it.carbs || 0, fat: it.fat || 0,
-                quantity: it.quantity || 1, unit: it.unit || 'piece',
-              })) : [{
-                food_name: meal.name || meal.food_name || mt,
-                calories: meal.calories || 0, protein: meal.protein || 0, carbs: meal.carbs || 0, fat: meal.fat || 0,
-                quantity: meal.quantity || 1, unit: meal.unit || 'piece',
-                ingredients: meal.ingredients, instructions: meal.instructions,
-              }];
-              return { meal_type: mt, items };
-            }).filter(Boolean);
-            return { day: day.day, meals: mealsArr };
-          }
-          return day;
-        }),
-      };
+      return result;
     }
 
-    const planData = normalizeMealPlan(result.parsed);
-    console.log(`[Meal Plan] Normalized: ${planData.days?.length} days, first day meals: ${planData.days?.[0]?.meals?.length}`);
+    // ====== BATCH GENERATION (7 days per batch, like workout plans) ======
+    const MEAL_BATCH_SIZE = 7;
+    const allDays: any[] = [];
+    const totalBatches = Math.ceil(days / MEAL_BATCH_SIZE);
+
+    console.log(`[Meal Plan] Starting batch generation: ${totalBatches} batches for ${days} days`);
+
+    for (let bi = 0; bi < totalBatches; bi++) {
+      const bs = bi * MEAL_BATCH_SIZE + 1;
+      const be = Math.min(bs + MEAL_BATCH_SIZE - 1, days);
+      const bc = be - bs + 1;
+
+      // Progressive context: summarize previous days for variety
+      let prevCtx = "";
+      if (allDays.length > 0) {
+        const lastMeals = allDays.slice(-7).map((d: any) => {
+          const names = (d.meals || []).map((m: any) => (m.items?.[0]?.food_name || "?")).join(", ");
+          return `D${d.day}: ${names}`;
+        }).join("; ");
+        prevCtx = lang === "ru"
+          ? `\nПредыдущие дни: ${lastMeals}. НЕ ПОВТОРЯЙ блюда — обеспечь максимальное разнообразие.`
+          : `\nPrevious days: ${lastMeals}. DO NOT repeat meals — ensure maximum variety.`;
+      }
+
+      const batchSys = lang === "ru"
+        ? `Ты профессиональный диетолог-нутрициолог. Составь детальный план питания на дни ${bs}-${be}. ${bodyMetrics ? `Метрики клиента: ${bodyMetrics}` : ""}${bi === 0 ? photoInstruction : ""}${prevCtx}\nОтветь ТОЛЬКО JSON: { "days": [{ "day": ${bs}, "meals": [{ "meal_type": "breakfast", "items": [{ "food_name": "...", "calories": N, "protein": N, "carbs": N, "fat": N, "quantity": N, "unit": "g|ml|piece" }] }, { "meal_type": "lunch", "items": [...] }, { "meal_type": "dinner", "items": [...] }, { "meal_type": "snack", "items": [...] }] }] }`
+        : `You are a professional nutritionist. Create a detailed meal plan for days ${bs}-${be}. ${bodyMetrics ? `Client metrics: ${bodyMetrics}` : ""}${bi === 0 ? photoInstruction : ""}${prevCtx}\nReturn ONLY JSON: { "days": [{ "day": ${bs}, "meals": [{ "meal_type": "breakfast", "items": [{ "food_name": "...", "calories": N, "protein": N, "carbs": N, "fat": N, "quantity": N, "unit": "g|ml|piece" }] }, { "meal_type": "lunch", "items": [...] }, { "meal_type": "dinner", "items": [...] }, { "meal_type": "snack", "items": [...] }] }] }`;
+
+      const batchUser = lang === "ru"
+        ? `Дни ${bs}-${be} (${bc} дн) для ${userGender === "male" ? "мужчины" : "женщины"}, активность: ${userActivity}. Цель: ${userGoal}. Норма: ${calTarget} ккал/день. Разнообразные, практичные блюда.`
+        : `Days ${bs}-${be} (${bc} days) for ${userGender}, ${userActivity} activity. Goal: ${userGoal}. Target: ${calTarget} cal/day. Varied, practical meals.`;
+
+      console.log(`[Meal Plan] Batch ${bi + 1}/${totalBatches}: days ${bs}-${be}`);
+      const br = await genMealBatch(batchSys, batchUser, bi === 0 && useVision, bi === 0 ? imageBase64 : undefined, bi === 0 ? mimeType : undefined);
+
+      if (!br.ok || !br.parsed) {
+        console.log(`[Meal Plan] Batch ${bi + 1} failed: ${br.error}`);
+        if (allDays.length === 0) return c.json({ message: "AI generation failed after 3 attempts", code: "AI_ERROR", status: 502 }, 502);
+        console.log(`[Meal Plan] Returning partial: ${allDays.length} days`);
+        break;
+      }
+
+      // Normalize and accumulate
+      const normalizedDays = normalizeBatchDays(br.parsed);
+      for (let i = 0; i < normalizedDays.length; i++) {
+        normalizedDays[i].day = bs + i;
+      }
+      for (const d of normalizedDays) allDays.push(d);
+      console.log(`[Meal Plan] Batch ${bi + 1} OK: +${normalizedDays.length} days, total=${allDays.length}`);
+    }
+
+    if (allDays.length === 0) {
+      return c.json({ message: "AI generation failed", code: "AI_ERROR", status: 502 }, 502);
+    }
+
+    const planData = { days: allDays };
+    console.log(`[Meal Plan] Generated ${allDays.length}/${days} days for user ${auth.userId}, photo=${useVision}`);
     const planId = generateId("mplan");
-    const savedPlan = { id: planId, userId: auth.userId, plan_length: days, plan_data: planData, created_at: new Date().toISOString() };
+    const savedPlan = { id: planId, userId: auth.userId, plan_length: allDays.length, plan_data: planData, created_at: new Date().toISOString() };
     await kv.set(`become:mealplan:${auth.userId}:${planId}`, savedPlan);
 
     const plansIndexKey = `become:mealplans:${auth.userId}`;
@@ -9586,7 +9637,7 @@ app.post(`${PREFIX}/meal-plans/generate`, async (c) => {
     await kv.set(plansIndexKey, plansIndex);
 
     await incrementWeeklyMealPlanCount(auth.userId);
-    console.log(`[Meal Plan] Generated ${batchDays}-day plan for user ${auth.userId}, photo=${useVision}`);
+    console.log(`[Meal Plan] Saved plan ${planId}: ${allDays.length} days, user=${auth.userId}`);
     return c.json(savedPlan);
   } catch (err) {
     console.log("POST /meal-plans/generate error:", err);

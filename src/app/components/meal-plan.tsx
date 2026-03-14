@@ -89,6 +89,11 @@ const PLAN_OPTIONS: { length: PlanLength; labelKey: string; descKey: string; col
 const GEN_MESSAGE_KEYS = [
   'mp_gen_1', 'mp_gen_2', 'mp_gen_3', 'mp_gen_4', 'mp_gen_5', 'mp_gen_6',
 ];
+const GEN_MESSAGE_KEYS_LONG = [
+  'mp_gen_1', 'mp_gen_2', 'mp_gen_3', 'mp_gen_4', 'mp_gen_5', 'mp_gen_6',
+  'mp_gen_batch2', 'mp_gen_batch3', 'mp_gen_batch4', 'mp_gen_batch5',
+  'mp_gen_1', 'mp_gen_2', 'mp_gen_3',
+];
 
 // ---- Goal labels ----
 const GOAL_LABELS: Record<string, { en: string; ru: string }> = {
@@ -198,16 +203,17 @@ export function MealPlanPage() {
       return;
     }
     setGenMessage(0);
+    const msgKeys = selectedLength > 7 ? GEN_MESSAGE_KEYS_LONG : GEN_MESSAGE_KEYS;
     genIntervalRef.current = setInterval(() => {
       setGenMessage((prev) => {
-        if (prev >= GEN_MESSAGE_KEYS.length - 1) return prev;
+        if (prev >= msgKeys.length - 1) return prev;
         return prev + 1;
       });
-    }, 3000);
+    }, selectedLength > 7 ? 5000 : 3000);
     return () => {
       if (genIntervalRef.current) clearInterval(genIntervalRef.current);
     };
-  }, [viewState]);
+  }, [viewState, selectedLength]);
 
   // Generate plan
   const handleGenerate = useCallback(async () => {
@@ -1103,7 +1109,8 @@ function GeneratingAnimation({
   planLength: PlanLength;
 }) {
   const { t } = useTranslation();
-  const messages = GEN_MESSAGE_KEYS.map((key) => t(key));
+  const keys = planLength > 7 ? GEN_MESSAGE_KEYS_LONG : GEN_MESSAGE_KEYS;
+  const messages = keys.map((key) => t(key));
 
   return (
     <div className="text-center">

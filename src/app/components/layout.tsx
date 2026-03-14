@@ -10,45 +10,36 @@ import { BottomSheetProvider, useAnyBottomSheetOpen } from './bottom-sheet-conte
 import { ThemeSync } from './theme-sync';
 import { api } from './api-client';
 import { WebLoginScreen } from './web-login-screen';
-import svgPaths from '../../imports/svg-hg8um85cbx';
-import patternSvgPaths from '../../imports/svg-769x92ozth';
+import tabIconPaths from '../../imports/svg-cjzrxu9257';
 
-// ---- Custom SVG nav icons from Figma ----
+// ---- Custom SVG nav icons from Figma (Bold/Filled style) ----
 
-function NavIcon({ pathData, active, clipPaths }: { pathData: string | string[]; active: boolean; clipPaths?: boolean }) {
+function BoldNavIcon({ pathData, active }: { pathData: string | string[]; active: boolean }) {
   const paths = Array.isArray(pathData) ? pathData : [pathData];
-  // Use CSS variables for theme-aware colors
-  const color = active ? 'var(--tab-active)' : 'var(--tab-inactive)';
+  const color = active ? '#566DD6' : '#8E8E93';
   return (
-    <svg width="20" height="20" viewBox="0 0 19.9816 19.9816" fill="none">
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
       {paths.map((d, i) => (
-        <path
-          key={i}
-          d={d}
-          stroke={color}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="1.66513"
-        />
+        <path key={i} d={d} fill={color} />
       ))}
     </svg>
   );
 }
 
-// Tab definitions
+// Tab definitions with bold Figma icons
 interface TabDef {
   key: string;
   path: string;
   labelKey: string;
-  iconPaths: string | string[];
+  iconPaths: string[];
 }
 
 const TABS: TabDef[] = [
-  { key: 'home', path: '/home', labelKey: 'nav_home', iconPaths: svgPaths.p302a0a00 },
-  { key: 'calories', path: '/calories', labelKey: 'nav_calories', iconPaths: svgPaths.p4765360 },
-  { key: 'meal-plan', path: '/meal-plan', labelKey: 'nav_meal_plan', iconPaths: [svgPaths.pd3bcef0, svgPaths.p989f700, svgPaths.p2287a480] },
-  { key: 'workout', path: '/workout-plan', labelKey: 'nav_workout', iconPaths: svgPaths.p12d14866 },
-  { key: 'profile', path: '/profile', labelKey: 'nav_profile', iconPaths: svgPaths.p1a7a4780 },
+  { key: 'home', path: '/home', labelKey: 'nav_home', iconPaths: [tabIconPaths.pf7e9c00] },
+  { key: 'calories', path: '/calories', labelKey: 'nav_calories', iconPaths: [tabIconPaths.p7e81180, tabIconPaths.p2cfae00] },
+  { key: 'meal-plan', path: '/meal-plan', labelKey: 'nav_meal_plan', iconPaths: [tabIconPaths.p2d04c4f0, tabIconPaths.p36aa1780, tabIconPaths.p2db24580, tabIconPaths.p3c35e500] },
+  { key: 'workout', path: '/workout-plan', labelKey: 'nav_workout', iconPaths: [tabIconPaths.p296c4c80, tabIconPaths.p16ddeaf0, tabIconPaths.p1ab15c00] },
+  { key: 'profile', path: '/profile', labelKey: 'nav_profile', iconPaths: [tabIconPaths.p2cb3a980, tabIconPaths.p1c48e200] },
 ];
 
 // Main tab paths — tab bar is ONLY shown on these
@@ -185,7 +176,7 @@ function GlassTabBar({ keyboardVisible }: { keyboardVisible: boolean }) {
               : 'calc(max(env(safe-area-inset-bottom, 0px), 8px) + 8px)',
           }}
         >
-          <div className="mx-auto max-w-md px-4 pb-2">
+          <div className="flex flex-col items-center px-4 pb-2">
 
             {/* Premium upgrade pill for free users — above tab bar */}
             {!subscriptionActive && location.pathname !== '/upgrade' && (
@@ -206,7 +197,7 @@ function GlassTabBar({ keyboardVisible }: { keyboardVisible: boolean }) {
             )}
 
             <div
-              className="bg-liquid-glass relative rounded-[28px] overflow-hidden"
+              className="bg-liquid-glass relative rounded-[28px] overflow-hidden inline-flex"
               style={{
                 border: '1px solid var(--glass-border)',
                 boxShadow: 'var(--glass-shadow-card)',
@@ -220,7 +211,7 @@ function GlassTabBar({ keyboardVisible }: { keyboardVisible: boolean }) {
                 }}
               />
 
-              <div className="relative flex items-center justify-around px-3 py-2">
+              <div className="relative flex items-center gap-2 px-4 py-3">
                 {TABS.map((tab) => {
                   const isActive = activeTab === tab.key;
                   return (
@@ -232,27 +223,48 @@ function GlassTabBar({ keyboardVisible }: { keyboardVisible: boolean }) {
                           navigate(tab.path);
                         }
                       }}
-                      className="relative flex flex-col items-center justify-center w-[46px] h-[46px] transition-all"
+                      className="relative flex flex-col items-center justify-center p-1 transition-all"
                       aria-label={t(tab.labelKey)}
                     >
-                      {/* Active indicator pill */}
+                      {/* Active background + indicator */}
                       {isActive && (
-                        <motion.div
-                          layoutId="tab-indicator"
-                          className="absolute -top-[8px] w-6 h-[2px] rounded-full"
-                          style={{ background: 'var(--tab-indicator)' }}
-                          transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                        />
+                        <>
+                          <motion.div
+                            layoutId="tab-active-bg"
+                            className="absolute inset-0 rounded-[12px]"
+                            style={{ background: 'rgba(86, 109, 214, 0.08)' }}
+                            transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                          />
+                          <motion.div
+                            layoutId="tab-indicator"
+                            className="absolute -top-[12px] w-5 h-[2px] rounded-full"
+                            style={{ background: '#566DD6' }}
+                            transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                          />
+                        </>
                       )}
                       <div className="relative">
-                        <NavIcon pathData={tab.iconPaths} active={isActive} />
+                        <BoldNavIcon pathData={tab.iconPaths} active={isActive} />
                         {/* Premium crown badge on profile tab */}
                         {tab.key === 'profile' && subscriptionActive && (
                           <div
-                            className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 rounded-full flex items-center justify-center"
-                            style={{ background: 'var(--tab-crown-bg)' }}
+                            className="absolute -top-0.5 -right-0.5 rounded-full flex items-center justify-center"
+                            style={{ background: 'var(--background, #0a0a0f)' }}
                           >
-                            <Crown className="w-2.5 h-2.5 text-[#ffd700] fill-[#ffd700]" />
+                            <div className="p-[2px]">
+                              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                                <g clipPath="url(#crownClip)">
+                                  <path d="M4.8175 1.36083C4.83548 1.32817 4.86191 1.30093 4.89401 1.28196C4.92611 1.26299 4.96271 1.25298 5 1.25298C5.03729 1.25298 5.07389 1.26299 5.10599 1.28196C5.13809 1.30093 5.16452 1.32817 5.1825 1.36083L6.4125 3.69583C6.44183 3.7499 6.48277 3.7968 6.53238 3.83317C6.58199 3.86955 6.63903 3.89448 6.69942 3.90619C6.7598 3.9179 6.82203 3.9161 6.88164 3.90091C6.94125 3.88572 6.99675 3.85752 7.04417 3.81833L8.82625 2.29167C8.86046 2.26384 8.90262 2.24759 8.94665 2.24525C8.99068 2.24291 9.03433 2.2546 9.07129 2.27864C9.10826 2.30269 9.13664 2.33784 9.15236 2.37904C9.16807 2.42024 9.17031 2.46536 9.15875 2.50792L7.97792 6.77708C7.95381 6.86444 7.90189 6.94157 7.83 6.99676C7.75812 7.05194 7.67021 7.08219 7.57958 7.08292H2.42083C2.33014 7.08228 2.24213 7.05208 2.17016 6.99688C2.0982 6.94168 2.04621 6.86451 2.02208 6.77708L0.841667 2.50833C0.830104 2.46578 0.832342 2.42066 0.848059 2.37945C0.863775 2.33825 0.892159 2.3031 0.929125 2.27906C0.966091 2.25502 1.00973 2.24333 1.05377 2.24567C1.0978 2.24801 1.13996 2.26426 1.17417 2.29208L2.95583 3.81875C3.00325 3.85793 3.05875 3.88613 3.11836 3.90132C3.17797 3.91651 3.2402 3.91832 3.30058 3.90661C3.36097 3.8949 3.41801 3.86996 3.46762 3.83359C3.51723 3.79722 3.55817 3.75032 3.5875 3.69625L4.8175 1.36083Z" fill="#FFD700" stroke="#FFD700" strokeLinecap="round" strokeLinejoin="round" strokeWidth="0.833333" />
+                                  <path d="M2.08333 8.75H7.91667" fill="#FFD700" />
+                                  <path d="M2.08333 8.75H7.91667" stroke="#FFD700" strokeLinecap="round" strokeLinejoin="round" strokeWidth="0.833333" />
+                                </g>
+                                <defs>
+                                  <clipPath id="crownClip">
+                                    <rect fill="white" height="10" width="10" />
+                                  </clipPath>
+                                </defs>
+                              </svg>
+                            </div>
                           </div>
                         )}
                       </div>

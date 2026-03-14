@@ -820,14 +820,14 @@ export const api = {
   },
 
   /** Send food photo to AI for recognition (Edge Function → OpenAI Vision) */
-  async scanFood(imageBase64: string, mimeType?: string): Promise<{
+  async scanFood(imageBase64: string, mimeType?: string, language?: string): Promise<{
     food_name: string;
     estimated_calories: number;
     protein: number;
     carbs: number;
     fat: number;
   }> {
-    return request('POST', '/food/scan', { imageBase64, mimeType });
+    return request('POST', '/food/scan', { imageBase64, mimeType, language: language || getUserLang() });
   },
 
   /** Save recognized food entry to food_entries table */

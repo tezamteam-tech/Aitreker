@@ -308,7 +308,7 @@ export function HomeNutritionPage() {
   };
 
   return (
-    <div className="min-h-screen pb-6">
+    <div className="min-h-screen pb-32">
       <PageHeader title={t('home_title')} />
 
       <div className="px-4 space-y-4">
