@@ -91,27 +91,17 @@ function miniAppUrl(): string {
 }
 
 /**
- * Build a t.me deep link that opens the Mini App natively via Telegram.
- * Uses Telegram's native mechanism — no SSL dependency, no "untrusted site" dialogs.
- */
-function buildTgDeepLink(startapp?: string): string {
-  const botUsername = Deno.env.get("TELEGRAM_BOT_USERNAME") || "ProperFoodAi_bot";
-  const appShortName = Deno.env.get("TELEGRAM_MINIAPP_SHORT_NAME") || "app";
-  const base = `https://t.me/${botUsername}/${appShortName}`;
-  if (startapp) {
-    return `${base}?startapp=${encodeURIComponent(startapp)}`;
-  }
-  return base;
-}
-
-/**
  * Build an inline keyboard button that opens the Mini App.
- * Uses url: t.me deep link — Telegram intercepts natively, opens Mini App.
- * style: "primary" makes the button blue.
+ * Uses web_app: { url } — opens Mini App directly in Telegram WebView.
+ * This is the correct approach per Telegram Bot API docs.
  */
 function appButton(label: string, startapp?: string): InlineKeyboardButton[] {
-  const deepLink = startapp ? buildTgDeepLink(startapp) : buildTgDeepLink();
-  return [{ text: label, url: deepLink, style: "primary" }];
+  const url = miniAppUrl();
+  if (!url) return [];
+  const finalUrl = startapp
+    ? `${url}${url.includes("?") ? "&" : "?"}startapp=${encodeURIComponent(startapp)}`
+    : url;
+  return [{ text: label, web_app: { url: finalUrl } }];
 }
 
 // ---- Notification senders ----

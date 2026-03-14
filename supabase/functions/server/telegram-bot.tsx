@@ -407,8 +407,7 @@ export async function setMyCommands(): Promise<any> {
 
 /**
  * Build the welcome message for NEW users.
- * Uses url: t.me deep link for inline buttons — Telegram intercepts t.me links natively.
- * style: "primary" makes the button blue.
+ * Uses web_app: { url } for inline buttons — opens Mini App directly in WebView.
  */
 export function buildNewUserWelcomeMessage(user: TgUser, _appUrl?: string): {
   text: string;
@@ -434,18 +433,19 @@ export function buildNewUserWelcomeMessage(user: TgUser, _appUrl?: string): {
       : "\u{1F447} You're all set \u2014 tap the button to open the app!",
   ].join("\n");
 
-  // url with t.me deep link — Telegram intercepts natively, opens Mini App
-  const deepLink = buildTgDeepLink();
-  const keyboard: InlineKeyboardButton[][] = [
-    [{ text: t("btn_open_app", lang), url: deepLink, style: "primary" }],
-  ];
+  // web_app: { url } — opens Mini App directly in Telegram WebView
+  const miniAppUrl = _appUrl || getMiniAppUrl();
+  const keyboard: InlineKeyboardButton[][] = [];
+  if (miniAppUrl) {
+    keyboard.push([{ text: t("btn_open_app", lang), web_app: { url: miniAppUrl } }]);
+  }
 
   return { text, reply_markup: { inline_keyboard: keyboard } };
 }
 
 /**
  * Build the welcome-back message for returning users (already registered).
- * Uses url: t.me deep link for inline "Open" button.
+ * Uses web_app: { url } for inline "Open" button — opens Mini App directly.
  * skipOpenButton: if true, omit the inline "Open" button (reply keyboard handles it).
  */
 export function buildReturningStartMessage(user: TgUser, deepLinkParam?: string, _appUrl?: string, skipOpenButton?: boolean): {
@@ -473,10 +473,15 @@ export function buildReturningStartMessage(user: TgUser, deepLinkParam?: string,
 
   const keyboard: InlineKeyboardButton[][] = [];
 
-  // Row 1: Open Mini App via t.me deep link — Telegram opens natively
+  // Row 1: Open Mini App via web_app: { url } — direct WebView opening
   if (!skipOpenButton) {
-    const deepLink = deepLinkParam ? buildTgDeepLink(deepLinkParam) : buildTgDeepLink();
-    keyboard.push([{ text: t("btn_open_app", lang), url: deepLink, style: "primary" }]);
+    const miniAppUrl = _appUrl || getMiniAppUrl();
+    if (miniAppUrl) {
+      const finalUrl = deepLinkParam
+        ? `${miniAppUrl}${miniAppUrl.includes("?") ? "&" : "?"}startapp=${encodeURIComponent(deepLinkParam)}`
+        : miniAppUrl;
+      keyboard.push([{ text: t("btn_open_app", lang), web_app: { url: finalUrl } }]);
+    }
   }
 
   // Row 2: Sync Data
@@ -492,7 +497,7 @@ export function buildReturningStartMessage(user: TgUser, deepLinkParam?: string,
 
 /**
  * Build the contact-received success message.
- * Inline keyboard: Open App (t.me deep link) + Sync Data.
+ * Inline keyboard: Open App (web_app: { url }) + Sync Data.
  * Reply keyboard: "Open Proper Food AI" web_app button (blue in keyboard).
  */
 export function buildContactSuccessMessage(user: TgUser, _appUrl?: string): {
@@ -502,8 +507,7 @@ export function buildContactSuccessMessage(user: TgUser, _appUrl?: string): {
 } {
   const lang = detectLang(user.language_code);
   const name = user.first_name || "there";
-  const miniAppUrl = getMiniAppUrl();
-  const deepLink = buildTgDeepLink();
+  const miniAppUrl = _appUrl || getMiniAppUrl();
 
   const text = [
     `\u{2705} <b>${t("contact_success_title", lang, { name })}</b>`,
@@ -517,13 +521,14 @@ export function buildContactSuccessMessage(user: TgUser, _appUrl?: string): {
     `\u{1F514} ${t("contact_f4", lang)}`,
   ].join("\n");
 
-  // Inline keyboard: Open App via t.me deep link + Sync Data
-  const inline_keyboard: InlineKeyboardButton[][] = [
-    [{ text: t("btn_open_app", lang), url: deepLink, style: "primary" }],
-    [{ text: t("btn_sync_data", lang), callback_data: "cmd_sync" }],
-  ];
+  // Inline keyboard: Open App via web_app: { url } + Sync Data
+  const inline_keyboard: InlineKeyboardButton[][] = [];
+  if (miniAppUrl) {
+    inline_keyboard.push([{ text: t("btn_open_app", lang), web_app: { url: miniAppUrl } }]);
+  }
+  inline_keyboard.push([{ text: t("btn_sync_data", lang), callback_data: "cmd_sync" }]);
 
-  // Reply keyboard: web_app button (appears blue in keyboard area)
+  // Reply keyboard: web_app button (appears blue automatically in Telegram)
   const replyKb: ReplyKeyboardButton[][] = [];
   if (miniAppUrl) {
     replyKb.push([{ text: t("btn_open_app", lang), web_app: { url: miniAppUrl }, style: "primary" }]);
@@ -588,10 +593,12 @@ export function buildReplyKeyboard(lang: Lang = "en", appUrl?: string): ReplyKey
  * Build help message (i18n)
  */
 export function buildHelpMessage(lang: Lang = "en"): { text: string; reply_markup: InlineKeyboardMarkup } {
-  const deepLink = buildTgDeepLink();
+  const miniAppUrl = getMiniAppUrl();
   const keyboard: InlineKeyboardButton[][] = [];
-  // t.me deep link — Telegram opens Mini App natively
-  keyboard.push([{ text: t("btn_open_app", lang), url: deepLink, style: "primary" }]);
+  // web_app: { url } — opens Mini App directly in Telegram WebView
+  if (miniAppUrl) {
+    keyboard.push([{ text: t("btn_open_app", lang), web_app: { url: miniAppUrl } }]);
+  }
   keyboard.push([{ text: t("btn_menu", lang), callback_data: "cmd_menu" }]);
 
   const text = lang === "ru" ? [

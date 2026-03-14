@@ -203,7 +203,7 @@ async function grantReferralBonusOnSubscription(subscriberUserId: string): Promi
       const tgId = referrer.telegramId;
       if (tgId) {
         const keyboard: InlineKeyboardButton[][] = [
-          [{ text: referrerLang === "ru" ? "👥 Мои рефералы" : "👥 My Referrals", url: buildTgDeepLink("referrals"), style: "primary" }],
+          [webAppButton(referrerLang === "ru" ? "👥 Мои рефералы" : "👥 My Referrals", "referrals")],
         ];
         await sendMessage(Number(tgId), notifText, { reply_markup: { inline_keyboard: keyboard } });
         console.log(`[Referral Bonus] Notification sent to referrer tg:${tgId}`);
@@ -233,7 +233,7 @@ async function notifyReferrerNewJoin(referrerUserId: string, newUserName: string
       : `👋 <b>New Referral!</b>\n\n<b>${newUserName}</b> joined through your link.\nWhen they subscribe, you'll earn <b>+${REFERRAL_BONUS_DAYS} days</b> Premium!\n\n📊 Total invited: <b>${referrer.referralCount || 0}</b>`;
 
     const keyboard: InlineKeyboardButton[][] = [
-      [{ text: lang === "ru" ? "👥 Мои рефералы" : "👥 My Referrals", url: buildTgDeepLink("referrals"), style: "primary" }],
+      [webAppButton(lang === "ru" ? "👥 Мои рефералы" : "👥 My Referrals", "referrals")],
     ];
     await sendMessage(Number(referrer.telegramId), text, { reply_markup: { inline_keyboard: keyboard } });
     console.log(`[Referral] Join notification sent to referrer ${referrerUserId}`);
@@ -342,6 +342,22 @@ function buildTgDeepLink(startapp?: string): string {
 }
 
 /**
+ * Build a web_app inline button that opens the Mini App directly in Telegram WebView.
+ * Uses web_app: { url } — the correct approach per Telegram Bot API.
+ * DO NOT use url: "t.me/..." for inline buttons — causes "web app not found" errors.
+ */
+function webAppButton(label: string, startapp?: string): InlineKeyboardButton {
+  const baseUrl = getProperMiniAppUrl();
+  if (!baseUrl) {
+    return { text: label, callback_data: "cmd_open_app" };
+  }
+  const finalUrl = startapp
+    ? `${baseUrl}${baseUrl.includes("?") ? "&" : "?"}startapp=${encodeURIComponent(startapp)}`
+    : baseUrl;
+  return { text: label, web_app: { url: finalUrl } };
+}
+
+/**
  * Send a targeted message when the user arrives via a deep link
  * (e.g., /start challenge_ch_xxx).
  *
@@ -355,9 +371,7 @@ async function sendDeepLinkMessage(
   baseAppUrl?: string
 ): Promise<void> {
   try {
-    // url: t.me deep link — Telegram intercepts natively, opens Mini App
-    const deepLink = buildTgDeepLink(deepLinkParam);
-
+    // web_app: { url } — opens Mini App directly in Telegram WebView
     if (deepLinkParam.startsWith("challenge_")) {
       const challengeId = deepLinkParam.replace("challenge_", "");
       let challengeTitle = "";
@@ -371,7 +385,7 @@ async function sendDeepLinkMessage(
         : `🏆 <b>${challengeTitle ? `Challenge: ${challengeTitle}` : "You've been invited to a challenge!"}</b>\n\nTap the button below to open it in the app:`;
 
       const keyboard: InlineKeyboardButton[][] = [[
-        { text: lang === "ru" ? "🚀 Открыть челлендж" : "🚀 Open Challenge", url: deepLink, style: "primary" },
+        webAppButton(lang === "ru" ? "🚀 Открыть челлендж" : "🚀 Open Challenge", deepLinkParam),
       ]];
 
       await sendMessage(chatId, text, { reply_markup: { inline_keyboard: keyboard } });
@@ -383,7 +397,7 @@ async function sendDeepLinkMessage(
         : "🎯 <b>Strategic Goals</b>\n\nOpen the app to view your goals:";
 
       const keyboard: InlineKeyboardButton[][] = [[
-        { text: lang === "ru" ? "🎯 Открыть цели" : "🎯 Open Goals", url: deepLink, style: "primary" },
+        webAppButton(lang === "ru" ? "🎯 Открыть цели" : "🎯 Open Goals", deepLinkParam),
       ]];
 
       await sendMessage(chatId, text, { reply_markup: { inline_keyboard: keyboard } });
@@ -395,7 +409,7 @@ async function sendDeepLinkMessage(
         : "🤖 <b>AI Coach</b>\n\nOpen the app to chat with your coach:";
 
       const keyboard: InlineKeyboardButton[][] = [[
-        { text: lang === "ru" ? "🤖 Открыть коуча" : "🤖 Open Coach", url: deepLink, style: "primary" },
+        webAppButton(lang === "ru" ? "🤖 Открыть коуча" : "🤖 Open Coach", "coach"),
       ]];
 
       await sendMessage(chatId, text, { reply_markup: { inline_keyboard: keyboard } });
@@ -3583,7 +3597,7 @@ app.post(`${PREFIX}/notifications/task-reminder`, async (c) => {
               ? `\u23F0 <b>\u041D\u0430\u043F\u043E\u043C\u0438\u043D\u0430\u043D\u0438\u0435:</b> ${task.title}\n${task.description||""}\n\n\uD83D\uDCCB \u0414\u0435\u043D\u044C ${dayNum} \u2022 ~${task.estimatedMinutes||5} \u043C\u0438\u043D`
               : `\u23F0 <b>Reminder:</b> ${task.title}\n${task.description||""}\n\n\uD83D\uDCCB Day ${dayNum} \u2022 ~${task.estimatedMinutes||5} min`;
             const kbd: any[][] = [
-              [{ text: l==="ru" ? "\uD83D\uDE80 \u041E\u0442\u043A\u0440\u044B\u0442\u044C" : "\uD83D\uDE80 Open", url: buildTgDeepLink(), style: "primary" }],
+              [{ text: l==="ru" ? "\uD83D\uDE80 \u041E\u0442\u043A\u0440\u044B\u0442\u044C" : "\uD83D\uDE80 Open", web_app: { url: (getProperMiniAppUrl() || "") } }],
             ];
             await sendMessage(Number(user.telegramId), text, kbd.length > 0 ? { reply_markup: { inline_keyboard: kbd } } : undefined);
             sent++;
@@ -3647,7 +3661,7 @@ app.get(`${PREFIX}/notifications/task-reminder`, async (c) => {
               ? `\u23F0 <b>\u041D\u0430\u043F\u043E\u043C\u0438\u043D\u0430\u043D\u0438\u0435:</b> ${task.title}\n${task.description||""}\n\n\uD83D\uDCCB \u0414\u0435\u043D\u044C ${dayNum} \u2022 ~${task.estimatedMinutes||5} \u043C\u0438\u043D`
               : `\u23F0 <b>Reminder:</b> ${task.title}\n${task.description||""}\n\n\uD83D\uDCCB Day ${dayNum} \u2022 ~${task.estimatedMinutes||5} min`;
             const kbd: any[][] = [
-              [{ text: l==="ru" ? "\uD83D\uDE80 \u041E\u0442\u043A\u0440\u044B\u0442\u044C" : "\uD83D\uDE80 Open", url: buildTgDeepLink(), style: "primary" }],
+              [{ text: l==="ru" ? "\uD83D\uDE80 \u041E\u0442\u043A\u0440\u044B\u0442\u044C" : "\uD83D\uDE80 Open", web_app: { url: (getProperMiniAppUrl() || "") } }],
             ];
             await sendMessage(Number(user.telegramId), text, kbd.length > 0 ? { reply_markup: { inline_keyboard: kbd } } : undefined);
             sent++;
@@ -4898,7 +4912,7 @@ async function handleProgressCommand(msg: TgMessage): Promise<void> {
 
   const keyboard: InlineKeyboardButton[][] = [];
   keyboard.push([
-    { text: lang === "ru" ? "\uD83C\uDFAF \u041E\u0442\u043A\u0440\u044B\u0442\u044C" : "\uD83C\uDFAF Open App", url: buildTgDeepLink(), style: "primary" },
+    webAppButton(lang === "ru" ? "\uD83C\uDFAF \u041E\u0442\u043A\u0440\u044B\u0442\u044C" : "\uD83C\uDFAF Open App"),
   ]);
   keyboard.push([
     { text: lang === "ru" ? "\uD83D\uDCCB \u0417\u0430\u0434\u0430\u043D\u0438\u044F" : "\uD83D\uDCCB Today's Tasks", callback_data: "cmd_today" },
@@ -4950,12 +4964,11 @@ async function handleTodayCommand(msg: TgMessage): Promise<void> {
   ].join("\n");
 
   const keyboard: InlineKeyboardButton[][] = [];
-  keyboard.push([{
-    text: lang === "ru"
+  keyboard.push([
+    webAppButton(lang === "ru"
       ? `\uD83C\uDFAF \u041D\u0430\u0447\u0430\u0442\u044C \u0434\u0435\u043D\u044C ${todayData.dayNumber}`
-      : `\uD83C\uDFAF Start Day ${todayData.dayNumber}`,
-    url: buildTgDeepLink("today"), style: "primary",
-  }]);
+      : `\uD83C\uDFAF Start Day ${todayData.dayNumber}`, "today"),
+  ]);
   keyboard.push([
     { text: lang === "ru" ? "\uD83D\uDCCA \u041F\u0440\u043E\u0433\u0440\u0435\u0441\u0441" : "\uD83D\uDCCA Progress", callback_data: "cmd_progress" },
     { text: lang === "ru" ? "\u25C0\uFE0F \u041C\u0435\u043D\u044E" : "\u25C0\uFE0F Menu", callback_data: "cmd_menu" },
@@ -5009,10 +5022,9 @@ async function handleCoachCommand(msg: TgMessage): Promise<void> {
 
   const keyboard: InlineKeyboardButton[][] = [];
   if (miniAppUrl) {
-    keyboard.push([{
-      text: lang === "ru" ? "\uD83C\uDFAF \u041E\u0442\u043A\u0440\u044B\u0442\u044C" : "\uD83C\uDFAF Open App",
-      url: buildTgDeepLink("coach"), style: "primary"
-    }]);
+    keyboard.push([
+      webAppButton(lang === "ru" ? "\uD83C\uDFAF \u041E\u0442\u043A\u0440\u044B\u0442\u044C" : "\uD83C\uDFAF Open App", "coach"),
+    ]);
   }
   keyboard.push([{
     text: lang === "ru" ? "\u25C0\uFE0F \u041C\u0435\u043D\u044E" : "\u25C0\uFE0F Menu",
@@ -5080,9 +5092,8 @@ async function handleChallengeCommand(msg: TgMessage): Promise<void> {
   const keyboard: InlineKeyboardButton[][] = [];
   if (miniAppUrl) {
     keyboard.push([{
-      text: lang === "ru" ? "\uD83C\uDFC6 \u0421\u043C\u043E\u0442\u0440\u0435\u0442\u044C" : "\uD83C\uDFC6 View Challenges",
-      url: buildTgDeepLink("challenge"), style: "primary"
-    }]);
+      webAppButton(lang === "ru" ? "\uD83C\uDFC6 \u0421\u043C\u043E\u0442\u0440\u0435\u0442\u044C" : "\uD83C\uDFC6 View Challenges", "challenge"),
+    ]);
   }
   keyboard.push([
     { text: lang === "ru" ? "\u25C0\uFE0F \u041C\u0435\u043D\u044E" : "\u25C0\uFE0F Menu", callback_data: "cmd_menu" },
@@ -5168,10 +5179,9 @@ async function handleCallbackQuery(cbq: TgCallbackQuery): Promise<void> {
 
         const pKeyboard: InlineKeyboardButton[][] = [];
         if (miniAppUrl) {
-          pKeyboard.push([{
-            text: pLang === "ru" ? "\uD83C\uDFAF \u041E\u0442\u043A\u0440\u044B\u0442\u044C" : "\uD83C\uDFAF Open App",
-            url: buildTgDeepLink(), style: "primary"
-          }]);
+          pKeyboard.push([
+            webAppButton(pLang === "ru" ? "\uD83C\uDFAF \u041E\u0442\u043A\u0440\u044B\u0442\u044C" : "\uD83C\uDFAF Open App"),
+          ]);
         }
         pKeyboard.push([
           { text: pLang === "ru" ? "\uD83D\uDCCB \u0417\u0430\u0434\u0430\u043D\u0438\u044F" : "\uD83D\uDCCB Today", callback_data: "cmd_today" },
@@ -5225,11 +5235,10 @@ async function handleCallbackQuery(cbq: TgCallbackQuery): Promise<void> {
         const tKeyboard: InlineKeyboardButton[][] = [];
         if (miniAppUrl) {
           tKeyboard.push([{
-            text: tLang === "ru"
+            webAppButton(tLang === "ru"
               ? `\uD83C\uDFAF \u041D\u0430\u0447\u0430\u0442\u044C \u0434\u0435\u043D\u044C ${todayData.dayNumber}`
-              : `\uD83C\uDFAF Start Day ${todayData.dayNumber}`,
-            url: buildTgDeepLink("today"), style: "primary",
-          }]);
+              : `\uD83C\uDFAF Start Day ${todayData.dayNumber}`, "today"),
+          ]);
         }
         tKeyboard.push([
           { text: tLang === "ru" ? "\uD83D\uDCCA \u041F\u0440\u043E\u0433\u0440\u0435\u0441\u0441" : "\uD83D\uDCCA Progress", callback_data: "cmd_progress" },
@@ -5267,10 +5276,9 @@ async function handleCallbackQuery(cbq: TgCallbackQuery): Promise<void> {
 
         const cKeyboard: InlineKeyboardButton[][] = [];
         if (miniAppUrl) {
-          cKeyboard.push([{
-            text: cLang === "ru" ? "\uD83C\uDFAF \u041E\u0442\u043A\u0440\u044B\u0442\u044C" : "\uD83C\uDFAF Open App",
-            url: buildTgDeepLink("challenge"), style: "primary"
-          }]);
+          cKeyboard.push([
+            webAppButton(cLang === "ru" ? "\uD83C\uDFAF \u041E\u0442\u043A\u0440\u044B\u0442\u044C" : "\uD83C\uDFAF Open App", "challenge"),
+          ]);
         }
         cKeyboard.push([{
           text: cLang === "ru" ? "\u25C0\uFE0F \u041C\u0435\u043D\u044E" : "\u25C0\uFE0F Menu",
@@ -7803,7 +7811,7 @@ app.get(`${PREFIX}/notifications/strategic-daily`, async (c) => {
         const appUrl = getProperMiniAppUrl();
         const kbd: any[][] = [];
         if (appUrl) {
-          kbd.push([{ text: isRu ? "\uD83D\uDE80 Открыть Proper Food" : "\uD83D\uDE80 Open Proper Food", url: buildTgDeepLink("strategic_goals"), style: "primary" }]);
+          kbd.push([webAppButton(isRu ? "\uD83D\uDE80 Открыть Proper Food" : "\uD83D\uDE80 Open Proper Food", "strategic_goals")]);
         }
         await sendMessage(Number(user.telegramId), text, {
           reply_markup: kbd.length ? { inline_keyboard: kbd } : undefined,
@@ -9527,7 +9535,7 @@ app.post(`${PREFIX}/subscription/check-expiry-reminder`, async (c) => {
         : `⏰ <b>Subscription Expiring Soon!</b>\n\nYour Premium subscription expires in <b>${daysLeft} day${daysLeft === 1 ? "" : "s"}</b>.\n\n🔄 Renew now to keep unlimited access to food scanning, meal plans, and workouts.`;
 
       const keyboard: InlineKeyboardButton[][] = [
-        [{ text: lang === "ru" ? "⭐ Продлить Premium" : "⭐ Renew Premium", url: buildTgDeepLink("upgrade"), style: "primary" }],
+        [webAppButton(lang === "ru" ? "⭐ Продлить Premium" : "⭐ Renew Premium", "upgrade")],
       ];
 
       try {
@@ -10929,11 +10937,9 @@ app.post(`${PREFIX}/weight-log/check-reminder`, async (c) => {
       ? `${emoji} \u041D\u0435 \u0437\u0430\u0431\u0443\u0434\u044C\u0442\u0435 \u0432\u0437\u0432\u0435\u0441\u0438\u0442\u044C\u0441\u044F \u0441\u0435\u0433\u043E\u0434\u043D\u044F!\n\n${daysSinceLast > 1 ? `\u041F\u043E\u0441\u043B\u0435\u0434\u043D\u0435\u0435 \u0432\u0437\u0432\u0435\u0448\u0438\u0432\u0430\u043D\u0438\u0435: ${daysSinceLast} \u0434\u043D. \u043D\u0430\u0437\u0430\u0434.` : "\u0420\u0435\u0433\u0443\u043B\u044F\u0440\u043D\u043E\u0435 \u043E\u0442\u0441\u043B\u0435\u0436\u0438\u0432\u0430\u043D\u0438\u0435 \u043F\u043E\u043C\u043E\u0433\u0430\u0435\u0442 \u0432\u0438\u0434\u0435\u0442\u044C \u043F\u0440\u043E\u0433\u0440\u0435\u0441\u0441."}\n\n\u041E\u0442\u043A\u0440\u043E\u0439\u0442\u0435 \u043F\u0440\u0438\u043B\u043E\u0436\u0435\u043D\u0438\u0435, \u0447\u0442\u043E\u0431\u044B \u0437\u0430\u043F\u0438\u0441\u0430\u0442\u044C \u0432\u0435\u0441.`
       : `${emoji} Don't forget to weigh in today!\n\n${daysSinceLast > 1 ? `Last weigh-in: ${daysSinceLast} days ago.` : "Regular tracking helps you see your progress."}\n\nOpen the app to log your weight.`;
 
-    const keyboard = [[{
-      text: lang === "ru" ? "\uD83D\uDCCA \u0417\u0430\u043F\u0438\u0441\u0430\u0442\u044C \u0432\u0435\u0441" : "\uD83D\uDCCA Log Weight",
-      url: buildTgDeepLink("weight"),
-      style: "primary",
-    }]];
+    const keyboard = [[
+      webAppButton(lang === "ru" ? "\uD83D\uDCCA \u0417\u0430\u043F\u0438\u0441\u0430\u0442\u044C \u0432\u0435\u0441" : "\uD83D\uDCCA Log Weight", "weight"),
+    ]];
 
     await sendMessage(user.telegramId, text, { reply_markup: { inline_keyboard: keyboard } });
 
