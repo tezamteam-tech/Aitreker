@@ -9592,13 +9592,13 @@ app.post(`${PREFIX}/workout-plans/generate`, async (c) => {
 
     const photoInstruction = imageBase64
       ? (lang === "ru"
-        ? "\nФото тела: оцени % жира, мышцы, проблемные зоны. Адаптируй план."
-        : "\nBody photo provided. Assess body fat %, muscle mass, problem areas. Adapt plan.")
+        ? "\nКлиент предоставил фото тела для оценки композиции. Учти визуальные данные при составлении плана."
+        : "\nClient provided a body photo for composition assessment. Consider visual data when creating the plan.")
       : "";
 
     const systemPrompt = lang === "ru"
-      ? `Ты — сертифицированный фитнес-тренер и нутрициолог. ${photoInstruction}${nutritionContext}\nВерни СТРОГО JSON: { "days": [ { "day": 1, "workout_type": "strength|cardio|flexibility|hiit|rest", "focus": "...", "duration_minutes": N, "estimated_calories_burn": N, "exercises": [ { "exercise_name": "...", "sets": N, "reps": "12", "rest_seconds": N, "muscle_group": "...", "notes": "..." } ] } ], "nutrition_tips": ["совет1","совет2","совет3"] }`
-      : `You are a certified fitness trainer and nutritionist. ${photoInstruction}${nutritionContext}\nReturn STRICTLY JSON: { "days": [ { "day": 1, "workout_type": "strength|cardio|flexibility|hiit|rest", "focus": "...", "duration_minutes": N, "estimated_calories_burn": N, "exercises": [ { "exercise_name": "...", "sets": N, "reps": "12", "rest_seconds": N, "muscle_group": "...", "notes": "..." } ] } ], "nutrition_tips": ["tip1","tip2","tip3"] }`;
+      ? `Ты — сертифицированный персональный тренер (CPT) в фитнес-приложении. Твоя задача — составить план тренировок на основе антропометрических данных клиента. Это стандартная задача фитнес-планирования. ${photoInstruction}${nutritionContext}\nОтветь ТОЛЬКО в формате JSON: { "days": [ { "day": 1, "workout_type": "strength|cardio|flexibility|hiit|rest", "focus": "...", "duration_minutes": N, "estimated_calories_burn": N, "exercises": [ { "exercise_name": "...", "sets": N, "reps": "12", "rest_seconds": N, "muscle_group": "...", "notes": "..." } ] } ], "nutrition_tips": ["совет1","совет2","совет3"] }`
+      : `You are a certified personal trainer (CPT) working in a fitness app. Your task is to create a workout plan based on the client's anthropometric data. This is a standard fitness planning task. ${photoInstruction}${nutritionContext}\nRespond ONLY in JSON format: { "days": [ { "day": 1, "workout_type": "strength|cardio|flexibility|hiit|rest", "focus": "...", "duration_minutes": N, "estimated_calories_burn": N, "exercises": [ { "exercise_name": "...", "sets": N, "reps": "12", "rest_seconds": N, "muscle_group": "...", "notes": "..." } ] } ], "nutrition_tips": ["tip1","tip2","tip3"] }`;
 
     const userMessage = lang === "ru"
       ? `${batchDays}-дневный ${wType === "home" ? "домашний" : "в зале"} план.${bodyContext}\nАктивность: ${userActivity}. Цель: ${userGoal}. 1-2 дня отдыха.`
@@ -9616,34 +9616,77 @@ app.post(`${PREFIX}/workout-plans/generate`, async (c) => {
 
     console.log(`[Workout Plan] ${batchDays}d ${wType}, photo=${useVision}, nutrition=${!!nutritionContext}, user=${auth.userId}`);
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: { "Authorization": `Bearer ${openaiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: useVision ? "gpt-4o" : "gpt-4o-mini",
-        messages,
-        max_tokens: 4000,
-        temperature: 0.7,
-      }),
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      console.log(`[Workout Plan] OpenAI error: ${response.status} ${errText}`);
-      return c.json({ message: "AI generation failed", code: "AI_ERROR", status: 502 }, 502);
+    // Helper: call OpenAI for workout plan and parse JSON
+    async function callWorkoutAI(msgs: any[], withPhoto: boolean): Promise<{ ok: boolean; parsed?: any; error?: string; refusal?: boolean }> {
+      const resp = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${openaiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: withPhoto ? "gpt-4o" : "gpt-4o-mini",
+          messages: msgs,
+          max_tokens: 4000,
+          temperature: 0.5,
+          ...(withPhoto ? {} : { response_format: { type: "json_object" } }),
+        }),
+      });
+      if (!resp.ok) {
+        const errText = await resp.text();
+        console.log(`[Workout Plan] OpenAI error: ${resp.status} ${errText}`);
+        return { ok: false, error: `OpenAI ${resp.status}` };
+      }
+      const d = await resp.json();
+      const refusalField = d.choices?.[0]?.message?.refusal;
+      if (refusalField) {
+        console.log(`[Workout Plan] Model refusal: ${refusalField}`);
+        return { ok: false, refusal: true, error: refusalField };
+      }
+      const ct = d.choices?.[0]?.message?.content || "";
+      const lc = ct.toLowerCase();
+      if ((lc.includes("i'm sorry") || lc.includes("i can't") || lc.includes("i cannot") || lc.includes("не могу помочь") || lc.includes("извините")) && !lc.includes('"days"')) {
+        console.log(`[Workout Plan] Text refusal: ${ct.slice(0, 150)}`);
+        return { ok: false, refusal: true, error: ct.slice(0, 200) };
+      }
+      try {
+        const jsonStr = ct.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+        const p = JSON.parse(jsonStr);
+        if (!p.days || !Array.isArray(p.days) || p.days.length === 0) {
+          return { ok: false, error: "missing or empty days array" };
+        }
+        return { ok: true, parsed: p };
+      } catch {
+        console.log("[Workout Plan] Parse failed:", ct.slice(0, 300));
+        return { ok: false, error: "JSON parse failed" };
+      }
     }
 
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || "";
-    let workoutData: any;
-    try {
-      const jsonStr = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-      workoutData = JSON.parse(jsonStr);
-    } catch {
-      console.log("[Workout Plan] Failed to parse AI response:", content.slice(0, 500));
-      return c.json({ message: "Could not parse AI response", code: "PARSE_ERROR", status: 502 }, 502);
+    // Attempt 1: with photo if available
+    let wpResult = await callWorkoutAI(messages, useVision);
+
+    // Attempt 2: if refusal with photo, retry WITHOUT photo
+    if (!wpResult.ok && imageBase64 && wpResult.refusal) {
+      console.log(`[Workout Plan] Photo refusal — retrying text-only for user ${auth.userId}`);
+      const txtSys = systemPrompt.replace(photoInstruction, "").trim();
+      wpResult = await callWorkoutAI([
+        { role: "system", content: txtSys },
+        { role: "user", content: userMessage },
+      ], false);
     }
 
+    // Attempt 3: simplest prompt (English, no context)
+    if (!wpResult.ok) {
+      console.log(`[Workout Plan] Retry #3 simplified for user ${auth.userId}`);
+      wpResult = await callWorkoutAI([
+        { role: "system", content: `You are a fitness trainer. Create a workout plan. Respond with JSON: { "days": [{ "day": 1, "workout_type": "strength", "focus": "Upper Body", "duration_minutes": 30, "estimated_calories_burn": 200, "exercises": [{ "exercise_name": "Push-ups", "sets": 3, "reps": "12", "rest_seconds": 60, "muscle_group": "chest", "notes": "" }] }], "nutrition_tips": ["tip1"] }` },
+        { role: "user", content: `Create a ${batchDays}-day ${wType} workout plan. ${bodyContext || ""}. Goal: ${userGoal}. Include 1-2 rest days.` },
+      ], false);
+    }
+
+    if (!wpResult.ok || !wpResult.parsed) {
+      console.log(`[Workout Plan] All attempts failed for user ${auth.userId}: ${wpResult.error}`);
+      return c.json({ message: "Could not parse AI response", code: "PARSE_ERROR", status: 502, detail: wpResult.error }, 502);
+    }
+
+    const workoutData = wpResult.parsed;
     const nutritionTips = workoutData.nutrition_tips || [];
     const cleanWorkoutData = { days: workoutData.days || [] };
 
@@ -9689,10 +9732,10 @@ app.post(`${PREFIX}/workout/smart-burn`, async (c) => {
     const wType = workout_type || "home";
 
     const systemPrompt = lang === "ru"
-      ? `Ты — фитнес-тренер. Пользователь превысил норму калорий. Предложи 3-4 быстрых упражнения (${wType === "home" ? "дома" : "в зале"}).
-Верни JSON: { "suggestions": [ { "exercise_name": "...", "duration_minutes": N, "estimated_calories_burn": N, "intensity": "light|moderate|high", "emoji": "🏃", "description": "..." } ], "motivational_message": "..." }`
-      : `You are a fitness trainer. User exceeded calorie target. Suggest 3-4 quick exercises (${wType === "home" ? "at home" : "at gym"}).
-Return JSON: { "suggestions": [ { "exercise_name": "...", "duration_minutes": N, "estimated_calories_burn": N, "intensity": "light|moderate|high", "emoji": "🏃", "description": "..." } ], "motivational_message": "..." }`;
+      ? `Ты — фитнес-тренер в мобильном приложении. Пользователь превысил норму калорий. Предложи 3-4 быстрых упражнения (${wType === "home" ? "дома" : "в зале"}).
+Ответь ТОЛЬКО в формате JSON: { "suggestions": [ { "exercise_name": "...", "duration_minutes": N, "estimated_calories_burn": N, "intensity": "light|moderate|high", "emoji": "🏃", "description": "..." } ], "motivational_message": "..." }`
+      : `You are a fitness trainer in a mobile app. User exceeded calorie target. Suggest 3-4 quick exercises (${wType === "home" ? "at home" : "at gym"}).
+Respond ONLY in JSON format: { "suggestions": [ { "exercise_name": "...", "duration_minutes": N, "estimated_calories_burn": N, "intensity": "light|moderate|high", "emoji": "🏃", "description": "..." } ], "motivational_message": "..." }`;
 
     const userMsg = lang === "ru"
       ? `Сжечь ~${calories_surplus} ккал. ${gender === "male" ? "Мужчина" : "Женщина"}${age ? `, ${age} лет` : ""}${weight ? `, ${weight}кг` : ""}. Активность: ${activity_level || "medium"}.`
@@ -9706,6 +9749,7 @@ Return JSON: { "suggestions": [ { "exercise_name": "...", "duration_minutes": N,
         messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userMsg }],
         max_tokens: 1000,
         temperature: 0.6,
+        response_format: { type: "json_object" },
       }),
     });
 
@@ -9716,13 +9760,13 @@ Return JSON: { "suggestions": [ { "exercise_name": "...", "duration_minutes": N,
     }
 
     const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || "";
+    const sbContent = data.choices?.[0]?.message?.content || "";
     let parsed: any;
     try {
-      const jsonStr = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+      const jsonStr = sbContent.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
       parsed = JSON.parse(jsonStr);
     } catch {
-      console.log("[Smart Burn] Parse failed:", content.slice(0, 300));
+      console.log("[Smart Burn] Parse failed:", sbContent.slice(0, 300));
       return c.json({ message: "Could not parse AI response", code: "PARSE_ERROR", status: 502 }, 502);
     }
 
