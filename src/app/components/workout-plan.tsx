@@ -112,6 +112,11 @@ const GOAL_LABELS: Record<string, { en: string; ru: string }> = {
 const GEN_MESSAGE_KEYS = [
   'wp_gen_1', 'wp_gen_2', 'wp_gen_3', 'wp_gen_4', 'wp_gen_5', 'wp_gen_6',
 ];
+const GEN_MESSAGE_KEYS_LONG = [
+  'wp_gen_phases', 'wp_gen_1', 'wp_gen_2', 'wp_gen_3', 'wp_gen_4',
+  'wp_gen_5', 'wp_gen_6', 'wp_gen_1', 'wp_gen_2', 'wp_gen_3',
+  'wp_gen_4', 'wp_gen_5', 'wp_gen_6',
+];
 
 // ---- Lang ----
 function useLang() {
@@ -145,6 +150,12 @@ export function WorkoutPlanPage() {
   // Body photo state
   const [bodyPhoto, setBodyPhoto] = useState<string | null>(null);
   const [showCamera, setShowCamera] = useState(false);
+
+  // Progress photos state
+  const [progressPhotos, setProgressPhotos] = useState<Array<{ id: string; url: string; plan_id: string | null; day_number: number | null; note: string; created_at: string }>>([]);
+  const [showProgressCamera, setShowProgressCamera] = useState(false);
+  const [progressNote, setProgressNote] = useState('');
+  const [uploadingProgress, setUploadingProgress] = useState(false);
 
   // Nutrition context state
   const [nutritionCtx, setNutritionCtx] = useState<NutritionContext>({
@@ -219,6 +230,14 @@ export function WorkoutPlanPage() {
     }).catch(() => {});
   }, [user]);
 
+  // Load progress photos when plan changes
+  useEffect(() => {
+    if (!currentPlan || !user) return;
+    api.getProgressPhotos(currentPlan.id).then((res) => {
+      setProgressPhotos(res.photos || []);
+    }).catch(() => {});
+  }, [currentPlan?.id, user]);
+
   // Load completed from localStorage
   useEffect(() => {
     if (!currentPlan) return;
@@ -241,9 +260,10 @@ export function WorkoutPlanPage() {
       return;
     }
     setGenMessage(0);
+    const msgKeys = selectedLength > 14 ? GEN_MESSAGE_KEYS_LONG : GEN_MESSAGE_KEYS;
     genIntervalRef.current = setInterval(() => {
-      setGenMessage((p) => (p >= GEN_MESSAGE_KEYS.length - 1 ? p : p + 1));
-    }, 3000);
+      setGenMessage((p) => (p >= msgKeys.length - 1 ? p : p + 1));
+    }, selectedLength > 14 ? 5000 : 3000);
     return () => { if (genIntervalRef.current) clearInterval(genIntervalRef.current); };
   }, [viewState]);
 
@@ -324,7 +344,7 @@ export function WorkoutPlanPage() {
         day_number: selectedDay,
         workout_name: dayData.focus || dayData.workout_type || 'Workout',
         duration_minutes: dayData.duration_minutes || 0,
-        calories_burned: dayData.calories_burn || 0,
+        calories_burned: (dayData as any).estimated_calories_burn || (dayData as any).calories_burn || 0,
         exercises_completed: dayCompletedCount,
       });
       hapticSuccess();
@@ -336,6 +356,33 @@ export function WorkoutPlanPage() {
       setLoggingDay(false);
     }
   };
+
+  // Upload progress photo
+  const handleUploadProgressPhoto = useCallback(async (dataUrl: string) => {
+    if (!currentPlan || uploadingProgress) return;
+    setUploadingProgress(true);
+    hapticFeedback('medium');
+    try {
+      const match = dataUrl.match(/^data:(.+?);base64,(.+)$/);
+      if (!match) return;
+      const res = await api.uploadProgressPhoto({
+        imageBase64: match[2],
+        mimeType: match[1],
+        plan_id: currentPlan.id,
+        day_number: selectedDay,
+        note: progressNote,
+      });
+      setProgressPhotos((prev) => [res, ...prev]);
+      setProgressNote('');
+      hapticSuccess();
+    } catch (err) {
+      console.error('[Progress Photo] Upload error:', err);
+      hapticError();
+    } finally {
+      setUploadingProgress(false);
+      setShowProgressCamera(false);
+    }
+  }, [currentPlan, selectedDay, progressNote, uploadingProgress]);
 
   // History
   const handleShowHistory = useCallback(async () => {
@@ -821,7 +868,7 @@ export function WorkoutPlanPage() {
                             <>
                               <CheckCircle2 className="w-4 h-4 text-white" />
                               <span className="text-white" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
-                                {t('wc_complete_day')} · {dayData?.calories_burn || 0} {t('unit_kcal')}
+                                {t('wc_complete_day')} · {(dayData as any)?.estimated_calories_burn || (dayData as any)?.calories_burn || 0} {t('unit_kcal')}
                               </span>
                             </>
                           )}
@@ -880,6 +927,130 @@ export function WorkoutPlanPage() {
                     {t('shared_no_data')}
                   </p>
                 </div>
+              )}
+
+              {/* Milestone — Progress Photo Prompt */}
+              {currentPlan?.workout_data?.milestones && (() => {
+                const milestone = (currentPlan.workout_data as any).milestones?.find((m: any) => m.day === selectedDay);
+                if (!milestone) return null;
+                const hasPhotoForDay = progressPhotos.some((p) => p.day_number === selectedDay);
+                return (
+                  <GlassCard className="!p-4 border-[#fd79a8]/20">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#fd79a8]/20 to-[#e17055]/20 flex items-center justify-center">
+                        <Camera className="w-5 h-5 text-[#fd79a8]" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-[#fd79a8]" style={{ fontSize: '0.875rem', fontWeight: 700 }}>
+                          {t('wp_milestone_photo')}
+                        </p>
+                        <p className="text-white/40" style={{ fontSize: '0.6875rem' }}>
+                          {milestone.title} — {t('wp_milestone_photo_desc')}
+                        </p>
+                      </div>
+                    </div>
+                    {!hasPhotoForDay ? (
+                      <motion.button
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => { hapticFeedback('light'); setShowProgressCamera(true); }}
+                        className="w-full h-11 rounded-xl bg-gradient-to-r from-[#fd79a8] to-[#e17055] flex items-center justify-center gap-2"
+                      >
+                        <Camera className="w-4 h-4 text-white" />
+                        <span className="text-white" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
+                          {t('pp_upload')}
+                        </span>
+                      </motion.button>
+                    ) : (
+                      <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#00cec9]/10 border border-[#00cec9]/20">
+                        <CheckCircle2 className="w-4 h-4 text-[#00cec9]" />
+                        <span className="text-white/60" style={{ fontSize: '0.75rem' }}>
+                          {t('pp_milestone')} ✓
+                        </span>
+                      </div>
+                    )}
+                  </GlassCard>
+                );
+              })()}
+
+              {/* Phase Info for long plans */}
+              {currentPlan?.workout_data?.phases && (() => {
+                const phases = (currentPlan.workout_data as any).phases;
+                if (!phases?.length) return null;
+                const weekNum = Math.floor((selectedDay - 1) / 7) + 1;
+                const currentPhase = phases.find((p: any) => weekNum >= (p.week_start || 1) && weekNum <= (p.week_end || 999));
+                if (!currentPhase) return null;
+                return (
+                  <GlassCard className="!p-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-[#6c5ce7]/15 flex items-center justify-center">
+                        <Target className="w-4 h-4 text-[#a29bfe]" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-white/50" style={{ fontSize: '0.625rem', fontWeight: 500 }}>
+                          {t('wp_phase_current')}
+                        </p>
+                        <p className="text-white" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
+                          {t('wp_phase_label', { n: currentPhase.phase, name: currentPhase.name })}
+                        </p>
+                      </div>
+                      <span className="px-2 py-0.5 rounded-full text-xs" style={{
+                        backgroundColor: currentPhase.intensity === 'high' ? '#e1705520' : currentPhase.intensity === 'medium' ? '#fdcb6e20' : '#00cec920',
+                        color: currentPhase.intensity === 'high' ? '#e17055' : currentPhase.intensity === 'medium' ? '#fdcb6e' : '#00cec9',
+                        fontWeight: 600,
+                      }}>
+                        {currentPhase.intensity}
+                      </span>
+                    </div>
+                  </GlassCard>
+                );
+              })()}
+
+              {/* Progress Photos Section */}
+              {currentPlan && currentPlan.plan_length >= 30 && (
+                <GlassCard className="!p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-[#fd79a8]/15 flex items-center justify-center">
+                        <Camera className="w-4 h-4 text-[#fd79a8]" />
+                      </div>
+                      <div>
+                        <p className="text-foreground" style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+                          {t('pp_title')}
+                        </p>
+                        <p className="text-muted-foreground" style={{ fontSize: '0.625rem' }}>
+                          {t('pp_subtitle')}
+                        </p>
+                      </div>
+                    </div>
+                    <motion.button
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => { hapticFeedback('light'); setShowProgressCamera(true); }}
+                      className="w-8 h-8 rounded-lg bg-[#fd79a8]/15 flex items-center justify-center"
+                    >
+                      <Camera className="w-4 h-4 text-[#fd79a8]" />
+                    </motion.button>
+                  </div>
+
+                  {progressPhotos.length === 0 ? (
+                    <div className="text-center py-4">
+                      <p className="text-white/30" style={{ fontSize: '0.75rem' }}>{t('pp_no_photos')}</p>
+                      <p className="text-white/15 mt-1" style={{ fontSize: '0.6875rem' }}>{t('pp_take_first')}</p>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollSnapType: 'x mandatory' }}>
+                      {progressPhotos.slice(0, 10).map((photo) => (
+                        <div key={photo.id} className="flex-shrink-0 w-20" style={{ scrollSnapAlign: 'start' }}>
+                          <div className="w-20 h-20 rounded-xl overflow-hidden border border-white/10 mb-1">
+                            <img src={photo.url} alt="" className="w-full h-full object-cover" />
+                          </div>
+                          <p className="text-white/30 text-center" style={{ fontSize: '0.5625rem' }}>
+                            {photo.day_number ? t('pp_day_n', { n: photo.day_number }) : new Date(photo.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </GlassCard>
               )}
 
               {/* Nutrition Tips from AI */}
@@ -944,7 +1115,7 @@ export function WorkoutPlanPage() {
         )}
       </AnimatePresence>
 
-      {/* Camera for body photo */}
+      {/* Camera for body photo (plan generation) */}
       <CameraCapture
         open={showCamera}
         onCapture={(dataUrl) => {
@@ -952,6 +1123,15 @@ export function WorkoutPlanPage() {
           setShowCamera(false);
         }}
         onClose={() => setShowCamera(false)}
+      />
+
+      {/* Camera for progress photo */}
+      <CameraCapture
+        open={showProgressCamera}
+        onCapture={(dataUrl) => {
+          handleUploadProgressPhoto(dataUrl);
+        }}
+        onClose={() => setShowProgressCamera(false)}
       />
     </div>
   );
@@ -1143,6 +1323,12 @@ function WeeklySchedule({
                   style={{ backgroundColor: isRest ? '#74b9ff40' : typeColor }}
                 />
               )}
+              {/* Milestone indicator */}
+              {planData.milestones?.some((m) => m.day === day) && (
+                <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-[#fd79a8] flex items-center justify-center">
+                  <span style={{ fontSize: '0.4375rem' }}>📸</span>
+                </div>
+              )}
             </motion.button>
           );
         })}
@@ -1312,7 +1498,8 @@ function GeneratingAnimation({
   location: WorkoutLocation;
 }) {
   const { t } = useTranslation();
-  const messages = GEN_MESSAGE_KEYS.map((key) => t(key));
+  const keys = planLength > 14 ? GEN_MESSAGE_KEYS_LONG : GEN_MESSAGE_KEYS;
+  const messages = keys.map((key) => t(key));
 
   return (
     <div className="text-center">
@@ -1342,11 +1529,16 @@ function GeneratingAnimation({
       <p className="text-white mb-2" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
         {t('wp_building_title')}
       </p>
-      <p className="text-white/30 mb-6" style={{ fontSize: '0.875rem' }}>
+      <p className="text-white/30 mb-3" style={{ fontSize: '0.875rem' }}>
         {t('wp_building_desc_days', { n: planLength })} · {location === 'home'
           ? t('wp_home_workouts')
           : t('wp_gym_workouts')}
       </p>
+      {planLength > 14 && (
+        <p className="text-white/20 mb-6 max-w-[260px] mx-auto" style={{ fontSize: '0.6875rem', lineHeight: 1.4 }}>
+          {t('wp_gen_long_hint')}
+        </p>
+      )}
 
       <div className="h-6 relative">
         <AnimatePresence mode="wait">

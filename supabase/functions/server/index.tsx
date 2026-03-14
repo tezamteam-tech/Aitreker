@@ -8548,7 +8548,7 @@ ${contextInfo ? `\nUSER CONTEXT:\n${contextInfo}` : ""}`;
 
     if (!apiKey) {
       assistantMessage = language === "ru"
-        ? "AI сервис временно недоступен. Попробуй позже."
+        ? "AI сервис временно недоступен. Попр��буй позже."
         : "AI service is temporarily unavailable. Try again later.";
     } else {
       const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -9549,7 +9549,6 @@ app.post(`${PREFIX}/workout-plans/generate`, async (c) => {
     const userHeight = height || userProfile?.height || null;
     const userWeight = weight || userProfile?.weight || null;
     const userCalTarget = daily_calorie_target || userProfile?.daily_calorie_target || null;
-    const batchDays = Math.min(days, 7);
     const lang = language === "ru" ? "ru" : "en";
     const useVision = !!imageBase64;
 
@@ -9596,99 +9595,151 @@ app.post(`${PREFIX}/workout-plans/generate`, async (c) => {
         : "\nClient provided a body photo for composition assessment. Consider visual data when creating the plan.")
       : "";
 
-    const systemPrompt = lang === "ru"
-      ? `Ты — сертифицированный персональный тренер (CPT) в фитнес-приложении. Твоя задача — составить план тренировок на основе антропометрических данных клиента. Это стандартная задача фитнес-планирования. ${photoInstruction}${nutritionContext}\nОтветь ТОЛЬКО в формате JSON: { "days": [ { "day": 1, "workout_type": "strength|cardio|flexibility|hiit|rest", "focus": "...", "duration_minutes": N, "estimated_calories_burn": N, "exercises": [ { "exercise_name": "...", "sets": N, "reps": "12", "rest_seconds": N, "muscle_group": "...", "notes": "..." } ] } ], "nutrition_tips": ["совет1","совет2","совет3"] }`
-      : `You are a certified personal trainer (CPT) working in a fitness app. Your task is to create a workout plan based on the client's anthropometric data. This is a standard fitness planning task. ${photoInstruction}${nutritionContext}\nRespond ONLY in JSON format: { "days": [ { "day": 1, "workout_type": "strength|cardio|flexibility|hiit|rest", "focus": "...", "duration_minutes": N, "estimated_calories_burn": N, "exercises": [ { "exercise_name": "...", "sets": N, "reps": "12", "rest_seconds": N, "muscle_group": "...", "notes": "..." } ] } ], "nutrition_tips": ["tip1","tip2","tip3"] }`;
+    console.log(`[Workout Plan] ${days}d ${wType}, photo=${useVision}, nutrition=${!!nutritionContext}, lang=${lang}, user=${auth.userId}`);
 
-    const userMessage = lang === "ru"
-      ? `${batchDays}-дневный ${wType === "home" ? "домашний" : "в зале"} план.${bodyContext}\nАктивность: ${userActivity}. Цель: ${userGoal}. 1-2 дня отдыха.`
-      : `${batchDays}-day ${wType} plan.${bodyContext}\nActivity: ${userActivity}. Goal: ${userGoal}. 1-2 rest days.`;
-
-    const messages: any[] = [{ role: "system", content: systemPrompt }];
-    if (imageBase64) {
-      messages.push({ role: "user", content: [
-        { type: "text", text: userMessage },
-        { type: "image_url", image_url: { url: `data:${mimeType || "image/jpeg"};base64,${imageBase64}` } },
-      ]});
-    } else {
-      messages.push({ role: "user", content: userMessage });
-    }
-
-    console.log(`[Workout Plan] ${batchDays}d ${wType}, photo=${useVision}, nutrition=${!!nutritionContext}, user=${auth.userId}`);
-
-    // Helper: call OpenAI for workout plan and parse JSON
-    async function callWorkoutAI(msgs: any[], withPhoto: boolean): Promise<{ ok: boolean; parsed?: any; error?: string; refusal?: boolean }> {
+    // ====== Helper: call OpenAI for a batch of days ======
+    async function callBatch(
+      msgs: any[], withPhoto: boolean, maxTok: number
+    ): Promise<{ ok: boolean; parsed?: any; error?: string; refusal?: boolean }> {
       const resp = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: { "Authorization": `Bearer ${openaiKey}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           model: withPhoto ? "gpt-4o" : "gpt-4o-mini",
-          messages: msgs,
-          max_tokens: 4000,
-          temperature: 0.5,
+          messages: msgs, max_tokens: maxTok, temperature: 0.5,
           ...(withPhoto ? {} : { response_format: { type: "json_object" } }),
         }),
       });
       if (!resp.ok) {
         const errText = await resp.text();
-        console.log(`[Workout Plan] OpenAI error: ${resp.status} ${errText}`);
+        console.log(`[Workout Plan] OpenAI ${resp.status}: ${errText.slice(0,200)}`);
         return { ok: false, error: `OpenAI ${resp.status}` };
       }
       const d = await resp.json();
-      const refusalField = d.choices?.[0]?.message?.refusal;
-      if (refusalField) {
-        console.log(`[Workout Plan] Model refusal: ${refusalField}`);
-        return { ok: false, refusal: true, error: refusalField };
+      if (d.choices?.[0]?.message?.refusal) {
+        return { ok: false, refusal: true, error: d.choices[0].message.refusal };
       }
       const ct = d.choices?.[0]?.message?.content || "";
       const lc = ct.toLowerCase();
-      if ((lc.includes("i'm sorry") || lc.includes("i can't") || lc.includes("i cannot") || lc.includes("не могу помочь") || lc.includes("извините")) && !lc.includes('"days"')) {
-        console.log(`[Workout Plan] Text refusal: ${ct.slice(0, 150)}`);
+      if ((lc.includes("i'm sorry") || lc.includes("i can't") || lc.includes("не могу помочь") || lc.includes("извините")) && !lc.includes('"days"')) {
         return { ok: false, refusal: true, error: ct.slice(0, 200) };
       }
       try {
         const jsonStr = ct.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
         const p = JSON.parse(jsonStr);
-        if (!p.days || !Array.isArray(p.days) || p.days.length === 0) {
-          return { ok: false, error: "missing or empty days array" };
-        }
+        if (!p.days || !Array.isArray(p.days) || p.days.length === 0) return { ok: false, error: "no days" };
         return { ok: true, parsed: p };
       } catch {
-        console.log("[Workout Plan] Parse failed:", ct.slice(0, 300));
+        console.log("[Workout Plan] Parse fail:", ct.slice(0, 200));
         return { ok: false, error: "JSON parse failed" };
       }
     }
 
-    // Attempt 1: with photo if available
-    let wpResult = await callWorkoutAI(messages, useVision);
-
-    // Attempt 2: if refusal with photo, retry WITHOUT photo
-    if (!wpResult.ok && imageBase64 && wpResult.refusal) {
-      console.log(`[Workout Plan] Photo refusal — retrying text-only for user ${auth.userId}`);
-      const txtSys = systemPrompt.replace(photoInstruction, "").trim();
-      wpResult = await callWorkoutAI([
-        { role: "system", content: txtSys },
-        { role: "user", content: userMessage },
-      ], false);
+    // Helper: generate one batch with 3-attempt retry
+    async function genBatch(sysP: string, userM: string, img64?: string, imgMime?: string) {
+      const m1: any[] = [{ role: "system", content: sysP }];
+      if (img64) {
+        m1.push({ role: "user", content: [
+          { type: "text", text: userM },
+          { type: "image_url", image_url: { url: `data:${imgMime || "image/jpeg"};base64,${img64}` } },
+        ]});
+      } else { m1.push({ role: "user", content: userM }); }
+      let r = await callBatch(m1, !!img64, 8000);
+      if (!r.ok && img64 && r.refusal) {
+        r = await callBatch([{ role: "system", content: sysP.replace(photoInstruction, "").trim() }, { role: "user", content: userM }], false, 8000);
+      }
+      if (!r.ok) {
+        const minSys = lang === "ru"
+          ? `Ты фитнес-тренер. Составь план тренировок на русском. Ответь JSON: { "days": [{ "day": 1, "workout_type": "strength", "focus": "Верх тела", "duration_minutes": 30, "estimated_calories_burn": 200, "exercises": [{ "exercise_name": "Отжимания", "sets": 3, "reps": "12", "rest_seconds": 60, "muscle_group": "грудь", "notes": "" }] }] }`
+          : `You are a fitness trainer. Create a workout plan. Respond JSON: { "days": [{ "day": 1, "workout_type": "strength", "focus": "Upper Body", "duration_minutes": 30, "estimated_calories_burn": 200, "exercises": [{ "exercise_name": "Push-ups", "sets": 3, "reps": "12", "rest_seconds": 60, "muscle_group": "chest", "notes": "" }] }] }`;
+        r = await callBatch([{ role: "system", content: minSys }, { role: "user", content: userM }], false, 8000);
+      }
+      return r;
     }
 
-    // Attempt 3: simplest prompt (English, no context)
-    if (!wpResult.ok) {
-      console.log(`[Workout Plan] Retry #3 simplified for user ${auth.userId}`);
-      wpResult = await callWorkoutAI([
-        { role: "system", content: `You are a fitness trainer. Create a workout plan. Respond with JSON: { "days": [{ "day": 1, "workout_type": "strength", "focus": "Upper Body", "duration_minutes": 30, "estimated_calories_burn": 200, "exercises": [{ "exercise_name": "Push-ups", "sets": 3, "reps": "12", "rest_seconds": 60, "muscle_group": "chest", "notes": "" }] }], "nutrition_tips": ["tip1"] }` },
-        { role: "user", content: `Create a ${batchDays}-day ${wType} workout plan. ${bodyContext || ""}. Goal: ${userGoal}. Include 1-2 rest days.` },
-      ], false);
+    // ====== BATCH GENERATION ======
+    const BATCH_SIZE = 14;
+    const allDays: any[] = [];
+    let allTips: string[] = [];
+    const totalBatches = Math.ceil(days / BATCH_SIZE);
+    let planPhases: any[] = [];
+    let planMilestones: any[] = [];
+
+    // For long plans (30+), generate phase structure first
+    if (days > 14) {
+      const phaseP = lang === "ru"
+        ? `Ты CPT. Клиент: ${days}-дневный ${wType === "home" ? "домашний" : "зальный"} план.${bodyContext}\nАктивность: ${userActivity}. Цель: ${userGoal}.\nСоздай структуру фаз (~2-4 нед каждая) и контрольные точки для фото прогресса.\nJSON: { "phases": [{ "phase": 1, "name": "...", "week_start": 1, "week_end": 4, "focus": "...", "intensity": "low|medium|high" }], "milestones": [{ "day": 30, "type": "progress_photo", "title": "..." }], "nutrition_tips": ["..."] }`
+        : `You are a CPT. Client: ${days}-day ${wType} plan.${bodyContext}\nActivity: ${userActivity}. Goal: ${userGoal}.\nCreate phase structure (~2-4 weeks each) and progress photo milestones.\nJSON: { "phases": [{ "phase": 1, "name": "...", "week_start": 1, "week_end": 4, "focus": "...", "intensity": "low|medium|high" }], "milestones": [{ "day": 30, "type": "progress_photo", "title": "..." }], "nutrition_tips": ["..."] }`;
+      const pr = await callBatch([
+        { role: "system", content: phaseP },
+        { role: "user", content: lang === "ru" ? `Структура ${days}-дневного плана.` : `Structure for ${days}-day plan.` },
+      ], false, 2000);
+      if (pr.ok && pr.parsed) {
+        planPhases = pr.parsed.phases || [];
+        planMilestones = pr.parsed.milestones || [];
+        allTips = pr.parsed.nutrition_tips || [];
+        console.log(`[Workout Plan] ${planPhases.length} phases, ${planMilestones.length} milestones`);
+      }
+      // Default milestones
+      if (planMilestones.length === 0) {
+        planMilestones.push({ day: 1, type: "start_photo", title: lang === "ru" ? "Стартовое фото" : "Starting Photo" });
+        if (days >= 30) planMilestones.push({ day: 30, type: "progress_photo", title: lang === "ru" ? "30 дней" : "30-Day Check" });
+        if (days >= 60) planMilestones.push({ day: 60, type: "progress_photo", title: lang === "ru" ? "60 дней" : "60-Day Check" });
+        if (days >= 90) planMilestones.push({ day: 90, type: "progress_photo", title: lang === "ru" ? "90 дней" : "90-Day Check" });
+        if (days >= 100) planMilestones.push({ day: 100, type: "final", title: lang === "ru" ? "Трансформация!" : "Transformation!" });
+      }
     }
 
-    if (!wpResult.ok || !wpResult.parsed) {
-      console.log(`[Workout Plan] All attempts failed for user ${auth.userId}: ${wpResult.error}`);
-      return c.json({ message: "Could not parse AI response", code: "PARSE_ERROR", status: 502, detail: wpResult.error }, 502);
+    // Generate day-by-day in batches
+    for (let bi = 0; bi < totalBatches; bi++) {
+      const bs = bi * BATCH_SIZE + 1;
+      const be = Math.min(bs + BATCH_SIZE - 1, days);
+      const bc = be - bs + 1;
+      const wk = Math.floor(bs / 7) + 1;
+
+      let phCtx = "";
+      if (planPhases.length > 0) {
+        const cp = planPhases.find((p: any) => wk >= (p.week_start || 1) && wk <= (p.week_end || 999));
+        if (cp) phCtx = lang === "ru"
+          ? `\nФаза: "${cp.name}" (${cp.focus}). Интенсивность: ${cp.intensity}.`
+          : `\nPhase: "${cp.name}" (${cp.focus}). Intensity: ${cp.intensity}.`;
+      }
+
+      let prevCtx = "";
+      if (allDays.length > 0) {
+        const last = allDays.slice(-7).map((d: any) => `D${d.day}:${d.workout_type}-${d.focus}`).join("; ");
+        prevCtx = lang === "ru" ? `\nПредыдущие: ${last}. Прогрессия+разнообразие.` : `\nPrevious: ${last}. Progression+variety.`;
+      }
+
+      const bSys = lang === "ru"
+        ? `Ты CPT в фитнес-приложении. Составь дни ${bs}-${be} плана. ВСЕ ТЕКСТЫ НА РУССКОМ. ${photoInstruction}${nutritionContext}${phCtx}${prevCtx}\nJSON: { "days": [{ "day": ${bs}, "workout_type": "strength|cardio|flexibility|hiit|rest", "focus": "...", "duration_minutes": N, "estimated_calories_burn": N, "exercises": [{ "exercise_name": "...", "sets": N, "reps": "12", "rest_seconds": N, "muscle_group": "...", "notes": "..." }] }]${bi === 0 && allTips.length === 0 ? ', "nutrition_tips": ["..."]' : ""} }`
+        : `You are a CPT in a fitness app. Create days ${bs}-${be}. ${photoInstruction}${nutritionContext}${phCtx}${prevCtx}\nJSON: { "days": [{ "day": ${bs}, "workout_type": "strength|cardio|flexibility|hiit|rest", "focus": "...", "duration_minutes": N, "estimated_calories_burn": N, "exercises": [{ "exercise_name": "...", "sets": N, "reps": "12", "rest_seconds": N, "muscle_group": "...", "notes": "..." }] }]${bi === 0 && allTips.length === 0 ? ', "nutrition_tips": ["..."]' : ""} }`;
+
+      const bUser = lang === "ru"
+        ? `Дни ${bs}-${be} (${bc} дн). ${wType === "home" ? "Дома" : "Зал"}.${bodyContext}\nАктивность: ${userActivity}. Цель: ${userGoal}. 1-2 дня отдыха/нед.`
+        : `Days ${bs}-${be} (${bc} days). ${wType}.${bodyContext}\nActivity: ${userActivity}. Goal: ${userGoal}. 1-2 rest/week.`;
+
+      console.log(`[Workout Plan] Batch ${bi + 1}/${totalBatches}: days ${bs}-${be}`);
+      const br = await genBatch(bSys, bUser, bi === 0 ? imageBase64 : undefined, bi === 0 ? mimeType : undefined);
+
+      if (!br.ok || !br.parsed) {
+        console.log(`[Workout Plan] Batch ${bi + 1} failed: ${br.error}`);
+        if (allDays.length === 0) return c.json({ message: "Could not generate plan", code: "PARSE_ERROR", status: 502, detail: br.error }, 502);
+        console.log(`[Workout Plan] Returning partial: ${allDays.length} days`);
+        break;
+      }
+
+      for (const day of br.parsed.days) allDays.push(day);
+      if (bi === 0 && br.parsed.nutrition_tips && allTips.length === 0) allTips = br.parsed.nutrition_tips;
     }
 
-    const workoutData = wpResult.parsed;
-    const nutritionTips = workoutData.nutrition_tips || [];
-    const cleanWorkoutData = { days: workoutData.days || [] };
+    if (allDays.length === 0) return c.json({ message: "Could not generate plan", code: "GENERATION_FAILED", status: 502 }, 502);
+    console.log(`[Workout Plan] Generated ${allDays.length}/${days} days for user ${auth.userId}`);
+
+    const nutritionTips = allTips;
+    const cleanWorkoutData: any = { days: allDays };
+    if (planPhases.length > 0) cleanWorkoutData.phases = planPhases;
+    if (planMilestones.length > 0) cleanWorkoutData.milestones = planMilestones;
 
     const planId = generateId("wplan");
     const savedPlan = {
@@ -9704,7 +9755,7 @@ app.post(`${PREFIX}/workout-plans/generate`, async (c) => {
     plansIndex.unshift(planId);
     await kv.set(indexKey, plansIndex);
 
-    console.log(`[Workout Plan] OK: ${batchDays}d ${wType}, tips=${nutritionTips.length}, user=${auth.userId}`);
+    console.log(`[Workout Plan] OK: ${allDays.length}d ${wType}, tips=${nutritionTips.length}, user=${auth.userId}`);
     return c.json(savedPlan);
   } catch (err) {
     console.log("POST /workout-plans/generate error:", err);
@@ -9774,6 +9825,118 @@ Respond ONLY in JSON format: { "suggestions": [ { "exercise_name": "...", "durat
     return c.json({ surplus: calories_surplus, ...parsed });
   } catch (err) {
     console.log("POST /workout/smart-burn error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- Progress Photos ----
+const PROGRESS_BUCKET = "make-f366fb78-progress-photos";
+async function ensureProgressBucket() {
+  try {
+    const sb = getSupabaseAdmin();
+    const { data: buckets } = await sb.storage.listBuckets();
+    if (!buckets?.some((b: any) => b.name === PROGRESS_BUCKET)) {
+      await sb.storage.createBucket(PROGRESS_BUCKET, { public: false });
+      console.log(`[Storage] Created bucket ${PROGRESS_BUCKET}`);
+    }
+  } catch (e) { console.log("[Storage] Progress bucket init error:", e); }
+}
+ensureProgressBucket();
+
+// POST /progress-photos — Upload a progress photo
+app.post(`${PREFIX}/progress-photos`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+    const { imageBase64, mimeType, plan_id, day_number, note } = await c.req.json();
+    if (!imageBase64) return c.json({ message: "No image provided", code: "BAD_REQUEST", status: 400 }, 400);
+
+    const ext = (mimeType || "image/jpeg").split("/")[1] || "jpg";
+    const ts = Date.now();
+    const filePath = `${auth.userId}/${ts}.${ext}`;
+    const bytes = Uint8Array.from(atob(imageBase64), (c) => c.charCodeAt(0));
+
+    const sb = getSupabaseAdmin();
+    const { error: upErr } = await sb.storage.from(PROGRESS_BUCKET).upload(filePath, bytes.buffer, { contentType: mimeType || "image/jpeg", upsert: true });
+    if (upErr) {
+      console.log("[Progress Photo] Upload error:", upErr.message);
+      return c.json({ message: "Upload failed", code: "UPLOAD_ERROR", status: 500 }, 500);
+    }
+
+    const { data: signedData } = await sb.storage.from(PROGRESS_BUCKET).createSignedUrl(filePath, 365 * 24 * 60 * 60);
+    const photoUrl = signedData?.signedUrl || "";
+
+    const photoRecord = {
+      id: `pp_${ts}`,
+      user_id: auth.userId,
+      plan_id: plan_id || null,
+      day_number: day_number || null,
+      note: note || "",
+      storage_path: filePath,
+      url: photoUrl,
+      created_at: new Date().toISOString(),
+    };
+    await kv.set(`become:progress_photo:${auth.userId}:${ts}`, photoRecord);
+
+    console.log(`[Progress Photo] Uploaded for user ${auth.userId}, day=${day_number}, plan=${plan_id}`);
+    return c.json(photoRecord);
+  } catch (err) {
+    console.log("POST /progress-photos error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// GET /progress-photos — List all progress photos for user
+app.get(`${PREFIX}/progress-photos`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+    const planId = c.req.query("plan_id");
+
+    const photos = await kv.getByPrefix(`become:progress_photo:${auth.userId}:`);
+    let list = (photos || []).sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    if (planId) list = list.filter((p: any) => p.plan_id === planId);
+
+    // Refresh signed URLs for older ones
+    const sb = getSupabaseAdmin();
+    for (const photo of list) {
+      if (photo.storage_path) {
+        const { data } = await sb.storage.from(PROGRESS_BUCKET).createSignedUrl(photo.storage_path, 24 * 60 * 60);
+        if (data?.signedUrl) photo.url = data.signedUrl;
+      }
+    }
+
+    return c.json({ photos: list });
+  } catch (err) {
+    console.log("GET /progress-photos error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// DELETE /progress-photos/:id — Delete a progress photo
+app.delete(`${PREFIX}/progress-photos/:id`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+    const photoId = c.req.param("id");
+
+    const photos = await kv.getByPrefix(`become:progress_photo:${auth.userId}:`);
+    const photo = (photos || []).find((p: any) => p.id === photoId);
+    if (!photo) return c.json({ message: "Not found", code: "NOT_FOUND", status: 404 }, 404);
+
+    // Delete from storage
+    if (photo.storage_path) {
+      const sb = getSupabaseAdmin();
+      await sb.storage.from(PROGRESS_BUCKET).remove([photo.storage_path]);
+    }
+
+    // Delete KV record
+    const ts = photoId.replace("pp_", "");
+    await kv.del(`become:progress_photo:${auth.userId}:${ts}`);
+
+    return c.json({ success: true });
+  } catch (err) {
+    console.log("DELETE /progress-photos error:", err);
     return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
   }
 });

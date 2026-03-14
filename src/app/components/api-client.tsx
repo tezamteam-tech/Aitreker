@@ -1017,6 +1017,46 @@ export const api = {
     return request('POST', '/workout/smart-burn', input);
   },
 
+  // ---- Progress Photos ----
+
+  /** Upload a progress photo */
+  async uploadProgressPhoto(input: {
+    imageBase64: string;
+    mimeType?: string;
+    plan_id?: string;
+    day_number?: number;
+    note?: string;
+  }): Promise<{
+    id: string;
+    url: string;
+    plan_id: string | null;
+    day_number: number | null;
+    note: string;
+    created_at: string;
+  }> {
+    return request('POST', '/progress-photos', input);
+  },
+
+  /** Get all progress photos (optionally filtered by plan) */
+  async getProgressPhotos(planId?: string): Promise<{
+    photos: Array<{
+      id: string;
+      url: string;
+      plan_id: string | null;
+      day_number: number | null;
+      note: string;
+      created_at: string;
+    }>;
+  }> {
+    const q = planId ? `?plan_id=${planId}` : '';
+    return request('GET', `/progress-photos${q}`);
+  },
+
+  /** Delete a progress photo */
+  async deleteProgressPhoto(photoId: string): Promise<{ success: boolean }> {
+    return request('DELETE', `/progress-photos/${photoId}`);
+  },
+
   // ---- SmartBurn Tracking ----
 
   /** Save a completed SmartBurn exercise */
@@ -1741,6 +1781,7 @@ export interface WorkoutPlanData {
     focus: string;
     workout_type: 'strength' | 'cardio' | 'flexibility' | 'hiit' | 'rest';
     duration_minutes: number;
+    estimated_calories_burn?: number;
     exercises: Array<{
       exercise_name: string;
       sets: number;
@@ -1750,5 +1791,18 @@ export interface WorkoutPlanData {
       muscle_group: string;
       notes?: string;
     }>;
+  }>;
+  phases?: Array<{
+    phase: number;
+    name: string;
+    week_start: number;
+    week_end: number;
+    focus: string;
+    intensity: 'low' | 'medium' | 'high';
+  }>;
+  milestones?: Array<{
+    day: number;
+    type: string;
+    title: string;
   }>;
 }
