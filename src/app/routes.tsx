@@ -34,6 +34,7 @@ const BonusesPage = React.lazy(() => import('./components/bonuses').then(m => ({
 const AdminPage = React.lazy(() => import('./components/admin').then(m => ({ default: m.AdminPage })));
 const WalletPage = React.lazy(() => import('./components/wallet').then(m => ({ default: m.WalletPage })));
 const UpgradePremiumPage = React.lazy(() => import('./components/upgrade-premium').then(m => ({ default: m.UpgradePremiumPage })));
+const WeeklyAnalyticsPage = React.lazy(() => import('./components/weekly-analytics').then(m => ({ default: m.WeeklyAnalyticsPage })));
 
 // ---- Suspense wrapper for lazy routes ----
 function LazyPage({ children }: { children: React.ReactNode }) {
@@ -118,6 +119,7 @@ export const router = createBrowserRouter([
       { path: 'coach', Component: lazy(CoachChatPage) },
       { path: 'nutrition-coach', Component: lazy(NutritionCoachPage) },
       { path: 'weight', Component: lazy(WeightTrackingPage) },
+      { path: 'analytics', Component: lazy(WeeklyAnalyticsPage) },
       { path: 'goals', Component: lazy(GoalsListPage) },
       { path: 'goals/:id', Component: lazy(GoalDetailPage) },
       { path: 'strategic-goal/create', Component: lazy(StrategicGoalCreatePage) },

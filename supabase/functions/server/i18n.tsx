@@ -51,7 +51,7 @@ const translations: Record<string, Record<Lang, string>> = {
   },
   welcome_cta: {
     en: "Tap the button below to share your contact and get started!",
-    ru: "Нажми кнопку ниже, чтобы поделиться контактом и начать!",
+    ru: "Нажми кнопку ниже, чтобы поделиться контактом и ачать!",
   },
   welcome_returning: {
     en: "Welcome back, {name}! Open the app to continue your journey.",
@@ -257,7 +257,7 @@ const translations: Record<string, Record<Lang, string>> = {
   },
   notif_daily_greetings: {
     en: "Rise and build.|New day, new chance.|Your future self is watching.|Small steps, big change.|Show up for yourself today.",
-    ru: "Вставай и строй.|Новый день, новая возможность.|Твоя будуща�� версия наблюдает.|Маленькие шаги, большие изменения.|Появляйся для себя сегодня.",
+    ru: "Вставай и строй.|Новый день, новая возможность.|Твоя будущая версия наблюдает.|Маленькие шаги, большие изменения.|Появляйся для себя сегодня.",
   },
   notif_daily_tasks_waiting: {
     en: "{n} tasks waiting for you.",
@@ -392,7 +392,7 @@ const translations: Record<string, Record<Lang, string>> = {
   },
   notif_daily_calories_under: {
     en: "You're {amount} cal under your target. Don't forget to eat!",
-    ru: "До нормы ещё {amount} ккал. Не забудь поес��ь!",
+    ru: "До нормы ещё {amount} ккал. Не забудь поесть!",
   },
   notif_daily_calories_perfect: {
     en: "Great job! You hit your calorie target today!",
@@ -485,6 +485,58 @@ const translations: Record<string, Record<Lang, string>> = {
   btn_nutrition: {
     en: "\u{1F34E} Nutrition",
     ru: "\u{1F34E} Питание",
+  },
+
+  // === Calorie Surplus Reminder ===
+  notif_surplus_title: {
+    en: "Calorie Surplus Alert",
+    ru: "Превышение калорий",
+  },
+  notif_surplus_body: {
+    en: "You've consumed {consumed} cal today (target: {target} cal).\nThat's +{surplus} cal over your goal!",
+    ru: "Сегодня вы потребили {consumed} ккал (норма: {target} ккал).\nЭто +{surplus} ккал сверх нормы!",
+  },
+  notif_surplus_tip: {
+    en: "\u{1F4AA} A quick workout can help burn the excess. Try our Smart Burn suggestions!",
+    ru: "\u{1F4AA} Короткая тренировка поможет сжечь лишнее. Попробуйте наши Smart Burn предложения!",
+  },
+  btn_burn_it: {
+    en: "\u{1F525} Burn It Off",
+    ru: "\u{1F525} Сжечь лишнее",
+  },
+
+  // === Morning Workout Reminder ===
+  notif_morning_workout_title: {
+    en: "Morning Workout Reminder",
+    ru: "Утреннее напоминание о тренировке",
+  },
+  notif_morning_workout_greetings: {
+    en: "Good morning!|Rise and shine!|Time to move!|Ready to train?|Let's get active!",
+    ru: "Доброе утро!|Подъём!|Время двигаться!|Готовы тренироваться?|Вперёд!",
+  },
+  notif_morning_workout_body: {
+    en: "Today's workout: <b>{name}</b>\n\u{23F1} ~{duration} min · \u{1F525} ~{calories} cal burn",
+    ru: "Тренировка на сегодня: <b>{name}</b>\n\u{23F1} ~{duration} мин · \u{1F525} ~{calories} ккал",
+  },
+  notif_morning_workout_surplus: {
+    en: "\n\u{26A0}\u{FE0F} Yesterday you exceeded your calorie target by {surplus} cal. Today's workout will help fix that!",
+    ru: "\n\u{26A0}\u{FE0F} Вчера вы превысили норму калорий на {surplus} ккал. Сегодняшняя тренировка поможет!",
+  },
+  notif_morning_workout_streak: {
+    en: "\u{1F525} Workout streak: {streak} days — keep it going!",
+    ru: "\u{1F525} Серия тренировок: {streak} дней — продолжайте!",
+  },
+  notif_morning_no_plan: {
+    en: "\u{1F3CB}\u{FE0F} You don't have a workout plan yet. Create one based on your nutrition profile!",
+    ru: "\u{1F3CB}\u{FE0F} У вас ещё нет плана тренировок. Создайте его на основе вашего профиля питания!",
+  },
+  btn_open_workout: {
+    en: "\u{1F3CB}\u{FE0F} Open Workout",
+    ru: "\u{1F3CB}\u{FE0F} Открыть тренировку",
+  },
+  btn_create_workout: {
+    en: "\u{2795} Create Plan",
+    ru: "\u{2795} Создать план",
   },
 };
 

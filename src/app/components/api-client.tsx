@@ -735,6 +735,9 @@ export const api = {
     daily_calorie_target?: number;
     bmr?: number;
     daily_maintenance_calories?: number;
+    target_protein?: number;
+    target_carbs?: number;
+    target_fat?: number;
   }): Promise<{ success: boolean }> {
     return request('POST', '/user-profile', profile);
   },
@@ -749,6 +752,9 @@ export const api = {
     daily_calorie_target?: number;
     bmr?: number;
     daily_maintenance_calories?: number;
+    target_protein?: number;
+    target_carbs?: number;
+    target_fat?: number;
     created_at: string;
   } | null> {
     try {
@@ -785,6 +791,32 @@ export const api = {
     tips: string[];
   }> {
     return request('POST', '/nutrition/ai-body-analysis', params);
+  },
+
+  /** Get AI analysis history with usage info */
+  async getAiAnalysisHistory(): Promise<{
+    analyses: Array<{
+      recommended_calories: number;
+      recommended_protein: number;
+      recommended_carbs: number;
+      recommended_fat: number;
+      bmr_estimate: number;
+      tdee_estimate: number;
+      body_fat_estimate: string | null;
+      body_assessment: string;
+      recommendation_reason: string;
+      tips: string[];
+      input: { gender: string; age: number; height: number; weight: number; activityLevel: string; goal: string; had_photo: boolean };
+      created_at: string;
+    }>;
+    usage: {
+      is_premium: boolean;
+      used_this_week: number;
+      limit: number | null;
+      remaining: number | null;
+    };
+  }> {
+    return request('GET', '/nutrition/ai-analysis-history');
   },
 
   /** Send food photo to AI for recognition (Edge Function → OpenAI Vision) */
@@ -897,19 +929,37 @@ export const api = {
 
   // ---- Workout Plan Generation ----
 
-  /** Generate AI workout plan */
+  /** Generate AI workout plan — with nutrition & body context */
   async generateWorkoutPlan(input: {
     plan_length: 7 | 30 | 100;
     workout_type: 'home' | 'gym';
     goal: string;
     gender: string;
     activity_level: string;
+    // Body metrics (optional — enhances AI context)
+    age?: number;
+    height?: number;
+    weight?: number;
+    body_fat_estimate?: string;
+    // Photo for AI body analysis (optional)
+    imageBase64?: string;
+    mimeType?: string;
+    // Nutrition context (optional — links nutrition to workout)
+    daily_calorie_target?: number;
+    calories_consumed_today?: number;
+    target_protein?: number;
+    target_carbs?: number;
+    target_fat?: number;
+    has_meal_plan?: boolean;
+    meal_plan_summary?: string;
+    language?: string;
   }): Promise<{
     id: string;
     plan_length: number;
     workout_type: 'home' | 'gym';
     workout_data: WorkoutPlanData;
     created_at: string;
+    nutrition_tips?: string[];
   }> {
     return request('POST', '/workout-plans/generate', input);
   },
@@ -941,6 +991,190 @@ export const api = {
   /** Delete a workout plan */
   async deleteWorkoutPlan(planId: string): Promise<{ success: boolean }> {
     return request('DELETE', `/workout-plans/${planId}`);
+  },
+
+  /** Get smart burn suggestions based on today's calorie surplus */
+  async getSmartBurnSuggestions(input: {
+    calories_surplus: number;
+    gender: string;
+    age: number;
+    weight: number;
+    activity_level: string;
+    workout_type: 'home' | 'gym';
+    language?: string;
+  }): Promise<{
+    surplus: number;
+    suggestions: Array<{
+      exercise_name: string;
+      duration_minutes: number;
+      estimated_calories_burn: number;
+      intensity: 'light' | 'moderate' | 'high';
+      emoji: string;
+      description: string;
+    }>;
+    motivational_message: string;
+  }> {
+    return request('POST', '/workout/smart-burn', input);
+  },
+
+  // ---- SmartBurn Tracking ----
+
+  /** Save a completed SmartBurn exercise */
+  async completeSmartBurn(input: {
+    exercise_name: string;
+    calories_burned: number;
+    duration_minutes: number;
+    intensity: string;
+    emoji: string;
+  }): Promise<{
+    id: string;
+    daily_totals: { calories: number; duration: number; count: number };
+  }> {
+    return request('POST', '/smartburn/complete', input);
+  },
+
+  /** Get today's SmartBurn completions & totals */
+  async getSmartBurnToday(): Promise<{
+    entries: Array<{
+      id: string;
+      exercise_name: string;
+      calories_burned: number;
+      duration_minutes: number;
+      intensity: string;
+      emoji: string;
+      date: string;
+    }>;
+    totals: { calories: number; duration: number; count: number };
+    date: string;
+  }> {
+    return request('GET', '/smartburn/today');
+  },
+
+  /** Get SmartBurn history for the last N days */
+  async getSmartBurnHistory(days: number = 7): Promise<{
+    history: Array<{
+      date: string;
+      calories: number;
+      duration: number;
+      count: number;
+    }>;
+  }> {
+    return request('GET', `/smartburn/history?days=${days}`);
+  },
+
+  // ---- Weekly Analytics ----
+
+  /** Get 7-day nutrition + workout + smartburn correlation data */
+  async getWeeklyAnalytics(): Promise<{
+    days: Array<{
+      date: string;
+      day: string;
+      consumed: number;
+      target: number;
+      burned: number;
+      burned_smartburn: number;
+      burned_workout: number;
+      burned_count: number;
+      burned_duration: number;
+      net_balance: number;
+      protein: number;
+      carbs: number;
+      fat: number;
+    }>;
+    summary: {
+      total_consumed: number;
+      total_burned: number;
+      total_target: number;
+      avg_consumed: number;
+      avg_burned: number;
+      days_over_target: number;
+      days_under_target: number;
+      best_burn_day: string;
+      best_burn_calories: number;
+      net_weekly: number;
+      calorie_target: number;
+    };
+  }> {
+    return request('GET', '/analytics/weekly');
+  },
+
+  /** Get extended analytics for 30 or 90 day periods */
+  async getExtendedAnalytics(period: 30 | 90 = 30): Promise<{
+    daily: Array<{
+      date: string;
+      consumed: number;
+      target: number;
+      burned_smartburn: number;
+      burned_workout: number;
+      burned_total: number;
+      net_balance: number;
+      protein: number;
+      carbs: number;
+      fat: number;
+      has_food: boolean;
+      has_workout: boolean;
+    }>;
+    weeks: Array<{
+      week: number;
+      start: string;
+      end: string;
+      label: string;
+      avg_consumed: number;
+      avg_burned: number;
+      total_consumed: number;
+      total_burned: number;
+      net_balance: number;
+      days_tracked: number;
+      days_with_workout: number;
+      avg_protein: number;
+      avg_carbs: number;
+      avg_fat: number;
+    }>;
+    trends: {
+      consumed_change: number;
+      burned_change: number;
+      net_change: number;
+      workout_frequency_change: number;
+    };
+    summary: {
+      period: number;
+      active_days: number;
+      total_consumed: number;
+      total_burned: number;
+      total_smartburn: number;
+      total_workout: number;
+      avg_daily_consumed: number;
+      avg_daily_burned: number;
+      calorie_target: number;
+      net_total: number;
+      workout_days: number;
+    };
+  }> {
+    return request('GET', `/analytics/extended?period=${period}`);
+  },
+
+  /** Log a completed workout day */
+  async logWorkoutCompletion(input: {
+    plan_id: string;
+    day_number: number;
+    workout_name?: string;
+    duration_minutes?: number;
+    calories_burned?: number;
+    exercises_completed?: number;
+  }): Promise<{ success: boolean; log: any }> {
+    return request('POST', '/workout/log-completion', input);
+  },
+
+  /** Get recent workout completions */
+  async getWorkoutCompletions(days: number = 7): Promise<{
+    completions: Array<{
+      date: string;
+      calories: number;
+      duration: number;
+      count: number;
+    }>;
+  }> {
+    return request('GET', `/workout/completions?days=${days}`);
   },
 
   // ---- Subscription / Payment ----

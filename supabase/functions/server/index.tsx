@@ -53,6 +53,8 @@ import {
   notifyDailyDigest,
   notifyWelcome,
   notifyChallengeExpiring,
+  notifyCalorieSurplus,
+  notifyMorningWorkout,
   getNotificationPrefs,
   setNotificationPrefs,
   computeStreak,
@@ -8930,6 +8932,7 @@ app.post(`${PREFIX}/tasks/:id/send-reminder`, async (c) => {
 
 const FREE_SCAN_LIMIT_PER_DAY = 5;
 const FREE_MEAL_PLAN_LIMIT_PER_WEEK = 1;
+const FREE_AI_ANALYSIS_LIMIT_PER_WEEK = 1;
 
 async function isPremiumUser(userId: string): Promise<boolean> {
   const user = await kv.get(`become:user:${userId}`);
@@ -8969,6 +8972,17 @@ async function incrementWeeklyMealPlanCount(userId: string): Promise<number> {
   return next;
 }
 
+async function getWeeklyAiAnalysisCount(userId: string): Promise<number> {
+  return (await kv.get(`become:usage:ai_analysis:${userId}:${getISOWeek()}`)) || 0;
+}
+
+async function incrementWeeklyAiAnalysisCount(userId: string): Promise<number> {
+  const key = `become:usage:ai_analysis:${userId}:${getISOWeek()}`;
+  const next = ((await kv.get(key)) || 0) + 1;
+  await kv.set(key, next);
+  return next;
+}
+
 // ---- GET /subscription/usage ----
 app.get(`${PREFIX}/subscription/usage`, async (c) => {
   try {
@@ -8978,11 +8992,13 @@ app.get(`${PREFIX}/subscription/usage`, async (c) => {
     const premium = await isPremiumUser(auth.userId);
     const scanCount = await getDailyScanCount(auth.userId);
     const mealPlanCount = await getWeeklyMealPlanCount(auth.userId);
+    const aiAnalysisCount = await getWeeklyAiAnalysisCount(auth.userId);
 
     return c.json({
       is_premium: premium,
       scans: { used: scanCount, limit: premium ? null : FREE_SCAN_LIMIT_PER_DAY, remaining: premium ? null : Math.max(0, FREE_SCAN_LIMIT_PER_DAY - scanCount) },
       meal_plans: { used: mealPlanCount, limit: premium ? null : FREE_MEAL_PLAN_LIMIT_PER_WEEK, remaining: premium ? null : Math.max(0, FREE_MEAL_PLAN_LIMIT_PER_WEEK - mealPlanCount) },
+      ai_analysis: { used: aiAnalysisCount, limit: premium ? null : FREE_AI_ANALYSIS_LIMIT_PER_WEEK, remaining: premium ? null : Math.max(0, FREE_AI_ANALYSIS_LIMIT_PER_WEEK - aiAnalysisCount) },
       workout_plans: { advanced: premium },
     });
   } catch (err) {
@@ -9065,6 +9081,21 @@ app.post(`${PREFIX}/nutrition/ai-body-analysis`, async (c) => {
 
     if (!gender || !age || !height || !weight) {
       return c.json({ message: "Missing required metrics", code: "BAD_REQUEST", status: 400 }, 400);
+    }
+
+    // Rate limiting: free users get 1 analysis per week
+    const premium = await isPremiumUser(auth.userId);
+    if (!premium) {
+      const analysisCount = await getWeeklyAiAnalysisCount(auth.userId);
+      if (analysisCount >= FREE_AI_ANALYSIS_LIMIT_PER_WEEK) {
+        return c.json({
+          message: "Weekly AI analysis limit reached. Upgrade to Premium for unlimited analyses.",
+          code: "LIMIT_REACHED",
+          status: 429,
+          limit: FREE_AI_ANALYSIS_LIMIT_PER_WEEK,
+          used: analysisCount,
+        }, 429);
+      }
     }
 
     const apiKey = Deno.env.get("OPENAI_API_KEY");
@@ -9150,10 +9181,58 @@ Return STRICTLY JSON (no markdown): {"recommended_calories":number,"recommended_
       return c.json({ message: "Could not parse AI response", code: "PARSE_ERROR", status: 502 }, 502);
     }
 
-    console.log(`[AI Body] Success: ${parsed.recommended_calories} cal for user ${auth.userId}`);
+    // Save analysis to history
+    const analysisRecord = {
+      ...parsed,
+      user_id: auth.userId,
+      telegram_id: auth.telegramId,
+      input: { gender, age, height, weight, activityLevel, goal, had_photo: !!imageBase64 },
+      created_at: new Date().toISOString(),
+    };
+    const historyKey = `become:ai_analysis:${auth.userId}:${Date.now()}`;
+    await kv.set(historyKey, analysisRecord);
+
+    // Increment usage counter
+    await incrementWeeklyAiAnalysisCount(auth.userId);
+
+    console.log(`[AI Body] Success: ${parsed.recommended_calories} cal for user ${auth.userId}, saved to ${historyKey}`);
     return c.json(parsed);
   } catch (err) {
     console.log("POST /nutrition/ai-body-analysis error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- GET /nutrition/ai-analysis-history ----
+app.get(`${PREFIX}/nutrition/ai-analysis-history`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const prefix = `become:ai_analysis:${auth.userId}:`;
+    const entries = await kv.getByPrefix(prefix);
+    
+    // Sort by created_at descending (newest first), limit to 20
+    const sorted = (entries || [])
+      .filter((e: any) => e && e.created_at)
+      .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 20);
+
+    // Check weekly usage for rate limit info
+    const premium = await isPremiumUser(auth.userId);
+    const weeklyCount = await getWeeklyAiAnalysisCount(auth.userId);
+
+    return c.json({
+      analyses: sorted,
+      usage: {
+        is_premium: premium,
+        used_this_week: weeklyCount,
+        limit: premium ? null : FREE_AI_ANALYSIS_LIMIT_PER_WEEK,
+        remaining: premium ? null : Math.max(0, FREE_AI_ANALYSIS_LIMIT_PER_WEEK - weeklyCount),
+      },
+    });
+  } catch (err) {
+    console.log("GET /nutrition/ai-analysis-history error:", err);
     return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
   }
 });
@@ -9184,6 +9263,28 @@ app.post(`${PREFIX}/food/entries`, async (c) => {
       const cacheKey = `become:cache:weekly_trends:${auth.userId}:${today}`;
       await kv.del(cacheKey);
     } catch (_) {}
+
+    // Fire-and-forget: check calorie surplus → send Telegram reminder
+    (async () => {
+      try {
+        const user = await kv.get(`become:user:${auth.userId}`);
+        if (!user?.telegram_id || !user?.daily_calorie_target) return;
+        const idxKey = `become:food_idx:${auth.userId}:${today}`;
+        const allIds: string[] = (await kv.get(idxKey)) || [];
+        const allKeys = allIds.map((id: string) => `become:food:${auth.userId}:${id}`);
+        const allEntries = allKeys.length > 0 ? await kv.mget(allKeys) : [];
+        const totalCal = allEntries.reduce((sum: number, e: any) => sum + (e?.calories || 0), 0);
+        const surplus = totalCal - user.daily_calorie_target;
+        if (surplus <= 100) return;
+        const throttleKey = `become:surplus_notif:${auth.userId}:${today}`;
+        const alreadySent = await kv.get(throttleKey);
+        if (alreadySent) return;
+        await kv.set(throttleKey, { sent_at: new Date().toISOString() });
+        await notifyCalorieSurplus(auth.userId, user.telegram_id, totalCal, user.daily_calorie_target, surplus);
+      } catch (e) {
+        console.log(`[Food] Surplus notification check error (non-blocking): ${e}`);
+      }
+    })();
 
     console.log(`[Food] Entry added: user=${auth.userId}, food=${food_name}, cal=${calories}`);
     return c.json(entry);
@@ -9380,14 +9481,21 @@ app.delete(`${PREFIX}/meal-plans/:id`, async (c) => {
 // WORKOUT PLAN ENDPOINTS
 // =============================================
 
-// ---- POST /workout-plans/generate ----
+// ---- POST /workout-plans/generate (Nutrition-Aware + Body Photo) ----
 app.post(`${PREFIX}/workout-plans/generate`, async (c) => {
   try {
     const auth = await resolveUser(c);
     if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
 
     const body = await c.req.json();
-    const { plan_length, workout_type, goal, gender, activity_level } = body;
+    const {
+      plan_length, workout_type, goal, gender, activity_level,
+      age, height, weight, body_fat_estimate,
+      imageBase64, mimeType,
+      daily_calorie_target, calories_consumed_today,
+      target_protein, target_carbs, target_fat,
+      has_meal_plan, meal_plan_summary, language,
+    } = body;
     const days = plan_length || 7;
     const wType = workout_type || "home";
 
@@ -9398,17 +9506,83 @@ app.post(`${PREFIX}/workout-plans/generate`, async (c) => {
     const userGoal = goal || userProfile?.goal || "stay fit";
     const userGender = gender || userProfile?.gender || "not specified";
     const userActivity = activity_level || userProfile?.activity_level || "moderate";
+    const userAge = age || userProfile?.age || null;
+    const userHeight = height || userProfile?.height || null;
+    const userWeight = weight || userProfile?.weight || null;
+    const userCalTarget = daily_calorie_target || userProfile?.daily_calorie_target || null;
     const batchDays = Math.min(days, 7);
+    const lang = language === "ru" ? "ru" : "en";
+    const useVision = !!imageBase64;
+
+    // Build body metrics context
+    let bodyContext = "";
+    if (userAge || userHeight || userWeight) {
+      const bmi = userHeight && userWeight ? (userWeight / ((userHeight / 100) ** 2)).toFixed(1) : null;
+      bodyContext = lang === "ru"
+        ? `\nТело: ${userGender === "male" ? "мужчина" : "женщина"}${userAge ? `, ${userAge} лет` : ""}${userHeight ? `, рост ${userHeight}см` : ""}${userWeight ? `, вес ${userWeight}кг` : ""}${bmi ? `, ИМТ ${bmi}` : ""}${body_fat_estimate ? `, примерный % жира: ${body_fat_estimate}` : ""}`
+        : `\nBody: ${userGender}${userAge ? `, age ${userAge}` : ""}${userHeight ? `, height ${userHeight}cm` : ""}${userWeight ? `, weight ${userWeight}kg` : ""}${bmi ? `, BMI ${bmi}` : ""}${body_fat_estimate ? `, est. body fat: ${body_fat_estimate}` : ""}`;
+    }
+
+    // Build nutrition context
+    let nutritionContext = "";
+    if (userCalTarget || has_meal_plan || calories_consumed_today) {
+      if (lang === "ru") {
+        nutritionContext = "\n\nКОНТЕКСТ ПИТАНИЯ (тренировки должны дополнять план питания):";
+        if (userCalTarget) nutritionContext += `\n- Дневная норма: ${userCalTarget} ккал`;
+        if (target_protein) nutritionContext += `, Б: ${target_protein}г, У: ${target_carbs || "?"}г, Ж: ${target_fat || "?"}г`;
+        if (calories_consumed_today != null) {
+          const surplus = calories_consumed_today - (userCalTarget || 2000);
+          nutritionContext += `\n- Сегодня: ${calories_consumed_today} ккал (${surplus > 0 ? `+${surplus} избыток` : `${surplus} дефицит`})`;
+        }
+        if (has_meal_plan) nutritionContext += "\n- Есть активный план питания — тренировки должны дополнять его";
+        if (meal_plan_summary) nutritionContext += `\n- План: ${meal_plan_summary}`;
+        nutritionContext += "\nЕсли калорий больше нормы — больше кардио/HIIT. Если дефицит — меньше интенсивность. Укажи estimated_calories_burn для каждого дня.";
+      } else {
+        nutritionContext = "\n\nNUTRITION CONTEXT (workouts must complement nutrition):";
+        if (userCalTarget) nutritionContext += `\n- Daily target: ${userCalTarget} kcal`;
+        if (target_protein) nutritionContext += `, P: ${target_protein}g, C: ${target_carbs || "?"}g, F: ${target_fat || "?"}g`;
+        if (calories_consumed_today != null) {
+          const surplus = calories_consumed_today - (userCalTarget || 2000);
+          nutritionContext += `\n- Today: ${calories_consumed_today} kcal (${surplus > 0 ? `+${surplus} surplus` : `${surplus} deficit`})`;
+        }
+        if (has_meal_plan) nutritionContext += "\n- Has active meal plan — workouts should complement it";
+        if (meal_plan_summary) nutritionContext += `\n- Plan: ${meal_plan_summary}`;
+        nutritionContext += "\nIf over target — more cardio/HIIT. If deficit — lower intensity. Include estimated_calories_burn per day.";
+      }
+    }
+
+    const photoInstruction = imageBase64
+      ? (lang === "ru"
+        ? "\nФото тела: оцени % жира, мышцы, проблемные зоны. Адаптируй план."
+        : "\nBody photo provided. Assess body fat %, muscle mass, problem areas. Adapt plan.")
+      : "";
+
+    const systemPrompt = lang === "ru"
+      ? `Ты — сертифицированный фитнес-тренер и нутрициолог. ${photoInstruction}${nutritionContext}\nВерни СТРОГО JSON: { "days": [ { "day": 1, "workout_type": "strength|cardio|flexibility|hiit|rest", "focus": "...", "duration_minutes": N, "estimated_calories_burn": N, "exercises": [ { "exercise_name": "...", "sets": N, "reps": "12", "rest_seconds": N, "muscle_group": "...", "notes": "..." } ] } ], "nutrition_tips": ["совет1","совет2","совет3"] }`
+      : `You are a certified fitness trainer and nutritionist. ${photoInstruction}${nutritionContext}\nReturn STRICTLY JSON: { "days": [ { "day": 1, "workout_type": "strength|cardio|flexibility|hiit|rest", "focus": "...", "duration_minutes": N, "estimated_calories_burn": N, "exercises": [ { "exercise_name": "...", "sets": N, "reps": "12", "rest_seconds": N, "muscle_group": "...", "notes": "..." } ] } ], "nutrition_tips": ["tip1","tip2","tip3"] }`;
+
+    const userMessage = lang === "ru"
+      ? `${batchDays}-дневный ${wType === "home" ? "домашний" : "в зале"} план.${bodyContext}\nАктивность: ${userActivity}. Цель: ${userGoal}. 1-2 дня отдыха.`
+      : `${batchDays}-day ${wType} plan.${bodyContext}\nActivity: ${userActivity}. Goal: ${userGoal}. 1-2 rest days.`;
+
+    const messages: any[] = [{ role: "system", content: systemPrompt }];
+    if (imageBase64) {
+      messages.push({ role: "user", content: [
+        { type: "text", text: userMessage },
+        { type: "image_url", image_url: { url: `data:${mimeType || "image/jpeg"};base64,${imageBase64}` } },
+      ]});
+    } else {
+      messages.push({ role: "user", content: userMessage });
+    }
+
+    console.log(`[Workout Plan] ${batchDays}d ${wType}, photo=${useVision}, nutrition=${!!nutritionContext}, user=${auth.userId}`);
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: { "Authorization": `Bearer ${openaiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: `You are a certified fitness trainer. Create a detailed ${wType} workout plan. Return ONLY a JSON object: { "days": [ { "day": 1, "workout_type": "upper body|lower body|cardio|full body|rest|hiit|flexibility", "name": "...", "duration_min": N, "calories_burn": N, "exercises": [ { "name": "...", "sets": N, "reps": "...", "rest_sec": N, "notes": "..." } ] } ] }. Include 1-2 rest days per week. No other text.` },
-          { role: "user", content: `Create a ${batchDays}-day ${wType} workout plan for a ${userGender} with ${userActivity} activity level. Goal: ${userGoal}. Make workouts varied and progressive.` },
-        ],
+        model: useVision ? "gpt-4o" : "gpt-4o-mini",
+        messages,
         max_tokens: 4000,
         temperature: 0.7,
       }),
@@ -9431,8 +9605,16 @@ app.post(`${PREFIX}/workout-plans/generate`, async (c) => {
       return c.json({ message: "Could not parse AI response", code: "PARSE_ERROR", status: 502 }, 502);
     }
 
+    const nutritionTips = workoutData.nutrition_tips || [];
+    const cleanWorkoutData = { days: workoutData.days || [] };
+
     const planId = generateId("wplan");
-    const savedPlan = { id: planId, userId: auth.userId, plan_length: days, workout_type: wType, workout_data: workoutData, created_at: new Date().toISOString() };
+    const savedPlan = {
+      id: planId, userId: auth.userId, plan_length: days, workout_type: wType,
+      workout_data: cleanWorkoutData, nutrition_tips: nutritionTips,
+      nutrition_context: { daily_calorie_target: userCalTarget, had_photo: useVision, had_meal_plan: !!has_meal_plan },
+      created_at: new Date().toISOString(),
+    };
     await kv.set(`become:workout_plans:${auth.userId}:${planId}`, savedPlan);
 
     const indexKey = `become:workout_plans_index:${auth.userId}`;
@@ -9440,11 +9622,76 @@ app.post(`${PREFIX}/workout-plans/generate`, async (c) => {
     plansIndex.unshift(planId);
     await kv.set(indexKey, plansIndex);
 
-    console.log(`[Workout Plan] Generated ${batchDays}-day ${wType} plan for user ${auth.userId}`);
+    console.log(`[Workout Plan] OK: ${batchDays}d ${wType}, tips=${nutritionTips.length}, user=${auth.userId}`);
     return c.json(savedPlan);
   } catch (err) {
     console.log("POST /workout-plans/generate error:", err);
     return c.json({ message: `Error generating workout plan: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- POST /workout/smart-burn — Quick exercises to burn calorie surplus ----
+app.post(`${PREFIX}/workout/smart-burn`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const body = await c.req.json();
+    const { calories_surplus, gender, age, weight, activity_level, workout_type, language } = body;
+
+    if (!calories_surplus || calories_surplus <= 0) {
+      return c.json({ message: "No calorie surplus to burn", code: "NO_SURPLUS", status: 400 }, 400);
+    }
+
+    const openaiKey = Deno.env.get("OPENAI_API_KEY");
+    if (!openaiKey) return c.json({ message: "OpenAI not configured", code: "CONFIG_ERROR", status: 500 }, 500);
+
+    const lang = language === "ru" ? "ru" : "en";
+    const wType = workout_type || "home";
+
+    const systemPrompt = lang === "ru"
+      ? `Ты — фитнес-тренер. Пользователь превысил норму калорий. Предложи 3-4 быстрых упражнения (${wType === "home" ? "дома" : "в зале"}).
+Верни JSON: { "suggestions": [ { "exercise_name": "...", "duration_minutes": N, "estimated_calories_burn": N, "intensity": "light|moderate|high", "emoji": "🏃", "description": "..." } ], "motivational_message": "..." }`
+      : `You are a fitness trainer. User exceeded calorie target. Suggest 3-4 quick exercises (${wType === "home" ? "at home" : "at gym"}).
+Return JSON: { "suggestions": [ { "exercise_name": "...", "duration_minutes": N, "estimated_calories_burn": N, "intensity": "light|moderate|high", "emoji": "🏃", "description": "..." } ], "motivational_message": "..." }`;
+
+    const userMsg = lang === "ru"
+      ? `Сжечь ~${calories_surplus} ккал. ${gender === "male" ? "Мужчина" : "Женщина"}${age ? `, ${age} лет` : ""}${weight ? `, ${weight}кг` : ""}. Активность: ${activity_level || "medium"}.`
+      : `Burn ~${calories_surplus} kcal. ${gender || "Person"}${age ? `, age ${age}` : ""}${weight ? `, ${weight}kg` : ""}. Activity: ${activity_level || "medium"}.`;
+
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${openaiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userMsg }],
+        max_tokens: 1000,
+        temperature: 0.6,
+      }),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.log(`[Smart Burn] OpenAI error: ${response.status} ${errText}`);
+      return c.json({ message: "AI suggestion failed", code: "AI_ERROR", status: 502 }, 502);
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || "";
+    let parsed: any;
+    try {
+      const jsonStr = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+      parsed = JSON.parse(jsonStr);
+    } catch {
+      console.log("[Smart Burn] Parse failed:", content.slice(0, 300));
+      return c.json({ message: "Could not parse AI response", code: "PARSE_ERROR", status: 502 }, 502);
+    }
+
+    console.log(`[Smart Burn] ${parsed.suggestions?.length || 0} suggestions for ${calories_surplus}kcal, user ${auth.userId}`);
+    return c.json({ surplus: calories_surplus, ...parsed });
+  } catch (err) {
+    console.log("POST /workout/smart-burn error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
   }
 });
 
@@ -10950,7 +11197,7 @@ app.post(`${PREFIX}/user-profile`, async (c) => {
     }
 
     const body = await c.req.json();
-    const { gender, age, height, weight, activity_level, goal, daily_calorie_target, bmr, daily_maintenance_calories } = body;
+    const { gender, age, height, weight, activity_level, goal, daily_calorie_target, bmr, daily_maintenance_calories, target_protein, target_carbs, target_fat } = body;
 
     // Validate required fields
     if (!gender || !age || !height || !weight || !activity_level || !goal) {
@@ -10974,6 +11221,9 @@ app.post(`${PREFIX}/user-profile`, async (c) => {
       daily_calorie_target: daily_calorie_target ? Number(daily_calorie_target) : (existing?.daily_calorie_target || null),
       bmr: bmr ? Number(bmr) : (existing?.bmr || null),
       daily_maintenance_calories: daily_maintenance_calories ? Number(daily_maintenance_calories) : (existing?.daily_maintenance_calories || null),
+      target_protein: target_protein != null ? Number(target_protein) : (existing?.target_protein || null),
+      target_carbs: target_carbs != null ? Number(target_carbs) : (existing?.target_carbs || null),
+      target_fat: target_fat != null ? Number(target_fat) : (existing?.target_fat || null),
       created_at: existing?.created_at || new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
@@ -11734,6 +11984,527 @@ app.post(`${PREFIX}/streak/milestone-shown`, async (c) => {
     return c.json({ success: true });
   } catch (err) {
     console.log("POST /streak/milestone-shown error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ============================================================
+// SMART BURN TRACKING
+// ============================================================
+
+// ---- POST /smartburn/complete — Save a completed SmartBurn exercise ----
+app.post(`${PREFIX}/smartburn/complete`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const body = await c.req.json();
+    const { exercise_name, calories_burned, duration_minutes, intensity, emoji } = body;
+    if (!exercise_name || !calories_burned) {
+      return c.json({ message: "exercise_name and calories_burned required", code: "BAD_REQUEST", status: 400 }, 400);
+    }
+
+    const now = new Date().toISOString();
+    const today = now.slice(0, 10);
+    const entryId = generateId("sb");
+
+    const entry = {
+      id: entryId,
+      userId: auth.userId,
+      exercise_name,
+      calories_burned: calories_burned || 0,
+      duration_minutes: duration_minutes || 0,
+      intensity: intensity || "moderate",
+      emoji: emoji || "🏋️",
+      date: today,
+      created_at: now,
+    };
+
+    // Save entry
+    await kv.set(`become:smartburn:${auth.userId}:${entryId}`, entry);
+
+    // Update daily index
+    const indexKey = `become:smartburn_idx:${auth.userId}:${today}`;
+    const index: string[] = (await kv.get(indexKey)) || [];
+    index.push(entryId);
+    await kv.set(indexKey, index);
+
+    // Update daily total burned
+    const totalsKey = `become:smartburn_totals:${auth.userId}:${today}`;
+    const totals = (await kv.get(totalsKey)) || { calories: 0, duration: 0, count: 0 };
+    totals.calories += (calories_burned || 0);
+    totals.duration += (duration_minutes || 0);
+    totals.count += 1;
+    await kv.set(totalsKey, totals);
+
+    console.log(`[SmartBurn] Exercise completed: user=${auth.userId}, exercise=${exercise_name}, cal=${calories_burned}`);
+    return c.json({ ...entry, daily_totals: totals });
+  } catch (err) {
+    console.log("POST /smartburn/complete error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- GET /smartburn/today — Get today's SmartBurn completions & totals ----
+app.get(`${PREFIX}/smartburn/today`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const today = new Date().toISOString().slice(0, 10);
+    const indexKey = `become:smartburn_idx:${auth.userId}:${today}`;
+    const index: string[] = (await kv.get(indexKey)) || [];
+
+    let entries: any[] = [];
+    if (index.length > 0) {
+      const keys = index.map((id: string) => `become:smartburn:${auth.userId}:${id}`);
+      entries = (await kv.mget(keys)).filter((e: any) => e && e.id);
+    }
+
+    const totalsKey = `become:smartburn_totals:${auth.userId}:${today}`;
+    const totals = (await kv.get(totalsKey)) || { calories: 0, duration: 0, count: 0 };
+
+    return c.json({ entries, totals, date: today });
+  } catch (err) {
+    console.log("GET /smartburn/today error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- GET /smartburn/history — Get SmartBurn history for the last 7 days ----
+app.get(`${PREFIX}/smartburn/history`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const days = Number(c.req.query("days") || "7");
+    const history: any[] = [];
+
+    for (let i = 0; i < days; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().slice(0, 10);
+      const totalsKey = `become:smartburn_totals:${auth.userId}:${dateStr}`;
+      const totals = (await kv.get(totalsKey)) || { calories: 0, duration: 0, count: 0 };
+      history.push({ date: dateStr, ...totals });
+    }
+
+    return c.json({ history });
+  } catch (err) {
+    console.log("GET /smartburn/history error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ============================================================
+// WEEKLY ANALYTICS — Nutrition vs Workout correlation
+// ============================================================
+
+// ---- GET /analytics/weekly — 7-day nutrition + workout + smartburn data ----
+app.get(`${PREFIX}/analytics/weekly`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const user = await kv.get(`become:user:${auth.userId}`);
+    const calorieTarget = user?.daily_calorie_target || 2000;
+
+    const days: any[] = [];
+    const now = new Date();
+
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().slice(0, 10);
+      const dayLabel = d.toLocaleDateString("en", { weekday: "short" });
+
+      // Food totals
+      const foodIdx: string[] = (await kv.get(`become:food_idx:${auth.userId}:${dateStr}`)) || [];
+      let foodTotals = { calories: 0, protein: 0, carbs: 0, fat: 0 };
+      if (foodIdx.length > 0) {
+        const foodKeys = foodIdx.map((id: string) => `become:food:${auth.userId}:${id}`);
+        const foodEntries = (await kv.mget(foodKeys)).filter((e: any) => e && e.id);
+        foodTotals = foodEntries.reduce((acc: any, e: any) => ({
+          calories: acc.calories + (e.calories || 0),
+          protein: acc.protein + (e.protein || 0),
+          carbs: acc.carbs + (e.carbs || 0),
+          fat: acc.fat + (e.fat || 0),
+        }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
+      }
+
+      // SmartBurn totals
+      const sbTotals = (await kv.get(`become:smartburn_totals:${auth.userId}:${dateStr}`)) || { calories: 0, duration: 0, count: 0 };
+
+      // Workout plan completion totals
+      const wTotals = (await kv.get(`become:workout_day_totals:${auth.userId}:${dateStr}`)) || { calories: 0, duration: 0, count: 0 };
+
+      // Combined burned = SmartBurn + Workout completions
+      const totalBurned = sbTotals.calories + wTotals.calories;
+      const totalBurnCount = sbTotals.count + wTotals.count;
+      const totalBurnDuration = sbTotals.duration + wTotals.duration;
+
+      // Net balance
+      const netBalance = foodTotals.calories - calorieTarget - totalBurned;
+
+      days.push({
+        date: dateStr,
+        day: dayLabel,
+        consumed: foodTotals.calories,
+        target: calorieTarget,
+        burned: totalBurned,
+        burned_smartburn: sbTotals.calories,
+        burned_workout: wTotals.calories,
+        burned_count: totalBurnCount,
+        burned_duration: totalBurnDuration,
+        net_balance: netBalance,
+        protein: foodTotals.protein,
+        carbs: foodTotals.carbs,
+        fat: foodTotals.fat,
+      });
+    }
+
+    // Weekly summary
+    const totalConsumed = days.reduce((s, d) => s + d.consumed, 0);
+    const totalBurned = days.reduce((s, d) => s + d.burned, 0);
+    const totalTarget = calorieTarget * 7;
+    const avgConsumed = Math.round(totalConsumed / 7);
+    const avgBurned = Math.round(totalBurned / 7);
+    const daysOverTarget = days.filter(d => d.consumed > d.target).length;
+    const daysUnderTarget = days.filter(d => d.consumed > 0 && d.consumed <= d.target).length;
+    const bestDay = days.reduce((best, d) => d.burned > best.burned ? d : best, days[0]);
+
+    const summary = {
+      total_consumed: totalConsumed,
+      total_burned: totalBurned,
+      total_target: totalTarget,
+      avg_consumed: avgConsumed,
+      avg_burned: avgBurned,
+      days_over_target: daysOverTarget,
+      days_under_target: daysUnderTarget,
+      best_burn_day: bestDay?.date,
+      best_burn_calories: bestDay?.burned || 0,
+      net_weekly: totalConsumed - totalTarget - totalBurned,
+      calorie_target: calorieTarget,
+    };
+
+    console.log(`[Analytics] Weekly data for user=${auth.userId}: consumed=${totalConsumed}, burned=${totalBurned}`);
+    return c.json({ days, summary });
+  } catch (err) {
+    console.log("GET /analytics/weekly error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ============================================================
+// FEATURE 1: Morning Workout Reminder Cron Endpoint
+// ============================================================
+
+app.post(`${PREFIX}/cron/morning-workout-reminder`, async (c) => {
+  try {
+    const now = new Date();
+    const today = now.toISOString().slice(0, 10);
+    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+    // Dedup: max once per day
+    const dedupKey = `become:cron:morning_workout:${today}`;
+    const already = await kv.get(dedupKey);
+    if (already) {
+      return c.json({ success: true, sent: 0, skipped: "already_ran_today" });
+    }
+    await kv.set(dedupKey, { ranAt: now.toISOString() });
+
+    const allUsers = await kv.getByPrefix("become:user:");
+    let sent = 0;
+    let errors = 0;
+
+    for (const user of (allUsers || [])) {
+      if (!user?.id || !user?.telegramId) continue;
+
+      try {
+        const tgId = Number(user.telegramId);
+        if (!tgId) continue;
+
+        // Check workout plan
+        const workoutIndex: string[] = (await kv.get(`become:workout_plans_index:${user.id}`)) || [];
+        const hasWorkoutPlan = workoutIndex.length > 0;
+
+        let workoutName = "";
+        let durationMin = 30;
+        let caloriesBurn = 200;
+
+        if (hasWorkoutPlan) {
+          const latestPlan = await kv.get(`become:workout_plans:${user.id}:${workoutIndex[0]}`);
+          if (latestPlan?.workout_data?.days) {
+            const daysSinceCreation = Math.max(1, Math.ceil(
+              (now.getTime() - new Date(latestPlan.created_at || now).getTime()) / (24 * 60 * 60 * 1000)
+            ) + 1);
+            const dayNum = Math.min(daysSinceCreation, latestPlan.workout_data.days.length);
+            const todayDay = latestPlan.workout_data.days.find((d: any) => d.day === dayNum)
+              || latestPlan.workout_data.days[0];
+            if (todayDay) {
+              workoutName = todayDay.name || todayDay.workout_type || latestPlan.workout_type || "Workout";
+              durationMin = todayDay.duration_min || 30;
+              caloriesBurn = todayDay.calories_burn || 200;
+            }
+          }
+        }
+
+        // Yesterday's calorie surplus
+        let yesterdaySurplus: number | undefined;
+        const ydayFoodIdx: string[] = (await kv.get(`become:food_idx:${user.id}:${yesterday}`)) || [];
+        if (ydayFoodIdx.length > 0 && user.daily_calorie_target) {
+          const ydayKeys = ydayFoodIdx.map((id: string) => `become:food:${user.id}:${id}`);
+          const ydayEntries = await kv.mget(ydayKeys);
+          const ydayCal = ydayEntries.reduce((s: number, e: any) => s + (e?.calories || 0), 0);
+          const surplus = ydayCal - (user.daily_calorie_target || 2000);
+          if (surplus > 50) yesterdaySurplus = surplus;
+        }
+
+        // Workout streak (count consecutive days with smartburn or workout completions)
+        let workoutStreak = 0;
+        for (let i = 1; i <= 30; i++) {
+          const dStr = new Date(now.getTime() - i * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+          const sbTotals = await kv.get(`become:smartburn_totals:${user.id}:${dStr}`);
+          const wLog = await kv.get(`become:workout_log:${user.id}:${dStr}`);
+          if ((sbTotals?.count > 0) || wLog) {
+            workoutStreak++;
+          } else {
+            break;
+          }
+        }
+
+        await notifyMorningWorkout(user.id, tgId, {
+          workoutName,
+          durationMin,
+          caloriesBurn,
+          yesterdaySurplus,
+          workoutStreak: workoutStreak > 0 ? workoutStreak : undefined,
+          hasWorkoutPlan,
+        });
+        sent++;
+      } catch (userErr) {
+        console.log(`[Cron] Morning workout error for user ${user.id}: ${userErr}`);
+        errors++;
+      }
+    }
+
+    console.log(`[Cron] Morning workout reminders: sent=${sent}, errors=${errors}`);
+    return c.json({ success: true, sent, errors, date: today });
+  } catch (err) {
+    console.log("POST /cron/morning-workout-reminder error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ============================================================
+// FEATURE 2: Workout Completion Logging
+// ============================================================
+
+app.post(`${PREFIX}/workout/log-completion`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const { plan_id, day_number, workout_name, duration_minutes, calories_burned, exercises_completed } = await c.req.json();
+    if (!plan_id || !day_number) {
+      return c.json({ message: "plan_id and day_number required", code: "BAD_REQUEST", status: 400 }, 400);
+    }
+
+    const today = new Date().toISOString().slice(0, 10);
+    const logId = `${plan_id}_d${day_number}_${Date.now()}`;
+    const logEntry = {
+      id: logId,
+      user_id: auth.userId,
+      plan_id,
+      day_number,
+      workout_name: workout_name || "Workout",
+      duration_minutes: duration_minutes || 0,
+      calories_burned: calories_burned || 0,
+      exercises_completed: exercises_completed || 0,
+      date: today,
+      completed_at: new Date().toISOString(),
+    };
+
+    await kv.set(`become:workout_log:${auth.userId}:${today}:${logId}`, logEntry);
+
+    // Update daily workout totals (separate from SmartBurn)
+    const dailyTotalsKey = `become:workout_day_totals:${auth.userId}:${today}`;
+    const existing = (await kv.get(dailyTotalsKey)) || { calories: 0, duration: 0, count: 0 };
+    await kv.set(dailyTotalsKey, {
+      calories: existing.calories + (calories_burned || 0),
+      duration: existing.duration + (duration_minutes || 0),
+      count: existing.count + 1,
+    });
+
+    // Marker for streak detection
+    await kv.set(`become:workout_log:${auth.userId}:${today}`, { completed: true, updated_at: new Date().toISOString() });
+
+    // Update workout log index
+    const idxKey = `become:workout_log_idx:${auth.userId}`;
+    const idx: string[] = (await kv.get(idxKey)) || [];
+    idx.unshift(`${today}:${logId}`);
+    if (idx.length > 100) idx.length = 100;
+    await kv.set(idxKey, idx);
+
+    console.log(`[Workout] Logged completion: user=${auth.userId}, plan=${plan_id}, day=${day_number}, cal=${calories_burned}`);
+    return c.json({ success: true, log: logEntry });
+  } catch (err) {
+    console.log("POST /workout/log-completion error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+app.get(`${PREFIX}/workout/completions`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const days = Number(c.req.query("days") || "7");
+    const now = new Date();
+    const completions: any[] = [];
+
+    for (let i = 0; i < days; i++) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().slice(0, 10);
+      const totals = (await kv.get(`become:workout_day_totals:${auth.userId}:${dateStr}`)) || { calories: 0, duration: 0, count: 0 };
+      if (totals.count > 0) {
+        completions.push({ date: dateStr, ...totals });
+      }
+    }
+
+    return c.json({ completions });
+  } catch (err) {
+    console.log("GET /workout/completions error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ============================================================
+// FEATURE 3: Extended Analytics (Monthly / Quarterly with Trends)
+// ============================================================
+
+app.get(`${PREFIX}/analytics/extended`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const period = Number(c.req.query("period") || "30");
+    const safePeriod = Math.min(Math.max(period, 7), 90);
+    const user = await kv.get(`become:user:${auth.userId}`);
+    const calorieTarget = user?.daily_calorie_target || 2000;
+
+    const now = new Date();
+    const dailyData: any[] = [];
+
+    for (let i = safePeriod - 1; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().slice(0, 10);
+
+      // Food totals
+      const foodIdx: string[] = (await kv.get(`become:food_idx:${auth.userId}:${dateStr}`)) || [];
+      let consumed = 0, protein = 0, carbs = 0, fat = 0;
+      if (foodIdx.length > 0) {
+        const foodKeys = foodIdx.map((id: string) => `become:food:${auth.userId}:${id}`);
+        const foodEntries = (await kv.mget(foodKeys)).filter((e: any) => e && e.id);
+        for (const e of foodEntries) {
+          consumed += e.calories || 0;
+          protein += e.protein || 0;
+          carbs += e.carbs || 0;
+          fat += e.fat || 0;
+        }
+      }
+
+      // SmartBurn + Workout totals
+      const sbTotals = (await kv.get(`become:smartburn_totals:${auth.userId}:${dateStr}`)) || { calories: 0, duration: 0, count: 0 };
+      const wTotals = (await kv.get(`become:workout_day_totals:${auth.userId}:${dateStr}`)) || { calories: 0, duration: 0, count: 0 };
+      const totalBurned = sbTotals.calories + wTotals.calories;
+
+      dailyData.push({
+        date: dateStr,
+        consumed,
+        target: calorieTarget,
+        burned_smartburn: sbTotals.calories,
+        burned_workout: wTotals.calories,
+        burned_total: totalBurned,
+        net_balance: consumed - calorieTarget - totalBurned,
+        protein, carbs, fat,
+        has_food: consumed > 0,
+        has_workout: totalBurned > 0,
+      });
+    }
+
+    // Aggregate into weekly buckets
+    const weeklyBuckets: any[] = [];
+    const numWeeks = Math.ceil(safePeriod / 7);
+    for (let w = 0; w < numWeeks; w++) {
+      const start = w * 7;
+      const end = Math.min(start + 7, dailyData.length);
+      const slice = dailyData.slice(start, end);
+      if (slice.length === 0) continue;
+
+      const weekStart = slice[0].date;
+      const weekEnd = slice[slice.length - 1].date;
+      const avgConsumed = Math.round(slice.reduce((s: number, d: any) => s + d.consumed, 0) / slice.length);
+      const avgBurned = Math.round(slice.reduce((s: number, d: any) => s + d.burned_total, 0) / slice.length);
+      const totalConsumed = slice.reduce((s: number, d: any) => s + d.consumed, 0);
+      const totalBurned = slice.reduce((s: number, d: any) => s + d.burned_total, 0);
+      const netBalance = totalConsumed - (calorieTarget * slice.length) - totalBurned;
+      const daysTracked = slice.filter((d: any) => d.has_food).length;
+      const daysWithWorkout = slice.filter((d: any) => d.has_workout).length;
+
+      weeklyBuckets.push({
+        week: w + 1,
+        start: weekStart,
+        end: weekEnd,
+        label: `${weekStart.slice(5)} — ${weekEnd.slice(5)}`,
+        avg_consumed: avgConsumed,
+        avg_burned: avgBurned,
+        total_consumed: totalConsumed,
+        total_burned: totalBurned,
+        net_balance: netBalance,
+        days_tracked: daysTracked,
+        days_with_workout: daysWithWorkout,
+        avg_protein: Math.round(slice.reduce((s: number, d: any) => s + d.protein, 0) / slice.length),
+        avg_carbs: Math.round(slice.reduce((s: number, d: any) => s + d.carbs, 0) / slice.length),
+        avg_fat: Math.round(slice.reduce((s: number, d: any) => s + d.fat, 0) / slice.length),
+      });
+    }
+
+    // Trends: compare latest week vs previous week
+    const latestWeek = weeklyBuckets[weeklyBuckets.length - 1];
+    const prevWeek = weeklyBuckets.length >= 2 ? weeklyBuckets[weeklyBuckets.length - 2] : null;
+    const trends = {
+      consumed_change: prevWeek ? latestWeek.avg_consumed - prevWeek.avg_consumed : 0,
+      burned_change: prevWeek ? latestWeek.avg_burned - prevWeek.avg_burned : 0,
+      net_change: prevWeek ? latestWeek.net_balance - prevWeek.net_balance : 0,
+      workout_frequency_change: prevWeek ? latestWeek.days_with_workout - prevWeek.days_with_workout : 0,
+    };
+
+    // Overall summary
+    const activeDays = dailyData.filter(d => d.has_food).length;
+    const totalConsumed = dailyData.reduce((s, d) => s + d.consumed, 0);
+    const totalBurned = dailyData.reduce((s, d) => s + d.burned_total, 0);
+
+    const summary = {
+      period: safePeriod,
+      active_days: activeDays,
+      total_consumed: totalConsumed,
+      total_burned: totalBurned,
+      total_smartburn: dailyData.reduce((s, d) => s + d.burned_smartburn, 0),
+      total_workout: dailyData.reduce((s, d) => s + d.burned_workout, 0),
+      avg_daily_consumed: activeDays > 0 ? Math.round(totalConsumed / activeDays) : 0,
+      avg_daily_burned: activeDays > 0 ? Math.round(totalBurned / activeDays) : 0,
+      calorie_target: calorieTarget,
+      net_total: totalConsumed - (calorieTarget * activeDays) - totalBurned,
+      workout_days: dailyData.filter(d => d.has_workout).length,
+    };
+
+    console.log(`[Analytics] Extended ${safePeriod}-day for user=${auth.userId}: consumed=${totalConsumed}, burned=${totalBurned}, weeks=${weeklyBuckets.length}`);
+    return c.json({ daily: dailyData, weeks: weeklyBuckets, trends, summary });
+  } catch (err) {
+    console.log("GET /analytics/extended error:", err);
     return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
   }
 });

@@ -322,6 +322,38 @@ export async function notifyChallengeJoined(
 }
 
 /**
+ * Calorie surplus reminder — sent when daily calories exceed target by 100+ kcal.
+ * Max 1 per day (throttled by caller).
+ */
+export async function notifyCalorieSurplus(
+  userId: string,
+  telegramId: number,
+  totalConsumed: number,
+  calorieTarget: number,
+  surplus: number
+): Promise<void> {
+  const prefs = await getNotificationPrefs(userId);
+  if (!prefs.enabled || !prefs.dailyReminder) return;
+
+  const lang = await getUserLang(userId, kv);
+
+  const text = [
+    `\u{1F525} <b>${t("notif_surplus_title", lang)}</b>`,
+    ``,
+    t("notif_surplus_body", lang, { consumed: totalConsumed, target: calorieTarget, surplus: Math.round(surplus) }),
+    ``,
+    t("notif_surplus_tip", lang),
+  ].join("\n");
+
+  const keyboard: InlineKeyboardButton[][] = [];
+  const btn = appButton(t("btn_burn_it", lang));
+  if (btn.length) keyboard.push(btn);
+
+  console.log(`[Notifications] Calorie surplus reminder for user ${userId}: ${totalConsumed}/${calorieTarget} (+${surplus}), lang=${lang}`);
+  await safeSend(telegramId, text, keyboard);
+}
+
+/**
  * Daily reminder — generic (legacy, i18n)
  */
 export async function notifyDailyReminder(
@@ -634,4 +666,74 @@ export async function notifyChallengeExpiring(
 
   console.log(`[Notifications] ChallengeExpiring for user ${userId} (tg:${telegramId}), ch:${challengeId}, hours:${Math.round(hoursLeft)}`);
   await safeSend(telegramId, text, keyboard);
+}
+
+/**
+ * Morning workout reminder — sent by cron each morning.
+ * Includes today's workout info, yesterday's surplus, and workout streak.
+ */
+export async function notifyMorningWorkout(
+  userId: string,
+  telegramId: number,
+  opts: {
+    workoutName: string;
+    durationMin: number;
+    caloriesBurn: number;
+    yesterdaySurplus?: number;
+    workoutStreak?: number;
+    hasWorkoutPlan: boolean;
+  }
+): Promise<void> {
+  const prefs = await getNotificationPrefs(userId);
+  if (!prefs.enabled || !prefs.dailyReminder) return;
+
+  const lang = await getUserLang(userId, kv);
+
+  if (!opts.hasWorkoutPlan) {
+    // Encourage creating a plan
+    const text = [
+      `\u{2600}\u{FE0F} <b>${t("notif_morning_workout_title", lang)}</b>`,
+      ``,
+      t("notif_morning_no_plan", lang),
+    ].join("\n");
+
+    const keyboard: InlineKeyboardButton[][] = [];
+    const btn = appButton(t("btn_create_workout", lang));
+    if (btn.length) keyboard.push(btn);
+
+    console.log(`[Notifications] Morning workout (no plan) for user ${userId}, lang=${lang}`);
+    await safeSend(telegramId, text, keyboard);
+    return;
+  }
+
+  const greetings = t("notif_morning_workout_greetings", lang).split("|");
+  const greeting = greetings[Math.floor(Math.random() * greetings.length)];
+
+  const lines: string[] = [
+    `\u{2600}\u{FE0F} <b>${greeting}</b>`,
+    ``,
+    t("notif_morning_workout_body", lang, {
+      name: opts.workoutName,
+      duration: opts.durationMin,
+      calories: opts.caloriesBurn,
+    }),
+  ];
+
+  // Yesterday's surplus warning
+  if (opts.yesterdaySurplus && opts.yesterdaySurplus > 50) {
+    lines.push(t("notif_morning_workout_surplus", lang, { surplus: Math.round(opts.yesterdaySurplus) }));
+  }
+
+  // Workout streak
+  if (opts.workoutStreak && opts.workoutStreak >= 2) {
+    lines.push(``);
+    lines.push(t("notif_morning_workout_streak", lang, { streak: opts.workoutStreak }));
+  }
+
+  const keyboard: InlineKeyboardButton[][] = [];
+  const btn = appButton(t("btn_open_workout", lang));
+  if (btn.length) keyboard.push(btn);
+
+  console.log(`[Notifications] Morning workout for user ${userId}: ${opts.workoutName}, ${opts.durationMin}min, ${opts.caloriesBurn}cal, lang=${lang}`);
+  await safeSend(telegramId, lines.join("\n"), keyboard);
 }

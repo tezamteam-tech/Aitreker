@@ -648,9 +648,10 @@ function LayoutInner() {
 
   return (
     <div
-      className="relative min-h-screen bg-background text-foreground overflow-y-auto"
+      className="relative h-screen bg-background text-foreground overflow-y-auto overscroll-none"
       style={{
         paddingTop: 'var(--safe-area-top, 0px)',
+        WebkitOverflowScrolling: 'touch',
       }}
     >
       <AuthGate>

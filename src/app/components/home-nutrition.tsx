@@ -30,6 +30,7 @@ import {
   Salad,
   MessageCircle,
   Scale,
+  BarChart3,
 } from 'lucide-react';
 import { GlassCard } from './glass-card';
 import { useAuth } from './auth-context';
@@ -40,6 +41,7 @@ import { PageHeader } from './page-header';
 import { calculateCalories, type CalorieResult } from './calorie-calculator';
 import { PremiumBadge } from './premium-gate';
 import { StreakShareCard } from './streak-share-card';
+import { SmartBurnCard } from './smart-burn-card';
 
 interface NutritionData {
   caloriesConsumed: number;
@@ -83,6 +85,12 @@ export function HomeNutritionPage() {
   
   // Streak milestone state
   const [streakMilestone, setStreakMilestone] = useState<{ milestone: number; streak: number } | null>(null);
+
+  // Profile data for SmartBurnCard
+  const [profileData, setProfileData] = useState<{ gender: string; age: number; weight: number; activityLevel: string } | null>(null);
+
+  // SmartBurn calories burned today
+  const [burnedToday, setBurnedToday] = useState(0);
 
   const [nutritionData, setNutritionData] = useState<NutritionData>({
     caloriesConsumed: 0,
@@ -152,6 +160,13 @@ export function HomeNutritionPage() {
       }
       
       setProfileLoaded(true);
+      // Set profile data for SmartBurnCard
+      setProfileData({
+        gender: profile.gender,
+        age: profile.age,
+        weight: profile.weight,
+        activityLevel: profile.activity_level,
+      });
     }).catch((err) => {
       console.warn('[HomeNutrition] Failed to load profile:', err);
       setProfileLoaded(true);
@@ -213,7 +228,7 @@ export function HomeNutritionPage() {
             ? exercises.map((ex: any, i: number) => ({
                 id: `w_${i}`,
                 name: ex.name || 'Exercise',
-                duration: ex.sets ? `${ex.sets} sets × ${ex.reps || '10'}` : `${todayDay.duration_min || 30} min`,
+                duration: ex.sets ? `${ex.sets} sets  ${ex.reps || '10'}` : `${todayDay.duration_min || 30} min`,
                 calories: Math.round((todayDay.calories_burn || 200) / exercises.length),
                 completed: false,
               }))
@@ -645,6 +660,44 @@ export function HomeNutritionPage() {
             </div>
           )}
         </GlassCard>
+
+        {/* Smart Burn Suggestions — shows when calories are over target */}
+        {profileData && nutritionData.caloriesConsumed > 0 && nutritionData.caloriesGoal > 0 && (
+          <SmartBurnCard
+            caloriesConsumed={nutritionData.caloriesConsumed}
+            caloriesTarget={nutritionData.caloriesGoal}
+            gender={profileData.gender}
+            age={profileData.age}
+            weight={profileData.weight}
+            activityLevel={profileData.activityLevel}
+            onBurnUpdate={(total) => setBurnedToday(total)}
+          />
+        )}
+
+        {/* Weekly Analytics Navigation Card */}
+        <motion.button
+          whileTap={{ scale: 0.98 }}
+          onClick={() => { hapticFeedback('medium'); navigate('/analytics'); }}
+          className="w-full p-4 rounded-[20px] bg-gradient-to-br from-[#a29bfe]/15 to-[#6c5ce7]/10 border border-[#a29bfe]/20 flex items-center justify-between"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#a29bfe] to-[#6c5ce7] flex items-center justify-center">
+              <BarChart3 className="w-5 h-5 text-white" />
+            </div>
+            <div className="text-left">
+              <p className="text-foreground font-medium" style={{ fontSize: '0.9375rem' }}>
+                {t('ea_title')}
+              </p>
+              <p className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>
+                {burnedToday > 0
+                  ? t('hn_burned_today', { cal: burnedToday })
+                  : t('ea_subtitle')
+                }
+              </p>
+            </div>
+          </div>
+          <ChevronRight className="w-4 h-4 text-[#a29bfe]/60" />
+        </motion.button>
 
         {/* Quick Stats */}
         <div className="grid grid-cols-2 gap-3">

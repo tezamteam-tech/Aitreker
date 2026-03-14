@@ -37,6 +37,12 @@ import {
   AlertCircle,
   Trophy,
   Play,
+  Camera,
+  Utensils,
+  Scale,
+  Ruler,
+  User,
+  Lightbulb,
 } from 'lucide-react';
 import { GlassCard } from './glass-card';
 import { useAuth } from './auth-context';
@@ -45,6 +51,7 @@ import { hapticFeedback, hapticSuccess, hapticError } from './telegram';
 import { useTranslation } from './i18n';
 import { PageHeader } from './page-header';
 import { useBottomSheetLifecycle } from './bottom-sheet-context';
+import { CameraCapture } from './camera-capture';
 
 // ---- Types ----
 type PlanLength = 7 | 30 | 100;
@@ -56,6 +63,19 @@ interface UserProfile {
   goal: string;
   gender: string;
   activity_level: string;
+  age?: number;
+  height?: number;
+  weight?: number;
+  daily_calorie_target?: number;
+  target_protein?: number;
+  target_carbs?: number;
+  target_fat?: number;
+}
+
+interface NutritionContext {
+  caloriesConsumed: number;
+  hasMealPlan: boolean;
+  mealPlanSummary?: string;
 }
 
 interface SavedPlan {
@@ -63,6 +83,7 @@ interface SavedPlan {
   plan_length: number;
   workout_type: WorkoutLocation;
   workout_data: WorkoutPlanData;
+  nutrition_tips?: string[];
   created_at: string;
 }
 
@@ -117,11 +138,23 @@ export function WorkoutPlanPage() {
   const [showHistory, setShowHistory] = useState(false);
   const [savedPlans, setSavedPlans] = useState<SavedPlan[]>([]);
   const [completedExercises, setCompletedExercises] = useState<Set<string>>(new Set());
+  const [dayLoggedToServer, setDayLoggedToServer] = useState<Set<number>>(new Set());
+  const [loggingDay, setLoggingDay] = useState(false);
   const genIntervalRef = useRef<ReturnType<typeof setInterval>>();
+
+  // Body photo state
+  const [bodyPhoto, setBodyPhoto] = useState<string | null>(null);
+  const [showCamera, setShowCamera] = useState(false);
+
+  // Nutrition context state
+  const [nutritionCtx, setNutritionCtx] = useState<NutritionContext>({
+    caloriesConsumed: 0,
+    hasMealPlan: false,
+  });
 
   useBottomSheetLifecycle(showHistory);
 
-  // Load profile
+  // Load profile with full metrics
   useEffect(() => {
     const cachedGoal = localStorage.getItem('nutrition_goal');
     const cachedGender = localStorage.getItem('nutrition_gender');
@@ -138,11 +171,35 @@ export function WorkoutPlanPage() {
         goal: p.goal || 'maintain_weight',
         gender: p.gender || 'male',
         activity_level: p.activity_level || 'medium',
+        age: p.age,
+        height: p.height,
+        weight: p.weight,
+        daily_calorie_target: p.daily_calorie_target,
+        target_protein: p.target_protein,
+        target_carbs: p.target_carbs,
+        target_fat: p.target_fat,
       };
       setProfile(prof);
       localStorage.setItem('nutrition_goal', prof.goal);
       localStorage.setItem('nutrition_gender', prof.gender);
       localStorage.setItem('nutrition_activity', prof.activity_level);
+    }).catch(() => {});
+
+    // Load today's food entries for nutrition context
+    const today = new Date().toISOString().slice(0, 10);
+    api.getFoodEntries(today).then((data) => {
+      setNutritionCtx((prev) => ({ ...prev, caloriesConsumed: data.totals?.calories || 0 }));
+    }).catch(() => {});
+
+    // Check for active meal plan
+    api.getMealPlans().then((res) => {
+      if (res.plans && res.plans.length > 0) {
+        setNutritionCtx((prev) => ({
+          ...prev,
+          hasMealPlan: true,
+          mealPlanSummary: res.plans[0].preview || undefined,
+        }));
+      }
     }).catch(() => {});
   }, [user]);
 
@@ -198,24 +255,52 @@ export function WorkoutPlanPage() {
     setErrorMsg('');
 
     try {
+      // Extract base64 from body photo data URL
+      let imageBase64: string | undefined;
+      let mimeType: string | undefined;
+      if (bodyPhoto) {
+        const match = bodyPhoto.match(/^data:(.+?);base64,(.+)$/);
+        if (match) {
+          mimeType = match[1];
+          imageBase64 = match[2];
+        }
+      }
+
       const result = await api.generateWorkoutPlan({
         plan_length: selectedLength,
         workout_type: workoutLocation,
         goal: profile.goal,
         gender: profile.gender,
         activity_level: profile.activity_level,
+        // Body metrics
+        age: profile.age,
+        height: profile.height,
+        weight: profile.weight,
+        // Photo
+        imageBase64,
+        mimeType,
+        // Nutrition context
+        daily_calorie_target: profile.daily_calorie_target,
+        calories_consumed_today: nutritionCtx.caloriesConsumed || undefined,
+        target_protein: profile.target_protein,
+        target_carbs: profile.target_carbs,
+        target_fat: profile.target_fat,
+        has_meal_plan: nutritionCtx.hasMealPlan,
+        meal_plan_summary: nutritionCtx.mealPlanSummary,
+        language: lang,
       });
       hapticSuccess();
       setCurrentPlan(result);
       setSelectedDay(1);
       setCompletedExercises(new Set());
+      setBodyPhoto(null); // Clear photo after generation
       setViewState('viewing');
     } catch (err: any) {
       hapticError();
       setErrorMsg(err?.message || 'Failed to generate workout plan');
       setViewState('error');
     }
-  }, [profile, selectedLength, workoutLocation]);
+  }, [profile, selectedLength, workoutLocation, bodyPhoto, nutritionCtx, lang]);
 
   // Toggle exercise
   const toggleExercise = (dayNum: number, exerciseIdx: number) => {
@@ -226,6 +311,30 @@ export function WorkoutPlanPage() {
       if (next.has(key)) next.delete(key); else next.add(key);
       return next;
     });
+  };
+
+  // Log workout day completion to backend
+  const handleLogDayCompletion = async () => {
+    if (!currentPlan || !dayData || loggingDay) return;
+    setLoggingDay(true);
+    hapticFeedback('medium');
+    try {
+      await api.logWorkoutCompletion({
+        plan_id: currentPlan.id,
+        day_number: selectedDay,
+        workout_name: dayData.focus || dayData.workout_type || 'Workout',
+        duration_minutes: dayData.duration_minutes || 0,
+        calories_burned: dayData.calories_burn || 0,
+        exercises_completed: dayCompletedCount,
+      });
+      hapticSuccess();
+      setDayLoggedToServer((prev) => new Set(prev).add(selectedDay));
+    } catch (err) {
+      console.warn('[Workout] Failed to log completion:', err);
+      hapticError();
+    } finally {
+      setLoggingDay(false);
+    }
   };
 
   // History
@@ -417,6 +526,129 @@ export function WorkoutPlanPage() {
                 </div>
               </div>
 
+              {/* ---- YOUR BODY section ---- */}
+              {profile && (profile.age || profile.height || profile.weight) && (
+                <GlassCard className="!p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#fd79a8]/20 to-[#e17055]/20 flex items-center justify-center">
+                      <User className="w-5 h-5 text-[#fd79a8]" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
+                        {t('wp_your_body')}
+                      </p>
+                      <p className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
+                        {t('wp_body_desc')}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-4 gap-2 mb-3">
+                    {profile.age ? (
+                      <div className="rounded-xl bg-white/[0.03] border border-white/[0.05] p-2 text-center">
+                        <p className="text-white/35" style={{ fontSize: '0.5625rem' }}>{t('wp_age_label')}</p>
+                        <p className="text-white" style={{ fontSize: '0.875rem', fontWeight: 700 }}>{profile.age}</p>
+                      </div>
+                    ) : null}
+                    {profile.height ? (
+                      <div className="rounded-xl bg-white/[0.03] border border-white/[0.05] p-2 text-center">
+                        <p className="text-white/35" style={{ fontSize: '0.5625rem' }}>{t('wp_height_label')}</p>
+                        <p className="text-white" style={{ fontSize: '0.875rem', fontWeight: 700 }}>{profile.height}<span className="text-white/30 text-[0.5rem]">cm</span></p>
+                      </div>
+                    ) : null}
+                    {profile.weight ? (
+                      <div className="rounded-xl bg-white/[0.03] border border-white/[0.05] p-2 text-center">
+                        <p className="text-white/35" style={{ fontSize: '0.5625rem' }}>{t('wp_weight_label')}</p>
+                        <p className="text-white" style={{ fontSize: '0.875rem', fontWeight: 700 }}>{profile.weight}<span className="text-white/30 text-[0.5rem]">kg</span></p>
+                      </div>
+                    ) : null}
+                    {profile.height && profile.weight ? (
+                      <div className="rounded-xl bg-white/[0.03] border border-white/[0.05] p-2 text-center">
+                        <p className="text-white/35" style={{ fontSize: '0.5625rem' }}>{t('wp_bmi_label')}</p>
+                        <p className="text-white" style={{ fontSize: '0.875rem', fontWeight: 700 }}>
+                          {(profile.weight / ((profile.height / 100) ** 2)).toFixed(1)}
+                        </p>
+                      </div>
+                    ) : null}
+                  </div>
+                  {bodyPhoto ? (
+                    <div className="flex items-center gap-3 p-3 rounded-xl bg-[#00cec9]/8 border border-[#00cec9]/20">
+                      <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0">
+                        <img src={bodyPhoto} alt="Body" className="w-full h-full object-cover" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-[#00cec9]" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{t('wp_photo_added')}</p>
+                        <p className="text-white/30" style={{ fontSize: '0.6875rem' }}>{t('wp_photo_hint')}</p>
+                      </div>
+                      <motion.button whileTap={{ scale: 0.9 }} onClick={() => { hapticFeedback('light'); setBodyPhoto(null); }} className="px-2.5 py-1 rounded-lg bg-white/[0.06]">
+                        <span className="text-white/40" style={{ fontSize: '0.6875rem' }}>{t('wp_remove_photo')}</span>
+                      </motion.button>
+                    </div>
+                  ) : (
+                    <motion.button whileTap={{ scale: 0.97 }} onClick={() => { hapticFeedback('light'); setShowCamera(true); }} className="w-full p-3 rounded-xl border-2 border-dashed border-white/10 flex items-center justify-center gap-2 bg-white/[0.01]">
+                      <Camera className="w-4 h-4 text-[#fd79a8]" />
+                      <span className="text-white/50" style={{ fontSize: '0.8125rem', fontWeight: 500 }}>{t('wp_add_photo')}</span>
+                    </motion.button>
+                  )}
+                </GlassCard>
+              )}
+
+              {/* ---- NUTRITION LINK section ---- */}
+              {profile && (profile.daily_calorie_target || nutritionCtx.hasMealPlan || nutritionCtx.caloriesConsumed > 0) && (
+                <GlassCard className="!p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#00cec9]/20 to-[#74b9ff]/20 flex items-center justify-center">
+                      <Utensils className="w-5 h-5 text-[#00cec9]" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>{t('wp_nutrition_link')}</p>
+                      <p className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>{t('wp_nutrition_link_desc')}</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    {profile.daily_calorie_target ? (
+                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+                        <span className="text-white/40" style={{ fontSize: '0.75rem' }}>{t('wp_cal_target')}</span>
+                        <span className="text-[#00cec9]" style={{ fontSize: '0.875rem', fontWeight: 700 }}>
+                          {profile.daily_calorie_target} <span style={{ fontSize: '0.6875rem', fontWeight: 400 }}>kcal</span>
+                        </span>
+                      </div>
+                    ) : null}
+                    {nutritionCtx.caloriesConsumed > 0 && profile.daily_calorie_target ? (
+                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+                        <span className="text-white/40" style={{ fontSize: '0.75rem' }}>{t('wp_cal_consumed')}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-white" style={{ fontSize: '0.875rem', fontWeight: 700 }}>{nutritionCtx.caloriesConsumed}</span>
+                          {(() => {
+                            const diff = nutritionCtx.caloriesConsumed - (profile.daily_calorie_target || 0);
+                            if (Math.abs(diff) < 50) return null;
+                            const isOver = diff > 0;
+                            return (
+                              <span className="px-1.5 py-0.5 rounded-full" style={{ fontSize: '0.5625rem', fontWeight: 600, backgroundColor: isOver ? '#e1705515' : '#00cec915', color: isOver ? '#e17055' : '#00cec9' }}>
+                                {isOver ? '+' : ''}{diff} {isOver ? t('wp_cal_surplus') : t('wp_cal_deficit')}
+                              </span>
+                            );
+                          })()}
+                        </div>
+                      </div>
+                    ) : null}
+                    {(profile.target_protein || profile.target_carbs || profile.target_fat) ? (
+                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+                        <span className="text-white/40" style={{ fontSize: '0.75rem' }}>{t('wp_macros_label')}</span>
+                        <div className="flex items-center gap-2">
+                          {profile.target_protein ? <span className="px-1.5 py-0.5 rounded-full bg-[#6c5ce7]/15 text-[#a29bfe]" style={{ fontSize: '0.5625rem', fontWeight: 600 }}>P {profile.target_protein}g</span> : null}
+                          {profile.target_carbs ? <span className="px-1.5 py-0.5 rounded-full bg-[#fdcb6e]/15 text-[#fdcb6e]" style={{ fontSize: '0.5625rem', fontWeight: 600 }}>C {profile.target_carbs}g</span> : null}
+                          {profile.target_fat ? <span className="px-1.5 py-0.5 rounded-full bg-[#e17055]/15 text-[#e17055]" style={{ fontSize: '0.5625rem', fontWeight: 600 }}>F {profile.target_fat}g</span> : null}
+                        </div>
+                      </div>
+                    ) : null}
+                    <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+                      <span className="text-white/40" style={{ fontSize: '0.75rem' }}>{nutritionCtx.hasMealPlan ? t('wp_meal_plan_active') : t('wp_no_meal_plan')}</span>
+                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: nutritionCtx.hasMealPlan ? '#00cec9' : '#ffffff15' }} />
+                    </div>
+                  </div>
+                </GlassCard>
+              )}
+
               {/* Generate */}
               <motion.button
                 whileTap={{ scale: 0.97 }}
@@ -559,18 +791,48 @@ export function WorkoutPlanPage() {
                     </div>
                   </div>
 
-                  {/* Completed badge */}
+                  {/* Completed badge + Log to server */}
                   {dayProgress === 100 && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#00cec9]/10 border border-[#00cec9]/20"
-                    >
-                      <Trophy className="w-4 h-4 text-[#00cec9]" />
-                      <span className="text-white/80" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
-                        {t('wp_workout_complete')}
-                      </span>
-                    </motion.div>
+                    <div className="space-y-2">
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#00cec9]/10 border border-[#00cec9]/20"
+                      >
+                        <Trophy className="w-4 h-4 text-[#00cec9]" />
+                        <span className="text-white/80" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
+                          {t('wp_workout_complete')}
+                        </span>
+                      </motion.div>
+
+                      {/* Save completion to backend for analytics */}
+                      {!dayLoggedToServer.has(selectedDay) ? (
+                        <motion.button
+                          initial={{ opacity: 0, y: 6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          whileTap={{ scale: 0.97 }}
+                          onClick={handleLogDayCompletion}
+                          disabled={loggingDay}
+                          className="w-full h-11 rounded-xl bg-gradient-to-r from-[#00cec9] to-[#74b9ff] flex items-center justify-center gap-2 disabled:opacity-60"
+                        >
+                          {loggingDay ? (
+                            <span className="text-white" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{t('wc_logging')}</span>
+                          ) : (
+                            <>
+                              <CheckCircle2 className="w-4 h-4 text-white" />
+                              <span className="text-white" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
+                                {t('wc_complete_day')} · {dayData?.calories_burn || 0} {t('unit_kcal')}
+                              </span>
+                            </>
+                          )}
+                        </motion.button>
+                      ) : (
+                        <div className="flex items-center justify-center gap-2 py-2 text-[#00cec9]/60">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span style={{ fontSize: '0.75rem', fontWeight: 500 }}>{t('wc_completed')}</span>
+                        </div>
+                      )}
+                    </div>
                   )}
                 </GlassCard>
               )}
@@ -619,6 +881,33 @@ export function WorkoutPlanPage() {
                   </p>
                 </div>
               )}
+
+              {/* Nutrition Tips from AI */}
+              {currentPlan?.nutrition_tips && currentPlan.nutrition_tips.length > 0 && (
+                <GlassCard className="!p-4">
+                  <div className="flex items-center gap-2.5 mb-3">
+                    <div className="w-8 h-8 rounded-lg bg-[#00cec9]/15 flex items-center justify-center">
+                      <Lightbulb className="w-4 h-4 text-[#00cec9]" />
+                    </div>
+                    <div>
+                      <p className="text-foreground" style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+                        {t('wp_nutrition_tips')}
+                      </p>
+                      <p className="text-muted-foreground" style={{ fontSize: '0.625rem' }}>
+                        {t('wp_nutrition_tip_from_ai')}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    {currentPlan.nutrition_tips.map((tip, i) => (
+                      <div key={i} className="flex items-start gap-2 p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+                        <span className="text-[#00cec9] flex-shrink-0 mt-0.5" style={{ fontSize: '0.75rem' }}>•</span>
+                        <p className="text-white/60" style={{ fontSize: '0.75rem', lineHeight: 1.5 }}>{tip}</p>
+                      </div>
+                    ))}
+                  </div>
+                </GlassCard>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
@@ -654,6 +943,16 @@ export function WorkoutPlanPage() {
           />
         )}
       </AnimatePresence>
+
+      {/* Camera for body photo */}
+      <CameraCapture
+        open={showCamera}
+        onCapture={(dataUrl) => {
+          setBodyPhoto(dataUrl);
+          setShowCamera(false);
+        }}
+        onClose={() => setShowCamera(false)}
+      />
     </div>
   );
 }
@@ -752,6 +1051,7 @@ function WeeklySchedule({
   planCreatedAt: string;
   lang: string;
 }) {
+  const { t } = useTranslation();
   const DAYS_PER_PAGE = 7;
   const currentWeek = Math.floor((selectedDay - 1) / DAYS_PER_PAGE);
   const totalWeeks = Math.ceil(totalDays / DAYS_PER_PAGE);
@@ -881,6 +1181,7 @@ function ExerciseCard({
   onToggle: () => void;
   lang: string;
 }) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
 
   const formatReps = () => {
@@ -1093,6 +1394,7 @@ function HistorySheet({
   onDelete: (planId: string) => void;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <>
       <motion.div

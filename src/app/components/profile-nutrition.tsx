@@ -52,6 +52,9 @@ interface ProfileData {
   daily_calorie_target?: number;
   bmr?: number;
   daily_maintenance_calories?: number;
+  target_protein?: number;
+  target_carbs?: number;
+  target_fat?: number;
 }
 
 const GOAL_LABELS: Record<Goal, string> = {
@@ -200,6 +203,9 @@ export function ProfileNutritionPage() {
         daily_calorie_target: finalCalories,
         bmr: calorieResult.bmr,
         daily_maintenance_calories: calorieResult.dailyCalories,
+        target_protein: merged.target_protein,
+        target_carbs: merged.target_carbs,
+        target_fat: merged.target_fat,
       });
 
       setProfile({
@@ -212,9 +218,9 @@ export function ProfileNutritionPage() {
       localStorage.setItem('nutrition_calorie_target', String(finalCalories));
       localStorage.setItem('nutrition_bmr', String(calorieResult.bmr));
       localStorage.setItem('nutrition_maintenance', String(calorieResult.dailyCalories));
-
-      hapticSuccess();
-      setEditing(null);
+      if (merged.target_protein) localStorage.setItem('nutrition_target_protein', String(merged.target_protein));
+      if (merged.target_carbs) localStorage.setItem('nutrition_target_carbs', String(merged.target_carbs));
+      if (merged.target_fat) localStorage.setItem('nutrition_target_fat', String(merged.target_fat));
     } catch (err) {
       console.error('[Profile] Save error:', err);
     } finally {
@@ -556,6 +562,24 @@ export function ProfileNutritionPage() {
                   )}
                 </div>
 
+                {/* Macro targets row */}
+                {(profile.target_protein || profile.target_carbs || profile.target_fat) && (
+                  <div className="mt-3 grid grid-cols-3 gap-2">
+                    <div className="rounded-lg py-2 px-1.5 text-center" style={{ background: 'rgba(108,92,231,0.08)', border: '1px solid rgba(108,92,231,0.15)' }}>
+                      <p className="text-[0.6rem] text-muted-foreground">{t('cal_protein')}</p>
+                      <p className="text-sm text-foreground font-semibold">{profile.target_protein || '—'}<span className="text-[0.6rem] text-muted-foreground ml-0.5">g</span></p>
+                    </div>
+                    <div className="rounded-lg py-2 px-1.5 text-center" style={{ background: 'rgba(0,206,201,0.08)', border: '1px solid rgba(0,206,201,0.15)' }}>
+                      <p className="text-[0.6rem] text-muted-foreground">{t('cal_carbs')}</p>
+                      <p className="text-sm text-foreground font-semibold">{profile.target_carbs || '—'}<span className="text-[0.6rem] text-muted-foreground ml-0.5">g</span></p>
+                    </div>
+                    <div className="rounded-lg py-2 px-1.5 text-center" style={{ background: 'rgba(225,112,85,0.08)', border: '1px solid rgba(225,112,85,0.15)' }}>
+                      <p className="text-[0.6rem] text-muted-foreground">{t('cal_fat')}</p>
+                      <p className="text-sm text-foreground font-semibold">{profile.target_fat || '—'}<span className="text-[0.6rem] text-muted-foreground ml-0.5">g</span></p>
+                    </div>
+                  </div>
+                )}
+
                 {/* AI Advisor CTA */}
                 <motion.button
                   whileTap={{ scale: 0.97 }}
@@ -589,9 +613,20 @@ export function ProfileNutritionPage() {
             <AiCalorieAdvisor
               profile={profile}
               currentTarget={profile.daily_calorie_target || 2000}
+              currentMacros={{
+                protein: profile.target_protein,
+                carbs: profile.target_carbs,
+                fat: profile.target_fat,
+              }}
               language={getUserLang()}
-              onApply={(calories) => {
-                saveProfile({ daily_calorie_target: calories });
+              isPremium={isPremium}
+              onApply={(calories, protein, carbs, fat) => {
+                saveProfile({
+                  daily_calorie_target: calories,
+                  target_protein: protein,
+                  target_carbs: carbs,
+                  target_fat: fat,
+                });
                 setShowAiAdvisor(false);
               }}
               onClose={() => setShowAiAdvisor(false)}
