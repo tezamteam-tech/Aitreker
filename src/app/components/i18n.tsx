@@ -1658,6 +1658,16 @@ const translations: Record<string, Record<Lang, string>> = {
   pn_setup_profile: { en: 'Set Up Profile', ru: 'Настроить профиль' },
   pn_maintenance: { en: 'Maintenance', ru: 'Поддержание' },
   pn_bmr_label: { en: 'BMR', ru: 'Базовый метаболизм' },
+  pn_section_body: { en: 'Body & Nutrition', ru: 'Тело и питание' },
+  pn_section_body_desc: { en: 'Metrics, goals & calorie targets', ru: 'Метрики, цели и нормы калорий' },
+  pn_section_app: { en: 'App & Account', ru: 'Приложение' },
+  pn_edit: { en: 'Edit', ru: 'Изменить' },
+  pn_save: { en: 'Save', ru: 'Сохранить' },
+  pn_kcal_day: { en: 'kcal/day', ru: 'ккал/день' },
+  pn_macros: { en: 'Macros', ru: 'Макронутриенты' },
+  pn_edit_metrics: { en: 'Edit Body Metrics', ru: 'Показатели тела' },
+  pn_edit_goal: { en: 'Edit Goal & Activity', ru: 'Цель и активность' },
+  pn_edit_calories: { en: 'Edit Calorie Target', ru: 'Норма калорий' },
 
   // ---- Upgrade Premium ----
   up_title: { en: 'Upgrade to Premium', ru: 'Перейти на Premium' },

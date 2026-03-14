@@ -1,9 +1,6 @@
 // =============================================
-// Profile Screen — Nutrition & Fitness Context
-// =============================================
-// Loads real user profile from API, shows Telegram
-// avatar, supports inline editing of body metrics,
-// goals, and calorie targets.
+// Profile Screen — Redesigned with Collapsible
+// Cards & Bottom Sheet Editing
 // =============================================
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -18,6 +15,7 @@ import {
   Share2,
   LogOut,
   ChevronRight,
+  ChevronDown,
   Edit2,
   Users,
   Crown,
@@ -28,6 +26,7 @@ import {
   Ruler,
   Flame,
   Sparkles,
+  Heart,
 } from 'lucide-react';
 import { GlassCard } from './glass-card';
 import { useAuth } from './auth-context';
@@ -64,9 +63,9 @@ const GOAL_LABELS: Record<Goal, string> = {
 };
 
 const GOAL_ICONS: Record<Goal, string> = {
-  lose_weight: '🔥',
-  maintain_weight: '⚖️',
-  gain_muscle: '💪',
+  lose_weight: '\u{1F525}',
+  maintain_weight: '\u{2696}\u{FE0F}',
+  gain_muscle: '\u{1F4AA}',
 };
 
 const ACTIVITY_LABELS: Record<ActivityLevel, string> = {
@@ -75,6 +74,59 @@ const ACTIVITY_LABELS: Record<ActivityLevel, string> = {
   high: 'pn_activity_high',
   athlete: 'pn_activity_athlete',
 };
+
+// ---- Bottom Sheet Component ----
+function BottomSheet({
+  open,
+  onClose,
+  title,
+  children,
+}: {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <AnimatePresence>
+      {open && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 z-50"
+            onClick={onClose}
+          />
+          <motion.div
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+            className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl max-h-[85vh] overflow-y-auto"
+            style={{ background: 'var(--glass-bg-solid, #1a1a2e)', border: '1px solid var(--glass-border)' }}
+          >
+            <div className="flex justify-center pt-3 pb-1">
+              <div className="w-10 h-1 rounded-full bg-white/20" />
+            </div>
+            <div className="px-5 pb-2 flex items-center justify-between">
+              <h3 className="text-lg text-foreground font-semibold">{title}</h3>
+              <button
+                onClick={onClose}
+                className="w-8 h-8 rounded-full bg-white/[0.06] flex items-center justify-center"
+              >
+                <X className="w-4 h-4 text-muted-foreground" />
+              </button>
+            </div>
+            <div className="px-5 pb-8">
+              {children}
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+}
 
 export function ProfileNutritionPage() {
   const { user, logout, subscriptionActive, subscriptionDaysLeft } = useAuth();
@@ -85,15 +137,19 @@ export function ProfileNutritionPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // Edit state
-  const [editing, setEditing] = useState<string | null>(null); // 'metrics' | 'goal' | 'calories' | null
+  // Bottom sheet state
+  const [sheetType, setSheetType] = useState<'metrics' | 'goal' | 'calories' | null>(null);
   const [editWeight, setEditWeight] = useState('');
   const [editHeight, setEditHeight] = useState('');
   const [editAge, setEditAge] = useState('');
+  const [editGender, setEditGender] = useState<Gender>('male');
   const [editGoal, setEditGoal] = useState<Goal>('maintain_weight');
   const [editActivity, setEditActivity] = useState<ActivityLevel>('medium');
   const [editCalories, setEditCalories] = useState('');
   const [showAiAdvisor, setShowAiAdvisor] = useState(false);
+
+  // Collapsible sections
+  const [expandedSection, setExpandedSection] = useState<string | null>('body');
 
   // Load profile from API
   useEffect(() => {
@@ -103,29 +159,21 @@ export function ProfileNutritionPage() {
         const data = await api.getUserProfile();
         if (!cancelled && data) {
           setProfile(data as ProfileData);
-          // Also hydrate localStorage
           if (data.daily_calorie_target) {
             localStorage.setItem('nutrition_calorie_target', String(data.daily_calorie_target));
           }
-          // Cache full profile for offline use
           localStorage.setItem('nutrition_profile', JSON.stringify(data));
         } else if (!cancelled && !data) {
-          // API returned 404 — try localStorage fallback from onboarding
           try {
             const cached = localStorage.getItem('nutrition_profile');
-            if (cached) {
-              setProfile(JSON.parse(cached) as ProfileData);
-            }
+            if (cached) setProfile(JSON.parse(cached) as ProfileData);
           } catch {}
         }
       } catch (err) {
         console.error('[Profile] Load error:', err);
-        // Fallback: try localStorage cache from onboarding
         try {
           const cached = localStorage.getItem('nutrition_profile');
-          if (cached && !cancelled) {
-            setProfile(JSON.parse(cached) as ProfileData);
-          }
+          if (cached && !cancelled) setProfile(JSON.parse(cached) as ProfileData);
         } catch {}
       } finally {
         if (!cancelled) setLoading(false);
@@ -135,49 +183,43 @@ export function ProfileNutritionPage() {
   }, []);
 
   const isPremium = subscriptionActive;
+  const bmi = profile ? (profile.weight / ((profile.height / 100) ** 2)).toFixed(1) : '\u2014';
 
-  const bmi = profile
-    ? (profile.weight / ((profile.height / 100) ** 2)).toFixed(1)
-    : '—';
-
-  // ---- Edit handlers ----
-  const startEditMetrics = () => {
+  // ---- Open bottom sheets ----
+  const openMetricsSheet = () => {
     if (!profile) return;
     hapticFeedback('light');
     setEditWeight(String(profile.weight));
     setEditHeight(String(profile.height));
     setEditAge(String(profile.age));
-    setEditing('metrics');
+    setEditGender(profile.gender);
+    setSheetType('metrics');
   };
 
-  const startEditGoal = () => {
+  const openGoalSheet = () => {
     if (!profile) return;
     hapticFeedback('light');
     setEditGoal(profile.goal);
     setEditActivity(profile.activity_level);
-    setEditing('goal');
+    setSheetType('goal');
   };
 
-  const startEditCalories = () => {
+  const openCaloriesSheet = () => {
     if (!profile) return;
     hapticFeedback('light');
     setEditCalories(String(profile.daily_calorie_target || 2000));
-    setEditing('calories');
+    setSheetType('calories');
   };
 
-  const cancelEdit = () => {
-    hapticFeedback('light');
-    setEditing(null);
-  };
+  const closeSheet = () => setSheetType(null);
 
+  // ---- Save logic ----
   const saveProfile = useCallback(async (updated: Partial<ProfileData>) => {
     if (!profile) return;
     setSaving(true);
     hapticFeedback('medium');
 
     const merged = { ...profile, ...updated };
-
-    // Recalculate calories if body metrics or goal changed
     const calorieResult = calculateCalories({
       gender: merged.gender,
       age: merged.age,
@@ -187,7 +229,6 @@ export function ProfileNutritionPage() {
       goal: merged.goal,
     });
 
-    // If user is editing calories directly, use their value; otherwise recalculate
     const finalCalories = updated.daily_calorie_target
       ? updated.daily_calorie_target
       : calorieResult.targetCalories;
@@ -218,13 +259,12 @@ export function ProfileNutritionPage() {
       localStorage.setItem('nutrition_calorie_target', String(finalCalories));
       localStorage.setItem('nutrition_bmr', String(calorieResult.bmr));
       localStorage.setItem('nutrition_maintenance', String(calorieResult.dailyCalories));
-      if (merged.target_protein) localStorage.setItem('nutrition_target_protein', String(merged.target_protein));
-      if (merged.target_carbs) localStorage.setItem('nutrition_target_carbs', String(merged.target_carbs));
-      if (merged.target_fat) localStorage.setItem('nutrition_target_fat', String(merged.target_fat));
+      hapticSuccess();
     } catch (err) {
       console.error('[Profile] Save error:', err);
     } finally {
       setSaving(false);
+      setSheetType(null);
     }
   }, [profile]);
 
@@ -233,7 +273,7 @@ export function ProfileNutritionPage() {
     const h = Number(editHeight);
     const a = Number(editAge);
     if (w > 0 && h > 0 && a > 0) {
-      saveProfile({ weight: w, height: h, age: a });
+      saveProfile({ weight: w, height: h, age: a, gender: editGender });
     }
   };
 
@@ -258,6 +298,11 @@ export function ProfileNutritionPage() {
     }
   };
 
+  const toggleSection = (id: string) => {
+    hapticFeedback('light');
+    setExpandedSection((prev) => (prev === id ? null : id));
+  };
+
   const menuItems = [
     { icon: BarChart3, label: t('pn_weight_tracking'), color: '#0984e3', action: () => navigate('/weight') },
     { icon: Bell, label: t('pn_notifications'), color: '#ffeaa7', action: () => navigate('/profile/notifications') },
@@ -266,402 +311,230 @@ export function ProfileNutritionPage() {
   ];
 
   return (
-    <div className="min-h-screen pb-6">
+    <div className="min-h-screen pb-32">
       <PageHeader title={t('profile_title') || 'Profile'} />
 
-      <div className="px-4 space-y-4">
+      <div className="px-4 space-y-3">
 
-        {/* User Card with Telegram Avatar */}
+        {/* ======== User Card ======== */}
         <GlassCard className="p-5">
-          <div className="flex items-center gap-4 mb-4">
+          <div className="flex items-center gap-4">
             {user?.photoUrl ? (
               <img
                 src={user.photoUrl}
                 alt={user.firstName}
-                className="w-16 h-16 rounded-full object-cover border-2 border-white/10"
+                className="w-14 h-14 rounded-full object-cover border-2 border-white/10"
                 onError={(e) => {
-                  // Fallback to gradient icon if avatar fails
                   (e.target as HTMLImageElement).style.display = 'none';
                   (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
                 }}
               />
             ) : null}
-            <div className={`w-16 h-16 rounded-full bg-gradient-to-br from-[#6c5ce7] to-[#a29bfe] flex items-center justify-center ${user?.photoUrl ? 'hidden' : ''}`}>
-              <User className="w-8 h-8 text-white" />
+            <div className={`w-14 h-14 rounded-full bg-gradient-to-br from-[#6c5ce7] to-[#a29bfe] flex items-center justify-center flex-shrink-0 ${user?.photoUrl ? 'hidden' : ''}`}>
+              <User className="w-7 h-7 text-white" />
             </div>
-            <div className="flex-1">
-              <h2 className="text-xl text-foreground font-semibold mb-1">
-                {user?.firstName || 'User'}
-              </h2>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg text-foreground font-semibold truncate">
+                  {user?.firstName || 'User'}
+                </h2>
+                {isPremium && (
+                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-[#ffd700]/20 to-[#ffa500]/20 border border-[#ffd700]/30 flex-shrink-0">
+                    <Crown className="w-3 h-3 text-[#ffd700]" />
+                    <span className="text-[0.625rem] text-[#ffd700] font-semibold">PRO</span>
+                  </div>
+                )}
+              </div>
               <p className="text-sm text-muted-foreground">@{user?.username || 'username'}</p>
             </div>
-            {isPremium && (
-              <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-gradient-to-r from-[#ffd700]/20 to-[#ffa500]/20 border border-[#ffd700]/30">
-                <Crown className="w-4 h-4 text-[#ffd700]" />
-                <span className="text-xs text-[#ffd700]">Pro</span>
-              </div>
-            )}
           </div>
 
-          {/* Body Metrics */}
-          {loading ? (
-            <div className="flex items-center justify-center py-4">
-              <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
-            </div>
-          ) : profile ? (
-            <div className="grid grid-cols-3 gap-3 pt-3" style={{ borderTop: '1px solid var(--glass-border-subtle)' }}>
+          {/* Quick stats row */}
+          {!loading && profile && (
+            <div className="grid grid-cols-3 gap-2 mt-4 pt-3" style={{ borderTop: '1px solid var(--glass-border-subtle)' }}>
               <div className="text-center">
-                <p className="text-xs text-muted-foreground mb-1">{t('pn_weight')}</p>
-                <p className="text-sm text-foreground font-medium">{profile.weight} {t('unit_kg')}</p>
+                <p className="text-lg text-foreground font-semibold">{profile.weight}<span className="text-xs text-muted-foreground ml-0.5">{t('unit_kg')}</span></p>
+                <p className="text-[0.625rem] text-muted-foreground">{t('pn_weight')}</p>
               </div>
               <div className="text-center">
-                <p className="text-xs text-muted-foreground mb-1">{t('pn_height')}</p>
-                <p className="text-sm text-foreground font-medium">{profile.height} {t('unit_cm')}</p>
+                <p className="text-lg text-foreground font-semibold">{profile.height}<span className="text-xs text-muted-foreground ml-0.5">{t('unit_cm')}</span></p>
+                <p className="text-[0.625rem] text-muted-foreground">{t('pn_height')}</p>
               </div>
               <div className="text-center">
-                <p className="text-xs text-muted-foreground mb-1">{t('pn_bmi')}</p>
-                <p className="text-sm text-foreground font-medium">{bmi}</p>
+                <p className="text-lg text-foreground font-semibold">{bmi}</p>
+                <p className="text-[0.625rem] text-muted-foreground">{t('pn_bmi')}</p>
               </div>
-            </div>
-          ) : (
-            <div className="pt-3" style={{ borderTop: '1px solid var(--glass-border-subtle)' }}>
-              <p className="text-sm text-muted-foreground text-center py-2">
-                {t('pn_no_profile')}
-              </p>
-              <button
-                onClick={() => navigate('/')}
-                className="w-full mt-2 py-2.5 rounded-xl bg-[#6c5ce7]/15 border border-[#6c5ce7]/25 text-sm text-[#a29bfe] font-medium"
-              >
-                {t('pn_setup_profile')}
-              </button>
             </div>
           )}
         </GlassCard>
 
-        {/* Body Metrics Edit Card */}
+        {/* ======== Body & Nutrition — Collapsible Section ======== */}
         {profile && (
-          <GlassCard className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Scale className="w-5 h-5 text-[#6c5ce7]" />
-                <h3 className="text-foreground font-medium">{t('pn_body_metrics')}</h3>
-              </div>
-              {editing !== 'metrics' ? (
-                <button onClick={startEditMetrics} className="text-app-accent">
-                  <Edit2 className="w-4 h-4" />
-                </button>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <button onClick={cancelEdit} className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center">
-                    <X className="w-4 h-4 text-muted-foreground" />
-                  </button>
-                  <button
-                    onClick={saveMetrics}
-                    disabled={saving}
-                    className="w-8 h-8 rounded-lg bg-[#00cec9]/20 flex items-center justify-center"
-                  >
-                    {saving ? <Loader2 className="w-4 h-4 text-[#00cec9] animate-spin" /> : <Check className="w-4 h-4 text-[#00cec9]" />}
-                  </button>
+          <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--glass-bg-card)', border: '1px solid var(--glass-border)' }}>
+            {/* Section Header */}
+            <button
+              onClick={() => toggleSection('body')}
+              className="w-full px-5 py-4 flex items-center justify-between"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#6c5ce7]/15 to-[#a29bfe]/10 flex items-center justify-center">
+                  <Heart className="w-4.5 h-4.5 text-[#a29bfe]" />
                 </div>
-              )}
-            </div>
-
-            {editing === 'metrics' ? (
-              <div className="space-y-3">
-                <EditRow icon={<Ruler className="w-4 h-4 text-[#74b9ff]" />} label={t('pn_height')} unit={t('unit_cm')}>
-                  <input
-                    type="number"
-                    value={editHeight}
-                    onChange={(e) => setEditHeight(e.target.value)}
-                    className="w-20 bg-white/[0.06] border border-white/[0.1] rounded-lg px-3 py-1.5 text-foreground text-sm text-right outline-none focus:border-[#6c5ce7]/50"
-                  />
-                </EditRow>
-                <EditRow icon={<Scale className="w-4 h-4 text-[#00cec9]" />} label={t('pn_weight')} unit={t('unit_kg')}>
-                  <input
-                    type="number"
-                    value={editWeight}
-                    onChange={(e) => setEditWeight(e.target.value)}
-                    className="w-20 bg-white/[0.06] border border-white/[0.1] rounded-lg px-3 py-1.5 text-foreground text-sm text-right outline-none focus:border-[#6c5ce7]/50"
-                  />
-                </EditRow>
-                <EditRow icon={<User className="w-4 h-4 text-[#fd79a8]" />} label={t('pn_age')} unit="">
-                  <input
-                    type="number"
-                    value={editAge}
-                    onChange={(e) => setEditAge(e.target.value)}
-                    className="w-20 bg-white/[0.06] border border-white/[0.1] rounded-lg px-3 py-1.5 text-foreground text-sm text-right outline-none focus:border-[#6c5ce7]/50"
-                  />
-                </EditRow>
-              </div>
-            ) : (
-              <div className="space-y-2.5">
-                <MetricRow label={t('pn_height')} value={`${profile.height} ${t('unit_cm')}`} />
-                <MetricRow label={t('pn_weight')} value={`${profile.weight} ${t('unit_kg')}`} />
-                <MetricRow label={t('pn_age')} value={`${profile.age}`} />
-                <MetricRow label={t('pn_gender')} value={profile.gender === 'male' ? t('pn_male') : t('pn_female')} />
-              </div>
-            )}
-          </GlassCard>
-        )}
-
-        {/* Goal & Activity Card */}
-        {profile && (
-          <GlassCard className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Target className="w-5 h-5 text-[#fd79a8]" />
-                <h3 className="text-foreground font-medium">{t('pn_current_goal')}</h3>
-              </div>
-              {editing !== 'goal' ? (
-                <button onClick={startEditGoal} className="text-app-accent">
-                  <Edit2 className="w-4 h-4" />
-                </button>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <button onClick={cancelEdit} className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center">
-                    <X className="w-4 h-4 text-muted-foreground" />
-                  </button>
-                  <button
-                    onClick={saveGoal}
-                    disabled={saving}
-                    className="w-8 h-8 rounded-lg bg-[#00cec9]/20 flex items-center justify-center"
-                  >
-                    {saving ? <Loader2 className="w-4 h-4 text-[#00cec9] animate-spin" /> : <Check className="w-4 h-4 text-[#00cec9]" />}
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {editing === 'goal' ? (
-              <div className="space-y-4">
-                {/* Goal selector */}
-                <div>
-                  <p className="text-xs text-muted-foreground mb-2">{t('pn_select_goal')}</p>
-                  <div className="space-y-2">
-                    {(['lose_weight', 'maintain_weight', 'gain_muscle'] as Goal[]).map((g) => (
-                      <button
-                        key={g}
-                        onClick={() => { hapticFeedback('light'); setEditGoal(g); }}
-                        className={`w-full px-4 py-3 rounded-xl flex items-center gap-3 transition-all ${
-                          editGoal === g
-                            ? 'bg-[#6c5ce7]/15 border border-[#6c5ce7]/30'
-                            : 'bg-white/[0.03] border border-white/[0.06]'
-                        }`}
-                      >
-                        <span style={{ fontSize: '1.25rem' }}>{GOAL_ICONS[g]}</span>
-                        <span className={`text-sm font-medium ${editGoal === g ? 'text-foreground' : 'text-muted-foreground'}`}>
-                          {t(GOAL_LABELS[g])}
-                        </span>
-                        {editGoal === g && <Check className="w-4 h-4 text-[#6c5ce7] ml-auto" />}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Activity level selector */}
-                <div>
-                  <p className="text-xs text-muted-foreground mb-2">{t('pn_activity_level')}</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {(['low', 'medium', 'high', 'athlete'] as ActivityLevel[]).map((a) => (
-                      <button
-                        key={a}
-                        onClick={() => { hapticFeedback('light'); setEditActivity(a); }}
-                        className={`px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                          editActivity === a
-                            ? 'bg-[#00cec9]/15 border border-[#00cec9]/30 text-foreground'
-                            : 'bg-white/[0.03] border border-white/[0.06] text-muted-foreground'
-                        }`}
-                      >
-                        {t(ACTIVITY_LABELS[a])}
-                      </button>
-                    ))}
-                  </div>
+                <div className="text-left">
+                  <p className="text-foreground font-medium text-[0.9375rem]">{t('pn_section_body')}</p>
+                  <p className="text-muted-foreground text-xs">{t('pn_section_body_desc')}</p>
                 </div>
               </div>
-            ) : (
-              <div className="space-y-2.5">
-                <MetricRow
-                  label={t('pn_goal_label')}
-                  value={`${GOAL_ICONS[profile.goal]} ${t(GOAL_LABELS[profile.goal])}`}
-                />
-                <MetricRow
-                  label={t('pn_activity_level')}
-                  value={t(ACTIVITY_LABELS[profile.activity_level])}
-                />
-              </div>
-            )}
-          </GlassCard>
-        )}
+              <motion.div
+                animate={{ rotate: expandedSection === 'body' ? 180 : 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <ChevronDown className="w-5 h-5 text-muted-foreground" />
+              </motion.div>
+            </button>
 
-        {/* Daily Calorie Goal */}
-        {profile && (
-          <GlassCard className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Flame className="w-5 h-5 text-[#e17055]" />
-                <h3 className="text-foreground font-medium">{t('pn_daily_calorie_goal')}</h3>
-              </div>
-              {editing !== 'calories' ? (
-                <button onClick={startEditCalories} className="text-app-accent">
-                  <Edit2 className="w-4 h-4" />
-                </button>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <button onClick={cancelEdit} className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center">
-                    <X className="w-4 h-4 text-muted-foreground" />
-                  </button>
-                  <button
-                    onClick={saveCalories}
-                    disabled={saving}
-                    className="w-8 h-8 rounded-lg bg-[#00cec9]/20 flex items-center justify-center"
-                  >
-                    {saving ? <Loader2 className="w-4 h-4 text-[#00cec9] animate-spin" /> : <Check className="w-4 h-4 text-[#00cec9]" />}
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {editing === 'calories' ? (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    inputMode="numeric"
-                    value={editCalories}
-                    onChange={(e) => setEditCalories(e.target.value)}
-                    className="flex-1 bg-white/[0.06] border border-white/[0.1] rounded-xl px-3 py-2.5 text-foreground text-xl font-semibold text-center outline-none focus:border-[#6c5ce7]/50"
-                  />
-                  <span className="text-muted-foreground text-xs flex-shrink-0">{t('cal_unit')}</span>
-                </div>
-                <p className="text-xs text-muted-foreground text-center">
-                  {t('pn_calorie_hint')}
-                </p>
-              </div>
-            ) : (
-              <>
-                <div className="flex items-end justify-between">
-                  <div>
-                    <p className="text-3xl text-foreground font-semibold">
-                      {profile.daily_calorie_target || '—'}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {t('pn_activity_based', { level: t(ACTIVITY_LABELS[profile.activity_level]) })}
-                    </p>
-                  </div>
-                  {profile.bmr && (
-                    <div className="flex items-center gap-3 text-right">
-                      <div>
-                        <p className="text-[0.625rem] text-muted-foreground">BMR</p>
-                        <p className="text-xs text-foreground font-medium">{profile.bmr}</p>
-                      </div>
-                      <div>
-                        <p className="text-[0.625rem] text-muted-foreground">{t('pn_maintenance')}</p>
-                        <p className="text-xs text-foreground font-medium">{profile.daily_maintenance_calories}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Macro targets row */}
-                {(profile.target_protein || profile.target_carbs || profile.target_fat) && (
-                  <div className="mt-3 grid grid-cols-3 gap-2">
-                    <div className="rounded-lg py-2 px-1.5 text-center" style={{ background: 'rgba(108,92,231,0.08)', border: '1px solid rgba(108,92,231,0.15)' }}>
-                      <p className="text-[0.6rem] text-muted-foreground">{t('cal_protein')}</p>
-                      <p className="text-sm text-foreground font-semibold">{profile.target_protein || '—'}<span className="text-[0.6rem] text-muted-foreground ml-0.5">g</span></p>
-                    </div>
-                    <div className="rounded-lg py-2 px-1.5 text-center" style={{ background: 'rgba(0,206,201,0.08)', border: '1px solid rgba(0,206,201,0.15)' }}>
-                      <p className="text-[0.6rem] text-muted-foreground">{t('cal_carbs')}</p>
-                      <p className="text-sm text-foreground font-semibold">{profile.target_carbs || '—'}<span className="text-[0.6rem] text-muted-foreground ml-0.5">g</span></p>
-                    </div>
-                    <div className="rounded-lg py-2 px-1.5 text-center" style={{ background: 'rgba(225,112,85,0.08)', border: '1px solid rgba(225,112,85,0.15)' }}>
-                      <p className="text-[0.6rem] text-muted-foreground">{t('cal_fat')}</p>
-                      <p className="text-sm text-foreground font-semibold">{profile.target_fat || '—'}<span className="text-[0.6rem] text-muted-foreground ml-0.5">g</span></p>
-                    </div>
-                  </div>
-                )}
-
-                {/* AI Advisor CTA */}
-                <motion.button
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => {
-                    hapticFeedback('medium');
-                    setShowAiAdvisor(true);
-                  }}
-                  className="w-full mt-3 p-3 rounded-xl flex items-center gap-3 relative overflow-hidden"
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(108,92,231,0.1), rgba(0,206,201,0.06))',
-                    border: '1px solid rgba(108,92,231,0.2)',
-                  }}
+            {/* Expandable Content */}
+            <AnimatePresence initial={false}>
+              {expandedSection === 'body' && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.25, ease: 'easeInOut' }}
+                  className="overflow-hidden"
                 >
-                  <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#6c5ce7]/20 to-[#a29bfe]/20 flex items-center justify-center flex-shrink-0">
-                    <Sparkles className="w-4 h-4 text-[#a29bfe]" />
+                  <div className="px-4 pb-4 space-y-2">
+
+                    {/* Body Metrics Row */}
+                    <button
+                      onClick={openMetricsSheet}
+                      className="w-full p-3.5 rounded-xl flex items-center justify-between"
+                      style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Scale className="w-4.5 h-4.5 text-[#6c5ce7]" />
+                        <div className="text-left">
+                          <p className="text-foreground text-sm font-medium">{t('pn_body_metrics')}</p>
+                          <p className="text-muted-foreground text-xs">
+                            {profile.weight}{t('unit_kg')} \u00B7 {profile.height}{t('unit_cm')} \u00B7 {profile.age} {t('pn_age').toLowerCase()} \u00B7 {profile.gender === 'male' ? t('pn_male') : t('pn_female')}
+                          </p>
+                        </div>
+                      </div>
+                      <Edit2 className="w-4 h-4 text-muted-foreground/50" />
+                    </button>
+
+                    {/* Goal & Activity Row */}
+                    <button
+                      onClick={openGoalSheet}
+                      className="w-full p-3.5 rounded-xl flex items-center justify-between"
+                      style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Target className="w-4.5 h-4.5 text-[#fd79a8]" />
+                        <div className="text-left">
+                          <p className="text-foreground text-sm font-medium">{t('pn_current_goal')}</p>
+                          <p className="text-muted-foreground text-xs">
+                            {GOAL_ICONS[profile.goal]} {t(GOAL_LABELS[profile.goal])} \u00B7 {t(ACTIVITY_LABELS[profile.activity_level])}
+                          </p>
+                        </div>
+                      </div>
+                      <Edit2 className="w-4 h-4 text-muted-foreground/50" />
+                    </button>
+
+                    {/* Calorie Target Row */}
+                    <button
+                      onClick={openCaloriesSheet}
+                      className="w-full p-3.5 rounded-xl flex items-center justify-between"
+                      style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Flame className="w-4.5 h-4.5 text-[#e17055]" />
+                        <div className="text-left">
+                          <p className="text-foreground text-sm font-medium">{t('pn_daily_calorie_goal')}</p>
+                          <p className="text-muted-foreground text-xs">
+                            {profile.daily_calorie_target || '\u2014'} {t('pn_kcal_day')}
+                            {profile.target_protein ? ` \u00B7 \u0411:${profile.target_protein} \u0423:${profile.target_carbs || '?'} \u0416:${profile.target_fat || '?'}` : ''}
+                          </p>
+                        </div>
+                      </div>
+                      <Edit2 className="w-4 h-4 text-muted-foreground/50" />
+                    </button>
+
+                    {/* AI Advisor CTA */}
+                    <motion.button
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => {
+                        hapticFeedback('medium');
+                        setShowAiAdvisor(true);
+                      }}
+                      className="w-full p-3.5 rounded-xl flex items-center gap-3 relative overflow-hidden"
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(108,92,231,0.1), rgba(0,206,201,0.06))',
+                        border: '1px solid rgba(108,92,231,0.2)',
+                      }}
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#6c5ce7]/20 to-[#a29bfe]/20 flex items-center justify-center flex-shrink-0">
+                        <Sparkles className="w-4 h-4 text-[#a29bfe]" />
+                      </div>
+                      <div className="flex-1 text-left">
+                        <p className="text-foreground text-sm font-medium">{t('pn_ask_ai')}</p>
+                        <p className="text-muted-foreground text-[0.6875rem] leading-snug">{t('pn_ask_ai_desc')}</p>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-[#a29bfe]/60 flex-shrink-0" />
+                    </motion.button>
                   </div>
-                  <div className="flex-1 text-left">
-                    <p className="text-foreground text-sm font-medium">{t('pn_ask_ai')}</p>
-                    <p className="text-muted-foreground text-xs leading-snug">{t('pn_ask_ai_desc')}</p>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-[#a29bfe]/60 flex-shrink-0" />
-                </motion.button>
-              </>
-            )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
+
+        {/* No profile fallback */}
+        {!loading && !profile && (
+          <GlassCard className="p-5">
+            <p className="text-sm text-muted-foreground text-center py-2">
+              {t('pn_no_profile')}
+            </p>
+            <button
+              onClick={() => navigate('/')}
+              className="w-full mt-2 py-2.5 rounded-xl bg-[#6c5ce7]/15 border border-[#6c5ce7]/25 text-sm text-[#a29bfe] font-medium"
+            >
+              {t('pn_setup_profile')}
+            </button>
           </GlassCard>
         )}
 
-        {/* AI Calorie Advisor Bottom Sheet */}
-        <AnimatePresence>
-          {showAiAdvisor && profile && (
-            <AiCalorieAdvisor
-              profile={profile}
-              currentTarget={profile.daily_calorie_target || 2000}
-              currentMacros={{
-                protein: profile.target_protein,
-                carbs: profile.target_carbs,
-                fat: profile.target_fat,
-              }}
-              language={getUserLang()}
-              isPremium={isPremium}
-              onApply={(calories, protein, carbs, fat) => {
-                saveProfile({
-                  daily_calorie_target: calories,
-                  target_protein: protein,
-                  target_carbs: carbs,
-                  target_fat: fat,
-                });
-                setShowAiAdvisor(false);
-              }}
-              onClose={() => setShowAiAdvisor(false)}
-            />
-          )}
-        </AnimatePresence>
+        {/* Loading state */}
+        {loading && (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-6 h-6 text-muted-foreground animate-spin" />
+          </div>
+        )}
 
-        {/* Premium Upgrade CTA for free users */}
+        {/* ======== Premium Upgrade / Status ======== */}
         {!isPremium && (
           <motion.button
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => {
-              hapticFeedback('medium');
-              navigate('/upgrade');
-            }}
-            className="w-full p-5 rounded-[20px] bg-gradient-to-br from-[#6c5ce7] to-[#a29bfe] relative overflow-hidden"
+            onClick={() => { hapticFeedback('medium'); navigate('/upgrade'); }}
+            className="w-full p-4 rounded-[20px] bg-gradient-to-br from-[#6c5ce7] to-[#a29bfe] relative overflow-hidden"
             style={{ boxShadow: '0 8px 32px rgba(108,92,231,0.3)' }}
           >
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/[0.06] rounded-full -translate-y-1/2 translate-x-1/2" />
-            <div className="relative flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center flex-shrink-0">
-                <Crown className="w-7 h-7 text-white" />
+            <div className="relative flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                <Crown className="w-6 h-6 text-white" />
               </div>
               <div className="flex-1 text-left">
-                <p className="text-white font-semibold text-base mb-0.5">{t('pn_upgrade_premium')}</p>
-                <p className="text-white/70 text-sm">{t('pn_upgrade_desc')}</p>
+                <p className="text-white font-semibold text-sm mb-0.5">{t('pn_upgrade_premium')}</p>
+                <p className="text-white/70 text-xs">{t('pn_upgrade_desc')}</p>
               </div>
               <ChevronRight className="w-5 h-5 text-white/60" />
             </div>
           </motion.button>
         )}
 
-        {/* Premium status badge for subscribers */}
         {isPremium && subscriptionDaysLeft > 0 && (
           <GlassCard className="p-4">
             <div className="flex items-center justify-between">
@@ -681,107 +554,342 @@ export function ProfileNutritionPage() {
           </GlassCard>
         )}
 
-        {/* Menu Items */}
-        <div className="space-y-2">
-          {menuItems.map((item, idx) => {
-            const Icon = item.icon;
-            return (
-              <motion.button
-                key={idx}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.05 }}
-                onClick={() => {
-                  hapticFeedback('light');
-                  item.action();
-                }}
-                className="w-full"
+        {/* ======== App & Account Section ======== */}
+        <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--glass-bg-card)', border: '1px solid var(--glass-border)' }}>
+          <button
+            onClick={() => toggleSection('app')}
+            className="w-full px-5 py-4 flex items-center justify-between"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#74b9ff]/15 to-[#0984e3]/10 flex items-center justify-center">
+                <Settings className="w-4.5 h-4.5 text-[#74b9ff]" />
+              </div>
+              <p className="text-foreground font-medium text-[0.9375rem]">{t('pn_section_app')}</p>
+            </div>
+            <motion.div
+              animate={{ rotate: expandedSection === 'app' ? 180 : 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <ChevronDown className="w-5 h-5 text-muted-foreground" />
+            </motion.div>
+          </button>
+
+          <AnimatePresence initial={false}>
+            {expandedSection === 'app' && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.25, ease: 'easeInOut' }}
+                className="overflow-hidden"
               >
-                <GlassCard className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center"
-                        style={{ backgroundColor: `${item.color}20` }}
+                <div className="px-4 pb-4 space-y-1">
+                  {menuItems.map((item, idx) => {
+                    const Icon = item.icon;
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => { hapticFeedback('light'); item.action(); }}
+                        className="w-full p-3 rounded-xl flex items-center justify-between"
+                        style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}
                       >
-                        <Icon className="w-5 h-5" style={{ color: item.color }} />
-                      </div>
-                      <span className="text-foreground font-medium">{item.label}</span>
-                    </div>
-                    <ChevronRight className="w-5 h-5 text-muted-foreground" />
-                  </div>
-                </GlassCard>
-              </motion.button>
-            );
-          })}
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="w-8 h-8 rounded-lg flex items-center justify-center"
+                            style={{ backgroundColor: `${item.color}18` }}
+                          >
+                            <Icon className="w-4 h-4" style={{ color: item.color }} />
+                          </div>
+                          <span className="text-foreground text-sm font-medium">{item.label}</span>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-muted-foreground/40" />
+                      </button>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
-        {/* Share Referral */}
+        {/* ======== Share Referral ======== */}
         <motion.button
           whileTap={{ scale: 0.98 }}
           onClick={handleReferralShare}
           className="w-full p-4 rounded-[20px] bg-gradient-to-br from-[#00cec9] to-[#74b9ff] flex items-center justify-between"
         >
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
-              <Share2 className="w-6 h-6 text-white" />
+            <div className="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center">
+              <Share2 className="w-5 h-5 text-white" />
             </div>
             <div className="text-left">
-              <p className="text-white font-medium">{t('pn_share_friends')}</p>
-              <p className="text-white/70 text-sm">{t('pn_share_rewards')}</p>
+              <p className="text-white font-medium text-sm">{t('pn_share_friends')}</p>
+              <p className="text-white/70 text-xs">{t('pn_share_rewards')}</p>
             </div>
           </div>
           <ChevronRight className="w-5 h-5 text-white/80" />
         </motion.button>
 
-        {/* Sign Out */}
+        {/* ======== Sign Out ======== */}
         <button
-          onClick={() => {
-            hapticFeedback('medium');
-            logout();
-          }}
-          className="w-full p-4 rounded-[18px] flex items-center justify-center gap-2"
+          onClick={() => { hapticFeedback('medium'); logout(); }}
+          className="w-full p-3.5 rounded-[18px] flex items-center justify-center gap-2"
           style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border)' }}
         >
-          <LogOut className="w-5 h-5 text-muted-foreground" />
-          <span className="text-foreground/80">{t('pn_sign_out')}</span>
+          <LogOut className="w-4.5 h-4.5 text-muted-foreground" />
+          <span className="text-foreground/80 text-sm">{t('pn_sign_out')}</span>
         </button>
 
       </div>
+
+      {/* ======== BOTTOM SHEETS ======== */}
+
+      {/* Metrics Bottom Sheet */}
+      <BottomSheet
+        open={sheetType === 'metrics'}
+        onClose={closeSheet}
+        title={t('pn_edit_metrics')}
+      >
+        <div className="space-y-4 mt-3">
+          {/* Gender toggle */}
+          <div>
+            <label className="text-xs text-muted-foreground mb-2 block">{t('pn_gender')}</label>
+            <div className="grid grid-cols-2 gap-2">
+              {(['male', 'female'] as Gender[]).map((g) => (
+                <button
+                  key={g}
+                  onClick={() => { hapticFeedback('light'); setEditGender(g); }}
+                  className={`py-2.5 rounded-xl text-sm font-medium transition-all ${
+                    editGender === g
+                      ? 'bg-[#6c5ce7]/15 border border-[#6c5ce7]/30 text-foreground'
+                      : 'bg-white/[0.03] border border-white/[0.06] text-muted-foreground'
+                  }`}
+                >
+                  {g === 'male' ? t('pn_male') : t('pn_female')}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <SheetInput
+            icon={<Ruler className="w-4 h-4 text-[#74b9ff]" />}
+            label={t('pn_height')}
+            unit={t('unit_cm')}
+            value={editHeight}
+            onChange={setEditHeight}
+          />
+          <SheetInput
+            icon={<Scale className="w-4 h-4 text-[#00cec9]" />}
+            label={t('pn_weight')}
+            unit={t('unit_kg')}
+            value={editWeight}
+            onChange={setEditWeight}
+          />
+          <SheetInput
+            icon={<User className="w-4 h-4 text-[#fd79a8]" />}
+            label={t('pn_age')}
+            unit=""
+            value={editAge}
+            onChange={setEditAge}
+          />
+
+          <button
+            onClick={saveMetrics}
+            disabled={saving}
+            className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe] text-white font-semibold text-sm flex items-center justify-center gap-2 mt-2"
+          >
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+            {t('pn_save')}
+          </button>
+        </div>
+      </BottomSheet>
+
+      {/* Goal Bottom Sheet */}
+      <BottomSheet
+        open={sheetType === 'goal'}
+        onClose={closeSheet}
+        title={t('pn_edit_goal')}
+      >
+        <div className="space-y-5 mt-3">
+          {/* Goal selector */}
+          <div>
+            <label className="text-xs text-muted-foreground mb-2 block">{t('pn_select_goal')}</label>
+            <div className="space-y-2">
+              {(['lose_weight', 'maintain_weight', 'gain_muscle'] as Goal[]).map((g) => (
+                <button
+                  key={g}
+                  onClick={() => { hapticFeedback('light'); setEditGoal(g); }}
+                  className={`w-full px-4 py-3.5 rounded-xl flex items-center gap-3 transition-all ${
+                    editGoal === g
+                      ? 'bg-[#6c5ce7]/15 border border-[#6c5ce7]/30'
+                      : 'bg-white/[0.03] border border-white/[0.06]'
+                  }`}
+                >
+                  <span style={{ fontSize: '1.25rem' }}>{GOAL_ICONS[g]}</span>
+                  <span className={`text-sm font-medium ${editGoal === g ? 'text-foreground' : 'text-muted-foreground'}`}>
+                    {t(GOAL_LABELS[g])}
+                  </span>
+                  {editGoal === g && <Check className="w-4 h-4 text-[#6c5ce7] ml-auto" />}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Activity level selector */}
+          <div>
+            <label className="text-xs text-muted-foreground mb-2 block">{t('pn_activity_level')}</label>
+            <div className="grid grid-cols-2 gap-2">
+              {(['low', 'medium', 'high', 'athlete'] as ActivityLevel[]).map((a) => (
+                <button
+                  key={a}
+                  onClick={() => { hapticFeedback('light'); setEditActivity(a); }}
+                  className={`px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                    editActivity === a
+                      ? 'bg-[#00cec9]/15 border border-[#00cec9]/30 text-foreground'
+                      : 'bg-white/[0.03] border border-white/[0.06] text-muted-foreground'
+                  }`}
+                >
+                  {t(ACTIVITY_LABELS[a])}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <button
+            onClick={saveGoal}
+            disabled={saving}
+            className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe] text-white font-semibold text-sm flex items-center justify-center gap-2"
+          >
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+            {t('pn_save')}
+          </button>
+        </div>
+      </BottomSheet>
+
+      {/* Calories Bottom Sheet */}
+      <BottomSheet
+        open={sheetType === 'calories'}
+        onClose={closeSheet}
+        title={t('pn_edit_calories')}
+      >
+        <div className="space-y-4 mt-3">
+          <div className="flex flex-col items-center gap-2">
+            <input
+              type="number"
+              inputMode="numeric"
+              value={editCalories}
+              onChange={(e) => setEditCalories(e.target.value)}
+              className="w-full bg-white/[0.06] border border-white/[0.1] rounded-2xl px-4 py-4 text-foreground text-3xl font-bold text-center outline-none focus:border-[#6c5ce7]/50"
+            />
+            <span className="text-muted-foreground text-sm">{t('pn_kcal_day')}</span>
+          </div>
+
+          {/* Show BMR & Maintenance info */}
+          {profile?.bmr && (
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-xl py-3 px-3 text-center" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
+                <p className="text-[0.625rem] text-muted-foreground mb-0.5">BMR</p>
+                <p className="text-foreground font-semibold text-sm">{profile.bmr}</p>
+              </div>
+              <div className="rounded-xl py-3 px-3 text-center" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
+                <p className="text-[0.625rem] text-muted-foreground mb-0.5">{t('pn_maintenance')}</p>
+                <p className="text-foreground font-semibold text-sm">{profile.daily_maintenance_calories}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Macro targets if available */}
+          {profile && (profile.target_protein || profile.target_carbs || profile.target_fat) && (
+            <div className="grid grid-cols-3 gap-2">
+              <div className="rounded-xl py-2.5 px-2 text-center" style={{ background: 'rgba(108,92,231,0.08)', border: '1px solid rgba(108,92,231,0.15)' }}>
+                <p className="text-[0.6rem] text-muted-foreground">{t('cal_protein')}</p>
+                <p className="text-sm text-foreground font-semibold">{profile.target_protein || '\u2014'}<span className="text-[0.6rem] text-muted-foreground ml-0.5">g</span></p>
+              </div>
+              <div className="rounded-xl py-2.5 px-2 text-center" style={{ background: 'rgba(0,206,201,0.08)', border: '1px solid rgba(0,206,201,0.15)' }}>
+                <p className="text-[0.6rem] text-muted-foreground">{t('cal_carbs')}</p>
+                <p className="text-sm text-foreground font-semibold">{profile.target_carbs || '\u2014'}<span className="text-[0.6rem] text-muted-foreground ml-0.5">g</span></p>
+              </div>
+              <div className="rounded-xl py-2.5 px-2 text-center" style={{ background: 'rgba(225,112,85,0.08)', border: '1px solid rgba(225,112,85,0.15)' }}>
+                <p className="text-[0.6rem] text-muted-foreground">{t('cal_fat')}</p>
+                <p className="text-sm text-foreground font-semibold">{profile.target_fat || '\u2014'}<span className="text-[0.6rem] text-muted-foreground ml-0.5">g</span></p>
+              </div>
+            </div>
+          )}
+
+          <p className="text-xs text-muted-foreground text-center">
+            {t('pn_calorie_hint')}
+          </p>
+
+          <button
+            onClick={saveCalories}
+            disabled={saving}
+            className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe] text-white font-semibold text-sm flex items-center justify-center gap-2"
+          >
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+            {t('pn_save')}
+          </button>
+        </div>
+      </BottomSheet>
+
+      {/* AI Calorie Advisor Bottom Sheet */}
+      <AnimatePresence>
+        {showAiAdvisor && profile && (
+          <AiCalorieAdvisor
+            profile={profile}
+            currentTarget={profile.daily_calorie_target || 2000}
+            currentMacros={{
+              protein: profile.target_protein,
+              carbs: profile.target_carbs,
+              fat: profile.target_fat,
+            }}
+            language={getUserLang()}
+            isPremium={isPremium}
+            onApply={(calories, protein, carbs, fat) => {
+              saveProfile({
+                daily_calorie_target: calories,
+                target_protein: protein,
+                target_carbs: carbs,
+                target_fat: fat,
+              });
+              setShowAiAdvisor(false);
+            }}
+            onClose={() => setShowAiAdvisor(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
 // ---- Sub-components ----
-function MetricRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between py-1">
-      <span className="text-sm text-muted-foreground">{label}</span>
-      <span className="text-sm text-foreground font-medium">{value}</span>
-    </div>
-  );
-}
-
-function EditRow({
+function SheetInput({
   icon,
   label,
   unit,
-  children,
+  value,
+  onChange,
 }: {
   icon: React.ReactNode;
   label: string;
   unit: string;
-  children: React.ReactNode;
+  value: string;
+  onChange: (v: string) => void;
 }) {
   return (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2">
+    <div>
+      <label className="text-xs text-muted-foreground mb-1.5 flex items-center gap-1.5">
         {icon}
-        <span className="text-sm text-muted-foreground">{label}</span>
-      </div>
-      <div className="flex items-center gap-1.5">
-        {children}
-        {unit && <span className="text-xs text-muted-foreground w-6">{unit}</span>}
+        {label}
+      </label>
+      <div className="flex items-center gap-2">
+        <input
+          type="number"
+          inputMode="numeric"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="flex-1 bg-white/[0.06] border border-white/[0.1] rounded-xl px-3 py-2.5 text-foreground text-base font-medium text-right outline-none focus:border-[#6c5ce7]/50"
+        />
+        {unit && <span className="text-sm text-muted-foreground w-8">{unit}</span>}
       </div>
     </div>
   );
