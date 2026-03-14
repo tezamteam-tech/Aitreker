@@ -20,7 +20,14 @@ function getBotToken(): string {
 }
 
 function getMiniAppUrl(): string {
-  return Deno.env.get("PROPERFOOD_MINIAPP_URL") || Deno.env.get("BECOME_MINIAPP_URL") || "";
+  const raw = Deno.env.get("PROPERFOOD_MINIAPP_URL") || Deno.env.get("BECOME_MINIAPP_URL") || "";
+  // CRITICAL: web_app: { url } buttons require a direct HTTPS URL, NOT a t.me deep link
+  if (raw && (raw.includes("t.me/") || raw.includes("telegram.me/"))) {
+    console.log(`[CRITICAL] PROPERFOOD_MINIAPP_URL is a t.me deep link ("${raw}") — BUTTON_URL_INVALID!`);
+    console.log(`[CRITICAL] Set PROPERFOOD_MINIAPP_URL to the actual web app URL (e.g. https://your-app.domain.com)`);
+    return "";
+  }
+  return raw;
 }
 
 /**
@@ -460,8 +467,8 @@ export function buildReturningStartMessage(user: TgUser, deepLinkParam?: string,
         `\u{1F44B} <b>${t("welcome_returning", lang, { name })}</b>`,
         ``,
         lang === "ru"
-          ? "\u{1F4F1} \u041D\u0430\u0436\u043C\u0438 \u043A\u043D\u043E\u043F\u043A\u0443 <b>\u00AB\u041E\u0442\u043A\u0440\u044B\u0442\u044C Proper Food\u00BB</b> \u043D\u0430 \u043A\u043B\u0430\u0432\u0438\u0430\u0442\u0443\u0440\u0435 \u0432\u043D\u0438\u0437\u0443 \u{1F447} \u0438\u043B\u0438 \u043A\u043D\u043E\u043F\u043A\u0443 <b>\u041C\u0435\u043D\u044E</b> (\u2630) \u0441\u043B\u0435\u0432\u0430 \u043E\u0442 \u043F\u043E\u043B\u044F \u0432\u0432\u043E\u0434\u0430."
-          : "\u{1F4F1} Tap <b>\u00ABOpen Proper Food\u00BB</b> on the keyboard below \u{1F447} or the <b>Menu</b> button (\u2630) next to the text field.",
+          ? "\u{1F4F1} \u041D\u0430\u0436\u043C\u0438 \u043A\u043D\u043E\u043F\u043A\u0443 <b>\u00AB\u041E\u0442\u043A\u0440\u044B\u0442\u044C\u00BB</b> \u043D\u0430 \u043A\u043B\u0430\u0432\u0438\u0430\u0442\u0443\u0440\u0435 \u0432\u043D\u0438\u0437\u0443 \u{1F447} \u0438\u043B\u0438 \u043A\u043D\u043E\u043F\u043A\u0443 <b>\u041C\u0435\u043D\u044E</b> (\u2630) \u0441\u043B\u0435\u0432\u0430 \u043E\u0442 \u043F\u043E\u043B\u044F \u0432\u0432\u043E\u0434\u0430."
+          : "\u{1F4F1} Tap <b>\u00ABOpen\u00BB</b> on the keyboard below \u{1F447} or the <b>Menu</b> button (\u2630) next to the text field.",
       ].join("\n")
     : [
         `\u{1F44B} <b>${t("welcome_returning", lang, { name })}</b>`,
@@ -544,8 +551,8 @@ export function buildContactSuccessMessage(user: TgUser, _appUrl?: string): {
       resize_keyboard: true,
       is_persistent: true,
       input_field_placeholder: lang === "ru"
-        ? "\u041D\u0430\u0436\u043C\u0438 \u043A\u043D\u043E\u043F\u043A\u0443 \u00AB\u041E\u0442\u043A\u0440\u044B\u0442\u044C Proper Food\u00BB \u2B06\uFE0F"
-        : "Tap \u00ABOpen Proper Food\u00BB above \u2B06\uFE0F",
+        ? "\u041D\u0430\u0436\u043C\u0438 \u043A\u043D\u043E\u043F\u043A\u0443 \u00AB\u041E\u0442\u043A\u0440\u044B\u0442\u044C\u00BB \u2B06\uFE0F"
+        : "Tap \u00ABOpen\u00BB above \u2B06\uFE0F",
     },
   };
 }
@@ -575,7 +582,7 @@ export function buildReplyKeyboard(lang: Lang = "en", appUrl?: string): ReplyKey
     // Fallback: plain text button when PROPERFOOD_MINIAPP_URL is not set
     // This ensures the keyboard is never empty (which would leave old keyboards intact)
     keyboard.push([
-      { text: "\u{1F680} " + t("btn_open_app", lang), style: "primary" },
+      { text: t("btn_open_app", lang), style: "primary" },
     ]);
   }
 
@@ -584,8 +591,8 @@ export function buildReplyKeyboard(lang: Lang = "en", appUrl?: string): ReplyKey
     resize_keyboard: true,
     is_persistent: true,
     input_field_placeholder: lang === "ru"
-      ? "Нажми «Открыть Proper Food» ⬆️"
-      : "Tap «Open Proper Food» above ⬆️",
+      ? "Нажми кнопку «Открыть» ⬆️"
+      : "Tap «Open» above ⬆️",
   };
 }
 

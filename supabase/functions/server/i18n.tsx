@@ -94,8 +94,8 @@ const translations: Record<string, Record<Lang, string>> = {
     ru: "\u{1F4F2} Поделиться контактом",
   },
   btn_open_app: {
-    en: "\u{1F3AF} Open Proper Food",
-    ru: "\u{1F3AF} Открыть Proper Food",
+    en: "Open",
+    ru: "Открыть",
   },
   btn_progress: {
     en: "\u{1F4CA} My Progress",
@@ -257,7 +257,7 @@ const translations: Record<string, Record<Lang, string>> = {
   },
   notif_daily_greetings: {
     en: "Rise and build.|New day, new chance.|Your future self is watching.|Small steps, big change.|Show up for yourself today.",
-    ru: "Вставай и строй.|Новый день, новая возможность.|Твоя будущая версия наблюдает.|Маленькие шаги, большие изменения.|Появляйся для себя сегодня.",
+    ru: "Вставай и строй.|Новый день, новая возможность.|Твоя будуща�� версия наблюдает.|Маленькие шаги, большие изменения.|Появляйся для себя сегодня.",
   },
   notif_daily_tasks_waiting: {
     en: "{n} tasks waiting for you.",
@@ -392,7 +392,7 @@ const translations: Record<string, Record<Lang, string>> = {
   },
   notif_daily_calories_under: {
     en: "You're {amount} cal under your target. Don't forget to eat!",
-    ru: "До нормы ещё {amount} ккал. Не забудь поесть!",
+    ru: "До нормы ещё {amount} ккал. Не забудь поес��ь!",
   },
   notif_daily_calories_perfect: {
     en: "Great job! You hit your calorie target today!",

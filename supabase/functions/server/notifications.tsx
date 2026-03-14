@@ -87,7 +87,12 @@ async function safeSend(
 // ---- Mini App URL helpers ----
 
 function miniAppUrl(): string {
-  return Deno.env.get("PROPERFOOD_MINIAPP_URL") || Deno.env.get("BECOME_MINIAPP_URL") || "";
+  const raw = Deno.env.get("PROPERFOOD_MINIAPP_URL") || Deno.env.get("BECOME_MINIAPP_URL") || "";
+  if (raw && (raw.includes("t.me/") || raw.includes("telegram.me/"))) {
+    console.log(`[CRITICAL] PROPERFOOD_MINIAPP_URL is a t.me deep link — BUTTON_URL_INVALID!`);
+    return "";
+  }
+  return raw;
 }
 
 /**

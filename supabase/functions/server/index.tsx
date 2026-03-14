@@ -90,7 +90,15 @@ function getProperBotToken(): string {
 }
 
 function getProperMiniAppUrl(): string {
-  return Deno.env.get("PROPERFOOD_MINIAPP_URL") || Deno.env.get("BECOME_MINIAPP_URL") || "";
+  const raw = Deno.env.get("PROPERFOOD_MINIAPP_URL") || Deno.env.get("BECOME_MINIAPP_URL") || "";
+  // CRITICAL: web_app: { url } buttons require a direct HTTPS URL, NOT a t.me deep link
+  if (raw && (raw.includes("t.me/") || raw.includes("telegram.me/"))) {
+    console.log(`[CRITICAL] PROPERFOOD_MINIAPP_URL is a t.me deep link ("${raw}") — this WILL cause BUTTON_URL_INVALID errors!`);
+    console.log(`[CRITICAL] Set PROPERFOOD_MINIAPP_URL to the actual web app URL (e.g. https://your-app.domain.com)`);
+    // Return empty string so buttons fall back to callback_data instead of crashing
+    return "";
+  }
+  return raw;
 }
 
 // ---- Helpers ----
@@ -5091,7 +5099,7 @@ async function handleChallengeCommand(msg: TgMessage): Promise<void> {
 
   const keyboard: InlineKeyboardButton[][] = [];
   if (miniAppUrl) {
-    keyboard.push([{
+    keyboard.push([
       webAppButton(lang === "ru" ? "\uD83C\uDFC6 \u0421\u043C\u043E\u0442\u0440\u0435\u0442\u044C" : "\uD83C\uDFC6 View Challenges", "challenge"),
     ]);
   }
@@ -5234,7 +5242,7 @@ async function handleCallbackQuery(cbq: TgCallbackQuery): Promise<void> {
 
         const tKeyboard: InlineKeyboardButton[][] = [];
         if (miniAppUrl) {
-          tKeyboard.push([{
+          tKeyboard.push([
             webAppButton(tLang === "ru"
               ? `\uD83C\uDFAF \u041D\u0430\u0447\u0430\u0442\u044C \u0434\u0435\u043D\u044C ${todayData.dayNumber}`
               : `\uD83C\uDFAF Start Day ${todayData.dayNumber}`, "today"),
