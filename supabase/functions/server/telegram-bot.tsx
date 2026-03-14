@@ -81,6 +81,7 @@ export interface ReplyKeyboardButton {
   text: string;
   request_contact?: boolean;
   web_app?: { url: string };
+  style?: "danger" | "success" | "primary";
 }
 
 export interface ReplyKeyboardMarkup {
@@ -525,9 +526,9 @@ export function buildContactSuccessMessage(user: TgUser, _appUrl?: string): {
   // Reply keyboard: web_app button (appears blue in keyboard area)
   const replyKb: ReplyKeyboardButton[][] = [];
   if (miniAppUrl) {
-    replyKb.push([{ text: t("btn_open_app", lang), web_app: { url: miniAppUrl } }]);
+    replyKb.push([{ text: t("btn_open_app", lang), web_app: { url: miniAppUrl }, style: "primary" }]);
   } else {
-    replyKb.push([{ text: "\u{1F680} " + t("btn_open_app", lang) }]);
+    replyKb.push([{ text: "\u{1F680} " + t("btn_open_app", lang), style: "primary" }]);
   }
 
   return {
@@ -561,15 +562,15 @@ export function buildReplyKeyboard(lang: Lang = "en", appUrl?: string): ReplyKey
   const keyboard: ReplyKeyboardButton[][] = [];
 
   if (miniAppUrl) {
-    // Single row: "Open Proper Food" web_app button
+    // Single row: "Open Proper Food" web_app button — blue via style: "primary"
     keyboard.push([
-      { text: t("btn_open_app", lang), web_app: { url: miniAppUrl } },
+      { text: t("btn_open_app", lang), web_app: { url: miniAppUrl }, style: "primary" },
     ]);
   } else {
     // Fallback: plain text button when PROPERFOOD_MINIAPP_URL is not set
     // This ensures the keyboard is never empty (which would leave old keyboards intact)
     keyboard.push([
-      { text: "\u{1F680} " + t("btn_open_app", lang) },
+      { text: "\u{1F680} " + t("btn_open_app", lang), style: "primary" },
     ]);
   }
 
