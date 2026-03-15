@@ -115,9 +115,10 @@
 
   /* Mesh gradient — light, airy, pastel */
   --mesh-gradient:
-    radial-gradient(ellipse 80% 50% at 20% 80%, rgba(108, 92, 231, 0.06) 0%, transparent 50%),
-    radial-gradient(ellipse 60% 60% at 80% 20%, rgba(162, 155, 254, 0.05) 0%, transparent 50%),
-    radial-gradient(ellipse 50% 40% at 50% 50%, rgba(85, 163, 248, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse 65% 55% at 15% 20%, rgba(86, 150, 214, 0.035) 0%, transparent 70%),
+    radial-gradient(ellipse 55% 65% at 80% 10%, rgba(140, 170, 230, 0.03) 0%, transparent 65%),
+    radial-gradient(ellipse 60% 50% at 60% 80%, rgba(72, 199, 220, 0.03) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 55% at 25% 75%, rgba(251, 210, 100, 0.018) 0%, transparent 60%),
     linear-gradient(160deg, rgba(252, 253, 255, 1) 0%, rgba(248, 250, 254, 1) 100%);
 
   /* Pattern overlay opacity */
@@ -196,9 +197,10 @@
 
   /* Mesh gradient — deep, rich, subtle */
   --mesh-gradient:
-    radial-gradient(ellipse 80% 50% at 20% 80%, rgba(108, 92, 231, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse 60% 60% at 80% 20%, rgba(85, 70, 200, 0.06) 0%, transparent 50%),
-    radial-gradient(ellipse 50% 40% at 50% 50%, rgba(55, 55, 100, 0.05) 0%, transparent 50%),
+    radial-gradient(ellipse 65% 55% at 15% 20%, rgba(86, 109, 214, 0.18) 0%, transparent 70%),
+    radial-gradient(ellipse 55% 65% at 80% 10%, rgba(168, 130, 255, 0.12) 0%, transparent 65%),
+    radial-gradient(ellipse 60% 50% at 60% 80%, rgba(72, 199, 220, 0.10) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 55% at 25% 75%, rgba(251, 191, 36, 0.06) 0%, transparent 60%),
     linear-gradient(160deg, rgba(14, 14, 22, 1) 0%, rgba(8, 8, 16, 1) 100%);
 
   --pattern-opacity: 0.15;

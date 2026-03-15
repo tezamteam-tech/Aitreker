@@ -125,7 +125,7 @@ export function ProfileNutritionPage() {
   const [editHips, setEditHips] = useState('');
 
   // Collapsible sections
-  const [expandedSection, setExpandedSection] = useState<string | null>('body');
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
   // Load profile from API
   useEffect(() => {
@@ -614,25 +614,6 @@ export function ProfileNutritionPage() {
           </motion.button>
         )}
 
-        {isPremium && subscriptionDaysLeft > 0 && (
-          <GlassCard className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#ffd700]/15 flex items-center justify-center">
-                  <Crown className="w-5 h-5 text-[#ffd700]" />
-                </div>
-                <div>
-                  <p className="text-foreground font-medium text-sm">{t('pn_premium_active')}</p>
-                  <p className="text-muted-foreground text-xs">{t('pn_days_remaining', { n: subscriptionDaysLeft })}</p>
-                </div>
-              </div>
-              <div className="px-3 py-1 rounded-full bg-[#ffd700]/10 border border-[#ffd700]/20">
-                <span className="text-xs text-[#ffd700] font-medium">PRO</span>
-              </div>
-            </div>
-          </GlassCard>
-        )}
-
         {/* ======== App & Account Section ======== */}
         <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--glass-bg-card)', border: '1px solid var(--glass-border)' }}>
           <button
@@ -663,28 +644,124 @@ export function ProfileNutritionPage() {
                 className="overflow-hidden"
               >
                 <div className="px-4 pb-4 space-y-1">
-                  {menuItems.map((item, idx) => {
-                    const Icon = item.icon;
-                    return (
-                      <button
-                        key={idx}
-                        onClick={() => { hapticFeedback('light'); item.action(); }}
-                        className="w-full p-3 rounded-xl flex items-center justify-between"
-                        style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div
-                            className="w-8 h-8 rounded-lg flex items-center justify-center"
-                            style={{ backgroundColor: `${item.color}18` }}
-                          >
-                            <Icon className="w-4 h-4" style={{ color: item.color }} />
-                          </div>
-                          <span className="text-foreground text-sm font-medium">{item.label}</span>
-                        </div>
-                        <ChevronRight className="w-4 h-4 text-muted-foreground/40" />
-                      </button>
-                    );
-                  })}
+                  {/* Notifications */}
+                  <button
+                    onClick={() => { hapticFeedback('light'); navigate('/profile/notifications'); }}
+                    className="w-full p-3 rounded-xl flex items-center justify-between"
+                    style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'rgba(253,203,110,0.1)' }}>
+                        <Bell className="w-4 h-4 text-[#ffeaa7]" />
+                      </div>
+                      <span className="text-foreground text-sm font-medium">{t('pn_notifications')}</span>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground/40" />
+                  </button>
+
+                  {/* Referrals — with count badge */}
+                  <button
+                    onClick={() => { hapticFeedback('light'); navigate('/referrals'); }}
+                    className="w-full p-3 rounded-xl flex items-center justify-between"
+                    style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'rgba(162,155,254,0.1)' }}>
+                        <Users className="w-4 h-4 text-[#a29bfe]" />
+                      </div>
+                      <div className="flex flex-col items-start">
+                        <span className="text-foreground text-sm font-medium">{t('pn_referrals')}</span>
+                        {(user?.referralCount ?? 0) > 0 && (
+                          <span className="text-muted-foreground text-[0.625rem]">
+                            {t('pn_referrals_invited', { n: user?.referralCount || 0 })}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {(user?.referralCount ?? 0) > 0 && (
+                        <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-[#a29bfe]/15 text-[#a29bfe] text-[0.625rem] font-bold flex items-center justify-center">
+                          {user?.referralCount}
+                        </span>
+                      )}
+                      <ChevronRight className="w-4 h-4 text-muted-foreground/40" />
+                    </div>
+                  </button>
+
+                  {/* Social Tasks — earn bonus weeks */}
+                  <button
+                    onClick={() => { hapticFeedback('light'); navigate('/bonuses'); }}
+                    className="w-full p-3 rounded-xl flex items-center justify-between"
+                    style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'rgba(0,206,201,0.1)' }}>
+                        <Sparkles className="w-4 h-4 text-[#00cec9]" />
+                      </div>
+                      <div className="flex flex-col items-start">
+                        <span className="text-foreground text-sm font-medium">{t('pn_social_tasks')}</span>
+                        <span className="text-muted-foreground text-[0.625rem]">{t('pn_social_tasks_desc')}</span>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground/40" />
+                  </button>
+
+                  {/* Subscription */}
+                  <button
+                    onClick={() => { hapticFeedback('light'); navigate('/upgrade'); }}
+                    className="w-full p-3 rounded-xl flex items-center justify-between"
+                    style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: isPremium ? 'rgba(255,215,0,0.1)' : 'rgba(108,92,231,0.1)' }}>
+                        <Crown className="w-4 h-4" style={{ color: isPremium ? '#ffd700' : '#6c5ce7' }} />
+                      </div>
+                      <div className="flex flex-col items-start">
+                        <span className="text-foreground text-sm font-medium">{t('pn_subscription')}</span>
+                        <span className="text-muted-foreground text-[0.625rem]">
+                          {isPremium
+                            ? t('pn_sub_active_days', { n: subscriptionDaysLeft })
+                            : t('pn_sub_free')}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {isPremium && (
+                        <span className="px-1.5 py-0.5 rounded-full bg-[#ffd700]/10 border border-[#ffd700]/20 text-[0.5625rem] text-[#ffd700] font-semibold">PRO</span>
+                      )}
+                      <ChevronRight className="w-4 h-4 text-muted-foreground/40" />
+                    </div>
+                  </button>
+
+                  {/* Settings */}
+                  <button
+                    onClick={() => { hapticFeedback('light'); navigate('/profile/settings'); }}
+                    className="w-full p-3 rounded-xl flex items-center justify-between"
+                    style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'rgba(116,185,255,0.1)' }}>
+                        <Settings className="w-4 h-4 text-[#74b9ff]" />
+                      </div>
+                      <span className="text-foreground text-sm font-medium">{t('pn_settings')}</span>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground/40" />
+                  </button>
+
+                  {/* Developer badge — Tezam.by */}
+                  <div className="pt-2">
+                    <a
+                      href="https://tezam.by"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => hapticFeedback('light')}
+                      className="w-full py-2.5 rounded-xl flex items-center justify-center gap-1.5 opacity-50 hover:opacity-70 transition-opacity"
+                    >
+                      <Heart className="w-3 h-3 text-muted-foreground" />
+                      <span className="text-muted-foreground text-[0.6875rem]">{t('pn_developed_by')}</span>
+                      <span className="text-foreground/60 text-[0.6875rem] font-medium">Tezam.by</span>
+                    </a>
+                  </div>
                 </div>
               </motion.div>
             )}

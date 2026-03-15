@@ -176,21 +176,21 @@ export function CameraCapture({ open, onCapture, onClose }: CameraCaptureProps) 
               </div>
             )}
 
-            {/* Close button */}
+            {/* Close button — positioned below TG system header */}
             <button
               onClick={handleClose}
-              className="absolute top-4 left-4 w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm border border-white/10 flex items-center justify-center"
-              style={{ marginTop: 'var(--safe-area-top, 56px)' }}
+              className="absolute left-4 w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm border border-white/10 flex items-center justify-center"
+              style={{ top: 'calc(var(--safe-area-top, 56px) + 48px)' }}
             >
               <X className="w-5 h-5 text-white" />
             </button>
 
-            {/* Switch camera button */}
+            {/* Switch camera button — positioned below TG system header */}
             {ready && (
               <button
                 onClick={switchCamera}
-                className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm border border-white/10 flex items-center justify-center"
-                style={{ marginTop: 'var(--safe-area-top, 56px)' }}
+                className="absolute right-4 w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm border border-white/10 flex items-center justify-center"
+                style={{ top: 'calc(var(--safe-area-top, 56px) + 48px)' }}
               >
                 <SwitchCamera className="w-5 h-5 text-white" />
               </button>

@@ -2712,6 +2712,15 @@ app.get(`${PREFIX}/bonuses`, async (c) => {
     const tgClaimed = !!(await kv.get(`become:bonus:social:${auth.userId}:telegram`));
     const igClaimed = !!(await kv.get(`become:bonus:social:${auth.userId}:instagram`));
 
+    // Load admin-configured social tasks
+    const adminTasks: any[] = (await kv.get('become:social-tasks')) || [];
+    const tasksWithStatus = await Promise.all(
+      adminTasks.filter((t: any) => t.is_active !== false).map(async (task: any) => {
+        const claimed = !!(await kv.get(`become:bonus:task:${auth.userId}:${task.id}`));
+        return { ...task, claimed };
+      })
+    );
+
     const now = Date.now();
     const subExpires = user.subscriptionExpiresAt ? new Date(user.subscriptionExpiresAt).getTime() : 0;
     const daysLeft = Math.max(0, Math.ceil((subExpires - now) / (24 * 60 * 60 * 1000)));
@@ -2730,6 +2739,7 @@ app.get(`${PREFIX}/bonuses`, async (c) => {
         telegram: { claimed: tgClaimed },
         instagram: { claimed: igClaimed },
       },
+      socialTasks: tasksWithStatus,
       referral: {
         code: user.referralCode || null,
         count: user.referralCount || 0,
@@ -2760,7 +2770,7 @@ app.post(`${PREFIX}/bonuses/social-claim`, async (c) => {
       return c.json({ message: "Already claimed", code: "ALREADY_CLAIMED", status: 409 }, 409);
     }
 
-    // Mark as claimed
+    // Mark as claimed (legacy platform keys)
     await kv.set(`become:bonus:social:${auth.userId}:${platform}`, { claimedAt: new Date().toISOString() });
 
     // Add 7 days to subscription
@@ -2852,6 +2862,147 @@ app.post(`${PREFIX}/bonuses/referral-register`, async (c) => {
   } catch (err) {
     console.log("POST /bonuses/referral-register error:", err);
     return c.json({ message: `Error registering referral: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- POST /social-tasks/claim ----
+// Claim bonus for a dynamic admin-configured social task
+app.post(`${PREFIX}/social-tasks/claim`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const { taskId } = await c.req.json();
+    if (!taskId) return c.json({ message: "Missing taskId", code: "BAD_REQUEST", status: 400 }, 400);
+
+    // Verify task exists
+    const tasks: any[] = (await kv.get('become:social-tasks')) || [];
+    const task = tasks.find((t: any) => t.id === taskId);
+    if (!task || task.is_active === false) {
+      return c.json({ message: "Task not found or inactive", code: "NOT_FOUND", status: 404 }, 404);
+    }
+
+    // Check if already claimed
+    const claimKey = `become:bonus:task:${auth.userId}:${taskId}`;
+    const alreadyClaimed = await kv.get(claimKey);
+    if (alreadyClaimed) {
+      return c.json({ message: "Already claimed", code: "ALREADY_CLAIMED", status: 409 }, 409);
+    }
+
+    // Mark claimed
+    await kv.set(claimKey, { claimedAt: new Date().toISOString() });
+
+    // Add reward days to subscription
+    const rewardDays = task.reward_days || 7;
+    const user = await kv.get(`become:user:${auth.userId}`);
+    if (user) {
+      const currentExpiry = user.subscriptionExpiresAt ? new Date(user.subscriptionExpiresAt).getTime() : Date.now();
+      const base = Math.max(currentExpiry, Date.now());
+      user.subscriptionExpiresAt = new Date(base + rewardDays * 24 * 60 * 60 * 1000).toISOString();
+      user.updatedAt = new Date().toISOString();
+      await kv.set(`become:user:${auth.userId}`, user);
+    }
+
+    console.log(`[SocialTasks] Claimed: user=${auth.userId}, task=${taskId}, +${rewardDays} days`);
+    return c.json({ success: true, rewardDays, newExpiresAt: user?.subscriptionExpiresAt });
+  } catch (err) {
+    console.log("POST /social-tasks/claim error:", err);
+    return c.json({ message: `Error claiming task: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- GET /admin/social-tasks ----
+// Admin: list all social tasks
+app.get(`${PREFIX}/admin/social-tasks`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const user = await kv.get(`become:user:${auth.userId}`);
+    if (!user || !isAdminUser(String(user.telegramId))) {
+      return c.json({ message: "Admin only", code: "FORBIDDEN", status: 403 }, 403);
+    }
+
+    const tasks: any[] = (await kv.get('become:social-tasks')) || [];
+    return c.json({ tasks });
+  } catch (err) {
+    console.log("GET /admin/social-tasks error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- POST /admin/social-tasks ----
+// Admin: add or update a social task
+// Body: { id?, platform, name, url, reward_days, is_active }
+app.post(`${PREFIX}/admin/social-tasks`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const user = await kv.get(`become:user:${auth.userId}`);
+    if (!user || !isAdminUser(String(user.telegramId))) {
+      return c.json({ message: "Admin only", code: "FORBIDDEN", status: 403 }, 403);
+    }
+
+    const body = await c.req.json();
+    const { platform, name, url, reward_days, is_active, image_url } = body;
+    if (!platform || !name || !url) {
+      return c.json({ message: "Missing required fields: platform, name, url", code: "BAD_REQUEST", status: 400 }, 400);
+    }
+
+    const tasks: any[] = (await kv.get('become:social-tasks')) || [];
+    const taskId = body.id || `task_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+
+    const existingIdx = tasks.findIndex((t: any) => t.id === taskId);
+    const taskData = {
+      id: taskId,
+      platform,
+      name,
+      url,
+      image_url: image_url || null,
+      reward_days: reward_days || 7,
+      is_active: is_active !== false,
+      created_at: existingIdx >= 0 ? tasks[existingIdx].created_at : new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    if (existingIdx >= 0) {
+      tasks[existingIdx] = taskData;
+    } else {
+      tasks.push(taskData);
+    }
+
+    await kv.set('become:social-tasks', tasks);
+    console.log(`[Admin] Social task saved: ${taskId} (${platform}/${name})`);
+    return c.json({ success: true, task: taskData, totalTasks: tasks.length });
+  } catch (err) {
+    console.log("POST /admin/social-tasks error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- DELETE /admin/social-tasks/:id ----
+// Admin: delete a social task
+app.delete(`${PREFIX}/admin/social-tasks/:id`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const user = await kv.get(`become:user:${auth.userId}`);
+    if (!user || !isAdminUser(String(user.telegramId))) {
+      return c.json({ message: "Admin only", code: "FORBIDDEN", status: 403 }, 403);
+    }
+
+    const taskId = c.req.param('id');
+    const tasks: any[] = (await kv.get('become:social-tasks')) || [];
+    const filtered = tasks.filter((t: any) => t.id !== taskId);
+    await kv.set('become:social-tasks', filtered);
+
+    console.log(`[Admin] Social task deleted: ${taskId}`);
+    return c.json({ success: true, remaining: filtered.length });
+  } catch (err) {
+    console.log("DELETE /admin/social-tasks error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
   }
 });
 

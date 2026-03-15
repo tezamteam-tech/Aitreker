@@ -234,6 +234,44 @@ export function ReferralsPage() {
               />
             </div>
 
+            {/* Competitive Summary */}
+            {totalInvited > 0 && (
+              <GlassCard className="!p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Trophy className="w-4 h-4 text-[#ffd700]" />
+                  <p className="text-foreground" style={{ fontSize: '0.875rem', fontWeight: 700 }}>
+                    {t('ref_competitive_title')}
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.05] text-center">
+                    <p className="text-foreground" style={{ fontSize: '1.25rem', fontWeight: 800 }}>
+                      {Math.round((subscribedCount / Math.max(totalInvited, 1)) * 100)}%
+                    </p>
+                    <p className="text-muted-foreground/50 mt-0.5" style={{ fontSize: '0.625rem' }}>
+                      {t('ref_conversion_rate')}
+                    </p>
+                  </div>
+                  <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.05] text-center">
+                    <p className="text-foreground" style={{ fontSize: '1.25rem', fontWeight: 800 }}>
+                      {10 - nextMilestoneProgress}
+                    </p>
+                    <p className="text-muted-foreground/50 mt-0.5" style={{ fontSize: '0.625rem' }}>
+                      {t('ref_until_milestone')}
+                    </p>
+                  </div>
+                </div>
+                {data.invited_users.filter(u => u.is_subscribed).length > 0 && (
+                  <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-[#ffd700]/5 border border-[#ffd700]/10">
+                    <Sparkles className="w-3 h-3 text-[#ffd700]/50" />
+                    <p className="text-muted-foreground/50" style={{ fontSize: '0.6875rem' }}>
+                      {t('ref_friends_with_pro', { n: subscribedCount })}
+                    </p>
+                  </div>
+                )}
+              </GlassCard>
+            )}
+
             {/* Invite Friends Card */}
             <GlassCard className="!p-5" variant="elevated">
               <div className="flex items-center gap-3 mb-4">
@@ -406,7 +444,7 @@ export function ReferralsPage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.04 }}
                   >
-                    <ReferralCard user={invUser} />
+                    <ReferralCard user={invUser} rank={idx + 1} />
                   </motion.div>
                 ))}
               </div>
@@ -417,6 +455,20 @@ export function ReferralsPage() {
 
             {/* How it works */}
             <HowItWorks />
+
+            {/* Developer credit */}
+            <div className="pt-2 pb-4">
+              <a
+                href="https://tezam.by"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => hapticFeedback('light')}
+                className="w-full py-3 flex items-center justify-center gap-1.5 opacity-40 hover:opacity-60 transition-opacity"
+              >
+                <span className="text-muted-foreground text-[0.6875rem]">{t('pn_developed_by')}</span>
+                <span className="text-foreground/60 text-[0.6875rem] font-medium">Tezam.by</span>
+              </a>
+            </div>
           </>
         )}
       </div>
@@ -481,13 +533,17 @@ function RewardTier({
   );
 }
 
-function ReferralCard({ user }: { user: InvitedUser }) {
+function ReferralCard({ user, rank }: { user: InvitedUser; rank: number }) {
   const { t } = useTranslation();
   const initials = user.first_name ? user.first_name.charAt(0).toUpperCase() : '?';
   const joinedDate = new Date(user.joined_at).toLocaleDateString(
     t('locale_code'),
     { day: 'numeric', month: 'short' }
   );
+
+  // Days since joined
+  const daysSinceJoined = Math.floor((Date.now() - new Date(user.joined_at).getTime()) / (24 * 60 * 60 * 1000));
+  const isNew = daysSinceJoined <= 3;
 
   // Random-ish gradient based on user_id
   const gradients = [
@@ -502,15 +558,21 @@ function ReferralCard({ user }: { user: InvitedUser }) {
   return (
     <GlassCard className="!p-4">
       <div className="flex items-center gap-3">
-        {/* Avatar */}
-        <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${gradients[gradientIdx]} flex items-center justify-center flex-shrink-0`}>
-          <span className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 700 }}>{initials}</span>
+        {/* Rank + Avatar */}
+        <div className="relative flex-shrink-0">
+          <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${gradients[gradientIdx]} flex items-center justify-center`}>
+            <span className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 700 }}>{initials}</span>
+          </div>
+          {/* Rank badge */}
+          <div className="absolute -top-1.5 -left-1.5 w-5 h-5 rounded-full bg-[#6c5ce7] border-2 border-[rgba(0,0,0,0.3)] flex items-center justify-center">
+            <span className="text-white" style={{ fontSize: '0.5rem', fontWeight: 800 }}>#{rank}</span>
+          </div>
         </div>
 
         {/* Info */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <p className="text-white truncate" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-foreground truncate" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
               {user.first_name}
             </p>
             {user.is_subscribed && (
@@ -519,15 +581,20 @@ function ReferralCard({ user }: { user: InvitedUser }) {
                 <span className="text-[#ffd700]" style={{ fontSize: '0.5625rem', fontWeight: 600 }}>PRO</span>
               </span>
             )}
+            {isNew && (
+              <span className="px-1.5 py-0.5 rounded-md bg-[#00cec9]/10 border border-[#00cec9]/15 text-[#00cec9]" style={{ fontSize: '0.5625rem', fontWeight: 600 }}>
+                {t('ref_new')}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2 mt-0.5">
             {user.username && (
-              <span className="text-white/30 truncate" style={{ fontSize: '0.75rem' }}>@{user.username}</span>
+              <span className="text-muted-foreground/50 truncate" style={{ fontSize: '0.75rem' }}>@{user.username}</span>
             )}
-            <span className="text-white/15">·</span>
-            <span className="flex items-center gap-0.5 text-white/25" style={{ fontSize: '0.6875rem' }}>
+            <span className="text-muted-foreground/20">&middot;</span>
+            <span className="flex items-center gap-0.5 text-muted-foreground/40" style={{ fontSize: '0.6875rem' }}>
               <Clock className="w-2.5 h-2.5" />
-              {joinedDate}
+              {daysSinceJoined === 0 ? t('ref_today') : t('ref_days_ago', { n: daysSinceJoined })}
             </span>
           </div>
         </div>
@@ -543,8 +610,8 @@ function ReferralCard({ user }: { user: InvitedUser }) {
             </div>
           ) : (
             <div className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-white/[0.03]">
-              <CheckCircle2 className="w-3 h-3 text-white/20" />
-              <span className="text-white/25" style={{ fontSize: '0.6875rem', fontWeight: 500 }}>
+              <CheckCircle2 className="w-3 h-3 text-muted-foreground/30" />
+              <span className="text-muted-foreground/40" style={{ fontSize: '0.6875rem', fontWeight: 500 }}>
                 {t('ref_pending')}
               </span>
             </div>

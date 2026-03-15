@@ -46,7 +46,7 @@ import type { AdminUser } from './api-client';
 import { hapticFeedback, hapticSuccess } from './telegram';
 import { useTranslation } from './i18n';
 
-type Tab = 'stats' | 'users' | 'broadcast';
+type Tab = 'stats' | 'users' | 'broadcast' | 'social';
 
 export function AdminPage() {
   const navigate = useNavigate();
@@ -67,11 +67,12 @@ export function AdminPage() {
         </div>
 
         {/* Tabs */}
-        <div className="px-5 pb-3 flex gap-2">
+        <div className="px-5 pb-3 flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
           {([
             { id: 'stats' as Tab, icon: BarChart3, label: t('adm_tab_stats') },
             { id: 'users' as Tab, icon: Users, label: t('adm_tab_users') },
             { id: 'broadcast' as Tab, icon: Megaphone, label: t('adm_tab_broadcast') },
+            { id: 'social' as Tab, icon: Star, label: t('adm_tab_social') },
           ]).map(tab => (
             <button
               key={tab.id}
@@ -95,6 +96,7 @@ export function AdminPage() {
         {activeTab === 'stats' && <StatsSection />}
         {activeTab === 'users' && <UsersSection />}
         {activeTab === 'broadcast' && <BroadcastSection />}
+        {activeTab === 'social' && <SocialTasksSection />}
       </div>
     </div>
   );
@@ -1138,6 +1140,340 @@ function BroadcastSection() {
                   {t('adm_error')}: {result.error || 'Unknown'}
                 </div>
               )}
+            </GlassCard>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ---- Social Tasks Section (Admin CRUD) ----
+function SocialTasksSection() {
+  const { t } = useTranslation();
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [editingTask, setEditingTask] = useState<any>(null);
+
+  const [formPlatform, setFormPlatform] = useState('telegram');
+  const [formName, setFormName] = useState('');
+  const [formUrl, setFormUrl] = useState('');
+  const [formImageUrl, setFormImageUrl] = useState('');
+  const [formRewardDays, setFormRewardDays] = useState('7');
+  const [formActive, setFormActive] = useState(true);
+
+  const PLATFORMS = ['telegram', 'instagram', 'youtube', 'tiktok', 'twitter', 'other'];
+
+  const loadTasks = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await api.getAdminSocialTasks();
+      setTasks(res.tasks || []);
+    } catch (err) {
+      console.error('[Admin] Social tasks load error:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { loadTasks(); }, [loadTasks]);
+
+  const resetForm = () => {
+    setFormPlatform('telegram');
+    setFormName('');
+    setFormUrl('');
+    setFormImageUrl('');
+    setFormRewardDays('7');
+    setFormActive(true);
+    setEditingTask(null);
+    setShowForm(false);
+  };
+
+  const openEditForm = (task: any) => {
+    hapticFeedback('light');
+    setEditingTask(task);
+    setFormPlatform(task.platform || 'telegram');
+    setFormName(task.name || '');
+    setFormUrl(task.url || '');
+    setFormImageUrl(task.image_url || '');
+    setFormRewardDays(String(task.reward_days || 7));
+    setFormActive(task.is_active !== false);
+    setShowForm(true);
+  };
+
+  const handleSave = async () => {
+    if (!formName.trim() || !formUrl.trim()) return;
+    setSaving(true);
+    try {
+      await api.saveAdminSocialTask({
+        id: editingTask?.id,
+        platform: formPlatform,
+        name: formName.trim(),
+        url: formUrl.trim(),
+        image_url: formImageUrl.trim() || undefined,
+        reward_days: parseInt(formRewardDays) || 7,
+        is_active: formActive,
+      });
+      hapticSuccess();
+      resetForm();
+      await loadTasks();
+    } catch (err) {
+      console.error('[Admin] Save social task error:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (taskId: string) => {
+    hapticFeedback('medium');
+    try {
+      await api.deleteAdminSocialTask(taskId);
+      hapticSuccess();
+      await loadTasks();
+    } catch (err) {
+      console.error('[Admin] Delete social task error:', err);
+    }
+  };
+
+  const handleToggleActive = async (task: any) => {
+    hapticFeedback('light');
+    try {
+      await api.saveAdminSocialTask({
+        id: task.id,
+        platform: task.platform,
+        name: task.name,
+        url: task.url,
+        image_url: task.image_url,
+        reward_days: task.reward_days,
+        is_active: task.is_active === false,
+      });
+      await loadTasks();
+    } catch (err) {
+      console.error('[Admin] Toggle task error:', err);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-6 h-6 text-[#a29bfe] animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Header + Add */}
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-white/80" style={{ fontSize: '0.9375rem', fontWeight: 700 }}>
+            {t('adm_social_title')}
+          </p>
+          <p className="text-white/30" style={{ fontSize: '0.6875rem' }}>
+            {t('adm_social_desc')}
+          </p>
+        </div>
+        <motion.button
+          whileTap={{ scale: 0.95 }}
+          onClick={() => { hapticFeedback('light'); resetForm(); setShowForm(true); }}
+          className="h-9 px-4 rounded-xl bg-[#6c5ce7] text-white flex items-center gap-1.5"
+          style={{ fontSize: '0.8125rem', fontWeight: 600 }}
+        >
+          <Plus className="w-4 h-4" />
+          {t('adm_social_add')}
+        </motion.button>
+      </div>
+
+      {/* Empty state */}
+      {tasks.length === 0 && !showForm && (
+        <GlassCard className="!p-8 text-center">
+          <Star className="w-8 h-8 text-white/10 mx-auto mb-3" />
+          <p className="text-white/30" style={{ fontSize: '0.875rem' }}>
+            {t('adm_social_empty')}
+          </p>
+        </GlassCard>
+      )}
+
+      {/* Task List */}
+      {tasks.map((task, idx) => (
+        <motion.div
+          key={task.id}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: idx * 0.04 }}
+        >
+          <GlassCard className="!p-4">
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                task.is_active !== false ? 'bg-[#6c5ce7]/15' : 'bg-white/[0.04]'
+              }`}>
+                <span style={{ fontSize: '1.125rem' }}>
+                  {task.platform === 'telegram' ? '\u2708\uFE0F' :
+                   task.platform === 'instagram' ? '\uD83D\uDCF8' :
+                   task.platform === 'youtube' ? '\u25B6\uFE0F' :
+                   task.platform === 'tiktok' ? '\uD83C\uDFB5' :
+                   task.platform === 'twitter' ? '\uD83D\uDC26' : '\uD83C\uDF10'}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="text-white truncate" style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+                    {task.name}
+                  </p>
+                  {task.is_active === false && (
+                    <span className="px-1.5 py-0.5 rounded text-[0.5625rem] font-semibold bg-red-500/15 text-red-400">
+                      OFF
+                    </span>
+                  )}
+                </div>
+                <p className="text-white/25 truncate" style={{ fontSize: '0.6875rem' }}>
+                  {task.platform} &middot; +{task.reward_days}d &middot; {task.url}
+                </p>
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                <button
+                  onClick={() => handleToggleActive(task)}
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                    task.is_active !== false ? 'bg-green-500/10 text-green-400' : 'bg-white/[0.04] text-white/20'
+                  }`}
+                >
+                  <Check className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => openEditForm(task)}
+                  className="w-8 h-8 rounded-lg bg-[#6c5ce7]/10 flex items-center justify-center text-[#a29bfe]"
+                >
+                  <Star className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => handleDelete(task.id)}
+                  className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center text-red-400"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          </GlassCard>
+        </motion.div>
+      ))}
+
+      {/* Add/Edit Form */}
+      <AnimatePresence>
+        {showForm && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden"
+          >
+            <GlassCard className="!p-5 border border-[#6c5ce7]/20">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 700 }}>
+                  {editingTask ? t('adm_social_edit') : t('adm_social_new')}
+                </p>
+                <button onClick={resetForm} className="text-white/30">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                {/* Platform */}
+                <div>
+                  <label className="text-white/40 text-xs mb-1.5 block">{t('adm_social_platform')}</label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {PLATFORMS.map(p => (
+                      <button
+                        key={p}
+                        onClick={() => { hapticFeedback('light'); setFormPlatform(p); }}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                          formPlatform === p
+                            ? 'bg-[#6c5ce7]/20 text-[#a29bfe] border border-[#6c5ce7]/30'
+                            : 'bg-white/[0.04] text-white/30 border border-transparent'
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Name */}
+                <div>
+                  <label className="text-white/40 text-xs mb-1.5 block">{t('adm_social_name')}</label>
+                  <input
+                    type="text"
+                    value={formName}
+                    onChange={(e) => setFormName(e.target.value)}
+                    placeholder="Telegram Channel / Instagram"
+                    className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.06] text-white placeholder-white/20 outline-none text-sm"
+                  />
+                </div>
+
+                {/* URL */}
+                <div>
+                  <label className="text-white/40 text-xs mb-1.5 block">{t('adm_social_url')}</label>
+                  <input
+                    type="text"
+                    value={formUrl}
+                    onChange={(e) => setFormUrl(e.target.value)}
+                    placeholder="https://t.me/channel"
+                    className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.06] text-white placeholder-white/20 outline-none text-sm"
+                  />
+                </div>
+
+                {/* Image URL */}
+                <div>
+                  <label className="text-white/40 text-xs mb-1.5 block">{t('adm_social_image')}</label>
+                  <input
+                    type="text"
+                    value={formImageUrl}
+                    onChange={(e) => setFormImageUrl(e.target.value)}
+                    placeholder="https://example.com/icon.png"
+                    className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.06] text-white placeholder-white/20 outline-none text-sm"
+                  />
+                </div>
+
+                {/* Reward Days */}
+                <div>
+                  <label className="text-white/40 text-xs mb-1.5 block">{t('adm_social_reward')}</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      value={formRewardDays}
+                      onChange={(e) => setFormRewardDays(e.target.value)}
+                      className="w-20 px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.06] text-white text-center outline-none text-sm font-semibold"
+                    />
+                    <span className="text-white/30 text-sm">{t('adm_days')}</span>
+                  </div>
+                </div>
+
+                {/* Active Toggle */}
+                <div className="flex items-center justify-between py-1">
+                  <span className="text-white/60 text-sm">{t('adm_social_active')}</span>
+                  <button
+                    onClick={() => { hapticFeedback('light'); setFormActive(!formActive); }}
+                    className={`w-11 h-6 rounded-full transition-colors relative ${
+                      formActive ? 'bg-[#6c5ce7]' : 'bg-white/[0.1]'
+                    }`}
+                  >
+                    <div className={`w-5 h-5 rounded-full bg-white absolute top-0.5 transition-all ${
+                      formActive ? 'right-0.5' : 'left-0.5'
+                    }`} />
+                  </button>
+                </div>
+
+                {/* Save */}
+                <button
+                  onClick={handleSave}
+                  disabled={saving || !formName.trim() || !formUrl.trim()}
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe] text-white font-semibold text-sm flex items-center justify-center gap-2 disabled:opacity-40"
+                >
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                  {editingTask ? t('adm_social_save') : t('adm_social_create')}
+                </button>
+              </div>
             </GlassCard>
           </motion.div>
         )}

@@ -20,7 +20,6 @@ import {
   RotateCcw,
   Check,
   Flame,
-  ArrowLeft,
   AlertCircle,
   Plus,
   ChevronDown,
@@ -35,6 +34,7 @@ import {
   hapticError,
 } from './telegram';
 import { useTranslation } from './i18n';
+import { PageHeader } from './page-header';
 import { CameraCapture } from './camera-capture';
 
 // ---- Types ----
@@ -246,29 +246,11 @@ export function ScanFoodPage() {
         onClose={() => setCameraOpen(false)}
       />
 
-      {/* Header */}
-      <div
-        className="relative z-10 flex items-center justify-between px-4"
-        style={{ paddingTop: '6px' }}
-      >
-        <motion.button
-          whileTap={{ scale: 0.9 }}
-          onClick={goBack}
-          className="w-10 h-10 rounded-xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center"
-        >
-          <ArrowLeft className="w-5 h-5 text-white/60" />
-        </motion.button>
-        <h1
-          className="text-white/90"
-          style={{ fontSize: '1.0625rem', fontWeight: 600 }}
-        >
-          {t('scan_title')}
-        </h1>
-        <div className="w-10" />
-      </div>
+      {/* Header — title only; navigation via TG system back button */}
+      <PageHeader title={t('scan_title')} />
 
       {/* Content area */}
-      <div className="relative z-10 flex-1 flex flex-col px-4 pb-6 mt-4">
+      <div className="relative z-10 flex-1 flex flex-col px-4 pb-6">
         <AnimatePresence mode="wait">
 
           {/* ========== CAPTURE STEP ========== */}
@@ -330,7 +312,7 @@ export function ScanFoodPage() {
                   </div>
                 </div>
               ) : (
-                <div className="flex-1 flex flex-col">
+                <div className="flex flex-col">
                   <div className="relative rounded-2xl overflow-hidden border border-white/[0.08] mb-4 flex-shrink-0">
                     <img
                       src={imageData}
@@ -345,8 +327,6 @@ export function ScanFoodPage() {
                       <X className="w-4 h-4 text-white" />
                     </motion.button>
                   </div>
-
-                  <div className="flex-1" />
 
                   <div className="space-y-3">
                     <motion.button

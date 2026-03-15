@@ -242,6 +242,7 @@ export const api = {
   async getBonuses(): Promise<{
     subscription: { isActive: boolean; expiresAt: string | null; daysLeft: number };
     social: { telegram: { claimed: boolean }; instagram: { claimed: boolean } };
+    socialTasks: Array<{ id: string; platform: string; name: string; url: string; image_url?: string; reward_days: number; claimed: boolean }>;
     referral: { code: string | null; count: number; rewardsGiven: number; nextRewardAt: number };
   }> {
     return request('GET', '/bonuses');
@@ -249,6 +250,21 @@ export const api = {
 
   async claimSocialBonus(platform: 'telegram' | 'instagram'): Promise<{ success: boolean; newExpiresAt: string }> {
     return request('POST', '/bonuses/social-claim', { platform });
+  },
+
+  async claimSocialTask(taskId: string): Promise<{ success: boolean; rewardDays: number; newExpiresAt: string }> {
+    return request('POST', '/social-tasks/claim', { taskId });
+  },
+
+  // Admin: social tasks management
+  async getAdminSocialTasks(): Promise<{ tasks: any[] }> {
+    return request('GET', '/admin/social-tasks');
+  },
+  async saveAdminSocialTask(task: { id?: string; platform: string; name: string; url: string; image_url?: string; reward_days?: number; is_active?: boolean }): Promise<{ success: boolean; task: any }> {
+    return request('POST', '/admin/social-tasks', task);
+  },
+  async deleteAdminSocialTask(taskId: string): Promise<{ success: boolean }> {
+    return request('DELETE', `/admin/social-tasks/${taskId}`);
   },
 
   async registerReferral(referralCode: string): Promise<{ success: boolean }> {

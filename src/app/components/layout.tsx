@@ -10,6 +10,7 @@ import { BottomSheetProvider, useAnyBottomSheetOpen } from './bottom-sheet-conte
 import { ThemeSync } from './theme-sync';
 import { api } from './api-client';
 import { WebLoginScreen } from './web-login-screen';
+import { PatternBackground } from './pattern-background';
 import tabIconPaths from '../../imports/svg-cjzrxu9257';
 
 // ---- Custom SVG nav icons from Figma (Bold/Filled style) ----
@@ -660,12 +661,15 @@ function LayoutInner() {
 
   return (
     <div
-      className="relative h-screen bg-background text-foreground overflow-y-auto overscroll-none"
+      className="relative h-screen text-foreground overflow-y-auto overscroll-none"
       style={{
         paddingTop: 'var(--safe-area-top, 0px)',
         WebkitOverflowScrolling: 'touch',
       }}
     >
+      {/* Pattern background — z-[-1], must be first for glass backdrop-filter to work */}
+      <PatternBackground />
+
       <AuthGate>
         <Outlet />
         <GlassTabBar keyboardVisible={keyboardVisible} />
