@@ -447,9 +447,9 @@ export function WorkoutPlanPage() {
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={handleShowHistory}
-                className="w-9 h-9 rounded-xl bg-white/[0.05] border border-white/[0.08] flex items-center justify-center"
+                className="w-9 h-9 rounded-xl bg-ui-button border border-ui-button flex items-center justify-center"
               >
-                <History className="w-4 h-4 text-white/50" />
+                <History className="w-4 h-4 text-ui-icon-secondary" />
               </motion.button>
               <motion.button
                 whileTap={{ scale: 0.9 }}
@@ -540,11 +540,11 @@ export function WorkoutPlanPage() {
                     <p className="text-muted-foreground" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
                       {t('wp_wishes_title')}
                     </p>
-                    <span className="text-white/15 ml-auto" style={{ fontSize: '0.625rem' }}>
+                    <span className="text-ui-tertiary ml-auto" style={{ fontSize: '0.625rem' }}>
                       {t('shared_optional')}
                     </span>
                   </div>
-                  <p className="text-white/25 mb-2 px-1" style={{ fontSize: '0.6875rem', lineHeight: 1.4 }}>
+                  <p className="text-ui-tertiary mb-2 px-1" style={{ fontSize: '0.6875rem', lineHeight: 1.4 }}>
                     {t('wp_wishes_desc')}
                   </p>
                   <textarea
@@ -552,7 +552,7 @@ export function WorkoutPlanPage() {
                     onChange={(e) => setUserWishes(e.target.value)}
                     placeholder={t('wp_wishes_placeholder')}
                     rows={3}
-                    className="w-full rounded-xl px-4 py-3 bg-white/[0.03] border border-white/[0.08] text-white placeholder:text-white/15 outline-none resize-none focus:border-[#fdcb6e]/30 transition-colors"
+                    className="w-full rounded-xl px-4 py-3 ui-input border outline-none resize-none focus:border-[#fdcb6e]/30 transition-colors"
                     style={{ fontSize: '0.875rem', lineHeight: 1.5 }}
                     maxLength={500}
                   />
@@ -569,7 +569,7 @@ export function WorkoutPlanPage() {
                           className={`px-2.5 py-1 rounded-full border transition-all ${
                             isActive
                               ? 'bg-[#fdcb6e]/15 border-[#fdcb6e]/30 text-[#fdcb6e]'
-                              : 'bg-white/[0.02] border-white/[0.08] text-white/35'
+                              : 'bg-ui-button border-ui-button text-ui-secondary'
                           }`}
                           style={{ fontSize: '0.6875rem', fontWeight: 500 }}
                         >
@@ -579,7 +579,7 @@ export function WorkoutPlanPage() {
                     })}
                   </div>
                   {userWishes.length > 0 && (
-                    <p className="text-white/15 text-right mt-1 px-1" style={{ fontSize: '0.625rem' }}>
+                    <p className="text-ui-tertiary text-right mt-1 px-1" style={{ fontSize: '0.625rem' }}>
                       {userWishes.length}/500
                     </p>
                   )}
@@ -602,8 +602,9 @@ export function WorkoutPlanPage() {
                         className={`relative p-3 rounded-2xl flex flex-col items-center gap-1.5 transition-all ${
                           isSelected
                             ? 'bg-[#6c5ce7]/12 border-2 border-[#6c5ce7]/35'
-                            : 'bg-white/[0.03] border-2 border-white/[0.06]'
+                            : 'border-2'
                         }`}
+                        style={!isSelected ? { background: 'var(--glass-bg-row)', borderColor: 'var(--glass-border-subtle)' } : undefined}
                       >
                         <div
                           className="w-11 h-11 rounded-xl flex items-center justify-center"
@@ -676,10 +677,10 @@ export function WorkoutPlanPage() {
                 <div className="w-20 h-20 rounded-[1.5rem] bg-[#ff6b6b]/10 border border-[#ff6b6b]/20 flex items-center justify-center mx-auto mb-5">
                   <AlertCircle className="w-8 h-8 text-[#ff6b6b]" />
                 </div>
-                <p className="text-white mb-2" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
+                <p className="text-foreground mb-2" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
                   {t('shared_gen_failed')}
                 </p>
-                <p className="text-white/40 mb-6 max-w-[280px] mx-auto" style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
+                <p className="text-muted-foreground mb-6 max-w-[280px] mx-auto" style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
                   {errorMsg}
                 </p>
                 <motion.button
@@ -722,15 +723,15 @@ export function WorkoutPlanPage() {
                     <div className="flex items-center gap-3">
                       <WorkoutTypeIcon type={dayData.workout_type} size="lg" />
                       <div>
-                        <p className="text-white" style={{ fontSize: '1rem', fontWeight: 700 }}>
+                        <p className="text-foreground" style={{ fontSize: '1rem', fontWeight: 700 }}>
                           {dayData.focus}
                         </p>
                         <div className="flex items-center gap-3 mt-1">
-                          <span className="flex items-center gap-1 text-white/40" style={{ fontSize: '0.75rem' }}>
+                          <span className="flex items-center gap-1 text-muted-foreground" style={{ fontSize: '0.75rem' }}>
                             <Clock className="w-3 h-3" />
                             {dayData.duration_minutes} {t('wp_min')}
                           </span>
-                          <span className="flex items-center gap-1 text-white/40" style={{ fontSize: '0.75rem' }}>
+                          <span className="flex items-center gap-1 text-muted-foreground" style={{ fontSize: '0.75rem' }}>
                             <Dumbbell className="w-3 h-3" />
                             {dayData.exercises.length} {t('wp_exercises_count')}
                           </span>
@@ -754,14 +755,14 @@ export function WorkoutPlanPage() {
                   {/* Progress bar */}
                   <div className="mb-3">
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-white/35" style={{ fontSize: '0.6875rem' }}>
+                      <span className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
                         {t('wp_progress_label')}
                       </span>
-                      <span className="text-white/60" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
+                      <span className="text-foreground" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
                         {dayCompletedCount}/{dayExerciseCount}
                       </span>
                     </div>
-                    <div className="relative h-2 rounded-full bg-white/[0.06] overflow-hidden">
+                    <div className="relative h-2 rounded-full bg-ui-progress overflow-hidden">
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${dayProgress}%` }}
@@ -785,7 +786,7 @@ export function WorkoutPlanPage() {
                         className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#00cec9]/10 border border-[#00cec9]/20"
                       >
                         <Trophy className="w-4 h-4 text-[#00cec9]" />
-                        <span className="text-white/80" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
+                        <span className="text-foreground" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
                           {t('wp_workout_complete')}
                         </span>
                       </motion.div>
@@ -828,10 +829,10 @@ export function WorkoutPlanPage() {
                   <div className="w-16 h-16 rounded-2xl bg-[#74b9ff]/10 border border-[#74b9ff]/20 flex items-center justify-center mx-auto mb-4">
                     <Target className="w-8 h-8 text-[#74b9ff]" />
                   </div>
-                  <p className="text-white mb-2" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
+                  <p className="text-foreground mb-2" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
                     {t('wp_rest_day')}
                   </p>
-                  <p className="text-white/40 max-w-[240px] mx-auto" style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
+                  <p className="text-muted-foreground max-w-[240px] mx-auto" style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
                     {t('wp_rest_desc')}
                   </p>
                 </GlassCard>
@@ -840,7 +841,7 @@ export function WorkoutPlanPage() {
               {/* Exercise List */}
               {dayData && dayData.workout_type !== 'rest' && dayData.exercises.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-white/40 px-1" style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.05em' }}>
+                  <p className="text-muted-foreground px-1" style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.05em' }}>
                     {t('wp_exercises_label')}
                   </p>
                   {dayData.exercises.map((exercise, idx) => {
@@ -861,7 +862,7 @@ export function WorkoutPlanPage() {
 
               {!dayData && (
                 <div className="text-center py-12">
-                  <p className="text-white/30" style={{ fontSize: '0.875rem' }}>
+                  <p className="text-muted-foreground" style={{ fontSize: '0.875rem' }}>
                     {t('shared_no_data')}
                   </p>
                 </div>
@@ -882,7 +883,7 @@ export function WorkoutPlanPage() {
                         <p className="text-[#fd79a8]" style={{ fontSize: '0.875rem', fontWeight: 700 }}>
                           {t('wp_milestone_photo')}
                         </p>
-                        <p className="text-white/40" style={{ fontSize: '0.6875rem' }}>
+                        <p className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
                           {milestone.title} — {t('wp_milestone_photo_desc')}
                         </p>
                       </div>
@@ -901,7 +902,7 @@ export function WorkoutPlanPage() {
                     ) : (
                       <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#00cec9]/10 border border-[#00cec9]/20">
                         <CheckCircle2 className="w-4 h-4 text-[#00cec9]" />
-                        <span className="text-white/60" style={{ fontSize: '0.75rem' }}>
+                        <span className="text-foreground" style={{ fontSize: '0.75rem' }}>
                           {t('pp_milestone')} ✓
                         </span>
                       </div>
@@ -924,10 +925,10 @@ export function WorkoutPlanPage() {
                         <Target className="w-4 h-4 text-[#a29bfe]" />
                       </div>
                       <div className="flex-1">
-                        <p className="text-white/50" style={{ fontSize: '0.625rem', fontWeight: 500 }}>
+                        <p className="text-muted-foreground" style={{ fontSize: '0.625rem', fontWeight: 500 }}>
                           {t('wp_phase_current')}
                         </p>
-                        <p className="text-white" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
+                        <p className="text-foreground" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
                           {t('wp_phase_label', { n: currentPhase.phase, name: currentPhase.name })}
                         </p>
                       </div>
@@ -971,17 +972,17 @@ export function WorkoutPlanPage() {
 
                   {progressPhotos.length === 0 ? (
                     <div className="text-center py-4">
-                      <p className="text-white/30" style={{ fontSize: '0.75rem' }}>{t('pp_no_photos')}</p>
-                      <p className="text-white/15 mt-1" style={{ fontSize: '0.6875rem' }}>{t('pp_take_first')}</p>
+                      <p className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>{t('pp_no_photos')}</p>
+                      <p className="text-ui-tertiary mt-1" style={{ fontSize: '0.6875rem' }}>{t('pp_take_first')}</p>
                     </div>
                   ) : (
                     <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollSnapType: 'x mandatory' }}>
                       {progressPhotos.slice(0, 10).map((photo) => (
                         <div key={photo.id} className="flex-shrink-0 w-20" style={{ scrollSnapAlign: 'start' }}>
-                          <div className="w-20 h-20 rounded-xl overflow-hidden border border-white/10 mb-1">
+                          <div className="w-20 h-20 rounded-xl overflow-hidden mb-1" style={{ border: '1px solid var(--glass-border)' }}>
                             <img src={photo.url} alt="" className="w-full h-full object-cover" />
                           </div>
-                          <p className="text-white/30 text-center" style={{ fontSize: '0.5625rem' }}>
+                          <p className="text-muted-foreground text-center" style={{ fontSize: '0.5625rem' }}>
                             {photo.day_number ? t('pp_day_n', { n: photo.day_number }) : new Date(photo.created_at).toLocaleDateString()}
                           </p>
                         </div>
@@ -1009,9 +1010,9 @@ export function WorkoutPlanPage() {
                   </div>
                   <div className="space-y-2">
                     {currentPlan.nutrition_tips.map((tip, i) => (
-                      <div key={i} className="flex items-start gap-2 p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+                      <div key={i} className="flex items-start gap-2 p-2.5 rounded-xl" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
                         <span className="text-[#00cec9] flex-shrink-0 mt-0.5" style={{ fontSize: '0.75rem' }}>•</span>
-                        <p className="text-white/60" style={{ fontSize: '0.75rem', lineHeight: 1.5 }}>{tip}</p>
+                        <p className="text-muted-foreground" style={{ fontSize: '0.75rem', lineHeight: 1.5 }}>{tip}</p>
                       </div>
                     ))}
                   </div>
@@ -1118,8 +1119,9 @@ function LocationCard({
       className={`relative p-4 rounded-2xl text-left transition-all ${
         selected
           ? 'border-2 border-[#6c5ce7]/40 bg-[#6c5ce7]/8'
-          : 'border-2 border-white/[0.06] bg-white/[0.02]'
+          : 'border-2'
       }`}
+      style={!selected ? { background: 'var(--glass-bg-row)', borderColor: 'var(--glass-border-subtle)' } : undefined}
     >
       <div
         className="w-12 h-12 rounded-xl flex items-center justify-center mb-3"
@@ -1127,8 +1129,8 @@ function LocationCard({
       >
         <Icon className="w-6 h-6" style={{ color }} />
       </div>
-      <p className="text-white mb-0.5" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>{label}</p>
-      <p className="text-white/35" style={{ fontSize: '0.6875rem' }}>{desc}</p>
+      <p className="text-foreground mb-0.5" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>{label}</p>
+      <p className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>{desc}</p>
       {selected && (
         <motion.div
           initial={{ scale: 0 }}
@@ -1203,7 +1205,7 @@ function CollapsibleProfileCard({
           )}
         </div>
         <motion.div animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
-          <ChevronDown className="w-4 h-4 text-white/25 flex-shrink-0" />
+          <ChevronDown className="w-4 h-4 text-ui-tertiary flex-shrink-0" />
         </motion.div>
       </button>
 
@@ -1236,16 +1238,16 @@ function CollapsibleProfileCard({
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[#00cec9]" style={{ fontSize: '0.75rem', fontWeight: 600 }}>{t('wp_photo_added')}</p>
-                    <p className="text-white/30 truncate" style={{ fontSize: '0.625rem' }}>{t('wp_photo_hint')}</p>
+                    <p className="text-muted-foreground truncate" style={{ fontSize: '0.625rem' }}>{t('wp_photo_hint')}</p>
                   </div>
-                  <motion.button whileTap={{ scale: 0.9 }} onClick={(e) => { e.stopPropagation(); onRemovePhoto(); }} className="px-2 py-1 rounded-lg bg-white/[0.06]">
-                    <span className="text-white/40" style={{ fontSize: '0.625rem' }}>{t('wp_remove_photo')}</span>
+                  <motion.button whileTap={{ scale: 0.9 }} onClick={(e) => { e.stopPropagation(); onRemovePhoto(); }} className="px-2 py-1 rounded-lg bg-ui-button">
+                    <span className="text-muted-foreground" style={{ fontSize: '0.625rem' }}>{t('wp_remove_photo')}</span>
                   </motion.button>
                 </div>
               ) : (
-                <motion.button whileTap={{ scale: 0.97 }} onClick={(e) => { e.stopPropagation(); onAddPhoto(); }} className="w-full p-2.5 rounded-xl border-2 border-dashed border-white/10 flex items-center justify-center gap-2 bg-white/[0.01]">
+                <motion.button whileTap={{ scale: 0.97 }} onClick={(e) => { e.stopPropagation(); onAddPhoto(); }} className="w-full p-2.5 rounded-xl border-2 border-dashed flex items-center justify-center gap-2" style={{ borderColor: 'var(--glass-border)', background: 'var(--glass-bg-row)' }}>
                   <Camera className="w-3.5 h-3.5 text-[#fd79a8]" />
-                  <span className="text-white/50" style={{ fontSize: '0.75rem', fontWeight: 500 }}>{t('wp_add_photo')}</span>
+                  <span className="text-muted-foreground" style={{ fontSize: '0.75rem', fontWeight: 500 }}>{t('wp_add_photo')}</span>
                 </motion.button>
               )}
             </div>
@@ -1295,7 +1297,7 @@ function CollapsibleNutritionCard({
           </p>
         </div>
         <motion.div animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
-          <ChevronDown className="w-4 h-4 text-white/25 flex-shrink-0" />
+          <ChevronDown className="w-4 h-4 text-ui-tertiary flex-shrink-0" />
         </motion.div>
       </button>
 
@@ -1310,18 +1312,18 @@ function CollapsibleNutritionCard({
           >
             <div className="px-4 pb-4 space-y-2">
               {profile.daily_calorie_target ? (
-                <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.05]">
-                  <span className="text-white/40" style={{ fontSize: '0.75rem' }}>{t('wp_cal_target')}</span>
+                <div className="flex items-center justify-between p-2.5 rounded-xl" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
+                  <span className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>{t('wp_cal_target')}</span>
                   <span className="text-[#00cec9]" style={{ fontSize: '0.875rem', fontWeight: 700 }}>
                     {profile.daily_calorie_target} <span style={{ fontSize: '0.6875rem', fontWeight: 400 }}>kcal</span>
                   </span>
                 </div>
               ) : null}
               {nutritionCtx.caloriesConsumed > 0 && profile.daily_calorie_target ? (
-                <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.05]">
-                  <span className="text-white/40" style={{ fontSize: '0.75rem' }}>{t('wp_cal_consumed')}</span>
+                <div className="flex items-center justify-between p-2.5 rounded-xl" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
+                  <span className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>{t('wp_cal_consumed')}</span>
                   <div className="flex items-center gap-2">
-                    <span className="text-white" style={{ fontSize: '0.875rem', fontWeight: 700 }}>{nutritionCtx.caloriesConsumed}</span>
+                    <span className="text-foreground" style={{ fontSize: '0.875rem', fontWeight: 700 }}>{nutritionCtx.caloriesConsumed}</span>
                     {(() => {
                       const diff = nutritionCtx.caloriesConsumed - (profile.daily_calorie_target || 0);
                       if (Math.abs(diff) < 50) return null;

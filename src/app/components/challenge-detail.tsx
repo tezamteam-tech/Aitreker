@@ -49,7 +49,7 @@ const TYPE_CONFIG: Record<ChallengeType, { label: string; icon: typeof UserIcon;
 const STATUS_ICONS: Record<string, { icon: typeof CheckCircle2; color: string; bg: string }> = {
   done: { icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-emerald-500/15' },
   skip: { icon: SkipForward, color: 'text-amber-400', bg: 'bg-amber-500/15' },
-  pending: { icon: Circle, color: 'text-white/20', bg: 'bg-white/[0.04]' },
+  pending: { icon: Circle, color: 'text-ui-tertiary', bg: 'bg-ui-button' },
 };
 
 export function ChallengeDetailPage() {
@@ -254,12 +254,12 @@ export function ChallengeDetailPage() {
                 <span className="text-white/30" style={{ fontSize: '0.6875rem' }}>{t('chd_day_of', { current: daysPassed, total: challenge.durationDays })}</span>
                 <span className="text-white/30" style={{ fontSize: '0.6875rem' }}>{progressPercent}%</span>
               </div>
-              <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden">
+              <div className="h-2 rounded-full bg-ui-progress overflow-hidden">
                 <motion.div initial={{ width: 0 }} animate={{ width: `${progressPercent}%` }} transition={{ duration: 0.8 }} className="h-full rounded-full bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe]" />
               </div>
             </div>
             {challenge.rulesText && (
-              <div className="mt-3 pt-3 border-t border-white/[0.05]">
+              <div className="mt-3 pt-3" style={{ borderTop: '1px solid var(--glass-border-subtle)' }}>
                 <p className="text-white/25 mb-1" style={{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.05em' }}>{t('chd_rules')}</p>
                 <p className="text-white/45" style={{ fontSize: '0.8125rem', lineHeight: 1.5 }}>{challenge.rulesText}</p>
               </div>
@@ -288,10 +288,10 @@ export function ChallengeDetailPage() {
               </div>
               <div className="flex items-center gap-2 mb-2">
                 <input value={joinCode} onChange={(e) => { setJoinCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8)); setCodeError(null); }}
-                  placeholder={t('ch_code_placeholder')} className="flex-1 h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-center tracking-[0.2em] placeholder:text-white/20 placeholder:tracking-normal outline-none font-mono"
+                  placeholder={t('ch_code_placeholder')} className="flex-1 h-12 rounded-xl bg-ui-button border border-ui-button text-foreground text-center tracking-[0.2em] placeholder:text-ui-tertiary placeholder:tracking-normal outline-none font-mono"
                   style={{ fontSize: '1.25rem', fontWeight: 700 }} maxLength={8} onKeyDown={(e) => { if (e.key === 'Enter' && joinCode.trim()) handleJoin(joinCode.trim()); }} />
                 <motion.button whileTap={{ scale: 0.95 }} onClick={() => joinCode.trim() && handleJoin(joinCode.trim())} disabled={!joinCode.trim() || isJoining}
-                  className={`h-12 px-5 rounded-xl flex items-center justify-center shrink-0 transition-all ${joinCode.trim() && !isJoining ? 'bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe] text-white' : 'bg-white/[0.04] text-white/20'}`}
+                  className={`h-12 px-5 rounded-xl flex items-center justify-center shrink-0 transition-all ${joinCode.trim() && !isJoining ? 'bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe] text-white' : 'bg-ui-button text-ui-tertiary'}`}
                   style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
                   {isJoining ? <Loader2 className="w-4 h-4 animate-spin" /> : t('ch_join_btn')}
                 </motion.button>

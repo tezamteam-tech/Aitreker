@@ -497,16 +497,16 @@ export function DashboardPage() {
                 {/* Dismiss X */}
                 <button
                   onClick={(e) => { e.stopPropagation(); hapticFeedback('light'); dismissSupport(); }}
-                  className="absolute top-3 right-3 w-6 h-6 rounded-full bg-white/[0.06] flex items-center justify-center z-10"
+                  className="absolute top-3 right-3 w-6 h-6 rounded-full bg-ui-button flex items-center justify-center z-10"
                 >
-                  <X className="w-3 h-3 text-white/30" />
+                  <X className="w-3 h-3 text-ui-tertiary" />
                 </button>
 
                 <div className="relative z-[1]">
-                  <p className="text-white pr-6" style={{ fontSize: '0.9375rem', fontWeight: 700 }}>
+                  <p className="text-foreground pr-6" style={{ fontSize: '0.9375rem', fontWeight: 700 }}>
                     {t('support_title')}
                   </p>
-                  <p className="text-white/40 mt-1.5 leading-relaxed" style={{ fontSize: '0.8125rem' }}>
+                  <p className="text-ui-secondary mt-1.5 leading-relaxed" style={{ fontSize: '0.8125rem' }}>
                     {t('support_desc')}
                   </p>
                   <div className="flex items-center gap-2.5 mt-3.5">
@@ -551,7 +551,7 @@ export function DashboardPage() {
                           navigator.clipboard?.writeText(shareText).catch(() => {});
                         }
                       }}
-                      className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl bg-white/[0.06] border border-white/[0.08] text-white/50 active:bg-white/[0.1] active:scale-[0.97] transition-all"
+                      className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl bg-ui-button border border-ui-button text-muted-foreground active:bg-[var(--ui-button-active)] active:scale-[0.97] transition-all"
                       style={{ fontSize: '0.8125rem', fontWeight: 600 }}
                     >
                       <Share2 className="w-3.5 h-3.5" />
@@ -567,35 +567,35 @@ export function DashboardPage() {
         {/* 1. Quick access grid — entry points to sections */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.04 }} className="mb-4">
           <div className="flex items-center gap-2 mb-2.5 px-1">
-            <Zap className="w-3 h-3 text-white/25" />
-            <p className="text-white/25" style={{ fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.06em' }}>{t('home_quick_access')}</p>
+            <Zap className="w-3 h-3 text-ui-tertiary" />
+            <p className="text-ui-tertiary" style={{ fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.06em' }}>{t('home_quick_access')}</p>
           </div>
           <div className="grid grid-cols-2 gap-2.5">
             <GlassCard variant="interactive" padding="md" className="relative overflow-hidden" onClick={() => { hapticFeedback('medium'); navigate('/goals'); }}>
               <div className="absolute -top-4 -right-4 w-16 h-16 rounded-full bg-[#00cec9]/8 blur-[25px] pointer-events-none" />
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#00cec9]/20 to-[#6c5ce7]/20 flex items-center justify-center mb-2.5"><Target style={{ width: 18, height: 18 }} className="text-[#00cec9]" /></div>
-              <p className="text-white" style={{ fontSize: '0.875rem', fontWeight: 600 }}>{t('home_goals_entry')}</p>
-              <p className="text-white/25 mt-0.5" style={{ fontSize: '0.6875rem' }}>{t('home_goals_desc')}</p>
+              <p className="text-foreground" style={{ fontSize: '0.875rem', fontWeight: 600 }}>{t('home_goals_entry')}</p>
+              <p className="text-ui-tertiary mt-0.5" style={{ fontSize: '0.6875rem' }}>{t('home_goals_desc')}</p>
             </GlassCard>
             <GlassCard variant="interactive" padding="md" className="relative overflow-hidden" onClick={() => { hapticFeedback('medium'); navigate('/coach'); }}>
               <div className="absolute -top-4 -right-4 w-16 h-16 rounded-full bg-[#6c5ce7]/8 blur-[25px] pointer-events-none" />
               <div className="absolute top-2.5 right-2.5"><PremiumBadge /></div>
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#6c5ce7]/25 to-[#00cec9]/20 flex items-center justify-center mb-2.5"><Bot style={{ width: 18, height: 18 }} className="text-[#a29bfe]" /></div>
-              <p className="text-white" style={{ fontSize: '0.875rem', fontWeight: 600 }}>{t('coach_chat_title')}</p>
-              <p className="text-white/25 mt-0.5" style={{ fontSize: '0.6875rem' }}>{t('coach_chat_subtitle')}</p>
+              <p className="text-foreground" style={{ fontSize: '0.875rem', fontWeight: 600 }}>{t('coach_chat_title')}</p>
+              <p className="text-ui-tertiary mt-0.5" style={{ fontSize: '0.6875rem' }}>{t('coach_chat_subtitle')}</p>
             </GlassCard>
             <GlassCard variant="interactive" padding="md" className="relative overflow-hidden" onClick={() => { hapticFeedback('medium'); navigate('/plan-builder'); }}>
               <div className="absolute -top-4 -right-4 w-16 h-16 rounded-full bg-[#a29bfe]/8 blur-[25px] pointer-events-none" />
               <div className="absolute top-2.5 right-2.5"><PremiumBadge /></div>
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#6c5ce7]/20 to-[#a29bfe]/20 flex items-center justify-center mb-2.5"><Sparkles style={{ width: 18, height: 18 }} className="text-[#a29bfe]" /></div>
-              <p className="text-white" style={{ fontSize: '0.875rem', fontWeight: 600 }}>{t('home_create_path')}</p>
-              <p className="text-white/25 mt-0.5" style={{ fontSize: '0.6875rem' }}>{t('home_create_path_desc')}</p>
+              <p className="text-foreground" style={{ fontSize: '0.875rem', fontWeight: 600 }}>{t('home_create_path')}</p>
+              <p className="text-ui-tertiary mt-0.5" style={{ fontSize: '0.6875rem' }}>{t('home_create_path_desc')}</p>
             </GlassCard>
             <GlassCard variant="interactive" padding="md" className="relative overflow-hidden" onClick={() => { hapticFeedback('medium'); navigate('/journal'); }}>
               <div className="absolute -top-4 -right-4 w-16 h-16 rounded-full bg-[#fd79a8]/6 blur-[25px] pointer-events-none" />
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#a29bfe]/20 to-[#fd79a8]/20 flex items-center justify-center mb-2.5"><BookOpen style={{ width: 18, height: 18 }} className="text-[#a29bfe]" /></div>
-              <p className="text-white" style={{ fontSize: '0.875rem', fontWeight: 600 }}>{t('journal_title')}</p>
-              <p className="text-white/25 mt-0.5" style={{ fontSize: '0.6875rem' }}>{t('journal_subtitle')}</p>
+              <p className="text-foreground" style={{ fontSize: '0.875rem', fontWeight: 600 }}>{t('journal_title')}</p>
+              <p className="text-ui-tertiary mt-0.5" style={{ fontSize: '0.6875rem' }}>{t('journal_subtitle')}</p>
             </GlassCard>
           </div>
         </motion.div>
@@ -616,7 +616,7 @@ export function DashboardPage() {
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#00cec9]/20 to-[#6c5ce7]/20 flex items-center justify-center">
               <Timer className="text-[#00cec9]" style={{ width: 18, height: 18 }} />
             </div>
-            <p className="text-white text-center" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
+            <p className="text-foreground text-center" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
               {t('focus_dashboard_btn')}
             </p>
           </GlassCard>
@@ -630,7 +630,7 @@ export function DashboardPage() {
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-yellow-400/20 to-[#fd79a8]/20 flex items-center justify-center">
               <PenLine className="text-yellow-400" style={{ width: 18, height: 18 }} />
             </div>
-            <p className="text-white text-center" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
+            <p className="text-foreground text-center" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
               {t('note_quick_btn')}
             </p>
           </GlassCard>
@@ -644,7 +644,7 @@ export function DashboardPage() {
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#00cec9]/20 to-[#fd79a8]/20 flex items-center justify-center">
               <Mic className="text-[#00cec9]" style={{ width: 18, height: 18 }} />
             </div>
-            <p className="text-white text-center" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
+            <p className="text-foreground text-center" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
               {t('voice_note_btn')}
             </p>
           </GlassCard>
@@ -681,24 +681,24 @@ export function DashboardPage() {
                   {isComplete ? (
                     <CheckCircle2 className="text-emerald-400" style={{ width: 22, height: 22 }} />
                   ) : (
-                    <Play className="w-5 h-5 text-white" />
+                    <Play className="w-5 h-5 text-primary-foreground" />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-white truncate" style={{ fontSize: '0.9375rem', fontWeight: 700 }}>
+                  <p className="text-foreground truncate" style={{ fontSize: '0.9375rem', fontWeight: 700 }}>
                     {safeStr(program.title)}
                   </p>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-white/40" style={{ fontSize: '0.75rem' }}>
+                    <span className="text-ui-secondary" style={{ fontSize: '0.75rem' }}>
                       {t('day_x_of_y', { current: currentDay, total: totalDays })}
                     </span>
-                    <span className="text-white/10">&middot;</span>
-                    <span className="text-white/25" style={{ fontSize: '0.75rem' }}>
+                    <span className="text-ui-tertiary">&middot;</span>
+                    <span className="text-ui-tertiary" style={{ fontSize: '0.75rem' }}>
                       {progressPercent}%
                     </span>
                   </div>
                   {/* Progress bar */}
-                  <div className="mt-2 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                  <div className="mt-2 h-1.5 rounded-full bg-ui-progress overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${progressPercent}%` }}
@@ -711,14 +711,14 @@ export function DashboardPage() {
                     />
                   </div>
                 </div>
-                <ChevronRight className="w-4 h-4 text-white/20 shrink-0" />
+                <ChevronRight className="w-4 h-4 text-ui-tertiary shrink-0" />
               </div>
             </GlassCard>
           ) : (
             <GlassCard
               variant="interactive"
               padding="md"
-              className="relative overflow-hidden border border-dashed border-white/[0.08]"
+              className="relative overflow-hidden border border-dashed border-ui-button"
               onClick={() => { hapticFeedback('medium'); navigate('/plan-builder'); }}
             >
               <div className="absolute -top-6 -right-6 w-20 h-20 rounded-full bg-[#6c5ce7]/8 blur-[30px] pointer-events-none" />
@@ -728,14 +728,14 @@ export function DashboardPage() {
                   <Sparkles className="w-5 h-5 text-[#a29bfe]/60" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-white/70" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
+                  <p className="text-muted-foreground" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
                     {t('home_no_program_title')}
                   </p>
-                  <p className="text-white/25 mt-0.5" style={{ fontSize: '0.75rem' }}>
+                  <p className="text-ui-tertiary mt-0.5" style={{ fontSize: '0.75rem' }}>
                     {t('home_no_program_desc')}
                   </p>
                 </div>
-                <ChevronRight className="w-4 h-4 text-white/15 shrink-0" />
+                <ChevronRight className="w-4 h-4 text-ui-tertiary shrink-0" />
               </div>
             </GlassCard>
           )}
@@ -795,7 +795,7 @@ export function DashboardPage() {
                           {isDone ? (
                             <CircleCheck className="w-4 h-4 text-emerald-400" />
                           ) : (
-                            <div className="w-3 h-3 rounded-sm border border-white/20" />
+                            <div className="w-3 h-3 rounded-sm border border-[var(--glass-border)]" />
                           )}
                         </motion.button>
 
@@ -804,16 +804,16 @@ export function DashboardPage() {
                           className="flex-1 min-w-0 text-left"
                           onClick={() => !isDone && openEditTask(task)}
                         >
-                          <p className={`truncate ${isDone ? 'line-through text-white/30' : 'text-white'}`}
+                          <p className={`truncate ${isDone ? 'line-through text-ui-tertiary' : 'text-foreground'}`}
                             style={{ fontSize: '0.875rem', fontWeight: 500 }}>
                             {task.title}
                           </p>
                           {task.description ? (
-                            <p className="text-white/25 truncate mt-0.5" style={{ fontSize: '0.75rem' }}>
+                            <p className="text-ui-tertiary truncate mt-0.5" style={{ fontSize: '0.75rem' }}>
                               {task.description}
                             </p>
                           ) : !isDone ? (
-                            <p className="text-white/15 mt-0.5" style={{ fontSize: '0.6875rem' }}>
+                            <p className="text-ui-tertiary mt-0.5" style={{ fontSize: '0.6875rem' }}>
                               {t('task_tap_to_edit')}
                             </p>
                           ) : null}
@@ -834,9 +834,9 @@ export function DashboardPage() {
                           <motion.button
                             whileTap={{ scale: 0.85 }}
                             onClick={(e) => { e.stopPropagation(); openEditTask(task); }}
-                            className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 bg-white/[0.03] active:bg-[#e17055]/10 transition-colors"
+                            className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 bg-ui-input active:bg-[#e17055]/10 transition-colors"
                           >
-                            <Pencil className="w-3.5 h-3.5 text-white/20" />
+                            <Pencil className="w-3.5 h-3.5 text-ui-tertiary" />
                           </motion.button>
                         )}
 
@@ -845,9 +845,9 @@ export function DashboardPage() {
                           <motion.button
                             whileTap={{ scale: 0.85 }}
                             onClick={(e) => { e.stopPropagation(); handleDashDeleteTask(task); }}
-                            className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 bg-white/[0.03] active:bg-red-500/15 transition-colors"
+                            className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 bg-ui-input active:bg-red-500/15 transition-colors"
                           >
-                            <Trash2 className="w-3.5 h-3.5 text-white/15" />
+                            <Trash2 className="w-3.5 h-3.5 text-ui-tertiary" />
                           </motion.button>
                         )}
                       </div>
@@ -867,10 +867,10 @@ export function DashboardPage() {
                 <ListTodo className="w-4 h-4 text-[#e17055]/60" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-white/50" style={{ fontSize: '0.8125rem', fontWeight: 500 }}>{t('task_no_tasks')}</p>
-                <p className="text-white/20" style={{ fontSize: '0.6875rem' }}>{t('task_from_note_hint')}</p>
+                <p className="text-muted-foreground" style={{ fontSize: '0.8125rem', fontWeight: 500 }}>{t('task_no_tasks')}</p>
+                <p className="text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>{t('task_from_note_hint')}</p>
               </div>
-              <Plus className="w-3.5 h-3.5 text-white/15 shrink-0" />
+              <Plus className="w-3.5 h-3.5 text-ui-tertiary shrink-0" />
             </GlassCard>
           )}
         </motion.div>
@@ -926,20 +926,20 @@ export function DashboardPage() {
                         <Swords className="w-4 h-4 text-[#e17055]" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-white truncate" style={{ fontSize: '0.875rem', fontWeight: 500 }}>
+                        <p className="text-foreground truncate" style={{ fontSize: '0.875rem', fontWeight: 500 }}>
                           {ch.title}
                         </p>
                         <div className="flex items-center gap-2 mt-0.5">
-                          <span className="flex items-center gap-1 text-white/25" style={{ fontSize: '0.6875rem' }}>
+                          <span className="flex items-center gap-1 text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>
                             <Users className="w-3 h-3" /> {ch.memberCount}
                           </span>
-                          <span className="text-white/10">&middot;</span>
-                          <span className="text-white/20" style={{ fontSize: '0.6875rem' }}>
+                          <span className="text-ui-tertiary">&middot;</span>
+                          <span className="text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>
                             {t('dash_days_left', { n: daysLeft })}
                           </span>
                           {myStreak > 1 && (
                             <>
-                              <span className="text-white/10">&middot;</span>
+                              <span className="text-ui-tertiary">&middot;</span>
                               <span className="flex items-center gap-0.5 text-orange-400/60" style={{ fontSize: '0.6875rem' }}>
                                 <Flame className="w-2.5 h-2.5" /> {myStreak}
                               </span>
@@ -949,7 +949,7 @@ export function DashboardPage() {
                         {/* User progress bar */}
                         {myMember && ch.durationDays > 0 && (
                           <div className="mt-1.5 flex items-center gap-2">
-                            <div className="flex-1 h-1 rounded-full bg-white/[0.04] overflow-hidden">
+                            <div className="flex-1 h-1 rounded-full bg-ui-progress overflow-hidden">
                               <motion.div
                                 initial={{ width: 0 }}
                                 animate={{ width: `${myPct}%` }}
@@ -957,13 +957,13 @@ export function DashboardPage() {
                                 className="h-full rounded-full bg-gradient-to-r from-[#e17055] to-[#fab1a0]"
                               />
                             </div>
-                            <span className="text-white/20 shrink-0" style={{ fontSize: '0.5625rem', fontWeight: 600 }}>
+                            <span className="text-ui-tertiary shrink-0" style={{ fontSize: '0.5625rem', fontWeight: 600 }}>
                               {myDone}/{ch.durationDays}
                             </span>
                           </div>
                         )}
                       </div>
-                      <ChevronRight className="w-3.5 h-3.5 text-white/10 shrink-0" />
+                      <ChevronRight className="w-3.5 h-3.5 text-ui-tertiary shrink-0" />
                     </div>
                   </GlassCard>
                 );
@@ -980,14 +980,14 @@ export function DashboardPage() {
                 <Swords className="w-4 h-4 text-[#e17055]/60" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-white/50" style={{ fontSize: '0.8125rem', fontWeight: 500 }}>
+                <p className="text-muted-foreground" style={{ fontSize: '0.8125rem', fontWeight: 500 }}>
                   {t('home_no_challenges')}
                 </p>
-                <p className="text-white/20" style={{ fontSize: '0.6875rem' }}>
+                <p className="text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>
                   {t('home_view_challenges')}
                 </p>
               </div>
-              <ChevronRight className="w-3.5 h-3.5 text-white/10 shrink-0" />
+              <ChevronRight className="w-3.5 h-3.5 text-ui-tertiary shrink-0" />
             </GlassCard>
           )}
         </motion.div>
@@ -1001,18 +1001,18 @@ export function DashboardPage() {
         >
           <GlassCard padding="sm" className="text-center">
             <Flame className="w-5 h-5 text-orange-400 mx-auto mb-1" />
-            <p className="text-white" style={{ fontSize: '1.25rem', fontWeight: 700 }}>{streakDays}</p>
-            <p className="text-white/40" style={{ fontSize: '0.6875rem' }}>{t('streak')}</p>
+            <p className="text-foreground" style={{ fontSize: '1.25rem', fontWeight: 700 }}>{streakDays}</p>
+            <p className="text-ui-secondary" style={{ fontSize: '0.6875rem' }}>{t('streak')}</p>
           </GlassCard>
           <GlassCard padding="sm" className="text-center overflow-visible">
             <XpStatsCard xp={user?.xp ?? 0}>
-              <p className="text-white/40" style={{ fontSize: '0.6875rem' }}>{t('xp')}</p>
+              <p className="text-ui-secondary" style={{ fontSize: '0.6875rem' }}>{t('xp')}</p>
             </XpStatsCard>
           </GlassCard>
           <GlassCard padding="sm" className="text-center">
             <Trophy className="w-5 h-5 text-[#a29bfe] mx-auto mb-1" />
-            <p className="text-white" style={{ fontSize: '1.25rem', fontWeight: 700 }}>{completedDays}</p>
-            <p className="text-white/40" style={{ fontSize: '0.6875rem' }}>{t('done')}</p>
+            <p className="text-foreground" style={{ fontSize: '1.25rem', fontWeight: 700 }}>{completedDays}</p>
+            <p className="text-ui-secondary" style={{ fontSize: '0.6875rem' }}>{t('done')}</p>
           </GlassCard>
         </motion.div>
 
@@ -1036,14 +1036,14 @@ export function DashboardPage() {
                 <Brain className="w-5 h-5 text-[#fd79a8]" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
+                <p className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
                   {t('insights_weekly_teaser')}
                 </p>
-                <p className="text-white/30" style={{ fontSize: '0.75rem' }}>
+                <p className="text-ui-secondary" style={{ fontSize: '0.75rem' }}>
                   {t('insights_weekly_desc', { count: weeklyNoteCount })}
                 </p>
               </div>
-              <ChevronRight className="w-4 h-4 text-white/20 shrink-0" />
+              <ChevronRight className="w-4 h-4 text-ui-tertiary shrink-0" />
             </GlassCard>
           </motion.div>
         )}
@@ -1066,7 +1066,7 @@ export function DashboardPage() {
                   <p className="text-[#a29bfe]/70 mb-1" style={{ fontSize: '0.6275rem', fontWeight: 600, letterSpacing: '0.05em' }}>
                     {t('pb_coach_checkin').toUpperCase()}
                   </p>
-                  <p className="text-white/60" style={{ fontSize: '0.875rem', lineHeight: 1.55, fontStyle: 'italic' }}>
+                  <p className="text-muted-foreground" style={{ fontSize: '0.875rem', lineHeight: 1.55, fontStyle: 'italic' }}>
                     &ldquo;{coachMsg}&rdquo;
                   </p>
                 </div>
@@ -1093,18 +1093,18 @@ export function DashboardPage() {
                 setShowToneMenu((v) => !v);
               }}
             >
-              <div className="w-10 h-10 rounded-xl bg-white/[0.04] flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-ui-input flex items-center justify-center">
                 <currentTone.icon className={`w-5 h-5 ${currentTone.color}`} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 500 }}>
+                <p className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 500 }}>
                   {t('ai_coach_label')}: <span className={currentTone.color}>{currentTone.emoji} {t(currentTone.labelKey)}</span>
                 </p>
-                <p className="text-white/30" style={{ fontSize: '0.75rem' }}>
+                <p className="text-ui-secondary" style={{ fontSize: '0.75rem' }}>
                   {t('tap_to_change_tone')}
                 </p>
               </div>
-              <Volume2 className="w-4 h-4 text-white/20 shrink-0" />
+              <Volume2 className="w-4 h-4 text-ui-tertiary shrink-0" />
             </GlassCard>
 
             {/* Quick tone picker popover */}
@@ -1115,7 +1115,7 @@ export function DashboardPage() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -8, scale: 0.95 }}
                   transition={{ duration: 0.2 }}
-                  className="absolute top-full left-0 right-0 mt-2 rounded-2xl bg-liquid-glass-dropdown border border-white/[0.08] overflow-hidden z-50 shadow-2xl"
+                  className="absolute top-full left-0 right-0 mt-2 rounded-2xl bg-liquid-glass-dropdown border border-ui-button overflow-hidden z-50 shadow-2xl"
                   style={{ boxShadow: '0 16px 48px rgba(0,0,0,0.5)' }}
                 >
                   {Object.entries(TONE_CONFIG).map(([key, config]) => {
@@ -1125,11 +1125,11 @@ export function DashboardPage() {
                         key={key}
                         onClick={() => handleToneChange(key)}
                         className={`w-full flex items-center gap-3 px-4 py-3.5 text-left transition-colors ${
-                          isActive ? 'bg-[#6c5ce7]/10' : 'active:bg-white/[0.04]'
+                          isActive ? 'bg-[#6c5ce7]/10' : 'active:bg-ui-input'
                         }`}
                       >
                         <span style={{ fontSize: '1.125rem' }}>{config.emoji}</span>
-                        <span className={`flex-1 ${isActive ? 'text-white' : 'text-white/60'}`} style={{ fontSize: '0.9375rem', fontWeight: isActive ? 600 : 400 }}>
+                        <span className={`flex-1 ${isActive ? 'text-foreground' : 'text-muted-foreground'}`} style={{ fontSize: '0.9375rem', fontWeight: isActive ? 600 : 400 }}>
                           {t(config.labelKey)}
                         </span>
                         {isActive && <Check className="w-4 h-4 text-[#6c5ce7]" />}
@@ -1157,12 +1157,12 @@ export function DashboardPage() {
                 <Wallet className="w-6 h-6 text-yellow-400" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>{t('my_wallet')}</p>
-                <p className="text-white/40" style={{ fontSize: '0.8125rem' }}>
+                <p className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>{t('my_wallet')}</p>
+                <p className="text-ui-secondary" style={{ fontSize: '0.8125rem' }}>
                   {wallet.starsBalance} {t('stars')} &middot; {wallet.tonBalance} {t('ton')}
                 </p>
               </div>
-              <ChevronRight className="w-5 h-5 text-white/30" />
+              <ChevronRight className="w-5 h-5 text-ui-secondary" />
             </GlassCard>
           </button>
         </motion.div>
@@ -1186,9 +1186,9 @@ export function DashboardPage() {
               className="w-full max-w-lg rounded-t-3xl bg-liquid-glass glass-sheet glass-sheet-bottom p-6 pb-10"
             >
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-white" style={{ fontSize: '1.25rem', fontWeight: 700 }}>{t('note_quick')}</h2>
-                <button onClick={() => setShowQuickNote(false)} className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center">
-                  <X className="w-4 h-4 text-white/40" />
+                <h2 className="text-foreground" style={{ fontSize: '1.25rem', fontWeight: 700 }}>{t('note_quick')}</h2>
+                <button onClick={() => setShowQuickNote(false)} className="w-8 h-8 rounded-lg bg-ui-button flex items-center justify-center">
+                  <X className="w-4 h-4 text-ui-secondary" />
                 </button>
               </div>
 
@@ -1198,7 +1198,7 @@ export function DashboardPage() {
                 placeholder={t('note_quick_placeholder')}
                 rows={4}
                 autoFocus
-                className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] p-4 text-white placeholder:text-white/20 outline-none focus:border-[#6c5ce7]/40 transition-colors resize-none mb-3"
+                className="w-full rounded-xl bg-ui-input border border-ui-input p-4 text-foreground placeholder:text-ui-tertiary outline-none focus:border-[#6c5ce7]/40 transition-colors resize-none mb-3"
                 style={{ fontSize: '0.9375rem', lineHeight: 1.6 }}
               />
 
@@ -1212,7 +1212,7 @@ export function DashboardPage() {
                     className="mb-3 overflow-hidden"
                   >
                     {quickNoteAudioUploading ? (
-                      <div className="flex items-center gap-2 py-2 px-3 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+                      <div className="flex items-center gap-2 py-2 px-3 rounded-xl bg-ui-input border border-[var(--glass-border-subtle)]">
                         <Loader2 className="w-3.5 h-3.5 text-[#a29bfe] animate-spin" />
                         <span className="text-[#a29bfe]/70" style={{ fontSize: '0.75rem' }}>{t('audio_uploading')}</span>
                       </div>
@@ -1285,36 +1285,36 @@ export function DashboardPage() {
                   <div className="w-9 h-9 rounded-xl bg-[#e17055]/15 flex items-center justify-center">
                     <ListTodo className="w-5 h-5 text-[#e17055]" />
                   </div>
-                  <h2 className="text-white" style={{ fontSize: '1.125rem', fontWeight: 700 }}>{t('task_from_note')}</h2>
+                  <h2 className="text-foreground" style={{ fontSize: '1.125rem', fontWeight: 700 }}>{t('task_from_note')}</h2>
                 </div>
-                <button onClick={() => { setShowTaskFromNote(false); setSavedNoteText(''); setSavedNoteId(null); }} className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center">
-                  <X className="w-4 h-4 text-white/40" />
+                <button onClick={() => { setShowTaskFromNote(false); setSavedNoteText(''); setSavedNoteId(null); }} className="w-8 h-8 rounded-lg bg-ui-button flex items-center justify-center">
+                  <X className="w-4 h-4 text-ui-secondary" />
                 </button>
               </div>
 
-              <p className="text-white/40 mb-4" style={{ fontSize: '0.8125rem' }}>
+              <p className="text-ui-secondary mb-4" style={{ fontSize: '0.8125rem' }}>
                 {t('task_from_note_hint')}
               </p>
 
               {/* Preview of note text that will become task title */}
-              <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-3.5 mb-4">
-                <p className="text-white" style={{ fontSize: '0.875rem', fontWeight: 500, lineHeight: 1.5 }}>
+              <div className="rounded-xl bg-ui-input border border-ui-input p-3.5 mb-4">
+                <p className="text-foreground" style={{ fontSize: '0.875rem', fontWeight: 500, lineHeight: 1.5 }}>
                   {savedNoteText.length > 100 ? savedNoteText.slice(0, 100) + '…' : savedNoteText}
                 </p>
               </div>
 
               {/* Reminder toggle */}
-              <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-4 mb-5">
+              <div className="rounded-xl bg-ui-input border border-[var(--glass-border-subtle)] p-4 mb-5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
                     {taskFromNoteReminder ? (
                       <Bell className="w-4 h-4 text-[#e17055]" />
                     ) : (
-                      <BellOff className="w-4 h-4 text-white/25" />
+                      <BellOff className="w-4 h-4 text-ui-tertiary" />
                     )}
                     <div>
-                      <p className="text-white" style={{ fontSize: '0.875rem', fontWeight: 600 }}>{t('task_reminder')}</p>
-                      <p className="text-white/30" style={{ fontSize: '0.6875rem' }}>
+                      <p className="text-foreground" style={{ fontSize: '0.875rem', fontWeight: 600 }}>{t('task_reminder')}</p>
+                      <p className="text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>
                         {taskFromNoteReminder ? t('task_reminder_on') : t('task_reminder_off')}
                       </p>
                     </div>
@@ -1329,7 +1329,7 @@ export function DashboardPage() {
                       }
                     }}
                     className={`w-12 h-7 rounded-full transition-colors flex items-center px-0.5 ${
-                      taskFromNoteReminder ? 'bg-[#e17055]' : 'bg-white/[0.08]'
+                      taskFromNoteReminder ? 'bg-[#e17055]' : 'bg-[var(--switch-background)]'
                     }`}
                   >
                     <motion.div
@@ -1348,11 +1348,11 @@ export function DashboardPage() {
                       exit={{ height: 0, opacity: 0 }}
                       className="overflow-hidden"
                     >
-                      <div className="pt-4 mt-3 border-t border-white/[0.05] space-y-3">
+                      <div className="pt-4 mt-3 border-t border-[var(--glass-border-subtle)] space-y-3">
                         {/* Time picker */}
                         <div className="flex items-center gap-3">
                           <ClockIcon className="w-4 h-4 text-[#e17055]/60 shrink-0" />
-                          <p className="text-white/50 flex-1" style={{ fontSize: '0.8125rem' }}>{t('task_reminder_time')}</p>
+                          <p className="text-ui-secondary flex-1" style={{ fontSize: '0.8125rem' }}>{t('task_reminder_time')}</p>
                           <input
                             type="time"
                             value={taskFromNoteTime}
@@ -1362,28 +1362,28 @@ export function DashboardPage() {
                                 setTaskFromNoteStartDate(computeDefaultStartDate(e.target.value));
                               }
                             }}
-                            className="h-9 px-3 rounded-lg bg-white/[0.04] border border-white/[0.08] text-white outline-none focus:border-[#e17055]/40"
-                            style={{ fontSize: '0.875rem', colorScheme: 'dark' }}
+                            className="h-9 px-3 rounded-lg bg-ui-input border border-ui-input text-foreground outline-none focus:border-[#e17055]/40"
+                            style={{ fontSize: '0.875rem' }}
                           />
                         </div>
 
                         {/* Start date */}
                         <div className="flex items-center gap-3">
                           <Calendar className="w-4 h-4 text-[#e17055]/60 shrink-0" />
-                          <p className="text-white/50 flex-1" style={{ fontSize: '0.8125rem' }}>{t('task_start_date')}</p>
+                          <p className="text-ui-secondary flex-1" style={{ fontSize: '0.8125rem' }}>{t('task_start_date')}</p>
                           <input
                             type="date"
                             value={taskFromNoteStartDate || computeDefaultStartDate(taskFromNoteTime)}
                             onChange={(e) => setTaskFromNoteStartDate(e.target.value)}
                             min={new Date().toISOString().slice(0, 10)}
-                            className="h-9 px-3 rounded-lg bg-white/[0.04] border border-white/[0.08] text-white/60 outline-none focus:border-[#e17055]/40"
-                            style={{ fontSize: '0.8125rem', colorScheme: 'dark' }}
+                            className="h-9 px-3 rounded-lg bg-ui-input border border-ui-input text-muted-foreground outline-none focus:border-[#e17055]/40"
+                            style={{ fontSize: '0.8125rem' }}
                           />
                         </div>
 
                         {/* Frequency pills */}
                         <div>
-                          <p className="text-white/30 mb-2" style={{ fontSize: '0.6875rem', fontWeight: 600 }}>{t('task_reminder_freq')}</p>
+                          <p className="text-ui-tertiary mb-2" style={{ fontSize: '0.6875rem', fontWeight: 600 }}>{t('task_reminder_freq')}</p>
                           <div className="flex gap-2">
                             {(['daily', 'weekdays', 'once'] as const).map(f => (
                               <button
@@ -1391,8 +1391,8 @@ export function DashboardPage() {
                                 onClick={() => { hapticFeedback('light'); setTaskFromNoteFrequency(f); }}
                                 className={`px-3.5 py-1.5 rounded-full transition-all ${
                                   taskFromNoteFrequency === f
-                                    ? 'bg-[#e17055]/20 border border-[#e17055]/40 text-white'
-                                    : 'bg-white/[0.04] border border-white/[0.06] text-white/40'
+                                    ? 'bg-[#e17055]/20 border border-[#e17055]/40 text-foreground'
+                                    : 'bg-ui-input border border-[var(--glass-border-subtle)] text-ui-secondary'
                                 }`}
                                 style={{ fontSize: '0.75rem', fontWeight: taskFromNoteFrequency === f ? 600 : 400 }}
                               >
@@ -1432,7 +1432,7 @@ export function DashboardPage() {
               <div className="flex gap-3">
                 <button
                   onClick={() => { setShowTaskFromNote(false); setSavedNoteText(''); setSavedNoteId(null); }}
-                  className="flex-1 h-12 rounded-xl bg-white/[0.06] text-white/60"
+                  className="flex-1 h-12 rounded-xl bg-ui-button text-muted-foreground"
                   style={{ fontSize: '0.9375rem', fontWeight: 600 }}
                 >
                   {t('dash_skip_label')}
@@ -1471,9 +1471,9 @@ export function DashboardPage() {
               className="w-full max-w-lg rounded-t-3xl bg-liquid-glass glass-sheet glass-sheet-bottom p-6 pb-10 max-h-[90vh] overflow-y-auto"
             >
               <div className="flex items-center justify-between mb-5">
-                <h2 className="text-white" style={{ fontSize: '1.25rem', fontWeight: 700 }}>{t('task_create_title')}</h2>
-                <button onClick={() => setShowDashCreateTask(false)} className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center">
-                  <X className="w-4 h-4 text-white/40" />
+                <h2 className="text-foreground" style={{ fontSize: '1.25rem', fontWeight: 700 }}>{t('task_create_title')}</h2>
+                <button onClick={() => setShowDashCreateTask(false)} className="w-8 h-8 rounded-lg ui-close-button flex items-center justify-center">
+                  <X className="w-4 h-4 ui-close-icon" />
                 </button>
               </div>
 
@@ -1483,7 +1483,7 @@ export function DashboardPage() {
                 onChange={(e) => setDashNewTitle(e.target.value)}
                 placeholder={t('task_title_placeholder')}
                 autoFocus
-                className="w-full h-12 rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 text-white placeholder:text-white/20 outline-none focus:border-[#e17055]/40 transition-colors mb-3"
+                className="w-full h-12 rounded-xl bg-ui-input border border-ui-input px-4 text-foreground placeholder:text-ui-tertiary outline-none focus:border-[#e17055]/40 transition-colors mb-3"
                 style={{ fontSize: '0.9375rem' }}
               />
 
@@ -1492,18 +1492,18 @@ export function DashboardPage() {
                 onChange={(e) => setDashNewDesc(e.target.value)}
                 placeholder={t('task_desc_placeholder')}
                 rows={2}
-                className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] p-4 text-white placeholder:text-white/20 outline-none focus:border-[#e17055]/40 transition-colors resize-none mb-4"
+                className="w-full rounded-xl bg-ui-input border border-ui-input p-4 text-foreground placeholder:text-ui-tertiary outline-none focus:border-[#e17055]/40 transition-colors resize-none mb-4"
                 style={{ fontSize: '0.875rem', lineHeight: 1.5 }}
               />
 
               {/* Reminder section */}
-              <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-4 mb-5">
+              <div className="rounded-xl bg-ui-input border border-[var(--glass-border-subtle)] p-4 mb-5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <Bell className={dashNewReminder ? 'text-[#e17055]' : 'text-white/25'} style={{ width: 18, height: 18 }} />
+                    <Bell className={dashNewReminder ? 'text-[#e17055]' : 'text-ui-tertiary'} style={{ width: 18, height: 18 }} />
                     <div>
-                      <p className="text-white" style={{ fontSize: '0.875rem', fontWeight: 600 }}>{t('task_reminder')}</p>
-                      <p className="text-white/30" style={{ fontSize: '0.6875rem' }}>
+                      <p className="text-foreground" style={{ fontSize: '0.875rem', fontWeight: 600 }}>{t('task_reminder')}</p>
+                      <p className="text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>
                         {dashNewReminder ? t('task_reminder_on') : t('task_reminder_off')}
                       </p>
                     </div>
@@ -1518,7 +1518,7 @@ export function DashboardPage() {
                       }
                     }}
                     className={`w-12 h-7 rounded-full transition-colors flex items-center px-0.5 ${
-                      dashNewReminder ? 'bg-[#e17055]' : 'bg-white/[0.08]'
+                      dashNewReminder ? 'bg-[#e17055]' : 'bg-[var(--switch-background)]'
                     }`}
                   >
                     <motion.div
@@ -1537,11 +1537,11 @@ export function DashboardPage() {
                       exit={{ height: 0, opacity: 0 }}
                       className="overflow-hidden"
                     >
-                      <div className="pt-4 mt-3 border-t border-white/[0.05] space-y-3">
+                      <div className="pt-4 mt-3 border-t border-[var(--glass-border-subtle)] space-y-3">
                         {/* Time picker */}
                         <div className="flex items-center gap-3">
                           <ClockIcon className="w-4 h-4 text-[#e17055]/60 shrink-0" />
-                          <p className="text-white/50 flex-1" style={{ fontSize: '0.8125rem' }}>{t('task_reminder_time')}</p>
+                          <p className="text-ui-secondary flex-1" style={{ fontSize: '0.8125rem' }}>{t('task_reminder_time')}</p>
                           <input
                             type="time"
                             value={dashNewReminderTime}
@@ -1551,28 +1551,28 @@ export function DashboardPage() {
                                 setDashNewStartDate(computeDefaultStartDate(e.target.value));
                               }
                             }}
-                            className="h-9 px-3 rounded-lg bg-white/[0.04] border border-white/[0.08] text-white outline-none focus:border-[#e17055]/40"
-                            style={{ fontSize: '0.875rem', colorScheme: 'dark' }}
+                            className="h-9 px-3 rounded-lg bg-ui-input border border-ui-input text-foreground outline-none focus:border-[#e17055]/40"
+                            style={{ fontSize: '0.875rem' }}
                           />
                         </div>
 
                         {/* Start date */}
                         <div className="flex items-center gap-3">
                           <Calendar className="w-4 h-4 text-[#e17055]/60 shrink-0" />
-                          <p className="text-white/50 flex-1" style={{ fontSize: '0.8125rem' }}>{t('task_start_date')}</p>
+                          <p className="text-ui-secondary flex-1" style={{ fontSize: '0.8125rem' }}>{t('task_start_date')}</p>
                           <input
                             type="date"
                             value={dashNewStartDate || computeDefaultStartDate(dashNewReminderTime)}
                             onChange={(e) => setDashNewStartDate(e.target.value)}
                             min={new Date().toISOString().slice(0, 10)}
-                            className="h-9 px-3 rounded-lg bg-white/[0.04] border border-white/[0.08] text-white/60 outline-none focus:border-[#e17055]/40"
-                            style={{ fontSize: '0.8125rem', colorScheme: 'dark' }}
+                            className="h-9 px-3 rounded-lg bg-ui-input border border-ui-input text-muted-foreground outline-none focus:border-[#e17055]/40"
+                            style={{ fontSize: '0.8125rem' }}
                           />
                         </div>
 
                         {/* Frequency pills */}
                         <div>
-                          <p className="text-white/30 mb-2" style={{ fontSize: '0.6875rem', fontWeight: 600 }}>{t('task_reminder_freq')}</p>
+                          <p className="text-ui-tertiary mb-2" style={{ fontSize: '0.6875rem', fontWeight: 600 }}>{t('task_reminder_freq')}</p>
                           <div className="flex gap-2">
                             {(['daily', 'weekdays', 'once'] as const).map(f => (
                               <button
@@ -1580,8 +1580,8 @@ export function DashboardPage() {
                                 onClick={() => { hapticFeedback('light'); setDashNewFreq(f); }}
                                 className={`px-3.5 py-1.5 rounded-full transition-all ${
                                   dashNewFreq === f
-                                    ? 'bg-[#e17055]/20 border border-[#e17055]/40 text-white'
-                                    : 'bg-white/[0.04] border border-white/[0.06] text-white/40'
+                                    ? 'bg-[#e17055]/20 border border-[#e17055]/40 text-foreground'
+                                    : 'bg-ui-input border border-[var(--glass-border-subtle)] text-ui-secondary'
                                 }`}
                                 style={{ fontSize: '0.75rem', fontWeight: dashNewFreq === f ? 600 : 400 }}
                               >
@@ -1656,10 +1656,10 @@ export function DashboardPage() {
                   <div className="w-8 h-8 rounded-xl bg-[#e17055]/10 flex items-center justify-center">
                     <Pencil className="w-4 h-4 text-[#e17055]/70" />
                   </div>
-                  <h2 className="text-white" style={{ fontSize: '1.25rem', fontWeight: 700 }}>{t('task_edit_title')}</h2>
+                  <h2 className="text-foreground" style={{ fontSize: '1.25rem', fontWeight: 700 }}>{t('task_edit_title')}</h2>
                 </div>
-                <button onClick={() => setShowDashEditTask(false)} className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center">
-                  <X className="w-4 h-4 text-white/40" />
+                <button onClick={() => setShowDashEditTask(false)} className="w-8 h-8 rounded-lg ui-close-button flex items-center justify-center">
+                  <X className="w-4 h-4 ui-close-icon" />
                 </button>
               </div>
 
@@ -1670,7 +1670,7 @@ export function DashboardPage() {
                 onChange={(e) => setEditTitle(e.target.value)}
                 placeholder={t('task_title_placeholder')}
                 autoFocus
-                className="w-full h-12 rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 text-white placeholder:text-white/20 outline-none focus:border-[#e17055]/40 transition-colors mb-3"
+                className="w-full h-12 rounded-xl bg-ui-input border border-ui-input px-4 text-foreground placeholder:text-ui-tertiary outline-none focus:border-[#e17055]/40 transition-colors mb-3"
                 style={{ fontSize: '0.9375rem' }}
               />
 
@@ -1680,18 +1680,18 @@ export function DashboardPage() {
                 onChange={(e) => setEditDesc(e.target.value)}
                 placeholder={t('task_desc_placeholder')}
                 rows={2}
-                className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] p-4 text-white placeholder:text-white/20 outline-none focus:border-[#e17055]/40 transition-colors resize-none mb-4"
+                className="w-full rounded-xl bg-ui-input border border-ui-input p-4 text-foreground placeholder:text-ui-tertiary outline-none focus:border-[#e17055]/40 transition-colors resize-none mb-4"
                 style={{ fontSize: '0.875rem', lineHeight: 1.5 }}
               />
 
               {/* Reminder */}
-              <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-4 mb-5">
+              <div className="rounded-xl bg-ui-input border border-[var(--glass-border-subtle)] p-4 mb-5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <Bell className={editReminder ? 'text-[#e17055]' : 'text-white/25'} style={{ width: 18, height: 18 }} />
+                    <Bell className={editReminder ? 'text-[#e17055]' : 'text-ui-tertiary'} style={{ width: 18, height: 18 }} />
                     <div>
-                      <p className="text-white" style={{ fontSize: '0.875rem', fontWeight: 600 }}>{t('task_reminder')}</p>
-                      <p className="text-white/30" style={{ fontSize: '0.6875rem' }}>
+                      <p className="text-foreground" style={{ fontSize: '0.875rem', fontWeight: 600 }}>{t('task_reminder')}</p>
+                      <p className="text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>
                         {editReminder ? t('task_reminder_on') : t('task_reminder_off')}
                       </p>
                     </div>
@@ -1706,7 +1706,7 @@ export function DashboardPage() {
                       }
                     }}
                     className={`w-12 h-7 rounded-full transition-colors flex items-center px-0.5 ${
-                      editReminder ? 'bg-[#e17055]' : 'bg-white/[0.08]'
+                      editReminder ? 'bg-[#e17055]' : 'bg-[var(--switch-background)]'
                     }`}
                   >
                     <motion.div
@@ -1725,11 +1725,11 @@ export function DashboardPage() {
                       exit={{ height: 0, opacity: 0 }}
                       className="overflow-hidden"
                     >
-                      <div className="pt-4 mt-3 border-t border-white/[0.05] space-y-3">
+                      <div className="pt-4 mt-3 border-t border-[var(--glass-border-subtle)] space-y-3">
                         {/* Time */}
                         <div className="flex items-center gap-3">
                           <ClockIcon className="w-4 h-4 text-[#e17055]/60 shrink-0" />
-                          <p className="text-white/50 flex-1" style={{ fontSize: '0.8125rem' }}>{t('task_reminder_time')}</p>
+                          <p className="text-ui-secondary flex-1" style={{ fontSize: '0.8125rem' }}>{t('task_reminder_time')}</p>
                           <input
                             type="time"
                             value={editReminderTime}
@@ -1737,28 +1737,28 @@ export function DashboardPage() {
                               setEditReminderTime(e.target.value);
                               if (!editStartDate) setEditStartDate(computeDefaultStartDate(e.target.value));
                             }}
-                            className="h-9 px-3 rounded-lg bg-white/[0.04] border border-white/[0.08] text-white outline-none focus:border-[#e17055]/40"
-                            style={{ fontSize: '0.875rem', colorScheme: 'dark' }}
+                            className="h-9 px-3 rounded-lg bg-ui-input border border-ui-input text-foreground outline-none focus:border-[#e17055]/40"
+                            style={{ fontSize: '0.875rem' }}
                           />
                         </div>
 
                         {/* Start date */}
                         <div className="flex items-center gap-3">
                           <Calendar className="w-4 h-4 text-[#e17055]/60 shrink-0" />
-                          <p className="text-white/50 flex-1" style={{ fontSize: '0.8125rem' }}>{t('task_start_date')}</p>
+                          <p className="text-ui-secondary flex-1" style={{ fontSize: '0.8125rem' }}>{t('task_start_date')}</p>
                           <input
                             type="date"
                             value={editStartDate || computeDefaultStartDate(editReminderTime)}
                             onChange={(e) => setEditStartDate(e.target.value)}
                             min={new Date().toISOString().slice(0, 10)}
-                            className="h-9 px-3 rounded-lg bg-white/[0.04] border border-white/[0.08] text-white/60 outline-none focus:border-[#e17055]/40"
-                            style={{ fontSize: '0.8125rem', colorScheme: 'dark' }}
+                            className="h-9 px-3 rounded-lg bg-ui-input border border-ui-input text-muted-foreground outline-none focus:border-[#e17055]/40"
+                            style={{ fontSize: '0.8125rem' }}
                           />
                         </div>
 
                         {/* Frequency */}
                         <div>
-                          <p className="text-white/30 mb-2" style={{ fontSize: '0.6875rem', fontWeight: 600 }}>{t('task_reminder_freq')}</p>
+                          <p className="text-ui-tertiary mb-2" style={{ fontSize: '0.6875rem', fontWeight: 600 }}>{t('task_reminder_freq')}</p>
                           <div className="flex gap-2">
                             {(['daily', 'weekdays', 'once'] as const).map(f => (
                               <button
@@ -1766,8 +1766,8 @@ export function DashboardPage() {
                                 onClick={() => { hapticFeedback('light'); setEditFreq(f); }}
                                 className={`px-3.5 py-1.5 rounded-full transition-all ${
                                   editFreq === f
-                                    ? 'bg-[#e17055]/20 border border-[#e17055]/40 text-white'
-                                    : 'bg-white/[0.04] border border-white/[0.06] text-white/40'
+                                    ? 'bg-[#e17055]/20 border border-[#e17055]/40 text-foreground'
+                                    : 'bg-ui-input border border-[var(--glass-border-subtle)] text-ui-secondary'
                                 }`}
                                 style={{ fontSize: '0.75rem', fontWeight: editFreq === f ? 600 : 400 }}
                               >
@@ -1820,7 +1820,7 @@ export function DashboardPage() {
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={handleDeleteFromEdit}
-                className="w-full h-11 rounded-xl bg-white/[0.03] border border-white/[0.06] text-red-400/70 flex items-center justify-center gap-2"
+                className="w-full h-11 rounded-xl bg-ui-input border border-[var(--glass-border-subtle)] text-red-400/70 flex items-center justify-center gap-2"
                 style={{ fontSize: '0.875rem', fontWeight: 600 }}
               >
                 <Trash2 className="w-4 h-4" />

@@ -374,9 +374,9 @@ export function MealPlanPage() {
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={handleShowHistory}
-                className="w-9 h-9 rounded-xl bg-white/[0.05] border border-white/[0.08] flex items-center justify-center"
+                className="w-9 h-9 rounded-xl bg-ui-button border border-ui-button flex items-center justify-center"
               >
-                <History className="w-4 h-4 text-white/50" />
+                <History className="w-4 h-4 text-ui-icon-secondary" />
               </motion.button>
               <motion.button
                 whileTap={{ scale: 0.9 }}
@@ -438,11 +438,11 @@ export function MealPlanPage() {
                     <p className="text-muted-foreground" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
                       {t('mp_wishes_title')}
                     </p>
-                    <span className="text-white/15 ml-auto" style={{ fontSize: '0.625rem' }}>
+                    <span className="text-ui-tertiary ml-auto" style={{ fontSize: '0.625rem' }}>
                       {t('shared_optional')}
                     </span>
                   </div>
-                  <p className="text-white/25 mb-2 px-1" style={{ fontSize: '0.6875rem', lineHeight: 1.4 }}>
+                  <p className="text-ui-tertiary mb-2 px-1" style={{ fontSize: '0.6875rem', lineHeight: 1.4 }}>
                     {t('mp_wishes_desc')}
                   </p>
                   <textarea
@@ -450,7 +450,7 @@ export function MealPlanPage() {
                     onChange={(e) => setUserWishes(e.target.value)}
                     placeholder={t('mp_wishes_placeholder')}
                     rows={3}
-                    className="w-full rounded-xl px-4 py-3 bg-white/[0.03] border border-white/[0.08] text-white placeholder:text-white/15 outline-none resize-none focus:border-[#fdcb6e]/30 transition-colors"
+                    className="w-full rounded-xl px-4 py-3 ui-input border outline-none resize-none focus:border-[#fdcb6e]/30 transition-colors"
                     style={{ fontSize: '0.875rem', lineHeight: 1.5 }}
                     maxLength={500}
                   />
@@ -477,7 +477,7 @@ export function MealPlanPage() {
                     })}
                   </div>
                   {userWishes.length > 0 && (
-                    <p className="text-white/15 text-right mt-1 px-1" style={{ fontSize: '0.625rem' }}>
+                    <p className="text-ui-tertiary text-right mt-1 px-1" style={{ fontSize: '0.625rem' }}>
                       {userWishes.length}/500
                     </p>
                   )}
@@ -583,13 +583,13 @@ export function MealPlanPage() {
                     <div className="w-20 h-20 rounded-[1.5rem] bg-gradient-to-br from-[#6c5ce7]/20 to-[#a29bfe]/10 border border-white/[0.08] flex items-center justify-center mx-auto mb-5">
                       <Crown className="w-9 h-9 text-[#a29bfe]" />
                     </div>
-                    <p className="text-white mb-2" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
+                    <p className="text-foreground mb-2" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
                       {t('mp_limit_title')}
                     </p>
-                    <p className="text-white/40 mb-2 max-w-[280px] mx-auto" style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
+                    <p className="text-muted-foreground mb-2 max-w-[280px] mx-auto" style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
                       {t('mp_limit_used')}
                     </p>
-                    <p className="text-white/30 mb-8 max-w-[280px] mx-auto" style={{ fontSize: '0.8125rem', lineHeight: 1.5 }}>
+                    <p className="text-ui-tertiary mb-8 max-w-[280px] mx-auto" style={{ fontSize: '0.8125rem', lineHeight: 1.5 }}>
                       {t('mp_limit_upgrade')}
                     </p>
                     <motion.button
@@ -607,7 +607,7 @@ export function MealPlanPage() {
                     <motion.button
                       whileTap={{ scale: 0.97 }}
                       onClick={() => { hapticFeedback('light'); setViewState('selecting'); }}
-                      className="mt-2 text-white/40"
+                      className="mt-2 text-muted-foreground"
                       style={{ fontSize: '0.875rem' }}
                     >
                       {t('back')}
@@ -618,10 +618,10 @@ export function MealPlanPage() {
                     <div className="w-20 h-20 rounded-[1.5rem] bg-[#ff6b6b]/10 border border-[#ff6b6b]/20 flex items-center justify-center mx-auto mb-5">
                       <AlertCircle className="w-8 h-8 text-[#ff6b6b]" />
                     </div>
-                    <p className="text-white mb-2" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
+                    <p className="text-foreground mb-2" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
                       {t('shared_gen_failed')}
                     </p>
-                    <p className="text-white/40 mb-6 max-w-[280px] mx-auto" style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
+                    <p className="text-muted-foreground mb-6 max-w-[280px] mx-auto" style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
                       {errorMsg}
                     </p>
                     <motion.button
@@ -670,19 +670,19 @@ export function MealPlanPage() {
                         <Flame className="w-5 h-5 text-[#fd79a8]" />
                       </div>
                       <div>
-                        <p className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
+                        <p className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
                           {t('mp_day_label', { n: selectedDay })}
                         </p>
-                        <p className="text-white/30" style={{ fontSize: '0.6875rem' }}>
+                        <p className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
                           {t('mp_meals_count', { n: dayMeals.length })}
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-white" style={{ fontSize: '1.5rem', fontWeight: 800, lineHeight: 1 }}>
+                      <p className="text-foreground" style={{ fontSize: '1.5rem', fontWeight: 800, lineHeight: 1 }}>
                         {dayTotals.calories}
                       </p>
-                      <p className="text-white/30" style={{ fontSize: '0.6875rem' }}>
+                      <p className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
                         {t('cal_unit')}
                       </p>
                     </div>
@@ -742,7 +742,7 @@ export function MealPlanPage() {
 
               {!dayData && (
                 <div className="text-center py-12">
-                  <p className="text-white/30" style={{ fontSize: '0.875rem' }}>
+                  <p className="text-muted-foreground" style={{ fontSize: '0.875rem' }}>
                     {t('shared_no_data')}
                   </p>
                 </div>
@@ -869,7 +869,7 @@ function CollapsibleProfileCardMP({
           )}
         </div>
         <motion.div animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
-          <ChevronDown className="w-4 h-4 text-white/25 flex-shrink-0" />
+          <ChevronDown className="w-4 h-4 text-ui-tertiary flex-shrink-0" />
         </motion.div>
       </button>
 
@@ -899,16 +899,16 @@ function CollapsibleProfileCardMP({
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[#00cec9]" style={{ fontSize: '0.75rem', fontWeight: 600 }}>{t('mp_photo_added')}</p>
-                    <p className="text-white/30 truncate" style={{ fontSize: '0.625rem' }}>{t('mp_photo_hint')}</p>
+                    <p className="text-muted-foreground truncate" style={{ fontSize: '0.625rem' }}>{t('mp_photo_hint')}</p>
                   </div>
-                  <motion.button whileTap={{ scale: 0.9 }} onClick={(e) => { e.stopPropagation(); onRemovePhoto(); }} className="px-2 py-1 rounded-lg bg-white/[0.06]">
-                    <span className="text-white/40" style={{ fontSize: '0.625rem' }}>{t('mp_remove_photo')}</span>
+                  <motion.button whileTap={{ scale: 0.9 }} onClick={(e) => { e.stopPropagation(); onRemovePhoto(); }} className="px-2 py-1 rounded-lg bg-ui-button">
+                    <span className="text-muted-foreground" style={{ fontSize: '0.625rem' }}>{t('mp_remove_photo')}</span>
                   </motion.button>
                 </div>
               ) : (
-                <motion.button whileTap={{ scale: 0.97 }} onClick={(e) => { e.stopPropagation(); onAddPhoto(); }} className="w-full p-2.5 rounded-xl border-2 border-dashed border-white/10 flex items-center justify-center gap-2 bg-white/[0.01]">
+                <motion.button whileTap={{ scale: 0.97 }} onClick={(e) => { e.stopPropagation(); onAddPhoto(); }} className="w-full p-2.5 rounded-xl border-2 border-dashed flex items-center justify-center gap-2" style={{ borderColor: 'var(--glass-border)', background: 'var(--glass-bg-row)' }}>
                   <Camera className="w-3.5 h-3.5 text-[#fd79a8]" />
-                  <span className="text-white/50" style={{ fontSize: '0.75rem', fontWeight: 500 }}>{t('mp_add_photo')}</span>
+                  <span className="text-muted-foreground" style={{ fontSize: '0.75rem', fontWeight: 500 }}>{t('mp_add_photo')}</span>
                 </motion.button>
               )}
             </div>
@@ -993,16 +993,16 @@ function CalendarNavigator({
           whileTap={{ scale: 0.9 }}
           onClick={() => goWeek(-1)}
           disabled={currentWeek === 0}
-          className="w-8 h-8 rounded-lg bg-white/[0.05] flex items-center justify-center disabled:opacity-20"
+          className="w-8 h-8 rounded-lg bg-ui-button flex items-center justify-center disabled:opacity-20"
         >
-          <ChevronLeft className="w-4 h-4 text-white/60" />
+          <ChevronLeft className="w-4 h-4 text-ui-icon-secondary" />
         </motion.button>
 
         <div className="flex items-center gap-2">
           <Calendar className="w-4 h-4 text-[#a29bfe]" />
-          <span className="text-white" style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+          <span className="text-foreground" style={{ fontSize: '0.875rem', fontWeight: 600 }}>
             {t('mp_days_label')} {startDay}–{endDay}
-            <span className="text-white/30 ml-1.5" style={{ fontWeight: 400 }}>
+            <span className="text-muted-foreground ml-1.5" style={{ fontWeight: 400 }}>
               / {totalDays}
             </span>
           </span>
@@ -1012,9 +1012,9 @@ function CalendarNavigator({
           whileTap={{ scale: 0.9 }}
           onClick={() => goWeek(1)}
           disabled={currentWeek >= totalWeeks - 1}
-          className="w-8 h-8 rounded-lg bg-white/[0.05] flex items-center justify-center disabled:opacity-20"
+          className="w-8 h-8 rounded-lg bg-ui-button flex items-center justify-center disabled:opacity-20"
         >
-          <ChevronRight className="w-4 h-4 text-white/60" />
+          <ChevronRight className="w-4 h-4 text-ui-icon-secondary" />
         </motion.button>
       </div>
 
@@ -1034,18 +1034,18 @@ function CalendarNavigator({
               className={`py-2 rounded-xl text-center transition-all ${
                 isSelected
                   ? 'bg-gradient-to-b from-[#6c5ce7] to-[#5b4fd6] shadow-lg'
-                  : 'bg-white/[0.03] border border-white/[0.06]'
+                  : ''
               }`}
-              style={isSelected ? { boxShadow: '0 4px 16px rgba(108,92,231,0.35)' } : {}}
+              style={isSelected ? { boxShadow: '0 4px 16px rgba(108,92,231,0.35)' } : { background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}
             >
               <p
-                className={isSelected ? 'text-white/60' : 'text-white/30'}
+                className={isSelected ? 'text-white/60' : 'text-muted-foreground'}
                 style={{ fontSize: '0.5625rem', fontWeight: 500 }}
               >
                 {weekDay}
               </p>
               <p
-                className={isSelected ? 'text-white' : 'text-white/70'}
+                className={isSelected ? 'text-white' : 'text-foreground'}
                 style={{ fontSize: '0.9375rem', fontWeight: isSelected ? 700 : 500 }}
               >
                 {day}
@@ -1062,7 +1062,7 @@ function CalendarNavigator({
             key={i}
             className="h-1 rounded-full flex-1 transition-all"
             style={{
-              backgroundColor: i === currentWeek ? '#6c5ce7' : 'rgba(255,255,255,0.06)',
+              backgroundColor: i === currentWeek ? '#6c5ce7' : 'var(--ui-progress-bg)',
             }}
           />
         ))}
@@ -1117,21 +1117,21 @@ function MealCard({
               <Icon className="w-5 h-5" style={{ color: config.color }} />
             </div>
             <div className="text-left">
-              <p className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
+              <p className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
                 {t(config.key)}
               </p>
-              <p className="text-white/30" style={{ fontSize: '0.6875rem' }}>
+              <p className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
                 {items.length} {t('mp_items_count')} · P:{Math.round(totalProtein)}g C:{Math.round(totalCarbs)}g F:{Math.round(totalFat)}g
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <div className="text-right">
-              <p className="text-white" style={{ fontSize: '1.125rem', fontWeight: 700 }}>{totalCals}</p>
-              <p className="text-white/30" style={{ fontSize: '0.5625rem' }}>{t('mp_cal_unit')}</p>
+              <p className="text-foreground" style={{ fontSize: '1.125rem', fontWeight: 700 }}>{totalCals}</p>
+              <p className="text-muted-foreground" style={{ fontSize: '0.5625rem' }}>{t('mp_cal_unit')}</p>
             </div>
             <motion.div animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
-              <ChevronDown className="w-4 h-4 text-white/25" />
+              <ChevronDown className="w-4 h-4 text-ui-tertiary" />
             </motion.div>
           </div>
         </button>
@@ -1150,29 +1150,30 @@ function MealCard({
                 {items.map((item, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center justify-between p-3 rounded-xl bg-white/[0.025] border border-white/[0.04]"
+                    className="flex items-center justify-between p-3 rounded-xl"
+                    style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}
                   >
                     <div className="flex-1 min-w-0 mr-3">
-                      <p className="text-white truncate" style={{ fontSize: '0.875rem', fontWeight: 500 }}>
+                      <p className="text-foreground truncate" style={{ fontSize: '0.875rem', fontWeight: 500 }}>
                         {item.food_name}
                       </p>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-white/25" style={{ fontSize: '0.6875rem' }}>
+                        <span className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
                           {item.quantity}{item.unit}
                         </span>
-                        <span className="text-white/15">·</span>
-                        <span className="text-white/25" style={{ fontSize: '0.6875rem' }}>
+                        <span className="text-ui-tertiary">·</span>
+                        <span className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
                           P:{item.protein}g
                         </span>
-                        <span className="text-white/25" style={{ fontSize: '0.6875rem' }}>
+                        <span className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
                           C:{item.carbs}g
                         </span>
-                        <span className="text-white/25" style={{ fontSize: '0.6875rem' }}>
+                        <span className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
                           F:{item.fat}g
                         </span>
                       </div>
                     </div>
-                    <p className="text-white/70 flex-shrink-0" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
+                    <p className="text-foreground flex-shrink-0" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
                       {item.calories}
                     </p>
                   </div>
@@ -1227,10 +1228,10 @@ function GeneratingAnimation({
         </div>
       </div>
 
-      <p className="text-white mb-2" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
+      <p className="text-foreground mb-2" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
         {t('mp_generating_title')}
       </p>
-      <p className="text-white/30 mb-6" style={{ fontSize: '0.875rem' }}>
+      <p className="text-muted-foreground mb-6" style={{ fontSize: '0.875rem' }}>
         {t('mp_generating_desc', { n: planLength })}
       </p>
 
@@ -1257,7 +1258,7 @@ function GeneratingAnimation({
             key={i}
             className="w-2 h-2 rounded-full"
             animate={{
-              backgroundColor: i <= messageIndex ? '#6c5ce7' : 'rgba(255,255,255,0.08)',
+              backgroundColor: i <= messageIndex ? '#6c5ce7' : 'var(--ui-progress-bg)',
               scale: i === messageIndex ? 1.3 : 1,
             }}
             transition={{ duration: 0.3 }}
@@ -1286,7 +1287,7 @@ function HistorySheet({
   return (
     <SwipeableBottomSheet open={true} onClose={onClose} title={t('mp_my_plans')} maxHeight="70vh">
       {plans.length === 0 && (
-        <p className="text-white/30 text-center py-8" style={{ fontSize: '0.875rem' }}>
+        <p className="text-muted-foreground text-center py-8" style={{ fontSize: '0.875rem' }}>
           {t('mp_no_plans')}
         </p>
       )}
@@ -1295,16 +1296,17 @@ function HistorySheet({
         {plans.map((plan) => (
           <div
             key={plan.id}
-            className="flex items-center gap-3 p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06]"
+            className="flex items-center gap-3 p-3.5 rounded-xl"
+            style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}
           >
             <button
               onClick={() => onSelect(plan)}
               className="flex-1 text-left"
             >
-              <p className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
+              <p className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
                 {plan.plan_length} {t('mp_days_count')}
               </p>
-              <p className="text-white/30" style={{ fontSize: '0.75rem' }}>
+              <p className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>
                 {new Date(plan.created_at).toLocaleDateString(t('locale_code'), {
                   day: 'numeric',
                   month: 'short',
@@ -1323,9 +1325,9 @@ function HistorySheet({
             <motion.button
               whileTap={{ scale: 0.85 }}
               onClick={() => onDelete(plan.id)}
-              className="w-9 h-9 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center"
+              className="w-9 h-9 rounded-lg bg-ui-button border border-ui-button flex items-center justify-center"
             >
-              <Trash2 className="w-4 h-4 text-white/30" />
+              <Trash2 className="w-4 h-4 text-ui-icon-secondary" />
             </motion.button>
           </div>
         ))}

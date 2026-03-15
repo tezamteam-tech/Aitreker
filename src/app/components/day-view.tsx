@@ -516,7 +516,7 @@ export function DayViewPage() {
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-          className="w-8 h-8 border-2 border-white/10 border-t-[#6c5ce7] rounded-full"
+          className="w-8 h-8 border-2 border-ui-button border-t-[#6c5ce7] rounded-full"
         />
       </div>
     );
@@ -530,8 +530,8 @@ export function DayViewPage() {
             <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 1.5, repeat: Infinity }} className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#6c5ce7]/20 to-[#a29bfe]/20 flex items-center justify-center mb-4">
               <Brain className="w-8 h-8 text-[#a29bfe]" />
             </motion.div>
-            <p className="text-white/60 mb-2" style={{ fontSize: '1rem', fontWeight: 600 }}>{t('dv_generating_block')}</p>
-            <p className="text-white/30" style={{ fontSize: '0.8125rem' }}>{t('dv_generating_block_desc')}</p>
+            <p className="text-muted-foreground mb-2" style={{ fontSize: '1rem', fontWeight: 600 }}>{t('dv_generating_block')}</p>
+            <p className="text-ui-tertiary" style={{ fontSize: '0.8125rem' }}>{t('dv_generating_block_desc')}</p>
             <Loader2 className="w-5 h-5 text-[#6c5ce7] animate-spin mt-4" />
           </>
         ) : blockError ? (
@@ -541,7 +541,7 @@ export function DayViewPage() {
           </>
         ) : (
           <>
-            <p className="text-white/40 mb-4" style={{ fontSize: '1rem' }}>{t('day_not_found')}</p>
+            <p className="text-ui-secondary mb-4" style={{ fontSize: '1rem' }}>{t('day_not_found')}</p>
             <button onClick={() => navigate('/home')} className="text-[#a29bfe]" style={{ fontSize: '0.9375rem' }}>{t('back_to_home')}</button>
           </>
         )}
@@ -634,7 +634,7 @@ export function DayViewPage() {
           transition={{ delay: 0.05 }}
         >
           <GlassCard variant="elevated" className="mb-6">
-            <p className="text-white/55" style={{ fontSize: '0.9375rem', lineHeight: 1.65 }}>
+            <p className="text-muted-foreground" style={{ fontSize: '0.9375rem', lineHeight: 1.65 }}>
               {day.description}
             </p>
           </GlassCard>
@@ -642,7 +642,7 @@ export function DayViewPage() {
 
         {/* Task progress indicator */}
         <div className="flex items-center justify-between mb-3 px-1">
-          <h3 className="text-white/60" style={{ fontSize: '0.8125rem', fontWeight: 600, letterSpacing: '0.05em' }}>
+          <h3 className="text-muted-foreground" style={{ fontSize: '0.8125rem', fontWeight: 600, letterSpacing: '0.05em' }}>
             {t('tasks_label')}
           </h3>
           <div className="flex items-center gap-2">
@@ -655,12 +655,12 @@ export function DayViewPage() {
                       ? 'bg-emerald-500'
                       : checkedTasks.has(task.id)
                         ? 'bg-[#6c5ce7]'
-                        : 'bg-white/10'
+                        : 'bg-ui-progress'
                   }`}
                 />
               ))}
             </div>
-            <span className="text-white/30" style={{ fontSize: '0.75rem', fontWeight: 500 }}>
+            <span className="text-ui-tertiary" style={{ fontSize: '0.75rem', fontWeight: 500 }}>
               {checkedCount}/{tasksCount}
             </span>
           </div>

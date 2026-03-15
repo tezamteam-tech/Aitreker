@@ -160,7 +160,7 @@ export function OnboardingPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
-            className="text-white/80 tracking-[0.25em] mb-10"
+            className="text-foreground/80 tracking-[0.25em] mb-10"
             style={{ fontSize: '0.875rem', fontWeight: 600 }}
           >
             Proper Food
@@ -183,7 +183,7 @@ export function OnboardingPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="text-white/35 text-center max-w-[260px]"
+            className="text-ui-tertiary text-center max-w-[260px]"
             style={{ fontSize: '0.8125rem', lineHeight: 1.6 }}
           >
             {t('ob_splash_syncing', splashLang as any)}
@@ -229,7 +229,7 @@ export function OnboardingPage() {
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#6c5ce7] to-[#a29bfe] flex items-center justify-center shadow-lg" style={{ boxShadow: '0 4px 20px rgba(108,92,231,0.35)' }}>
               <Zap className="w-4.5 h-4.5 text-white" />
             </div>
-            <span className="text-white/80 tracking-widest" style={{ fontSize: '0.8125rem', fontWeight: 600, letterSpacing: '0.18em' }}>
+            <span className="text-foreground/80 tracking-widest" style={{ fontSize: '0.8125rem', fontWeight: 600, letterSpacing: '0.18em' }}>
               Proper Food
             </span>
           </div>
@@ -239,7 +239,7 @@ export function OnboardingPage() {
             whileTap={{ scale: 0.95 }}
             onClick={handleSkip}
             disabled={isLoading || authLoading}
-            className="flex items-center gap-1 text-white/35 active:text-white/50 transition-colors px-2 py-1"
+            className="flex items-center gap-1 text-ui-tertiary active:text-ui-secondary transition-colors px-2 py-1"
             style={{ fontSize: '0.8125rem', fontWeight: 500 }}
           >
             {t('skip', language)} <ArrowRight className="w-3.5 h-3.5" />
@@ -253,10 +253,10 @@ export function OnboardingPage() {
           transition={{ delay: 0.05 }}
           className="mb-7"
         >
-          <h1 className="text-white mb-2" style={{ fontSize: '1.625rem', fontWeight: 700, lineHeight: 1.2 }}>
+          <h1 className="text-foreground mb-2" style={{ fontSize: '1.625rem', fontWeight: 700, lineHeight: 1.2 }}>
             {t('ob_welcome_title', language)}
           </h1>
-          <p className="text-white/35" style={{ fontSize: '0.9375rem', lineHeight: 1.5 }}>
+          <p className="text-ui-tertiary" style={{ fontSize: '0.9375rem', lineHeight: 1.5 }}>
             {t('ob_welcome_desc', language)}
           </p>
         </motion.div>
@@ -273,7 +273,7 @@ export function OnboardingPage() {
               <div className="w-4 h-4 rounded-md bg-[#a29bfe]/15 flex items-center justify-center">
                 <span style={{ fontSize: '0.5625rem' }}>{language === 'ru' ? '\uD83C\uDDF7\uD83C\uDDFA' : '\uD83C\uDDFA\uD83C\uDDF8'}</span>
               </div>
-              <p className="text-white/30 uppercase" style={{ fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.06em' }}>
+              <p className="text-ui-tertiary uppercase" style={{ fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.06em' }}>
                 {t('ob_lang_label', language)}
               </p>
             </div>
@@ -288,11 +288,11 @@ export function OnboardingPage() {
                     className={`flex-1 h-12 rounded-xl flex items-center justify-center gap-2 border transition-all duration-200 ${
                       isActive
                         ? 'bg-[#6c5ce7]/15 border-[#6c5ce7]/40'
-                        : 'bg-white/[0.03] border-white/[0.06] active:bg-white/[0.06]'
+                        : 'bg-ui-button border-[var(--glass-border-subtle)] active:bg-[var(--ui-button-active)]'
                     }`}
                   >
                     <span style={{ fontSize: '1rem' }}>{l.flag}</span>
-                    <span className={isActive ? 'text-white' : 'text-white/50'} style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+                    <span className={isActive ? 'text-foreground' : 'text-muted-foreground'} style={{ fontSize: '0.875rem', fontWeight: 600 }}>
                       {l.label}
                     </span>
                     {isActive && <Check className="w-3.5 h-3.5 text-[#6c5ce7]" />}
@@ -312,7 +312,7 @@ export function OnboardingPage() {
               <div className="w-4 h-4 rounded-md bg-[#00cec9]/15 flex items-center justify-center">
                 <Target className="w-2.5 h-2.5 text-[#00cec9]" />
               </div>
-              <p className="text-white/30 uppercase" style={{ fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.06em' }}>
+              <p className="text-ui-tertiary uppercase" style={{ fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.06em' }}>
                 {t('ob_goal_label', language)}
               </p>
             </div>
@@ -327,11 +327,11 @@ export function OnboardingPage() {
                     className={`relative h-14 rounded-xl border flex items-center gap-2.5 px-3.5 transition-all duration-200 ${
                       isActive
                         ? 'bg-[#6c5ce7]/15 border-[#6c5ce7]/40'
-                        : 'bg-white/[0.03] border-white/[0.06] active:bg-white/[0.06]'
+                        : 'bg-ui-button border-[var(--glass-border-subtle)] active:bg-[var(--ui-button-active)]'
                     }`}
                   >
                     <span style={{ fontSize: '1.25rem' }}>{item.emoji}</span>
-                    <span className={isActive ? 'text-white' : 'text-white/60'} style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+                    <span className={isActive ? 'text-foreground' : 'text-muted-foreground'} style={{ fontSize: '0.875rem', fontWeight: 600 }}>
                       {item.label}
                     </span>
                     {isActive && (
@@ -359,7 +359,7 @@ export function OnboardingPage() {
               <div className="w-4 h-4 rounded-md bg-[#a29bfe]/15 flex items-center justify-center">
                 <Volume2 className="w-2.5 h-2.5 text-[#a29bfe]" />
               </div>
-              <p className="text-white/30 uppercase" style={{ fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.06em' }}>
+              <p className="text-ui-tertiary uppercase" style={{ fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.06em' }}>
                 {t('ob_tone_label', language)}
               </p>
             </div>
@@ -374,19 +374,19 @@ export function OnboardingPage() {
                     className={`w-full text-left rounded-xl border px-4 py-3 flex items-center gap-3 transition-all duration-200 ${
                       isActive
                         ? 'bg-white/[0.06] border-[#6c5ce7]/40'
-                        : 'bg-white/[0.02] border-white/[0.05] active:bg-white/[0.04]'
+                        : 'bg-[var(--glass-bg-card)] border-[var(--glass-border-subtle)] active:bg-[var(--ui-button-active)]'
                     }`}
                   >
                     <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-all ${
-                      isActive ? 'bg-[#6c5ce7]/25' : 'bg-white/[0.04]'
+                      isActive ? 'bg-[#6c5ce7]/25' : 'bg-ui-button'
                     }`}>
                       <span style={{ fontSize: '0.875rem' }}>{item.emoji}</span>
                     </div>
-                    <span className={`flex-1 ${isActive ? 'text-white' : 'text-white/50'}`} style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+                    <span className={`flex-1 ${isActive ? 'text-foreground' : 'text-muted-foreground'}`} style={{ fontSize: '0.875rem', fontWeight: 600 }}>
                       {item.label}
                     </span>
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
-                      isActive ? 'border-[#6c5ce7] bg-[#6c5ce7]' : 'border-white/15'
+                      isActive ? 'border-[#6c5ce7] bg-[#6c5ce7]' : 'border-[var(--glass-border)]'
                     }`}>
                       {isActive && <Check className="w-3 h-3 text-white" />}
                     </div>

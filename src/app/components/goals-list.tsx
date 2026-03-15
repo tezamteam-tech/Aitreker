@@ -51,7 +51,7 @@ const STATUS_FILTERS = ['active', '', 'done', 'archived'] as const;
 const STATUS_STYLES: Record<string, { text: string; bg: string; icon: React.ElementType }> = {
   active: { text: 'text-[#00cec9]', bg: 'bg-[#00cec9]/10', icon: Target },
   done: { text: 'text-emerald-400', bg: 'bg-emerald-400/10', icon: CheckCircle2 },
-  archived: { text: 'text-white/30', bg: 'bg-white/[0.04]', icon: Archive },
+  archived: { text: 'text-muted-foreground', bg: 'bg-ui-button', icon: Archive },
 };
 
 export function GoalsListPage() {
@@ -406,9 +406,10 @@ export function GoalsListPage() {
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={() => { hapticFeedback('light'); setShowAddMenu(!showAddMenu); }}
-                className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#6c5ce7]/30 to-[#00cec9]/30 border border-white/[0.1] flex items-center justify-center"
+                className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#6c5ce7]/30 to-[#00cec9]/30 flex items-center justify-center"
+                style={{ border: '1px solid var(--glass-border)' }}
               >
-                <Plus className="w-5 h-5 text-white/80" />
+                <Plus className="w-5 h-5 text-ui-icon-primary" />
               </motion.button>
 
             <AnimatePresence>
@@ -423,39 +424,39 @@ export function GoalsListPage() {
                 >
                   <button
                     onClick={() => { hapticFeedback('light'); setShowAddMenu(false); setShowCreateTask(true); }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.04] active:bg-white/[0.06] transition-colors"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[var(--ui-button-bg)] active:bg-[var(--ui-button-active)] transition-colors"
                   >
                     <div className="w-8 h-8 rounded-lg bg-[#e17055]/15 flex items-center justify-center">
                       <ListTodo className="w-4 h-4 text-[#e17055]" />
                     </div>
-                    <p className="text-white text-left" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{t('task_create')}</p>
+                    <p className="text-foreground text-left" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{t('task_create')}</p>
                   </button>
                   <button
                     onClick={() => { hapticFeedback('light'); setShowAddMenu(false); setShowCreate(true); }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.04] active:bg-white/[0.06] transition-colors"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[var(--ui-button-bg)] active:bg-[var(--ui-button-active)] transition-colors"
                   >
                     <div className="w-8 h-8 rounded-lg bg-[#00cec9]/15 flex items-center justify-center">
                       <Target className="w-4 h-4 text-[#00cec9]" />
                     </div>
-                    <p className="text-white text-left" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{t('goals_create_simple')}</p>
+                    <p className="text-foreground text-left" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{t('goals_create_simple')}</p>
                   </button>
                   <button
                     onClick={() => { hapticFeedback('medium'); setShowAddMenu(false); navigate('/strategic-goal/create'); }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.04] active:bg-white/[0.06] transition-colors"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[var(--ui-button-bg)] active:bg-[var(--ui-button-active)] transition-colors"
                   >
                     <div className="w-8 h-8 rounded-lg bg-[#6c5ce7]/15 flex items-center justify-center">
                       <Sparkles className="w-4 h-4 text-[#a29bfe]" />
                     </div>
-                    <p className="text-white text-left flex items-center gap-2" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{t('goals_create_strategic')} <PremiumBadge /></p>
+                    <p className="text-foreground text-left flex items-center gap-2" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{t('goals_create_strategic')} <PremiumBadge /></p>
                   </button>
                   <button
                     onClick={() => { hapticFeedback('medium'); setShowAddMenu(false); navigate('/plan-builder'); }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.04] active:bg-white/[0.06] transition-colors"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[var(--ui-button-bg)] active:bg-[var(--ui-button-active)] transition-colors"
                   >
                     <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#6c5ce7]/15 to-[#a29bfe]/15 flex items-center justify-center">
                       <Rocket className="w-4 h-4 text-[#a29bfe]" />
                     </div>
-                    <p className="text-white text-left flex items-center gap-2" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{t('goals_create_path')} <PremiumBadge /></p>
+                    <p className="text-foreground text-left flex items-center gap-2" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{t('goals_create_path')} <PremiumBadge /></p>
                   </button>
                 </motion.div>
               )}
@@ -505,13 +506,13 @@ export function GoalsListPage() {
                     </div>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-white/50" style={{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.04em' }}>
+                    <p className="text-muted-foreground" style={{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.04em' }}>
                       {t('goals_overview_progress').toUpperCase()}
                     </p>
-                    <p className="text-white mt-0.5" style={{ fontSize: '0.8125rem' }}>
+                    <p className="text-foreground mt-0.5" style={{ fontSize: '0.8125rem' }}>
                       <span style={{ fontWeight: 700 }}>{overallDone}</span>
-                      <span className="text-white/30">/{overallTotal}</span>
-                      <span className="text-white/25 ml-1" style={{ fontSize: '0.6875rem' }}>
+                      <span className="text-ui-tertiary">/{overallTotal}</span>
+                      <span className="text-ui-tertiary ml-1" style={{ fontSize: '0.6875rem' }}>
                         {t('gl_tasks')}
                       </span>
                     </p>
@@ -520,26 +521,26 @@ export function GoalsListPage() {
 
                 {/* Quick stats row */}
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="rounded-xl bg-white/[0.03] border border-white/[0.04] p-2.5 text-center">
+                  <div className="rounded-xl p-2.5 text-center" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
                     <div className="flex items-center justify-center gap-1 mb-1">
                       <Zap className="w-3 h-3 text-[#00cec9]" />
-                      <span className="text-white" style={{ fontSize: '1.125rem', fontWeight: 800 }}>{totalActive}</span>
+                      <span className="text-foreground" style={{ fontSize: '1.125rem', fontWeight: 800 }}>{totalActive}</span>
                     </div>
-                    <p className="text-white/30" style={{ fontSize: '0.5625rem', fontWeight: 600 }}>{t('goals_overview_active')}</p>
+                    <p className="text-ui-tertiary" style={{ fontSize: '0.5625rem', fontWeight: 600 }}>{t('goals_overview_active')}</p>
                   </div>
-                  <div className="rounded-xl bg-white/[0.03] border border-white/[0.04] p-2.5 text-center">
+                  <div className="rounded-xl p-2.5 text-center" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
                     <div className="flex items-center justify-center gap-1 mb-1">
                       <Clock className="w-3 h-3 text-[#e17055]" />
-                      <span className={`${totalDueSg > 0 ? 'text-[#e17055]' : 'text-white'}`} style={{ fontSize: '1.125rem', fontWeight: 800 }}>{totalDueSg}</span>
+                      <span className={`${totalDueSg > 0 ? 'text-[#e17055]' : 'text-foreground'}`} style={{ fontSize: '1.125rem', fontWeight: 800 }}>{totalDueSg}</span>
                     </div>
-                    <p className="text-white/30" style={{ fontSize: '0.5625rem', fontWeight: 600 }}>{t('goals_overview_due')}</p>
+                    <p className="text-ui-tertiary" style={{ fontSize: '0.5625rem', fontWeight: 600 }}>{t('goals_overview_due')}</p>
                   </div>
-                  <div className="rounded-xl bg-white/[0.03] border border-white/[0.04] p-2.5 text-center">
+                  <div className="rounded-xl p-2.5 text-center" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
                     <div className="flex items-center justify-center gap-1 mb-1">
                       <Trophy className="w-3 h-3 text-emerald-400" />
-                      <span className="text-white" style={{ fontSize: '1.125rem', fontWeight: 800 }}>{totalCompletedCount}</span>
+                      <span className="text-foreground" style={{ fontSize: '1.125rem', fontWeight: 800 }}>{totalCompletedCount}</span>
                     </div>
-                    <p className="text-white/30" style={{ fontSize: '0.5625rem', fontWeight: 600 }}>{t('goals_overview_completed')}</p>
+                    <p className="text-ui-tertiary" style={{ fontSize: '0.5625rem', fontWeight: 600 }}>{t('goals_overview_completed')}</p>
                   </div>
                 </div>
               </GlassCard>

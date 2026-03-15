@@ -216,9 +216,9 @@ export function CoachChatPage() {
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={() => { hapticFeedback('light'); loadHistory(); setShowHistory(true); }}
-                className="w-9 h-9 rounded-xl bg-white/[0.06] flex items-center justify-center"
+                className="w-9 h-9 rounded-xl bg-ui-button flex items-center justify-center"
               >
-                <Clock className="w-4.5 h-4.5 text-white/40" />
+                <Clock className="w-4.5 h-4.5 text-ui-icon-secondary" />
               </motion.button>
               <motion.button
                 whileTap={{ scale: 0.9 }}
@@ -233,7 +233,7 @@ export function CoachChatPage() {
       </div>
 
       {/* Divider */}
-      <div className="h-px bg-white/[0.04] mx-5" />
+      <div className="h-px mx-5" style={{ background: 'var(--ui-separator)' }} />
 
       {/* Messages area */}
       <div
@@ -251,7 +251,7 @@ export function CoachChatPage() {
             <div className="w-16 h-16 rounded-2xl bg-[#6c5ce7]/10 flex items-center justify-center mb-4">
               <Bot className="w-8 h-8 text-[#a29bfe]" />
             </div>
-            <p className="text-white/50 text-center max-w-xs mb-6" style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
+            <p className="text-muted-foreground text-center max-w-xs mb-6" style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
               {t('coach_chat_welcome')}
             </p>
 
@@ -265,7 +265,7 @@ export function CoachChatPage() {
                   transition={{ delay: 0.1 + i * 0.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => handleSend(s)}
-                  className="px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white/50 hover:text-white/70 hover:bg-white/[0.06] transition-all"
+                  className="px-3.5 py-2 rounded-xl bg-ui-button border border-ui-button text-muted-foreground hover:text-foreground hover:bg-[var(--ui-button-active)] transition-all"
                   style={{ fontSize: '0.8125rem' }}
                 >
                   {s}
@@ -292,7 +292,7 @@ export function CoachChatPage() {
               {msg.role === 'assistant' ? (
                 <Bot className="w-4 h-4 text-[#a29bfe]" />
               ) : (
-                <User className="w-4 h-4 text-white/40" />
+                <User className="w-4 h-4 text-ui-icon-secondary" />
               )}
             </div>
 
@@ -301,18 +301,18 @@ export function CoachChatPage() {
               className={`max-w-[80%] rounded-2xl px-4 py-3 ${
                 msg.role === 'user'
                   ? 'bg-[#6c5ce7]/20 border border-[#6c5ce7]/20'
-                  : 'bg-white/[0.04] border border-white/[0.06]'
+                  : 'bg-ui-button border border-ui-button'
               }`}
             >
               <p
                 className={`whitespace-pre-wrap ${
-                  msg.role === 'user' ? 'text-white/90' : 'text-white/70'
+                  msg.role === 'user' ? 'text-foreground' : 'text-ui-icon-primary'
                 }`}
                 style={{ fontSize: '0.875rem', lineHeight: 1.6 }}
               >
                 {msg.content}
               </p>
-              <p className="text-white/15 mt-1.5" style={{ fontSize: '0.625rem' }}>
+              <p className="text-ui-tertiary mt-1.5" style={{ fontSize: '0.625rem' }}>
                 {new Date(msg.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </p>
             </div>
@@ -329,13 +329,13 @@ export function CoachChatPage() {
             <div className="w-8 h-8 rounded-lg bg-[#6c5ce7]/15 flex items-center justify-center shrink-0">
               <Bot className="w-4 h-4 text-[#a29bfe]" />
             </div>
-            <div className="rounded-2xl px-4 py-3 bg-white/[0.04] border border-white/[0.06]">
+            <div className="rounded-2xl px-4 py-3 bg-ui-button border border-ui-button">
               <div className="flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-[#a29bfe]/40 animate-bounce" style={{ animationDelay: '0ms' }} />
                 <span className="w-2 h-2 rounded-full bg-[#a29bfe]/40 animate-bounce" style={{ animationDelay: '150ms' }} />
                 <span className="w-2 h-2 rounded-full bg-[#a29bfe]/40 animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
-              <p className="text-white/20 mt-1" style={{ fontSize: '0.6875rem' }}>{t('coach_chat_thinking')}</p>
+              <p className="text-ui-tertiary mt-1" style={{ fontSize: '0.6875rem' }}>{t('coach_chat_thinking')}</p>
             </div>
           </motion.div>
         )}
@@ -350,7 +350,7 @@ export function CoachChatPage() {
 
       {/* Input area */}
       <div className="relative z-10 px-4 shrink-0" style={{ paddingBottom: 'max(1rem, calc(var(--safe-area-bottom, 0px) + 0.5rem))' }}>
-        <div className="flex items-end gap-2 bg-white/[0.04] border border-white/[0.08] rounded-2xl px-3 py-2">
+        <div className="flex items-end gap-2 bg-ui-button border border-ui-button rounded-2xl px-3 py-2">
           <VoiceInput
             onTranscript={(text) => {
               setInput((prev) => prev ? `${prev} ${text}` : text);
@@ -366,7 +366,7 @@ export function CoachChatPage() {
             onKeyDown={handleKeyDown}
             placeholder={t('coach_chat_placeholder')}
             rows={1}
-            className="flex-1 bg-transparent text-white placeholder:text-white/20 outline-none resize-none py-1"
+            className="flex-1 bg-transparent text-foreground placeholder:text-ui-tertiary outline-none resize-none py-1"
             style={{ fontSize: '0.9375rem', lineHeight: 1.5, maxHeight: 120 }}
           />
 
@@ -407,7 +407,7 @@ export function CoachChatPage() {
               className="absolute bottom-0 left-0 right-0 max-h-[70vh] rounded-t-3xl bg-liquid-glass-panel border-t border-white/[0.1] p-6 pb-10 overflow-y-auto"
             >
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-white" style={{ fontSize: '1.25rem', fontWeight: 700 }}>{t('coach_chat_history')}</h2>
+                <h2 className="text-foreground" style={{ fontSize: '1.25rem', fontWeight: 700 }}>{t('coach_chat_history')}</h2>
                 <button
                   onClick={() => setShowHistory(false)}
                   className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center"

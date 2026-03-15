@@ -227,21 +227,21 @@ export function StrategicGoalCreatePage() {
                 <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#6c5ce7]/20 to-[#00cec9]/20 flex items-center justify-center mx-auto mb-4">
                   <Target className="w-7 h-7 text-[#a29bfe]" />
                 </div>
-                <p className="text-center text-white/40" style={{ fontSize: '0.875rem', lineHeight: 1.6 }}>
+                <p className="text-center text-ui-secondary" style={{ fontSize: '0.875rem', lineHeight: 1.6 }}>
                   {t('sg_choose_input')}
                 </p>
               </div>
 
               {/* Input mode tabs */}
-              <div className="flex gap-1.5 p-1 rounded-2xl bg-white/[0.03] border border-white/[0.06] mb-5">
+              <div className="flex gap-1.5 p-1 rounded-2xl bg-[var(--glass-bg-row)] border border-[var(--glass-border-subtle)] mb-5">
                 {modes.map((m) => (
                   <button
                     key={m.key}
                     onClick={() => { hapticFeedback('light'); setInputMode(m.key); }}
                     className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl transition-all ${
                       inputMode === m.key
-                        ? 'bg-[#6c5ce7]/20 border border-[#6c5ce7]/30 text-white'
-                        : 'text-white/40'
+                        ? 'bg-[#6c5ce7]/20 border border-[#6c5ce7]/30 text-foreground'
+                        : 'text-ui-secondary'
                     }`}
                     style={{ fontSize: '0.8125rem', fontWeight: inputMode === m.key ? 600 : 400 }}
                   >
@@ -261,7 +261,7 @@ export function StrategicGoalCreatePage() {
                       placeholder={t('sg_input_placeholder')}
                       rows={4}
                       autoFocus
-                      className="w-full rounded-2xl bg-white/[0.04] border border-white/[0.06] p-5 text-white placeholder:text-white/20 outline-none focus:border-[#6c5ce7]/40 transition-colors resize-none mb-4"
+                      className="w-full rounded-2xl bg-[var(--ui-input-bg)] border border-[var(--glass-border-subtle)] p-5 text-foreground placeholder:text-[var(--ui-text-tertiary)] outline-none focus:border-[#6c5ce7]/40 transition-colors resize-none mb-4"
                       style={{ fontSize: '1rem', lineHeight: 1.6 }}
                     />
                   </motion.div>
@@ -275,7 +275,7 @@ export function StrategicGoalCreatePage() {
                         <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#6c5ce7]/20 to-[#fd79a8]/20 flex items-center justify-center">
                           <Mic className="w-6 h-6 text-[#a29bfe]" />
                         </div>
-                        <p className="text-white/50 text-center" style={{ fontSize: '0.8125rem', lineHeight: 1.6 }}>
+                        <p className="text-ui-secondary text-center" style={{ fontSize: '0.8125rem', lineHeight: 1.6 }}>
                           {t('sg_voice_hint')}
                         </p>
                         <VoiceInput
@@ -294,7 +294,7 @@ export function StrategicGoalCreatePage() {
                       onChange={(e) => setGoalText(e.target.value)}
                       placeholder={t('sg_or_type')}
                       rows={3}
-                      className="w-full rounded-2xl bg-white/[0.04] border border-white/[0.06] p-4 text-white placeholder:text-white/20 outline-none focus:border-[#6c5ce7]/40 transition-colors resize-none mb-4"
+                      className="w-full rounded-2xl bg-[var(--ui-input-bg)] border border-[var(--glass-border-subtle)] p-4 text-foreground placeholder:text-[var(--ui-text-tertiary)] outline-none focus:border-[#6c5ce7]/40 transition-colors resize-none mb-4"
                       style={{ fontSize: '0.9375rem', lineHeight: 1.5 }}
                     />
                   </motion.div>
@@ -321,14 +321,14 @@ export function StrategicGoalCreatePage() {
                             <ImageIcon className="w-6 h-6 text-[#fdcb6e]" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
+                            <p className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
                               {t('sg_photo_dream')}
                             </p>
-                            <p className="text-white/35 mt-0.5" style={{ fontSize: '0.75rem', lineHeight: 1.4 }}>
+                            <p className="text-ui-secondary mt-0.5" style={{ fontSize: '0.75rem', lineHeight: 1.4 }}>
                               {t('sg_photo_dream_desc')}
                             </p>
                           </div>
-                          <ArrowRight className="w-4 h-4 text-white/20 shrink-0" />
+                          <ArrowRight className="w-4 h-4 text-ui-tertiary shrink-0" />
                         </div>
                       </GlassCard>
 
@@ -350,14 +350,14 @@ export function StrategicGoalCreatePage() {
                             <Camera className="w-6 h-6 text-[#00cec9]" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
+                            <p className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
                               {t('sg_photo_camera')}
                             </p>
-                            <p className="text-white/35 mt-0.5" style={{ fontSize: '0.75rem', lineHeight: 1.4 }}>
+                            <p className="text-ui-secondary mt-0.5" style={{ fontSize: '0.75rem', lineHeight: 1.4 }}>
                               {t('sg_photo_camera_desc')}
                             </p>
                           </div>
-                          <ArrowRight className="w-4 h-4 text-white/20 shrink-0" />
+                          <ArrowRight className="w-4 h-4 text-ui-tertiary shrink-0" />
                         </div>
                       </GlassCard>
 
@@ -379,20 +379,20 @@ export function StrategicGoalCreatePage() {
                             <UserCircle className="w-6 h-6 text-[#fd79a8]" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
+                            <p className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
                               {t('sg_photo_selfie')}
                             </p>
-                            <p className="text-white/35 mt-0.5" style={{ fontSize: '0.75rem', lineHeight: 1.4 }}>
+                            <p className="text-ui-secondary mt-0.5" style={{ fontSize: '0.75rem', lineHeight: 1.4 }}>
                               {t('sg_photo_selfie_desc')}
                             </p>
                           </div>
-                          <ArrowRight className="w-4 h-4 text-white/20 shrink-0" />
+                          <ArrowRight className="w-4 h-4 text-ui-tertiary shrink-0" />
                         </div>
                       </GlassCard>
                     </div>
 
                     {/* Or type below */}
-                    <p className="text-white/25 text-center mb-3" style={{ fontSize: '0.75rem' }}>
+                    <p className="text-ui-tertiary text-center mb-3" style={{ fontSize: '0.75rem' }}>
                       {t('sg_or_type')}
                     </p>
                     <textarea
@@ -400,7 +400,7 @@ export function StrategicGoalCreatePage() {
                       onChange={(e) => setGoalText(e.target.value)}
                       placeholder={t('sg_input_placeholder')}
                       rows={2}
-                      className="w-full rounded-2xl bg-white/[0.04] border border-white/[0.06] p-4 text-white placeholder:text-white/20 outline-none focus:border-[#6c5ce7]/40 transition-colors resize-none mb-4"
+                      className="w-full rounded-2xl bg-[var(--ui-input-bg)] border border-[var(--glass-border-subtle)] p-4 text-foreground placeholder:text-[var(--ui-text-tertiary)] outline-none focus:border-[#6c5ce7]/40 transition-colors resize-none mb-4"
                       style={{ fontSize: '0.9375rem', lineHeight: 1.5 }}
                     />
                   </motion.div>
@@ -445,7 +445,7 @@ export function StrategicGoalCreatePage() {
               >
                 <Eye className="w-6 h-6 text-[#a29bfe]" />
               </motion.div>
-              <p className="text-white/50" style={{ fontSize: '0.9375rem', fontWeight: 500 }}>{t('sg_analyzing_image')}</p>
+              <p className="text-ui-secondary" style={{ fontSize: '0.9375rem', fontWeight: 500 }}>{t('sg_analyzing_image')}</p>
               <Loader2 className="w-5 h-5 text-[#a29bfe]/50 animate-spin mt-4" />
             </motion.div>
           )}
@@ -456,14 +456,14 @@ export function StrategicGoalCreatePage() {
               {/* Image preview + analysis */}
               <div className="flex gap-4 mb-5">
                 {imagePreview && (
-                  <div className="w-20 h-20 rounded-2xl overflow-hidden shrink-0 border border-white/10">
+                  <div className="w-20 h-20 rounded-2xl overflow-hidden shrink-0 border border-[var(--glass-border)]">
                     <img src={imagePreview} alt="" className="w-full h-full object-cover" />
                   </div>
                 )}
                 <GlassCard variant="accent" padding="sm" className="flex-1">
                   <div className="flex gap-2">
                     <Sparkles className="w-4 h-4 text-[#a29bfe] shrink-0 mt-0.5" />
-                    <p className="text-white/70" style={{ fontSize: '0.8125rem', lineHeight: 1.6 }}>
+                    <p className="text-foreground/70" style={{ fontSize: '0.8125rem', lineHeight: 1.6 }}>
                       {analysisResult.analysis}
                     </p>
                   </div>
@@ -472,13 +472,13 @@ export function StrategicGoalCreatePage() {
 
               {/* Follow-up question */}
               {analysisResult.followUpQuestion && (
-                <p className="text-white/50 mb-4 px-1" style={{ fontSize: '0.875rem', lineHeight: 1.6, fontStyle: 'italic' }}>
+                <p className="text-ui-secondary mb-4 px-1" style={{ fontSize: '0.875rem', lineHeight: 1.6, fontStyle: 'italic' }}>
                   {analysisResult.followUpQuestion}
                 </p>
               )}
 
               {/* Suggested goals */}
-              <p className="text-white/40 mb-3 px-1" style={{ fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.08em' }}>
+              <p className="text-ui-secondary mb-3 px-1" style={{ fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.08em' }}>
                 {t('sg_ai_suggests').toUpperCase()}
               </p>
 
@@ -495,20 +495,20 @@ export function StrategicGoalCreatePage() {
                       className={`w-full text-left p-4 rounded-2xl border transition-all ${
                         isSelected
                           ? 'bg-[#6c5ce7]/15 border-[#6c5ce7]/40'
-                          : 'bg-white/[0.03] border-white/[0.06]'
+                          : 'bg-[var(--glass-bg-row)] border-[var(--glass-border-subtle)]'
                       }`}
                     >
                       <div className="flex items-start gap-3">
                         <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
-                          isSelected ? 'bg-[#6c5ce7]/30' : 'bg-white/[0.06]'
+                          isSelected ? 'bg-[#6c5ce7]/30' : 'bg-[var(--glass-bg-card)]'
                         }`}>
                           {isSelected ? (
                             <Check className="w-3.5 h-3.5 text-[#a29bfe]" />
                           ) : (
-                            <span className="text-white/30" style={{ fontSize: '0.6875rem', fontWeight: 700 }}>{idx + 1}</span>
+                            <span className="text-ui-tertiary" style={{ fontSize: '0.6875rem', fontWeight: 700 }}>{idx + 1}</span>
                           )}
                         </div>
-                        <p className={`${isSelected ? 'text-white' : 'text-white/60'}`}
+                        <p className={`${isSelected ? 'text-foreground' : 'text-muted-foreground'}`}
                           style={{ fontSize: '0.875rem', fontWeight: isSelected ? 600 : 400, lineHeight: 1.5 }}>
                           {goal}
                         </p>
@@ -519,7 +519,7 @@ export function StrategicGoalCreatePage() {
               </div>
 
               {/* Or type custom goal */}
-              <p className="text-white/25 text-center mb-2" style={{ fontSize: '0.75rem' }}>
+              <p className="text-ui-tertiary text-center mb-2" style={{ fontSize: '0.75rem' }}>
                 {t('sg_pick_goal')}
               </p>
               <textarea
@@ -527,7 +527,7 @@ export function StrategicGoalCreatePage() {
                 onChange={(e) => setGoalText(e.target.value)}
                 placeholder={t('sg_input_placeholder')}
                 rows={2}
-                className="w-full rounded-2xl bg-white/[0.04] border border-white/[0.06] p-4 text-white placeholder:text-white/20 outline-none focus:border-[#6c5ce7]/40 transition-colors resize-none mb-4"
+                className="w-full rounded-2xl bg-[var(--ui-input-bg)] border border-[var(--glass-border-subtle)] p-4 text-foreground placeholder:text-[var(--ui-text-tertiary)] outline-none focus:border-[#6c5ce7]/40 transition-colors resize-none mb-4"
                 style={{ fontSize: '0.9375rem', lineHeight: 1.5 }}
               />
 
@@ -558,7 +558,7 @@ export function StrategicGoalCreatePage() {
               >
                 <Sparkles className="w-7 h-7 text-[#a29bfe]" />
               </motion.div>
-              <p className="text-white/50" style={{ fontSize: '0.9375rem', fontWeight: 500 }}>{t('sg_ai_thinking')}</p>
+              <p className="text-ui-secondary" style={{ fontSize: '0.9375rem', fontWeight: 500 }}>{t('sg_ai_thinking')}</p>
               <Loader2 className="w-5 h-5 text-[#a29bfe]/50 animate-spin mt-4" />
             </motion.div>
           )}
@@ -572,14 +572,14 @@ export function StrategicGoalCreatePage() {
                     <div className="w-8 h-8 rounded-lg bg-[#6c5ce7]/20 flex items-center justify-center shrink-0 mt-0.5">
                       <Sparkles className="w-4 h-4 text-[#a29bfe]" />
                     </div>
-                    <p className="text-white/70" style={{ fontSize: '0.875rem', lineHeight: 1.6 }}>
+                    <p className="text-foreground/70" style={{ fontSize: '0.875rem', lineHeight: 1.6 }}>
                       {coachIntro}
                     </p>
                   </div>
                 </GlassCard>
               )}
 
-              <h2 className="text-white mb-4" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
+              <h2 className="text-foreground mb-4" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
                 {t('sg_questions_title')}
               </h2>
 
@@ -591,7 +591,7 @@ export function StrategicGoalCreatePage() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: idx * 0.08 }}
                   >
-                    <label className="text-white/60 mb-2 block" style={{ fontSize: '0.8125rem', fontWeight: 500 }}>
+                    <label className="text-muted-foreground mb-2 block" style={{ fontSize: '0.8125rem', fontWeight: 500 }}>
                       {q.text}
                     </label>
                     {q.type === 'select' && q.options ? (
@@ -604,8 +604,8 @@ export function StrategicGoalCreatePage() {
                               onClick={() => { hapticFeedback('light'); setAnswers((a) => ({ ...a, [q.id]: opt })); }}
                               className={`px-4 py-2 rounded-xl border transition-all ${
                                 isSelected
-                                  ? 'bg-[#6c5ce7]/20 border-[#6c5ce7]/40 text-white'
-                                  : 'bg-white/[0.03] border-white/[0.06] text-white/40'
+                                  ? 'bg-[#6c5ce7]/20 border-[#6c5ce7]/40 text-foreground'
+                                  : 'bg-[var(--glass-bg-row)] border-[var(--glass-border-subtle)] text-ui-secondary'
                               }`}
                               style={{ fontSize: '0.8125rem', fontWeight: isSelected ? 600 : 400 }}
                             >
@@ -619,7 +619,7 @@ export function StrategicGoalCreatePage() {
                         type="number"
                         value={answers[q.id] || ''}
                         onChange={(e) => setAnswers((a) => ({ ...a, [q.id]: e.target.value }))}
-                        className="w-full h-11 rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 text-white placeholder:text-white/15 outline-none focus:border-[#6c5ce7]/40 transition-colors"
+                        className="w-full h-11 rounded-xl bg-[var(--ui-input-bg)] border border-[var(--glass-border-subtle)] px-4 text-foreground placeholder:text-[var(--ui-text-tertiary)] outline-none focus:border-[#6c5ce7]/40 transition-colors"
                         style={{ fontSize: '0.9375rem' }}
                       />
                     ) : (
@@ -627,7 +627,7 @@ export function StrategicGoalCreatePage() {
                         value={answers[q.id] || ''}
                         onChange={(e) => setAnswers((a) => ({ ...a, [q.id]: e.target.value }))}
                         rows={2}
-                        className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] p-3.5 text-white placeholder:text-white/15 outline-none focus:border-[#6c5ce7]/40 transition-colors resize-none"
+                        className="w-full rounded-xl bg-[var(--ui-input-bg)] border border-[var(--glass-border-subtle)] p-3.5 text-foreground placeholder:text-[var(--ui-text-tertiary)] outline-none focus:border-[#6c5ce7]/40 transition-colors resize-none"
                         style={{ fontSize: '0.9375rem', lineHeight: 1.5 }}
                       />
                     )}
@@ -662,7 +662,7 @@ export function StrategicGoalCreatePage() {
               >
                 <Sparkles className="w-7 h-7 text-[#a29bfe]" />
               </motion.div>
-              <p className="text-white/50" style={{ fontSize: '0.9375rem', fontWeight: 500 }}>{t('sg_building_plan')}</p>
+              <p className="text-ui-secondary" style={{ fontSize: '0.9375rem', fontWeight: 500 }}>{t('sg_building_plan')}</p>
               <div className="flex items-center gap-1.5 mt-4">
                 {[0, 1, 2].map((i) => (
                   <motion.div
@@ -700,7 +700,7 @@ export function StrategicGoalCreatePage() {
 
               {plan.phases && plan.phases.length > 0 && (
                 <div className="mb-5">
-                  <h3 className="text-white/40 mb-3 px-1" style={{ fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.08em' }}>
+                  <h3 className="text-ui-secondary mb-3 px-1" style={{ fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.08em' }}>
                     {t('sg_phases').toUpperCase()}
                   </h3>
                   <div className="space-y-2">
@@ -710,8 +710,8 @@ export function StrategicGoalCreatePage() {
                           <span className="text-[#a29bfe]" style={{ fontSize: '0.6875rem', fontWeight: 700 }}>{idx + 1}</span>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-white" style={{ fontSize: '0.875rem', fontWeight: 600 }}>{ph.title}</p>
-                          <p className="text-white/35 mt-0.5" style={{ fontSize: '0.75rem' }}>
+                          <p className="text-foreground" style={{ fontSize: '0.875rem', fontWeight: 600 }}>{ph.title}</p>
+                          <p className="text-ui-secondary mt-0.5" style={{ fontSize: '0.75rem' }}>
                             {ph.description} &middot; {t('sg_w')}. {ph.weekStart}–{ph.weekEnd}
                           </p>
                         </div>
@@ -723,7 +723,7 @@ export function StrategicGoalCreatePage() {
 
               {plan.tasks && plan.tasks.length > 0 && (
                 <div className="mb-6">
-                  <h3 className="text-white/40 mb-3 px-1" style={{ fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.08em' }}>
+                  <h3 className="text-ui-secondary mb-3 px-1" style={{ fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.08em' }}>
                     {t('sg_tasks').toUpperCase()}
                   </h3>
                   <div className="space-y-2">
@@ -735,8 +735,8 @@ export function StrategicGoalCreatePage() {
                           <Repeat className={`w-3.5 h-3.5 ${task.frequency === 'monthly' ? 'text-[#fd79a8]' : 'text-[#00cec9]'}`} />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-white" style={{ fontSize: '0.875rem', fontWeight: 500 }}>{task.title}</p>
-                          <p className="text-white/30 mt-0.5" style={{ fontSize: '0.75rem' }}>
+                          <p className="text-foreground" style={{ fontSize: '0.875rem', fontWeight: 500 }}>{task.title}</p>
+                          <p className="text-ui-tertiary mt-0.5" style={{ fontSize: '0.75rem' }}>
                             {task.description?.slice(0, 100)}
                           </p>
                           <div className="flex items-center gap-3 mt-1">
@@ -744,7 +744,7 @@ export function StrategicGoalCreatePage() {
                               style={{ fontSize: '0.6875rem', fontWeight: 600 }}>
                               {t(task.frequency === 'monthly' ? 'sg_monthly' : 'sg_weekly')}
                             </span>
-                            <span className="flex items-center gap-1 text-white/20" style={{ fontSize: '0.6875rem' }}>
+                            <span className="flex items-center gap-1 text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>
                               <Calendar className="w-3 h-3" />
                               {task.firstDueDate}
                             </span>
@@ -798,7 +798,7 @@ export function StrategicGoalCreatePage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5 }}
-                className="text-white/40 text-center mb-10"
+                className="text-ui-secondary text-center mb-10"
                 style={{ fontSize: '0.9375rem' }}
               >
                 {t('sg_subtitle')}
@@ -812,7 +812,7 @@ export function StrategicGoalCreatePage() {
               >
                 <button
                   onClick={() => navigate('/goals')}
-                  className="flex-1 h-12 rounded-xl bg-white/[0.06] border border-white/[0.08] text-white/60 flex items-center justify-center"
+                  className="flex-1 h-12 rounded-xl bg-[var(--glass-bg-card)] border border-[var(--glass-border)] text-muted-foreground flex items-center justify-center"
                   style={{ fontSize: '0.9375rem', fontWeight: 500 }}
                 >
                   {t('goals_title')}

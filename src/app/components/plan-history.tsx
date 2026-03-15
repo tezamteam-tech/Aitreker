@@ -119,7 +119,7 @@ export function PlanHistoryPage() {
             className="fixed top-12 left-1/2 -translate-x-1/2 z-[60] px-5 py-2.5 rounded-2xl bg-liquid-glass-toast border border-white/[0.1] shadow-2xl"
             style={{ boxShadow: '0 12px 40px rgba(0,0,0,0.5)' }}
           >
-            <p className="text-white/80" style={{ fontSize: '0.8125rem', fontWeight: 500 }}>{toast}</p>
+            <p className="text-foreground/80" style={{ fontSize: '0.8125rem', fontWeight: 500 }}>{toast}</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -140,10 +140,10 @@ export function PlanHistoryPage() {
           </div>
         ) : totalItems === 0 ? (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center py-20">
-            <div className="w-16 h-16 rounded-2xl bg-white/[0.04] flex items-center justify-center mb-4">
-              <Calendar className="w-8 h-8 text-white/20" />
+            <div className="w-16 h-16 rounded-2xl bg-[var(--ui-input-bg)] flex items-center justify-center mb-4">
+              <Calendar className="w-8 h-8 text-ui-tertiary" />
             </div>
-            <p className="text-white/30 text-center" style={{ fontSize: '0.9375rem' }}>{t('pb_no_programs')}</p>
+            <p className="text-ui-tertiary text-center" style={{ fontSize: '0.9375rem' }}>{t('pb_no_programs')}</p>
             <button onClick={() => navigate('/plan-builder')} className="mt-4 px-6 py-2.5 rounded-xl bg-[#6c5ce7]/15 border border-[#6c5ce7]/30 text-[#a29bfe] flex items-center gap-2" style={{ fontSize: '0.875rem', fontWeight: 500 }}>
               <Sparkles className="w-4 h-4" />
               {t('pb_title')}
@@ -163,7 +163,7 @@ export function PlanHistoryPage() {
                     {drafts.length}
                   </span>
                 </div>
-                <p className="text-white/25 mb-3 px-1" style={{ fontSize: '0.6875rem' }}>
+                <p className="text-ui-tertiary mb-3 px-1" style={{ fontSize: '0.6875rem' }}>
                   {t('pb_drafts_subtitle')}
                 </p>
 
@@ -190,16 +190,16 @@ export function PlanHistoryPage() {
 
                           <div className="flex-1 min-w-0">
                             {/* Title / summary */}
-                            <p className="text-white truncate" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
+                            <p className="text-foreground truncate" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
                               {draft.planTitle || draft.inputSummary?.slice(0, 60) || 'Draft plan'}
                             </p>
                             {draft.planSubtitle && (
-                              <p className="text-white/30 truncate" style={{ fontSize: '0.75rem' }}>{draft.planSubtitle}</p>
+                              <p className="text-ui-tertiary truncate" style={{ fontSize: '0.75rem' }}>{draft.planSubtitle}</p>
                             )}
 
                             {/* Meta badges */}
                             <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-white/[0.04] text-white/30" style={{ fontSize: '0.625rem', fontWeight: 500 }}>
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[var(--ui-input-bg)] text-ui-tertiary" style={{ fontSize: '0.625rem', fontWeight: 500 }}>
                                 <Timer className="w-2.5 h-2.5" /> {draft.durationDays}{t('unit_days_short')}
                               </span>
                               <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md ${
@@ -212,7 +212,7 @@ export function PlanHistoryPage() {
                                   : t('pb_draft_in_progress', { n: draft.currentStep, total: draft.totalSteps })}
                               </span>
                               {draft.createdAt && (
-                                <span className="text-white/15" style={{ fontSize: '0.625rem' }}>
+                                <span className="text-ui-tertiary" style={{ fontSize: '0.625rem' }}>
                                   {formatDate(draft.createdAt)}
                                 </span>
                               )}
@@ -220,12 +220,12 @@ export function PlanHistoryPage() {
 
                             {/* Input summary preview */}
                             {draft.inputSummary && !draft.planTitle && (
-                              <p className="text-white/15 mt-1.5 line-clamp-2" style={{ fontSize: '0.6875rem', lineHeight: 1.4 }}>
+                              <p className="text-ui-tertiary mt-1.5 line-clamp-2" style={{ fontSize: '0.6875rem', lineHeight: 1.4 }}>
                                 {draft.inputSummary}
                               </p>
                             )}
                             {draft.inputSummary && draft.planTitle && (
-                              <p className="text-white/15 mt-1.5 line-clamp-1" style={{ fontSize: '0.6875rem', lineHeight: 1.4 }}>
+                              <p className="text-ui-tertiary mt-1.5 line-clamp-1" style={{ fontSize: '0.6875rem', lineHeight: 1.4 }}>
                                 {draft.inputSummary.slice(0, 80)}{draft.inputSummary.length > 80 ? '...' : ''}
                               </p>
                             )}
@@ -233,7 +233,7 @@ export function PlanHistoryPage() {
                         </div>
 
                         {/* Action buttons */}
-                        <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/[0.04]">
+                        <div className="flex items-center gap-2 mt-3 pt-3 border-t border-[var(--ui-separator)]">
                           <motion.button
                             whileTap={{ scale: 0.97 }}
                             onClick={() => handleOpenDraft(draft.draftId)}
@@ -247,7 +247,7 @@ export function PlanHistoryPage() {
                             whileTap={{ scale: 0.95 }}
                             onClick={() => handleDeleteDraft(draft.draftId)}
                             disabled={deletingDraftId === draft.draftId}
-                            className="w-9 h-9 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center text-white/25 active:text-red-400 active:bg-red-500/10 transition-colors"
+                            className="w-9 h-9 rounded-lg bg-[var(--ui-input-bg)] border border-[var(--glass-border-subtle)] flex items-center justify-center text-ui-tertiary active:text-red-400 active:bg-red-500/10 transition-colors"
                           >
                             {deletingDraftId === draft.draftId ? (
                               <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -287,32 +287,32 @@ export function PlanHistoryPage() {
                       <motion.div key={prog.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 * i }}>
                         <GlassCard variant={isActive ? 'elevated' : 'default'} padding="md">
                           <div className="flex items-start gap-3">
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${isActive ? 'bg-gradient-to-br from-[#6c5ce7] to-[#a29bfe]' : 'bg-white/[0.06]'}`}>
-                              {isActive ? <CheckCircle2 className="w-5 h-5 text-white" /> : <Circle className="w-5 h-5 text-white/30" />}
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${isActive ? 'bg-gradient-to-br from-[#6c5ce7] to-[#a29bfe]' : 'bg-[var(--glass-bg-card)]'}`}>
+                              {isActive ? <CheckCircle2 className="w-5 h-5 text-white" /> : <Circle className="w-5 h-5 text-ui-tertiary" />}
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-0.5">
-                                <p className="text-white truncate" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>{safeStr(prog.title) || safeStr(prog.subtitle) || 'Program'}</p>
+                                <p className="text-foreground truncate" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>{safeStr(prog.title) || safeStr(prog.subtitle) || 'Program'}</p>
                                 {isActive && (
                                   <span className="px-1.5 py-0.5 rounded-md bg-[#6c5ce7]/20 text-[#a29bfe]" style={{ fontSize: '0.6rem', fontWeight: 600 }}>
                                     {t('pb_active')}
                                   </span>
                                 )}
                               </div>
-                              {prog.subtitle && <p className="text-white/30 truncate mb-1.5" style={{ fontSize: '0.75rem' }}>{safeStr(prog.subtitle)}</p>}
+                              {prog.subtitle && <p className="text-ui-tertiary truncate mb-1.5" style={{ fontSize: '0.75rem' }}>{safeStr(prog.subtitle)}</p>}
 
                               {/* Progress bar */}
                               <div className="flex items-center gap-2">
-                                <div className="flex-1 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                                <div className="flex-1 h-1.5 rounded-full bg-ui-progress overflow-hidden">
                                   <div className="h-full rounded-full bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe] transition-all" style={{ width: `${progress}%` }} />
                                 </div>
-                                <span className="text-white/25 shrink-0" style={{ fontSize: '0.6875rem' }}>
+                                <span className="text-ui-tertiary shrink-0" style={{ fontSize: '0.6875rem' }}>
                                   {t('pb_days_done', { n: prog.doneDays || 0, total: prog.durationDays || 7 })}
                                 </span>
                               </div>
 
                               {prog.inputSummary && (
-                                <p className="text-white/20 mt-2 line-clamp-2" style={{ fontSize: '0.75rem', lineHeight: 1.4 }}>{prog.inputSummary}</p>
+                                <p className="text-ui-tertiary mt-2 line-clamp-2" style={{ fontSize: '0.75rem', lineHeight: 1.4 }}>{prog.inputSummary}</p>
                               )}
                             </div>
 
@@ -321,7 +321,7 @@ export function PlanHistoryPage() {
                               <button
                                 onClick={(e) => { e.stopPropagation(); handleSwitch(prog.id); }}
                                 disabled={switchingId === prog.id}
-                                className="px-3 py-1.5 rounded-lg bg-white/[0.06] border border-white/[0.08] text-white/50 shrink-0 mt-1"
+                                className="px-3 py-1.5 rounded-lg bg-[var(--glass-bg-card)] border border-[var(--glass-border)] text-ui-secondary shrink-0 mt-1"
                                 style={{ fontSize: '0.75rem', fontWeight: 500 }}
                               >
                                 {switchingId === prog.id ? <Loader2 className="w-3 h-3 animate-spin" /> : t('pb_switch')}

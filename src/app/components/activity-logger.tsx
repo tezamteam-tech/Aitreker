@@ -326,7 +326,7 @@ export function ActivityLogger({
 
                 {/* Activity entries */}
                 {activityEntries.map((entry) => (
-                  <div key={entry.id} className="p-3 rounded-xl bg-white/[0.025] border border-white/[0.04]">
+                  <div key={entry.id} className="p-3 rounded-xl" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
                     <div className="flex items-start justify-between mb-1.5">
                       <div className="flex-1 min-w-0">
                         <p className="text-foreground text-xs font-medium truncate">{entry.summary || t('ab_custom')}</p>
@@ -340,7 +340,7 @@ export function ActivityLogger({
                         <motion.button
                           whileTap={{ scale: 0.8 }}
                           onClick={() => handleDelete(entry.id)}
-                          className="w-6 h-6 rounded-md bg-white/[0.04] flex items-center justify-center ml-1"
+                          className="w-6 h-6 rounded-md bg-ui-button flex items-center justify-center ml-1"
                         >
                           <Trash2 className="w-3 h-3 text-muted-foreground/30" />
                         </motion.button>
@@ -366,7 +366,7 @@ export function ActivityLogger({
 
                 {/* SmartBurn entries */}
                 {smartburnEntries.map((entry) => (
-                  <div key={entry.id} className="p-2.5 rounded-xl bg-white/[0.025] border border-white/[0.04] flex items-center justify-between">
+                  <div key={entry.id} className="p-2.5 rounded-xl flex items-center justify-between" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
                     <div className="flex items-center gap-2">
                       <span style={{ fontSize: '1rem' }}>{entry.emoji}</span>
                       <div>
@@ -380,7 +380,7 @@ export function ActivityLogger({
 
                 {/* Workout calories */}
                 {workoutCalories > 0 && (
-                  <div className="p-2.5 rounded-xl bg-white/[0.025] border border-white/[0.04] flex items-center justify-between">
+                  <div className="p-2.5 rounded-xl flex items-center justify-between" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
                     <div className="flex items-center gap-2">
                       <Dumbbell className="w-4 h-4 text-[#6c5ce7]" />
                       <p className="text-foreground text-xs font-medium">{t('ab_workout')}</p>
@@ -411,7 +411,7 @@ export function ActivityLogger({
           <p className="text-muted-foreground text-xs">{t('ab_subtitle')}</p>
 
           {/* Input mode tabs */}
-          <div className="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-white/[0.04]">
+          <div className="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-ui-button">
             {([
               { id: 'text' as const, icon: Type, label: t('ab_text_tab') },
               { id: 'voice' as const, icon: Mic, label: t('ab_voice_tab') },
@@ -444,7 +444,7 @@ export function ActivityLogger({
                 onChange={(e) => setTextInput(e.target.value)}
                 placeholder={t('ab_text_placeholder')}
                 rows={4}
-                className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-foreground text-sm outline-none focus:border-[#e17055]/30 resize-none placeholder:text-muted-foreground/30"
+                className="w-full bg-ui-button border border-ui-button rounded-xl px-4 py-3 text-foreground text-sm outline-none focus:border-[#e17055]/30 resize-none placeholder:text-muted-foreground/30"
               />
               <motion.button
                 whileTap={{ scale: 0.97 }}
@@ -483,7 +483,7 @@ export function ActivityLogger({
 
               {/* Show transcript */}
               {voiceTranscript && (
-                <div className="p-3 rounded-xl bg-white/[0.04] border border-white/[0.06]">
+                <div className="p-3 rounded-xl bg-ui-button" style={{ border: '1px solid var(--glass-border-subtle)' }}>
                   <p className="text-foreground text-sm">{voiceTranscript}</p>
                 </div>
               )}
@@ -526,7 +526,8 @@ export function ActivityLogger({
                   <motion.button
                     whileTap={{ scale: 0.95 }}
                     onClick={() => { hapticFeedback('light'); setShowPhotoPicker(true); }}
-                    className="p-6 rounded-xl border-2 border-dashed border-white/10 flex flex-col items-center gap-2 bg-white/[0.02]"
+                    className="p-6 rounded-xl border-2 border-dashed flex flex-col items-center gap-2 bg-ui-button"
+                    style={{ borderColor: 'var(--glass-border)' }}
                   >
                     <Camera className="w-6 h-6 text-[#e17055]" />
                     <span className="text-foreground/60 text-xs">{t('ab_take_photo')}</span>
@@ -534,7 +535,8 @@ export function ActivityLogger({
                   <motion.button
                     whileTap={{ scale: 0.95 }}
                     onClick={() => { hapticFeedback('light'); setShowPhotoPicker(true); }}
-                    className="p-6 rounded-xl border-2 border-dashed border-white/10 flex flex-col items-center gap-2 bg-white/[0.02]"
+                    className="p-6 rounded-xl border-2 border-dashed flex flex-col items-center gap-2 bg-ui-button"
+                    style={{ borderColor: 'var(--glass-border)' }}
                   >
                     <ImageIcon className="w-6 h-6 text-[#74b9ff]" />
                     <span className="text-foreground/60 text-xs">{t('ab_choose_gallery')}</span>
@@ -550,7 +552,7 @@ export function ActivityLogger({
                 onChange={(e) => setTextInput(e.target.value)}
                 placeholder={t('ab_text_placeholder')}
                 rows={2}
-                className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-foreground text-sm outline-none focus:border-[#e17055]/30 resize-none placeholder:text-muted-foreground/30"
+                className="w-full bg-ui-button border border-ui-button rounded-xl px-4 py-3 text-foreground text-sm outline-none focus:border-[#e17055]/30 resize-none placeholder:text-muted-foreground/30"
               />
 
               <motion.button

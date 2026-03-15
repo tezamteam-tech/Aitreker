@@ -187,10 +187,10 @@ export function ChallengesListPage() {
                   hapticFeedback('light');
                   setShowCodeModal(true);
                 }}
-                className="h-9 px-3 rounded-xl bg-white/[0.06] border border-white/[0.08] flex items-center gap-1.5"
+                className="h-9 px-3 rounded-xl bg-ui-button border border-ui-button flex items-center gap-1.5"
               >
-                <KeyRound className="w-3.5 h-3.5 text-white/40" />
-                <span className="text-white/50" style={{ fontSize: '0.75rem', fontWeight: 500 }}>
+                <KeyRound className="w-3.5 h-3.5 text-ui-icon-secondary" />
+                <span className="text-muted-foreground" style={{ fontSize: '0.75rem', fontWeight: 500 }}>
                   {t('ch_join_by_code')}
                 </span>
               </motion.button>
@@ -216,20 +216,20 @@ export function ChallengesListPage() {
           className="mb-4"
         >
           <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-ui-tertiary" />
             <input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t('ch_search_placeholder')}
-              className="w-full h-11 pl-10 pr-10 rounded-xl bg-white/[0.04] border border-white/[0.06] text-white placeholder:text-white/20 outline-none"
+              className="w-full h-11 pl-10 pr-10 rounded-xl bg-ui-button border border-ui-button text-foreground placeholder:text-ui-tertiary outline-none"
               style={{ fontSize: '0.875rem' }}
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-white/[0.08] flex items-center justify-center"
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-ui-close flex items-center justify-center"
               >
-                <X className="w-3 h-3 text-white/40" />
+                <X className="w-3 h-3 text-ui-icon-secondary" />
               </button>
             )}
           </div>
@@ -251,8 +251,8 @@ export function ChallengesListPage() {
               }}
               className={`flex-1 h-10 rounded-xl flex items-center justify-center transition-all ${
                 tab === tabKey
-                  ? 'bg-[#6c5ce7]/20 border border-[#6c5ce7]/30 text-white'
-                  : 'bg-white/[0.03] border border-white/[0.05] text-white/40'
+                  ? 'bg-[#6c5ce7]/20 border border-[#6c5ce7]/30 text-foreground'
+                  : 'bg-ui-button border border-ui-button text-muted-foreground'
               }`}
               style={{ fontSize: '0.875rem', fontWeight: 500 }}
             >
@@ -267,7 +267,7 @@ export function ChallengesListPage() {
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-              className="w-8 h-8 border-2 border-white/10 border-t-[#6c5ce7] rounded-full"
+              className="w-8 h-8 border-2 border-ui-button border-t-[#6c5ce7] rounded-full"
             />
           </div>
         )}
@@ -279,19 +279,19 @@ export function ChallengesListPage() {
             animate={{ opacity: 1 }}
             className="flex flex-col items-center py-16 px-4"
           >
-            <div className="w-16 h-16 rounded-2xl bg-white/[0.04] flex items-center justify-center mb-4">
+            <div className="w-16 h-16 rounded-2xl bg-ui-button flex items-center justify-center mb-4">
               {searchQuery ? (
-                <Search className="w-8 h-8 text-white/20" />
+                <Search className="w-8 h-8 text-ui-tertiary" />
               ) : tab === 'my' ? (
-                <FileSignature className="w-8 h-8 text-white/20" />
+                <FileSignature className="w-8 h-8 text-ui-tertiary" />
               ) : (
-                <Users className="w-8 h-8 text-white/20" />
+                <Users className="w-8 h-8 text-ui-tertiary" />
               )}
             </div>
-            <p className="text-white/40 text-center mb-1" style={{ fontSize: '1rem', fontWeight: 500 }}>
+            <p className="text-muted-foreground text-center mb-1" style={{ fontSize: '1rem', fontWeight: 500 }}>
               {searchQuery ? t('ch_no_search_results') : tab === 'my' ? t('ch_no_challenges') : t('ch_no_available')}
             </p>
-            <p className="text-white/25 text-center mb-6" style={{ fontSize: '0.8125rem' }}>
+            <p className="text-ui-tertiary text-center mb-6" style={{ fontSize: '0.8125rem' }}>
               {searchQuery ? '' : tab === 'my' ? t('ch_create_desc') : t('ch_check_later')}
             </p>
             {tab === 'my' && !searchQuery && (
@@ -339,7 +339,7 @@ export function ChallengesListPage() {
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
-                        <p className="text-white truncate" style={{ fontSize: compact ? '0.875rem' : '0.9375rem', fontWeight: 600 }}>
+                        <p className="text-foreground truncate" style={{ fontSize: compact ? '0.875rem' : '0.9375rem', fontWeight: 600 }}>
                           {ch.title}
                         </p>
                         {isPrivate && (
@@ -360,7 +360,7 @@ export function ChallengesListPage() {
                       </div>
 
                       {!compact && (
-                        <p className="text-white/35 mb-2" style={{ fontSize: '0.75rem' }}>
+                        <p className="text-ui-tertiary mb-2" style={{ fontSize: '0.75rem' }}>
                           {t(config.sublabelKey)}
                           {ch.depositAmount > 0 && (
                             <>
@@ -375,7 +375,7 @@ export function ChallengesListPage() {
                       {/* Progress bar — hidden in compact mode */}
                       {!compact && ch.isMember && ch.durationDays > 0 && (
                         <div className="mb-2">
-                          <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                          <div className="h-1.5 rounded-full bg-ui-progress overflow-hidden">
                             <div
                               className="h-full rounded-full bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe] transition-all"
                               style={{ width: `${Math.min(100, Math.round((Math.max(0, Math.ceil((Date.now() - new Date(ch.startAt).getTime()) / 86400000)) / ch.durationDays) * 100))}%` }}
@@ -385,10 +385,10 @@ export function ChallengesListPage() {
                       )}
 
                       <div className="flex items-center gap-3">
-                        <span className="flex items-center gap-1 text-white/30" style={{ fontSize: '0.6875rem' }}>
+                        <span className="flex items-center gap-1 text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>
                           <Users className="w-3 h-3" /> {ch.memberCount}
                         </span>
-                        <span className="flex items-center gap-1 text-white/30" style={{ fontSize: '0.6875rem' }}>
+                        <span className="flex items-center gap-1 text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>
                           <Clock className="w-3 h-3" /> {t('ch_days_left', { count: remaining })}
                         </span>
                         {ch.isMember && (
@@ -399,7 +399,7 @@ export function ChallengesListPage() {
                       </div>
                     </div>
 
-                    <ChevronRight className="w-4 h-4 text-white/15 shrink-0 mt-1" />
+                    <ChevronRight className="w-4 h-4 text-ui-tertiary shrink-0 mt-1" />
                   </div>
                 </GlassCard>
               </motion.div>
@@ -432,15 +432,15 @@ export function ChallengesListPage() {
                     <KeyRound className="w-5 h-5 text-[#a29bfe]" />
                   </div>
                   <div>
-                    <h2 className="text-white" style={{ fontSize: '1.125rem', fontWeight: 700 }}>{t('ch_join_by_code')}</h2>
-                    <p className="text-white/30" style={{ fontSize: '0.75rem' }}>{t('ch_enter_code')}</p>
+                    <h2 className="text-foreground" style={{ fontSize: '1.125rem', fontWeight: 700 }}>{t('ch_join_by_code')}</h2>
+                    <p className="text-ui-tertiary" style={{ fontSize: '0.75rem' }}>{t('ch_enter_code')}</p>
                   </div>
                 </div>
                 <button
                   onClick={() => { setShowCodeModal(false); setCodeError(null); setInviteCode(''); }}
-                  className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center"
+                  className="w-8 h-8 rounded-lg bg-ui-close flex items-center justify-center"
                 >
-                  <X className="w-4 h-4 text-white/40" />
+                  <X className="w-4 h-4 text-ui-icon-secondary" />
                 </button>
               </div>
 
@@ -452,7 +452,7 @@ export function ChallengesListPage() {
                     setCodeError(null);
                   }}
                   placeholder={t('ch_code_placeholder')}
-                  className="w-full h-14 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-center tracking-[0.3em] placeholder:text-white/20 placeholder:tracking-normal outline-none"
+                  className="w-full h-14 rounded-xl bg-ui-button border border-ui-button text-foreground text-center tracking-[0.3em] placeholder:text-ui-tertiary placeholder:tracking-normal outline-none"
                   style={{ fontSize: '1.5rem', fontWeight: 700, letterSpacing: '0.3em' }}
                   autoFocus
                   maxLength={8}
@@ -479,7 +479,7 @@ export function ChallengesListPage() {
                 className={`w-full h-13 rounded-xl flex items-center justify-center gap-2 transition-all ${
                   inviteCode.trim() && !joiningByCode
                     ? 'bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe] text-white'
-                    : 'bg-white/[0.04] text-white/20'
+                    : 'bg-ui-button text-ui-tertiary'
                 }`}
                 style={{ fontSize: '1rem', fontWeight: 600, height: '52px', boxShadow: inviteCode.trim() ? '0 8px 32px rgba(108,92,231,0.3)' : 'none' }}
               >

@@ -363,7 +363,7 @@ export function WalletPage() {
         </button>
         <button
           onClick={onReset}
-          className="px-4 py-2.5 rounded-xl bg-white/[0.06] text-white/40"
+          className="px-4 py-2.5 rounded-xl bg-ui-close text-ui-secondary"
           style={{ fontSize: '0.8125rem' }}
         >
           OK
@@ -409,7 +409,7 @@ export function WalletPage() {
               </div>
             )}
             {(wallet.starsReserved || 0) > 0 && (
-              <p className="text-white/25 mt-0.5" style={{ fontSize: '0.625rem' }}>
+              <p className="text-ui-tertiary mt-0.5" style={{ fontSize: '0.625rem' }}>
                 {t('wl_available')}: {wallet.starsBalance - (wallet.starsReserved || 0)}
               </p>
             )}
@@ -435,7 +435,7 @@ export function WalletPage() {
               </div>
             )}
             {(wallet.tonReserved || 0) > 0 && (
-              <p className="text-white/25 mt-0.5" style={{ fontSize: '0.625rem' }}>
+              <p className="text-ui-tertiary mt-0.5" style={{ fontSize: '0.625rem' }}>
                 {t('wl_available')}: {(wallet.tonBalance - (wallet.tonReserved || 0)).toFixed(1)}
               </p>
             )}
@@ -454,7 +454,7 @@ export function WalletPage() {
             className={`flex-1 py-3 rounded-xl flex items-center justify-center gap-2 transition-all ${
               activeTab === 'topup'
                 ? 'bg-[#6c5ce7] text-white'
-                : 'bg-white/[0.06] border border-white/[0.08] text-white/70'
+                : 'bg-ui-button border border-ui-button text-ui-icon-primary'
             }`}
             style={{ fontSize: '0.8125rem', fontWeight: 600 }}
           >
@@ -466,7 +466,7 @@ export function WalletPage() {
             className={`flex-1 py-3 rounded-xl flex items-center justify-center gap-2 transition-all ${
               activeTab === 'subscribe'
                 ? 'bg-[#6c5ce7] text-white'
-                : 'bg-white/[0.06] border border-white/[0.08] text-white/70'
+                : 'bg-ui-button border border-ui-button text-ui-icon-primary'
             }`}
             style={{ fontSize: '0.8125rem', fontWeight: 600 }}
           >
@@ -489,11 +489,11 @@ export function WalletPage() {
             >
               <GlassCard padding="md">
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-white/50" style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.05em' }}>
+                  <p className="text-muted-foreground" style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.05em' }}>
                     {t('wl_top_up_balance')}
                   </p>
                   <button onClick={() => setActiveTab('overview')} className="p-1">
-                    <X className="w-4 h-4 text-white/30" />
+                    <X className="w-4 h-4 text-ui-tertiary" />
                   </button>
                 </div>
 
@@ -512,7 +512,7 @@ export function WalletPage() {
                         className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl transition-all ${
                           topupCurrency === 'stars'
                             ? 'bg-yellow-400/15 border border-yellow-400/30 text-yellow-400'
-                            : 'bg-white/[0.04] border border-transparent text-white/40'
+                            : 'bg-ui-button border border-transparent text-ui-secondary'
                         }`}
                         style={{ fontSize: '0.8125rem', fontWeight: 600 }}
                       >
@@ -524,7 +524,7 @@ export function WalletPage() {
                         className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl transition-all ${
                           topupCurrency === 'ton'
                             ? 'bg-blue-500/15 border border-blue-500/30 text-blue-400'
-                            : 'bg-white/[0.04] border border-transparent text-white/40'
+                            : 'bg-ui-button border border-transparent text-ui-secondary'
                         }`}
                         style={{ fontSize: '0.8125rem', fontWeight: 600 }}
                       >
@@ -560,12 +560,12 @@ export function WalletPage() {
                         value={customTopupAmount}
                         onChange={(e) => setCustomTopupAmount(e.target.value)}
                         placeholder={t('wl_custom_amount')}
-                        className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-2.5 text-white placeholder-white/20 outline-none focus:border-white/20"
+                        className="w-full bg-ui-button border border-ui-button rounded-xl px-4 py-2.5 text-foreground placeholder-ui-tertiary outline-none focus:border-muted-foreground/20"
                         style={{ fontSize: '0.875rem' }}
                         min={topupCurrency === 'stars' ? 1 : 0.1}
                         step={topupCurrency === 'stars' ? 1 : 0.1}
                       />
-                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30" style={{ fontSize: '0.75rem' }}>
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-ui-tertiary" style={{ fontSize: '0.75rem' }}>
                         {topupCurrency === 'stars' ? '★' : 'TON'}
                       </span>
                     </div>
@@ -625,13 +625,13 @@ export function WalletPage() {
             >
               <GlassCard padding="md">
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-white/50" style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.05em' }}>
+                  <p className="text-muted-foreground" style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.05em' }}>
                     {subscriptionActive
                       ? (t('wl_extend_subscription'))
                       : (t('wl_buy_subscription'))}
                   </p>
                   <button onClick={() => setActiveTab('overview')} className="p-1">
-                    <X className="w-4 h-4 text-white/30" />
+                    <X className="w-4 h-4 text-ui-tertiary" />
                   </button>
                 </div>
 

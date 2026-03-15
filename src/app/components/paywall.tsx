@@ -138,7 +138,7 @@ export function PaywallOverlay({ daysLeft, expiresAt, onSubscriptionUpdated }: P
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-white mb-2"
+            className="text-foreground mb-2"
             style={{ fontSize: '1.5rem', fontWeight: 700 }}
           >
             Proper Food Premium
@@ -148,7 +148,7 @@ export function PaywallOverlay({ daysLeft, expiresAt, onSubscriptionUpdated }: P
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="text-white/50"
+            className="text-muted-foreground"
             style={{ fontSize: '0.9375rem' }}
           >
             {t('pw_subtitle')}
@@ -165,7 +165,7 @@ export function PaywallOverlay({ daysLeft, expiresAt, onSubscriptionUpdated }: P
           <GlassCard className="p-5">
             <div className="flex items-center gap-2 mb-4">
               <Sparkles className="w-4 h-4 text-[#a29bfe]" />
-              <span className="text-white/70" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
+              <span className="text-[#a29bfe]" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
                 {t('pw_whats_included')}
               </span>
             </div>
@@ -175,7 +175,7 @@ export function PaywallOverlay({ daysLeft, expiresAt, onSubscriptionUpdated }: P
                   <div className="w-5 h-5 rounded-full bg-[#6c5ce7]/20 flex items-center justify-center shrink-0">
                     <Check className="w-3 h-3 text-[#a29bfe]" />
                   </div>
-                  <span className="text-white/70" style={{ fontSize: '0.875rem' }}>{f}</span>
+                  <span className="text-ui-icon-primary" style={{ fontSize: '0.875rem' }}>{f}</span>
                 </div>
               ))}
             </div>
@@ -194,7 +194,7 @@ export function PaywallOverlay({ daysLeft, expiresAt, onSubscriptionUpdated }: P
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl transition-all ${
               payMethod === 'stars'
                 ? 'bg-[#6c5ce7]/20 border border-[#6c5ce7]/40 text-[#a29bfe]'
-                : 'bg-white/[0.04] border border-transparent text-white/40'
+                : 'bg-ui-button border border-transparent text-muted-foreground'
             }`}
             style={{ fontSize: '0.8125rem', fontWeight: 600 }}
           >
@@ -206,7 +206,7 @@ export function PaywallOverlay({ daysLeft, expiresAt, onSubscriptionUpdated }: P
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl transition-all ${
               payMethod === 'ton'
                 ? 'bg-blue-500/20 border border-blue-500/40 text-blue-400'
-                : 'bg-white/[0.04] border border-transparent text-white/40'
+                : 'bg-ui-button border border-transparent text-muted-foreground'
             }`}
             style={{ fontSize: '0.8125rem', fontWeight: 600 }}
           >
@@ -248,7 +248,7 @@ export function PaywallOverlay({ daysLeft, expiresAt, onSubscriptionUpdated }: P
                     ? payMethod === 'stars'
                       ? 'bg-[#6c5ce7]/20 border-2 border-[#6c5ce7]'
                       : 'bg-blue-500/20 border-2 border-blue-500'
-                    : 'bg-white/[0.04] border-2 border-transparent'
+                    : 'bg-ui-button border-2 border-transparent'
                 }`}
               >
                 {plan.popular && (
@@ -264,14 +264,14 @@ export function PaywallOverlay({ daysLeft, expiresAt, onSubscriptionUpdated }: P
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-white" style={{ fontSize: '1rem', fontWeight: 600 }}>{label}</span>
+                      <span className="text-foreground" style={{ fontSize: '1rem', fontWeight: 600 }}>{label}</span>
                       {plan.save && (
                         <span className="px-2 py-0.5 rounded-full bg-green-500/20 text-green-400" style={{ fontSize: '0.6875rem', fontWeight: 600 }}>
                           -{plan.save}%
                         </span>
                       )}
                     </div>
-                    <span className="text-white/40" style={{ fontSize: '0.8125rem' }}>
+                    <span className="text-ui-secondary" style={{ fontSize: '0.8125rem' }}>
                       {plan.months > 1
                         ? `~${perMonth} ${priceUnit}/${t('pw_per_month')}`
                         : `${price} ${priceUnit}`

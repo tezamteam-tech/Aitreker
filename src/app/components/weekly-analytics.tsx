@@ -210,11 +210,11 @@ export function WeeklyAnalyticsPage() {
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-[#fd79a8]" />
-            <span className="text-white" style={{ fontSize: '0.75rem' }}>{t('wa_consumed')}: {consumed} {t('unit_kcal')}</span>
+            <span className="text-foreground" style={{ fontSize: '0.75rem' }}>{t('wa_consumed')}: {consumed} {t('unit_kcal')}</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-[#00cec9]" />
-            <span className="text-white" style={{ fontSize: '0.75rem' }}>{t('wa_burned')}: {burned} {t('unit_kcal')}</span>
+            <span className="text-foreground" style={{ fontSize: '0.75rem' }}>{t('wa_burned')}: {burned} {t('unit_kcal')}</span>
           </div>
         </div>
       </div>
@@ -372,15 +372,15 @@ export function WeeklyAnalyticsPage() {
               {/* Burn Breakdown */}
               {(extSummary.total_smartburn > 0 || extSummary.total_workout > 0) && (
                 <div className="mt-3 pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                  <p className="text-white/30 mb-2" style={{ fontSize: '0.6875rem' }}>{t('ea_burned_breakdown')}</p>
+                  <p className="text-ui-tertiary mb-2" style={{ fontSize: '0.6875rem' }}>{t('ea_burned_breakdown')}</p>
                   <div className="flex gap-3">
                     <div className="flex-1 p-2.5 rounded-xl bg-[#00cec9]/6 border border-[#00cec9]/12 text-center">
                       <p className="text-[#00cec9]" style={{ fontSize: '0.875rem', fontWeight: 700 }}>{extSummary.total_smartburn.toLocaleString()}</p>
-                      <p className="text-white/25" style={{ fontSize: '0.5625rem' }}>{t('ea_smartburn_label')}</p>
+                      <p className="text-ui-tertiary" style={{ fontSize: '0.5625rem' }}>{t('ea_smartburn_label')}</p>
                     </div>
                     <div className="flex-1 p-2.5 rounded-xl bg-[#a29bfe]/6 border border-[#a29bfe]/12 text-center">
                       <p className="text-[#a29bfe]" style={{ fontSize: '0.875rem', fontWeight: 700 }}>{extSummary.total_workout.toLocaleString()}</p>
-                      <p className="text-white/25" style={{ fontSize: '0.5625rem' }}>{t('ea_workout_label')}</p>
+                      <p className="text-ui-tertiary" style={{ fontSize: '0.5625rem' }}>{t('ea_workout_label')}</p>
                     </div>
                   </div>
                 </div>
@@ -388,7 +388,7 @@ export function WeeklyAnalyticsPage() {
 
               {/* Net total */}
               <div className="flex items-center justify-between mt-3 p-3 rounded-xl bg-white/[0.03] border border-white/[0.05]">
-                <span className="text-white/35" style={{ fontSize: '0.75rem' }}>{t('ea_net_total')}</span>
+                <span className="text-ui-secondary" style={{ fontSize: '0.75rem' }}>{t('ea_net_total')}</span>
                 <span style={{
                   fontSize: '1rem', fontWeight: 800,
                   color: extSummary.net_total <= 0 ? '#00cec9' : '#e17055',
@@ -412,10 +412,10 @@ export function WeeklyAnalyticsPage() {
                           <p className="text-white/50" style={{ fontSize: '0.625rem' }}>{w.label}</p>
                           <div className="flex items-center gap-3 mt-1">
                             <span className="text-[#fd79a8]" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
-                              {w.avg_consumed} <span className="text-white/20" style={{ fontSize: '0.5rem' }}>{t('unit_kcal')}/d</span>
+                              {w.avg_consumed} <span className="text-ui-tertiary" style={{ fontSize: '0.5rem' }}>{t('unit_kcal')}/d</span>
                             </span>
                             <span className="text-[#00cec9]" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
-                              {w.avg_burned} <span className="text-white/20" style={{ fontSize: '0.5rem' }}>{t('unit_kcal')}/d</span>
+                              {w.avg_burned} <span className="text-ui-tertiary" style={{ fontSize: '0.5rem' }}>{t('unit_kcal')}/d</span>
                             </span>
                           </div>
                         </div>
@@ -426,7 +426,7 @@ export function WeeklyAnalyticsPage() {
                           }}>
                             {w.net_balance > 0 ? '+' : ''}{w.net_balance.toLocaleString()}
                           </p>
-                          <p className="text-white/20" style={{ fontSize: '0.5rem' }}>
+                          <p className="text-ui-tertiary" style={{ fontSize: '0.5rem' }}>
                             {w.days_tracked}d tracked / {w.days_with_workout}d workout
                           </p>
                         </div>
@@ -440,8 +440,8 @@ export function WeeklyAnalyticsPage() {
             {/* No data state */}
             {weekBuckets.length === 0 && (
               <GlassCard className="!p-6 text-center">
-                <BarChart3 className="w-8 h-8 text-white/10 mx-auto mb-3" />
-                <p className="text-white/30" style={{ fontSize: '0.875rem' }}>{t('ea_no_data')}</p>
+                <BarChart3 className="w-8 h-8 text-ui-tertiary mx-auto mb-3" />
+                <p className="text-ui-secondary" style={{ fontSize: '0.875rem' }}>{t('ea_no_data')}</p>
               </GlassCard>
             )}
           </>
@@ -460,7 +460,7 @@ function PeriodTabs({ period, onChange, t }: { period: Period; onChange: (p: Per
     { key: 'quarter', label: t('ea_period_quarter') },
   ];
   return (
-    <div className="flex gap-1.5 p-1 rounded-2xl bg-white/[0.04] border border-white/[0.06]">
+    <div className="flex gap-1.5 p-1 rounded-2xl bg-ui-button" style={{ border: '1px solid var(--glass-border-subtle)' }}>
       {tabs.map((tab) => (
         <button
           key={tab.key}
@@ -468,7 +468,7 @@ function PeriodTabs({ period, onChange, t }: { period: Period; onChange: (p: Per
           className={`flex-1 py-2 rounded-xl transition-all ${
             period === tab.key
               ? 'bg-[#6c5ce7]/20 border border-[#6c5ce7]/30 text-[#a29bfe]'
-              : 'text-white/30'
+              : 'text-muted-foreground'
           }`}
           style={{ fontSize: '0.75rem', fontWeight: period === tab.key ? 600 : 400 }}
         >
@@ -486,8 +486,8 @@ function SummaryCard({ icon: Icon, label, value, unit, color }: {
     <GlassCard className="!p-3 text-center">
       <Icon className="w-4 h-4 mx-auto mb-1.5" style={{ color }} />
       <p style={{ fontSize: '1rem', fontWeight: 800, color }}>{value}</p>
-      <p className="text-white/20 mt-0.5" style={{ fontSize: '0.5rem' }}>{unit}</p>
-      <p className="text-white/30 mt-1" style={{ fontSize: '0.5625rem' }}>{label}</p>
+      <p className="text-ui-tertiary mt-0.5" style={{ fontSize: '0.5rem' }}>{unit}</p>
+      <p className="text-ui-tertiary mt-1" style={{ fontSize: '0.5625rem' }}>{label}</p>
     </GlassCard>
   );
 }
@@ -509,14 +509,14 @@ function TrendCard({ icon: Icon, label, value, change, unit, color, t }: {
         <span className="text-white/30" style={{ fontSize: '0.625rem' }}>{label}</span>
       </div>
       <p style={{ fontSize: '1.25rem', fontWeight: 800, color }}>{value}</p>
-      <p className="text-white/15 mt-0.5" style={{ fontSize: '0.5rem' }}>{unit}</p>
+      <p className="text-ui-tertiary mt-0.5" style={{ fontSize: '0.5rem' }}>{unit}</p>
       <div className="flex items-center gap-1 mt-1.5">
         {change !== 0 && (
           isUp
             ? <ArrowUp className="w-2.5 h-2.5 text-[#e17055]" />
             : <ArrowDown className="w-2.5 h-2.5 text-[#00cec9]" />
         )}
-        <span className="text-white/25" style={{ fontSize: '0.5625rem' }}>{changeStr}</span>
+        <span className="text-ui-tertiary" style={{ fontSize: '0.5625rem' }}>{changeStr}</span>
       </div>
     </GlassCard>
   );
@@ -527,11 +527,11 @@ function ChartLegend({ t }: { t: (k: string) => string }) {
     <div className="flex items-center gap-3">
       <div className="flex items-center gap-1.5">
         <div className="w-2 h-2 rounded-full bg-[#fd79a8]" />
-        <span className="text-white/30" style={{ fontSize: '0.5625rem' }}>{t('wa_consumed')}</span>
+        <span className="text-ui-tertiary" style={{ fontSize: '0.5625rem' }}>{t('wa_consumed')}</span>
       </div>
       <div className="flex items-center gap-1.5">
         <div className="w-2 h-2 rounded-full bg-[#00cec9]" />
-        <span className="text-white/30" style={{ fontSize: '0.5625rem' }}>{t('wa_burned')}</span>
+        <span className="text-ui-tertiary" style={{ fontSize: '0.5625rem' }}>{t('wa_burned')}</span>
       </div>
     </div>
   );
@@ -548,8 +548,8 @@ function StatPill({ label, value, color }: { label: string; value: string; color
 
 function MacroPill({ label, value, color }: { label: string; value: number; color: string }) {
   return (
-    <div className="rounded-lg bg-white/[0.03] border border-white/[0.05] p-2 text-center">
-      <p className="text-white/30" style={{ fontSize: '0.5625rem' }}>{label}</p>
+    <div className="rounded-lg p-2 text-center" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
+      <p className="text-ui-tertiary" style={{ fontSize: '0.5625rem' }}>{label}</p>
       <p style={{ fontSize: '0.8125rem', fontWeight: 700, color }}>{value}g</p>
     </div>
   );
@@ -577,7 +577,7 @@ function WeeklyBalanceCard({ summary, t }: { summary: WeeklySummary; t: (k: stri
           <p style={{ fontSize: '1.125rem', fontWeight: 800, color: summary.net_weekly <= 0 ? '#00cec9' : '#e17055' }}>
             {summary.net_weekly > 0 ? '+' : ''}{summary.net_weekly.toLocaleString()}
           </p>
-          <p className="text-white/25" style={{ fontSize: '0.625rem' }}>{t('unit_kcal')}</p>
+          <p className="text-ui-tertiary" style={{ fontSize: '0.625rem' }}>{t('unit_kcal')}</p>
         </div>
       </div>
 
@@ -591,7 +591,7 @@ function WeeklyBalanceCard({ summary, t }: { summary: WeeklySummary; t: (k: stri
       {summary.best_burn_calories > 0 && (
         <div className="flex items-center gap-2.5 mt-3 p-2.5 rounded-xl bg-[#00cec9]/6 border border-[#00cec9]/15">
           <Trophy className="w-4 h-4 text-[#fdcb6e] flex-shrink-0" />
-          <span className="text-white/50" style={{ fontSize: '0.6875rem' }}>
+          <span className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
             {t('wa_best_burn', { day: summary.best_burn_day, cal: summary.best_burn_calories })}
           </span>
         </div>
@@ -635,7 +635,7 @@ function DailyBreakdown({ days, selectedDay, setSelectedDay, weeklySummary, t }:
                   <div className="flex items-center gap-3">
                     <div className="text-center w-10">
                       <p className="text-white/30" style={{ fontSize: '0.5625rem' }}>{d.day}</p>
-                      <p className={`${isToday ? 'text-[#a29bfe]' : 'text-white'}`} style={{ fontSize: '0.875rem', fontWeight: 700 }}>
+                      <p className={`${isToday ? 'text-[#a29bfe]' : 'text-foreground'}`} style={{ fontSize: '0.875rem', fontWeight: 700 }}>
                         {d.date.slice(8)}
                       </p>
                     </div>
@@ -659,7 +659,7 @@ function DailyBreakdown({ days, selectedDay, setSelectedDay, weeklySummary, t }:
                           <Flame className="w-2.5 h-2.5" />
                           {t('wa_burned_label', { cal: d.burned })}
                           {d.burned_smartburn > 0 && d.burned_workout > 0 && (
-                            <span className="text-white/15 ml-1">
+                            <span className="text-ui-tertiary ml-1">
                               (SB:{d.burned_smartburn} + W:{d.burned_workout})
                             </span>
                           )}
@@ -667,7 +667,7 @@ function DailyBreakdown({ days, selectedDay, setSelectedDay, weeklySummary, t }:
                       )}
                     </div>
                   </div>
-                  <ChevronRight className={`w-4 h-4 text-white/20 transition-transform ${isSelected ? 'rotate-90' : ''}`} />
+                  <ChevronRight className={`w-4 h-4 text-ui-tertiary transition-transform ${isSelected ? 'rotate-90' : ''}`} />
                 </div>
               </motion.button>
 
@@ -696,8 +696,8 @@ function DailyBreakdown({ days, selectedDay, setSelectedDay, weeklySummary, t }:
                         </div>
                       )}
 
-                      <div className="flex items-center justify-between p-2.5 rounded-lg bg-white/[0.02]">
-                        <span className="text-white/30" style={{ fontSize: '0.6875rem' }}>{t('wa_net_balance')}</span>
+                      <div className="flex items-center justify-between p-2.5 rounded-xl" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
+                        <span className="text-ui-secondary" style={{ fontSize: '0.625rem' }}>{t('wa_net_balance')}</span>
                         <span style={{
                           fontSize: '0.8125rem', fontWeight: 700,
                           color: d.net_balance <= 0 ? '#00cec9' : '#e17055',

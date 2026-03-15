@@ -169,7 +169,7 @@ export function StrategicGoalDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-6 h-6 text-white/20 animate-spin" />
+        <Loader2 className="w-6 h-6 text-ui-tertiary animate-spin" />
       </div>
     );
   }
@@ -177,8 +177,8 @@ export function StrategicGoalDetailPage() {
   if (!goal) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-6">
-        <Target className="w-10 h-10 text-white/10 mb-3" />
-        <p className="text-white/30" style={{ fontSize: '0.9375rem' }}>Goal not found</p>
+        <Target className="w-10 h-10 text-ui-tertiary mb-3" />
+        <p className="text-ui-tertiary" style={{ fontSize: '0.9375rem' }}>Goal not found</p>
         <button onClick={() => navigate('/goals')} className="mt-4 text-[#00cec9]" style={{ fontSize: '0.9375rem' }}>Back</button>
       </div>
     );
@@ -222,7 +222,7 @@ export function StrategicGoalDetailPage() {
               <h3 className="text-[#a29bfe]/70 mb-2" style={{ fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.08em' }}>
                 {t('sg_strategy').toUpperCase()}
               </h3>
-              <p className="text-white/60" style={{ fontSize: '0.8125rem', lineHeight: 1.6 }}>
+              <p className="text-muted-foreground" style={{ fontSize: '0.8125rem', lineHeight: 1.6 }}>
                 {goal.structuredDataJson.strategySummary}
               </p>
             </GlassCard>
@@ -232,14 +232,14 @@ export function StrategicGoalDetailPage() {
         {/* Phases */}
         {phases.length > 0 && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="mb-5">
-            <h3 className="text-white/30 mb-3 px-1" style={{ fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.08em' }}>
+            <h3 className="text-ui-tertiary mb-3 px-1" style={{ fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.08em' }}>
               {t('sg_phases').toUpperCase()}
             </h3>
             <div className="flex gap-1.5 overflow-x-auto pb-1">
               {phases.map((ph, idx) => (
-                <div key={idx} className="shrink-0 px-3.5 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.05]" style={{ minWidth: 120 }}>
-                  <p className="text-white/60" style={{ fontSize: '0.75rem', fontWeight: 600 }}>{ph.title}</p>
-                  <p className="text-white/20 mt-0.5" style={{ fontSize: '0.625rem' }}>{t('sg_w')}. {ph.weekStart}–{ph.weekEnd}</p>
+                <div key={idx} className="shrink-0 px-3.5 py-2.5 rounded-xl bg-[var(--glass-bg-row)] border border-[var(--glass-border-subtle)]" style={{ minWidth: 120 }}>
+                  <p className="text-muted-foreground" style={{ fontSize: '0.75rem', fontWeight: 600 }}>{ph.title}</p>
+                  <p className="text-ui-tertiary mt-0.5" style={{ fontSize: '0.625rem' }}>{t('sg_w')}. {ph.weekStart}–{ph.weekEnd}</p>
                 </div>
               ))}
             </div>
@@ -255,10 +255,10 @@ export function StrategicGoalDetailPage() {
                 {reviewing ? <Loader2 className="w-5 h-5 text-[#a29bfe] animate-spin" /> : <Sparkles className="w-5 h-5 text-[#a29bfe]" />}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
+                <p className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
                   {reviewing ? t('sg_reviewing') : t('sg_ai_checkin')}
                 </p>
-                <p className="text-white/30" style={{ fontSize: '0.75rem' }}>{t('sg_ai_checkin_desc')}</p>
+                <p className="text-ui-tertiary" style={{ fontSize: '0.75rem' }}>{t('sg_ai_checkin_desc')}</p>
               </div>
               {latestReview && !reviewing && (
                 <div className={`px-2.5 py-1 rounded-lg bg-gradient-to-br ${getScoreBg(latestReview.overallScore)}`}>
@@ -274,10 +274,10 @@ export function StrategicGoalDetailPage() {
         {/* Vision Board Image */}
         {visionImageUrl && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.095 }} className="mb-5">
-            <h3 className="text-white/30 mb-3 px-1" style={{ fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.08em' }}>
+            <h3 className="text-ui-tertiary mb-3 px-1" style={{ fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.08em' }}>
               {t('sg_vision_board').toUpperCase()}
             </h3>
-            <div className="rounded-2xl overflow-hidden border border-white/[0.08] relative">
+            <div className="rounded-2xl overflow-hidden border border-[var(--glass-border)] relative">
               <img src={visionImageUrl} alt="Vision" className="w-full h-40 object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
               <div className="absolute bottom-3 left-3 flex items-center gap-2">
@@ -335,10 +335,10 @@ export function StrategicGoalDetailPage() {
                   {selfieChecking ? <Loader2 className="w-5 h-5 text-[#fd79a8] animate-spin" /> : <Camera className="w-5 h-5 text-[#fd79a8]" />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
+                  <p className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
                     {selfieChecking ? t('sg_selfie_analyzing') : t('sg_selfie_checkin')}
                   </p>
-                  <p className="text-white/30" style={{ fontSize: '0.75rem' }}>{t('sg_selfie_checkin_desc')}</p>
+                  <p className="text-ui-tertiary" style={{ fontSize: '0.75rem' }}>{t('sg_selfie_checkin_desc')}</p>
                 </div>
                 {selfieHistory.length > 0 && !selfieChecking && (
                   <span className="px-2 py-0.5 rounded-lg bg-[#fd79a8]/10 text-[#fd79a8]/70" style={{ fontSize: '0.6875rem', fontWeight: 700 }}>
@@ -353,7 +353,7 @@ export function StrategicGoalDetailPage() {
               <div className="mt-3">
                 <button
                   onClick={() => { hapticFeedback('light'); setShowSelfieHistory(!showSelfieHistory); }}
-                  className="flex items-center gap-2 text-white/25 mb-2 px-1"
+                  className="flex items-center gap-2 text-ui-tertiary mb-2 px-1"
                 >
                   <span style={{ fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.08em' }}>
                     {t('sg_selfie_history').toUpperCase()} ({selfieHistory.length})
@@ -373,16 +373,16 @@ export function StrategicGoalDetailPage() {
                               setShowSelfieResult(true);
                             }}
                           >
-                            <div className="w-20 h-20 rounded-xl overflow-hidden border border-white/10 mb-1">
+                            <div className="w-20 h-20 rounded-xl overflow-hidden border border-[var(--glass-border)] mb-1">
                               {s.imageUrl ? (
                                 <img src={s.imageUrl} alt="" className="w-full h-full object-cover" />
                               ) : (
-                                <div className="w-full h-full bg-white/[0.03] flex items-center justify-center">
-                                  <UserCircle className="w-6 h-6 text-white/10" />
+                                <div className="w-full h-full bg-[var(--glass-bg-row)] flex items-center justify-center">
+                                  <UserCircle className="w-6 h-6 text-ui-tertiary" />
                                 </div>
                               )}
                             </div>
-                            <p className="text-white/30 text-center" style={{ fontSize: '0.5625rem' }}>
+                            <p className="text-ui-tertiary text-center" style={{ fontSize: '0.5625rem' }}>
                               {t('sg_selfie_days', { n: s.daysSinceStart })}
                             </p>
                             <p className={`text-center ${getScoreColor(s.analysis?.score || 50)}`} style={{ fontSize: '0.625rem', fontWeight: 700 }}>
@@ -420,14 +420,14 @@ export function StrategicGoalDetailPage() {
         {/* Tasks */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}>
           <div className="flex items-center justify-between mb-3 px-1">
-            <h3 className="text-white/30" style={{ fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.08em' }}>
+            <h3 className="text-ui-tertiary" style={{ fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.08em' }}>
               {t('sg_tasks').toUpperCase()}
             </h3>
             {tasks.length > 1 && (
               <button
                 onClick={() => { hapticFeedback('light'); setReorderMode(!reorderMode); }}
                 className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all ${
-                  reorderMode ? 'bg-[#6c5ce7]/15 border border-[#6c5ce7]/30 text-[#a29bfe]' : 'bg-white/[0.03] text-white/20'
+                  reorderMode ? 'bg-[#6c5ce7]/15 border border-[#6c5ce7]/30 text-[#a29bfe]' : 'bg-[var(--ui-button-bg)] text-ui-tertiary'
                 }`}
               >
                 <ArrowUpDown className="w-3 h-3" />
@@ -439,7 +439,7 @@ export function StrategicGoalDetailPage() {
           </div>
 
           {tasks.length === 0 ? (
-            <p className="text-center text-white/15 py-8" style={{ fontSize: '0.875rem' }}>{t('goal_no_tasks')}</p>
+            <p className="text-center text-ui-tertiary py-8" style={{ fontSize: '0.875rem' }}>{t('goal_no_tasks')}</p>
           ) : (
             <div className="space-y-1.5">
               <AnimatePresence>
@@ -469,7 +469,7 @@ export function StrategicGoalDetailPage() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="mt-6">
             <button
               onClick={() => { hapticFeedback('light'); setShowHistory(!showHistory); }}
-              className="flex items-center gap-2 text-white/25 mb-3 px-1"
+              className="flex items-center gap-2 text-ui-tertiary mb-3 px-1"
             >
               <span style={{ fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.08em' }}>
                 {t('sg_review_history').toUpperCase()} ({reviewHistory.length})
@@ -486,8 +486,8 @@ export function StrategicGoalDetailPage() {
                         <span className={getScoreColor(rev.overallScore)} style={{ fontSize: '0.75rem', fontWeight: 700 }}>{rev.overallScore}</span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-white/50 truncate" style={{ fontSize: '0.8125rem' }}>{rev.summary}</p>
-                        <p className="text-white/20" style={{ fontSize: '0.625rem' }}>{fmtFull(rev.createdAt, t('locale_code'))}</p>
+                        <p className="text-ui-secondary truncate" style={{ fontSize: '0.8125rem' }}>{rev.summary}</p>
+                        <p className="text-ui-tertiary" style={{ fontSize: '0.625rem' }}>{fmtFull(rev.createdAt, t('locale_code'))}</p>
                       </div>
                     </GlassCard>
                   ))}
@@ -507,7 +507,7 @@ export function StrategicGoalDetailPage() {
             <motion.div
               initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="w-full max-w-lg rounded-t-3xl bg-liquid-glass-panel border-t border-white/[0.1] p-6 pb-10 max-h-[85vh] overflow-y-auto">
+              className="w-full max-w-lg rounded-t-3xl bg-liquid-glass-panel border-t border-[var(--glass-border)] p-6 pb-10 max-h-[85vh] overflow-y-auto">
 
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
@@ -515,16 +515,16 @@ export function StrategicGoalDetailPage() {
                     <span className={getScoreColor(latestReview.overallScore)} style={{ fontSize: '1.25rem', fontWeight: 800 }}>{latestReview.overallScore}</span>
                   </div>
                   <div>
-                    <p className="text-white" style={{ fontSize: '1.125rem', fontWeight: 700 }}>{t('sg_ai_checkin')}</p>
+                    <p className="text-foreground" style={{ fontSize: '1.125rem', fontWeight: 700 }}>{t('sg_ai_checkin')}</p>
                     <p className={getScoreColor(latestReview.overallScore)} style={{ fontSize: '0.75rem', fontWeight: 600 }}>{latestReview.scoreLabel}</p>
                   </div>
                 </div>
-                <button onClick={() => setShowReview(false)} className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center">
-                  <X className="w-4 h-4 text-white/40" />
+                <button onClick={() => setShowReview(false)} className="w-8 h-8 rounded-lg bg-ui-close flex items-center justify-center">
+                  <X className="w-4 h-4 text-ui-close-icon" />
                 </button>
               </div>
 
-              <p className="text-white/60 mb-5" style={{ fontSize: '0.875rem', lineHeight: 1.6 }}>{latestReview.summary}</p>
+              <p className="text-muted-foreground mb-5" style={{ fontSize: '0.875rem', lineHeight: 1.6 }}>{latestReview.summary}</p>
 
               {latestReview.wins.length > 0 && (
                 <ReviewSection icon={Trophy} color="emerald-400" label={t('sg_review_wins')} items={latestReview.wins} bgClass="bg-emerald-500/5 border-emerald-500/10" />
@@ -541,13 +541,13 @@ export function StrategicGoalDetailPage() {
 
               {latestReview.motivationalMessage && (
                 <GlassCard variant="accent" padding="md" className="mt-4">
-                  <p className="text-white/70 text-center italic" style={{ fontSize: '0.875rem', lineHeight: 1.6 }}>
+                  <p className="text-foreground/70 text-center italic" style={{ fontSize: '0.875rem', lineHeight: 1.6 }}>
                     &ldquo;{latestReview.motivationalMessage}&rdquo;
                   </p>
                 </GlassCard>
               )}
 
-              <p className="text-white/15 text-center mt-4" style={{ fontSize: '0.625rem' }}>{fmtFull(latestReview.createdAt, t('locale_code'))}</p>
+              <p className="text-ui-tertiary text-center mt-4" style={{ fontSize: '0.625rem' }}>{fmtFull(latestReview.createdAt, t('locale_code'))}</p>
             </motion.div>
           </motion.div>
         )}
@@ -562,7 +562,7 @@ export function StrategicGoalDetailPage() {
             <motion.div
               initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="w-full max-w-lg rounded-t-3xl bg-liquid-glass-panel border-t border-white/[0.1] p-6 pb-10 max-h-[85vh] overflow-y-auto">
+              className="w-full max-w-lg rounded-t-3xl bg-liquid-glass-panel border-t border-[var(--glass-border)] p-6 pb-10 max-h-[85vh] overflow-y-auto">
 
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
@@ -570,12 +570,12 @@ export function StrategicGoalDetailPage() {
                     <span className={getScoreColor(selfieResult.analysis.score)} style={{ fontSize: '1.25rem', fontWeight: 800 }}>{selfieResult.analysis.score}</span>
                   </div>
                   <div>
-                    <p className="text-white" style={{ fontSize: '1.125rem', fontWeight: 700 }}>{t('sg_selfie_checkin')}</p>
-                    <p className="text-white/40" style={{ fontSize: '0.75rem' }}>{t('sg_selfie_progress')}</p>
+                    <p className="text-foreground" style={{ fontSize: '1.125rem', fontWeight: 700 }}>{t('sg_selfie_checkin')}</p>
+                    <p className="text-ui-secondary" style={{ fontSize: '0.75rem' }}>{t('sg_selfie_progress')}</p>
                   </div>
                 </div>
-                <button onClick={() => setShowSelfieResult(false)} className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center">
-                  <X className="w-4 h-4 text-white/40" />
+                <button onClick={() => setShowSelfieResult(false)} className="w-8 h-8 rounded-lg bg-ui-close flex items-center justify-center">
+                  <X className="w-4 h-4 text-ui-close-icon" />
                 </button>
               </div>
 
@@ -584,8 +584,8 @@ export function StrategicGoalDetailPage() {
                 <div className="flex gap-3 mb-5">
                   {selfieResult.originalUrl && (
                     <div className="flex-1">
-                      <p className="text-white/30 text-center mb-1.5" style={{ fontSize: '0.625rem', fontWeight: 700 }}>{t('sg_selfie_before').toUpperCase()}</p>
-                      <div className="rounded-xl overflow-hidden border border-white/10 aspect-square">
+                      <p className="text-ui-tertiary text-center mb-1.5" style={{ fontSize: '0.625rem', fontWeight: 700 }}>{t('sg_selfie_before').toUpperCase()}</p>
+                      <div className="rounded-xl overflow-hidden border border-[var(--glass-border)] aspect-square">
                         <img src={selfieResult.originalUrl} alt="Before" className="w-full h-full object-cover" />
                       </div>
                     </div>
@@ -601,7 +601,7 @@ export function StrategicGoalDetailPage() {
                 </div>
               )}
 
-              <p className="text-white/60 mb-5" style={{ fontSize: '0.875rem', lineHeight: 1.6 }}>{selfieResult.analysis.progressSummary}</p>
+              <p className="text-muted-foreground mb-5" style={{ fontSize: '0.875rem', lineHeight: 1.6 }}>{selfieResult.analysis.progressSummary}</p>
 
               {selfieResult.analysis.positiveChanges.length > 0 && (
                 <ReviewSection icon={Trophy} color="emerald-400" label={t('sg_selfie_changes')} items={selfieResult.analysis.positiveChanges} bgClass="bg-emerald-500/5 border-emerald-500/10" />
@@ -618,14 +618,14 @@ export function StrategicGoalDetailPage() {
                     <span className="text-[#a29bfe]/70" style={{ fontSize: '0.6875rem', fontWeight: 700 }}>{t('sg_selfie_tip').toUpperCase()}</span>
                   </div>
                   <div className="px-3 py-2 rounded-lg bg-[#6c5ce7]/5 border border-[#6c5ce7]/10">
-                    <p className="text-white/60" style={{ fontSize: '0.8125rem' }}>{selfieResult.analysis.recommendation}</p>
+                    <p className="text-muted-foreground" style={{ fontSize: '0.8125rem' }}>{selfieResult.analysis.recommendation}</p>
                   </div>
                 </div>
               )}
 
               {selfieResult.analysis.motivationalMessage && (
                 <GlassCard variant="accent" padding="md" className="mt-4">
-                  <p className="text-white/70 text-center italic" style={{ fontSize: '0.875rem', lineHeight: 1.6 }}>
+                  <p className="text-foreground/70 text-center italic" style={{ fontSize: '0.875rem', lineHeight: 1.6 }}>
                     &ldquo;{selfieResult.analysis.motivationalMessage}&rdquo;
                   </p>
                 </GlassCard>
@@ -652,7 +652,7 @@ function ReviewSection({ icon: Icon, color, label, items, bgClass }: {
       <div className="space-y-1.5">
         {items.map((item, i) => (
           <div key={i} className={`px-3 py-2 rounded-lg ${bgClass} border`}>
-            <p className="text-white/60" style={{ fontSize: '0.8125rem' }}>{item}</p>
+            <p className="text-muted-foreground" style={{ fontSize: '0.8125rem' }}>{item}</p>
           </div>
         ))}
       </div>
@@ -670,7 +670,7 @@ function TaskRow({ task, index, total, today, t, lang, completing, reorderMode, 
   const urgency: 'overdue' | 'today' | 'upcoming' =
     task.nextDueDate < today ? 'overdue' : task.nextDueDate === today ? 'today' : 'upcoming';
 
-  const borderColor = urgency === 'overdue' ? 'border-[#e17055]/15' : urgency === 'today' ? 'border-yellow-400/15' : 'border-white/[0.05]';
+  const borderColor = urgency === 'overdue' ? 'border-[#e17055]/15' : urgency === 'today' ? 'border-yellow-400/15' : 'border-[var(--glass-border-subtle)]';
 
   return (
     <motion.div layout transition={{ type: 'spring', stiffness: 400, damping: 30 }}>
@@ -682,19 +682,19 @@ function TaskRow({ task, index, total, today, t, lang, completing, reorderMode, 
               onClick={onMoveUp}
               disabled={index === 0}
               className={`w-6 h-6 rounded flex items-center justify-center transition-all ${
-                index === 0 ? 'opacity-20' : 'bg-white/[0.04] active:bg-[#6c5ce7]/20'
+                index === 0 ? 'opacity-20' : 'bg-[var(--ui-input-bg)] active:bg-[#6c5ce7]/20'
               }`}
             >
-              <ChevronUp className="w-3.5 h-3.5 text-white/40" />
+              <ChevronUp className="w-3.5 h-3.5 text-ui-icon-secondary" />
             </button>
             <button
               onClick={onMoveDown}
               disabled={index === total - 1}
               className={`w-6 h-6 rounded flex items-center justify-center transition-all ${
-                index === total - 1 ? 'opacity-20' : 'bg-white/[0.04] active:bg-[#6c5ce7]/20'
+                index === total - 1 ? 'opacity-20' : 'bg-[var(--ui-input-bg)] active:bg-[#6c5ce7]/20'
               }`}
             >
-              <ChevronDownIcon className="w-3.5 h-3.5 text-white/40" />
+              <ChevronDownIcon className="w-3.5 h-3.5 text-ui-icon-secondary" />
             </button>
           </div>
         )}
@@ -705,18 +705,18 @@ function TaskRow({ task, index, total, today, t, lang, completing, reorderMode, 
             className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 transition-all ${
               urgency === 'overdue' ? 'bg-[#e17055]/10 border border-[#e17055]/20'
               : urgency === 'today' ? 'bg-yellow-400/10 border border-yellow-400/20'
-              : 'bg-white/[0.04] border border-white/[0.06]'
+              : 'bg-[var(--ui-input-bg)] border border-[var(--glass-border-subtle)]'
             }`}>
             {completing
-              ? <Loader2 className="w-3.5 h-3.5 text-white/30 animate-spin" />
-              : <CheckCircle2 className={`w-3.5 h-3.5 ${urgency === 'overdue' ? 'text-[#e17055]' : urgency === 'today' ? 'text-yellow-400' : 'text-white/20'}`} />
+              ? <Loader2 className="w-3.5 h-3.5 text-ui-tertiary animate-spin" />
+              : <CheckCircle2 className={`w-3.5 h-3.5 ${urgency === 'overdue' ? 'text-[#e17055]' : urgency === 'today' ? 'text-yellow-400' : 'text-ui-tertiary'}`} />
             }
           </motion.button>
         )}
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <p className="text-white/80 flex-1 truncate" style={{ fontSize: '0.875rem', fontWeight: 500 }}>{task.title}</p>
+            <p className="text-foreground/80 flex-1 truncate" style={{ fontSize: '0.875rem', fontWeight: 500 }}>{task.title}</p>
             {urgency === 'overdue' && (
               <span className="px-1.5 py-0.5 rounded bg-[#e17055]/10 text-[#e17055]" style={{ fontSize: '0.5625rem', fontWeight: 700 }}>{t('sg_overdue')}</span>
             )}
@@ -725,7 +725,7 @@ function TaskRow({ task, index, total, today, t, lang, completing, reorderMode, 
             )}
           </div>
           {task.description && (
-            <p className="text-white/25 mt-0.5" style={{ fontSize: '0.75rem', lineHeight: 1.4 }}>
+            <p className="text-ui-tertiary mt-0.5" style={{ fontSize: '0.75rem', lineHeight: 1.4 }}>
               {task.description.length > 70 ? task.description.slice(0, 70) + '...' : task.description}
             </p>
           )}
@@ -734,7 +734,7 @@ function TaskRow({ task, index, total, today, t, lang, completing, reorderMode, 
               style={{ fontSize: '0.625rem', fontWeight: 700 }}>
               {t(task.frequency === 'monthly' ? 'sg_monthly' : 'sg_weekly')}
             </span>
-            <span className="text-white/20" style={{ fontSize: '0.6875rem' }}>
+            <span className="text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>
               {t('sg_next_due', { date: fmtShort(task.nextDueDate, t('locale_code')) })}
             </span>
             {task.completedCount > 0 && (

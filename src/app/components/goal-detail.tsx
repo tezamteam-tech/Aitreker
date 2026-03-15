@@ -144,7 +144,7 @@ export function GoalDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-6 h-6 text-white/20 animate-spin" />
+        <Loader2 className="w-6 h-6 text-ui-tertiary animate-spin" />
       </div>
     );
   }
@@ -152,8 +152,8 @@ export function GoalDetailPage() {
   if (!goal) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-6">
-        <Target className="w-10 h-10 text-white/10 mb-3" />
-        <p className="text-white/30" style={{ fontSize: '0.9375rem' }}>Goal not found</p>
+        <Target className="w-10 h-10 text-ui-tertiary mb-3" />
+        <p className="text-ui-secondary" style={{ fontSize: '0.9375rem' }}>Goal not found</p>
         <button
           onClick={() => navigate('/goals')}
           className="mt-4 text-[#00cec9]"
@@ -192,14 +192,14 @@ export function GoalDetailPage() {
             className="mb-6"
           >
             <div className="flex items-center justify-between mb-2">
-              <span className="text-white/40" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
+              <span className="text-ui-secondary" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
                 {t('goal_tasks_count', { done: goal.tasksDone, total: goal.taskCount })}
               </span>
               <span className="text-[#00cec9]" style={{ fontSize: '0.75rem', fontWeight: 700 }}>
                 {progress}%
               </span>
             </div>
-            <div className="h-2 rounded-full bg-white/[0.04] overflow-hidden">
+            <div className="h-2 rounded-full bg-ui-progress overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${progress}%` }}
@@ -229,7 +229,7 @@ export function GoalDetailPage() {
               </button>
               <button
                 onClick={() => handleGoalStatusChange('archived')}
-                className="h-10 px-4 rounded-xl bg-white/[0.04] border border-white/[0.06] text-white/40 flex items-center justify-center gap-2"
+                className="h-10 px-4 rounded-xl bg-ui-button border border-ui-button text-muted-foreground flex items-center justify-center gap-2"
                 style={{ fontSize: '0.8125rem', fontWeight: 500 }}
               >
                 <Archive className="w-3.5 h-3.5" />
@@ -266,7 +266,7 @@ export function GoalDetailPage() {
           transition={{ delay: 0.12 }}
           className="flex items-center justify-between mb-4"
         >
-          <h3 className="text-white/50" style={{ fontSize: '0.8125rem', fontWeight: 600, letterSpacing: '0.05em' }}>
+          <h3 className="text-muted-foreground" style={{ fontSize: '0.8125rem', fontWeight: 600, letterSpacing: '0.05em' }}>
             TASKS
           </h3>
           <motion.button
@@ -283,8 +283,8 @@ export function GoalDetailPage() {
         {/* Tasks list */}
         {tasks.length === 0 ? (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-10">
-            <Circle className="w-8 h-8 text-white/[0.06] mx-auto mb-2" />
-            <p className="text-white/20" style={{ fontSize: '0.875rem' }}>{t('goal_no_tasks')}</p>
+            <Circle className="w-8 h-8 text-ui-tertiary mx-auto mb-2" />
+            <p className="text-ui-tertiary" style={{ fontSize: '0.875rem' }}>{t('goal_no_tasks')}</p>
           </motion.div>
         ) : (
           <div className="space-y-1.5">
@@ -309,11 +309,11 @@ export function GoalDetailPage() {
             {/* Done separator */}
             {doneTasks.length > 0 && todoTasks.length > 0 && (
               <div className="flex items-center gap-3 py-2 px-1">
-                <div className="flex-1 h-px bg-white/[0.04]" />
-                <span className="text-white/15" style={{ fontSize: '0.6875rem', fontWeight: 600 }}>
+                <div className="flex-1 h-px" style={{ background: 'var(--ui-separator)' }} />
+                <span className="text-ui-tertiary" style={{ fontSize: '0.6875rem', fontWeight: 600 }}>
                   {t('goals_done').toUpperCase()}
                 </span>
-                <div className="flex-1 h-px bg-white/[0.04]" />
+                <div className="flex-1 h-px" style={{ background: 'var(--ui-separator)' }} />
               </div>
             )}
 
@@ -356,9 +356,9 @@ export function GoalDetailPage() {
               className="w-full max-w-lg rounded-t-3xl bg-liquid-glass glass-sheet glass-sheet-bottom p-6 pb-10"
             >
               <div className="flex items-center justify-between mb-5">
-                <h2 className="text-white" style={{ fontSize: '1.25rem', fontWeight: 700 }}>{t('task_add')}</h2>
-                <button onClick={() => setShowAddTask(false)} className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center">
-                  <X className="w-4 h-4 text-white/40" />
+                <h2 className="text-foreground" style={{ fontSize: '1.25rem', fontWeight: 700 }}>{t('task_add')}</h2>
+                <button onClick={() => setShowAddTask(false)} className="w-8 h-8 rounded-lg bg-ui-close flex items-center justify-center">
+                  <X className="w-4 h-4 text-ui-icon-secondary" />
                 </button>
               </div>
 
@@ -379,26 +379,26 @@ export function GoalDetailPage() {
                 onChange={(e) => setTaskDesc(e.target.value)}
                 placeholder={t('task_desc_placeholder')}
                 rows={2}
-                className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] p-4 text-white placeholder:text-white/20 outline-none focus:border-[#00cec9]/40 transition-colors resize-none mb-3"
+                className="w-full rounded-xl bg-ui-button border border-ui-button p-4 text-foreground placeholder:text-ui-tertiary outline-none focus:border-[#00cec9]/40 transition-colors resize-none mb-3"
                 style={{ fontSize: '0.875rem', lineHeight: 1.5 }}
               />
 
               {/* Due date + Est. minutes */}
               <div className="grid grid-cols-2 gap-3 mb-5">
                 <div>
-                  <label className="text-white/30 mb-1.5 block" style={{ fontSize: '0.6875rem', fontWeight: 600 }}>
+                  <label className="text-ui-tertiary mb-1.5 block" style={{ fontSize: '0.6875rem', fontWeight: 600 }}>
                     {t('task_due_date')}
                   </label>
                   <input
                     type="date"
                     value={taskDue}
                     onChange={(e) => setTaskDue(e.target.value)}
-                    className="w-full h-10 rounded-xl bg-white/[0.04] border border-white/[0.06] px-3 text-white/60 outline-none focus:border-[#00cec9]/40 transition-colors"
+                    className="w-full h-10 rounded-xl bg-ui-button border border-ui-button px-3 text-muted-foreground outline-none focus:border-[#00cec9]/40 transition-colors"
                     style={{ fontSize: '0.8125rem', colorScheme: 'dark' }}
                   />
                 </div>
                 <div>
-                  <label className="text-white/30 mb-1.5 block" style={{ fontSize: '0.6875rem', fontWeight: 600 }}>
+                  <label className="text-ui-tertiary mb-1.5 block" style={{ fontSize: '0.6875rem', fontWeight: 600 }}>
                     {t('task_est_minutes')}
                   </label>
                   <input
@@ -408,7 +408,7 @@ export function GoalDetailPage() {
                     placeholder="30"
                     min={1}
                     max={480}
-                    className="w-full h-10 rounded-xl bg-white/[0.04] border border-white/[0.06] px-3 text-white/60 placeholder:text-white/15 outline-none focus:border-[#00cec9]/40 transition-colors"
+                    className="w-full h-10 rounded-xl bg-ui-button border border-ui-button px-3 text-muted-foreground placeholder:text-ui-tertiary outline-none focus:border-[#00cec9]/40 transition-colors"
                     style={{ fontSize: '0.8125rem' }}
                   />
                 </div>
@@ -466,25 +466,25 @@ function TaskRow({
             {isDone ? (
               <CheckCircle2 className="w-5 h-5 text-emerald-400" />
             ) : (
-              <Circle className="w-5 h-5 text-white/15 hover:text-white/30 transition-colors" />
+              <Circle className="w-5 h-5 text-ui-tertiary hover:text-ui-secondary transition-colors" />
             )}
           </button>
 
           <div className="flex-1 min-w-0">
-            <p className={`${isDone ? 'line-through text-white/30' : 'text-white/80'}`}
+            <p className={`${isDone ? 'line-through text-ui-tertiary' : 'text-ui-icon-primary'}`}
               style={{ fontSize: '0.9375rem', fontWeight: 500 }}>
               {task.title}
             </p>
 
             {task.description && (
-              <p className="text-white/25 mt-0.5" style={{ fontSize: '0.8125rem', lineHeight: 1.4 }}>
+              <p className="text-ui-tertiary mt-0.5" style={{ fontSize: '0.8125rem', lineHeight: 1.4 }}>
                 {task.description.length > 100 ? task.description.slice(0, 100) + '...' : task.description}
               </p>
             )}
 
             <div className="flex items-center gap-3 mt-1">
               {task.dueDate && (
-                <span className="flex items-center gap-1 text-white/20" style={{ fontSize: '0.6875rem' }}>
+                <span className="flex items-center gap-1 text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>
                   <Calendar className="w-3 h-3" />
                   {new Date(task.dueDate).toLocaleDateString(t('locale_code'), {
                     day: 'numeric', month: 'short',
@@ -492,7 +492,7 @@ function TaskRow({
                 </span>
               )}
               {task.estimatedMinutes && (
-                <span className="flex items-center gap-1 text-white/20" style={{ fontSize: '0.6875rem' }}>
+                <span className="flex items-center gap-1 text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>
                   <Clock className="w-3 h-3" />
                   {task.estimatedMinutes}m
                 </span>
@@ -509,7 +509,7 @@ function TaskRow({
                 : 'bg-white/[0.02] opacity-0 group-hover:opacity-100'
             }`}
           >
-            <Trash2 className={`w-3.5 h-3.5 ${deleteTaskId === task.id ? 'text-red-400' : 'text-white/20'}`} />
+            <Trash2 className={`w-3.5 h-3.5 ${deleteTaskId === task.id ? 'text-red-400' : 'text-ui-tertiary'}`} />
           </button>
         </div>
       </GlassCard>

@@ -203,7 +203,7 @@ export function ReferralsPage() {
         {/* Error */}
         {error && !loading && (
           <GlassCard className="!p-5 text-center">
-            <p className="text-white/50" style={{ fontSize: '0.875rem' }}>{error}</p>
+            <p className="text-muted-foreground" style={{ fontSize: '0.875rem' }}>{error}</p>
             <button onClick={loadData} className="mt-3 text-[#a29bfe] text-sm font-medium">
               {t('ref_retry')}
             </button>
@@ -279,18 +279,18 @@ export function ReferralsPage() {
                   <UserPlus className="w-5 h-5 text-[#a29bfe]" />
                 </div>
                 <div>
-                  <p className="text-white" style={{ fontSize: '1rem', fontWeight: 700 }}>
+                  <p className="text-foreground" style={{ fontSize: '1rem', fontWeight: 700 }}>
                     {t('ref_invite_title')}
                   </p>
-                  <p className="text-white/35" style={{ fontSize: '0.75rem' }}>
+                  <p className="text-ui-tertiary" style={{ fontSize: '0.75rem' }}>
                     {t('ref_invite_desc', { n: BONUS_PER_SUBSCRIBER })}
                   </p>
                 </div>
               </div>
 
               {/* Referral link */}
-              <div className="p-3 rounded-xl bg-white/[0.04] border border-white/[0.08] mb-3">
-                <p className="text-white/70 break-all font-mono" style={{ fontSize: '0.75rem', lineHeight: 1.6 }}>
+              <div className="p-3 rounded-xl bg-ui-button" style={{ border: '1px solid var(--glass-border)' }}>
+                <p className="text-ui-icon-primary break-all font-mono" style={{ fontSize: '0.75rem', lineHeight: 1.6 }}>
                   {referralLink || t('ref_loading')}
                 </p>
               </div>
@@ -324,8 +324,8 @@ export function ReferralsPage() {
                         exit={{ scale: 0.8, opacity: 0 }}
                         className="flex items-center gap-1.5"
                       >
-                        <Copy className="w-4 h-4 text-white/50" />
-                        <span className="text-white/80" style={{ fontSize: '0.875rem', fontWeight: 500 }}>
+                        <Copy className="w-4 h-4 text-ui-icon-secondary" />
+                        <span className="text-ui-icon-primary" style={{ fontSize: '0.875rem', fontWeight: 500 }}>
                           {t('ref_copy')}
                         </span>
                       </motion.div>
@@ -354,10 +354,10 @@ export function ReferralsPage() {
                   <Gift className="w-5 h-5 text-[#00cec9]" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-white" style={{ fontSize: '1rem', fontWeight: 700 }}>
+                  <p className="text-foreground" style={{ fontSize: '1rem', fontWeight: 700 }}>
                     {t('ref_bonus_title')}
                   </p>
-                  <p className="text-white/35" style={{ fontSize: '0.75rem' }}>
+                  <p className="text-ui-tertiary" style={{ fontSize: '0.75rem' }}>
                     {t('ref_bonus_desc')}
                   </p>
                 </div>
@@ -365,7 +365,7 @@ export function ReferralsPage() {
                   <p className="text-[#00cec9]" style={{ fontSize: '1.5rem', fontWeight: 800 }}>
                     {totalBonusDays}
                   </p>
-                  <p className="text-white/25" style={{ fontSize: '0.625rem' }}>
+                  <p className="text-ui-tertiary" style={{ fontSize: '0.625rem' }}>
                     {t('ref_days_unit')}
                   </p>
                 </div>
@@ -390,14 +390,14 @@ export function ReferralsPage() {
               {/* Milestone progress */}
               <div className="mt-4 p-3 rounded-xl bg-white/[0.03] border border-white/[0.05]">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-white/40" style={{ fontSize: '0.6875rem' }}>
+                  <span className="text-ui-secondary" style={{ fontSize: '0.6875rem' }}>
                     {t('ref_next_milestone')}
                   </span>
-                  <span className="text-white/60" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
+                  <span className="text-muted-foreground" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
                     {nextMilestoneProgress}/10
                   </span>
                 </div>
-                <div className="relative h-2 rounded-full bg-white/[0.06] overflow-hidden">
+                <div className="relative h-2 rounded-full bg-ui-progress overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${(nextMilestoneProgress / 10) * 100}%` }}
@@ -406,7 +406,7 @@ export function ReferralsPage() {
                   />
                 </div>
                 {milestonesReached > 0 && (
-                  <p className="text-white/25 mt-1.5" style={{ fontSize: '0.625rem' }}>
+                  <p className="text-ui-tertiary mt-1.5" style={{ fontSize: '0.625rem' }}>
                     {t('ref_milestones_reached', { n: milestonesReached })}
                   </p>
                 )}
@@ -415,22 +415,22 @@ export function ReferralsPage() {
 
             {/* Your Referrals */}
             <div>
-              <p className="text-white/40 px-1 mb-2.5" style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.05em' }}>
+              <p className="text-ui-secondary px-1 mb-2.5" style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.05em' }}>
                 {t('ref_your_referrals')}
                 {data.invited_users.length > 0 && (
-                  <span className="text-white/20 ml-1.5">({data.invited_users.length})</span>
+                  <span className="text-ui-tertiary ml-1.5">({data.invited_users.length})</span>
                 )}
               </p>
 
               {data.invited_users.length === 0 && (
                 <GlassCard className="!p-8 text-center">
-                  <div className="w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mx-auto mb-4">
-                    <Users className="w-7 h-7 text-white/15" />
+                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
+                    <Users className="w-7 h-7 text-ui-tertiary" />
                   </div>
-                  <p className="text-white/35 mb-1" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
+                  <p className="text-ui-secondary mb-1" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
                     {t('ref_no_referrals')}
                   </p>
-                  <p className="text-white/20 max-w-[240px] mx-auto" style={{ fontSize: '0.8125rem', lineHeight: 1.5 }}>
+                  <p className="text-ui-tertiary max-w-[240px] mx-auto" style={{ fontSize: '0.8125rem', lineHeight: 1.5 }}>
                     {t('ref_no_referrals_desc')}
                   </p>
                 </GlassCard>
@@ -499,8 +499,8 @@ function StatCard({
       >
         <Icon className="w-4 h-4" style={{ color }} />
       </div>
-      <p className="text-white" style={{ fontSize: '1.25rem', fontWeight: 800 }}>{value}</p>
-      <p className="text-white/30 mt-0.5" style={{ fontSize: '0.625rem', fontWeight: 500 }}>{label}</p>
+      <p className="text-foreground" style={{ fontSize: '1.25rem', fontWeight: 800 }}>{value}</p>
+      <p className="text-ui-tertiary mt-0.5" style={{ fontSize: '0.625rem', fontWeight: 500 }}>{label}</p>
     </GlassCard>
   );
 }
@@ -517,7 +517,7 @@ function RewardTier({
   color: string;
 }) {
   return (
-    <div className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+    <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
       <div
         className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
         style={{ backgroundColor: `${color}15` }}
@@ -525,10 +525,10 @@ function RewardTier({
         <Icon className="w-4 h-4" style={{ color }} />
       </div>
       <div className="flex-1">
-        <p className="text-white" style={{ fontSize: '0.875rem', fontWeight: 600 }}>{title}</p>
-        <p className="text-white/35" style={{ fontSize: '0.6875rem' }}>{desc}</p>
+        <p className="text-foreground" style={{ fontSize: '0.875rem', fontWeight: 600 }}>{title}</p>
+        <p className="text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>{desc}</p>
       </div>
-      <ArrowRight className="w-3.5 h-3.5 text-white/15 flex-shrink-0" />
+      <ArrowRight className="w-3.5 h-3.5 text-ui-tertiary flex-shrink-0" />
     </div>
   );
 }
@@ -633,7 +633,7 @@ function HowItWorks() {
 
   return (
     <GlassCard className="!p-5">
-      <p className="text-white/40 mb-4" style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.05em' }}>
+      <p className="text-foreground" style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.05em' }}>
         {t('ref_how_title')}
       </p>
       <div className="space-y-3">
@@ -649,12 +649,12 @@ function HowItWorks() {
                 </span>
               </div>
               {idx < steps.length - 1 && (
-                <div className="w-px h-4 bg-white/[0.06] mt-1" />
+                <div className="w-px h-4 mt-1" style={{ background: 'var(--ui-separator)' }} />
               )}
             </div>
             <div className="pt-0.5">
-              <p className="text-white" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{step.title}</p>
-              <p className="text-white/30" style={{ fontSize: '0.6875rem', lineHeight: 1.4 }}>{step.desc}</p>
+              <p className="text-foreground" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{step.title}</p>
+              <p className="text-ui-tertiary" style={{ fontSize: '0.6875rem', lineHeight: 1.4 }}>{step.desc}</p>
             </div>
           </div>
         ))}
@@ -689,9 +689,9 @@ function LeaderboardSection({ data, loading, currentUserId }: { data: Leaderboar
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between px-1">
-        <p className="text-white/40" style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.05em' }}>
+        <p className="text-ui-secondary" style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.05em' }}>
           {t('ref_top_referrers')}
-          <span className="text-white/20 ml-1.5">({data.total_referrers})</span>
+          <span className="text-ui-tertiary ml-1.5">({data.total_referrers})</span>
         </p>
         {data.my_rank && (
           <span className="text-[#a29bfe] flex items-center gap-1" style={{ fontSize: '0.6875rem', fontWeight: 600 }}>

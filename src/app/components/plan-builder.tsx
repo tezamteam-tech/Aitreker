@@ -389,7 +389,7 @@ export function PlanBuilderPage() {
                 </span>
                 <div className="flex gap-1">
                   {Array.from({ length: totalSteps }, (_, i) => (
-                    <div key={i} className={`h-1.5 rounded-full transition-all ${i < stepNumber ? 'w-5 bg-[#6c5ce7]' : i === stepNumber ? 'w-5 bg-[#6c5ce7]/40' : 'w-3 bg-white/10'}`} />
+                    <div key={i} className={`h-1.5 rounded-full transition-all ${i < stepNumber ? 'w-5 bg-[#6c5ce7]' : i === stepNumber ? 'w-5 bg-[#6c5ce7]/40' : 'w-3 bg-ui-progress'}`} />
                   ))}
                 </div>
               </div>
@@ -403,15 +403,15 @@ export function PlanBuilderPage() {
                   </div>
                   <p className="text-[#a29bfe]" style={{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.05em' }}>{t('pb_coach_intro')}</p>
                 </div>
-                <p className="text-white/65" style={{ fontSize: '0.875rem', lineHeight: 1.6 }}>{coachResponse}</p>
+                <p className="text-muted-foreground" style={{ fontSize: '0.875rem', lineHeight: 1.6 }}>{coachResponse}</p>
               </GlassCard>
 
               {/* Questions list */}
               <div className="space-y-2">
                 {questions.map((q, i) => (
-                  <div key={i} className="flex items-start gap-2 p-3 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+                  <div key={i} className="flex items-start gap-2 p-3 rounded-xl" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
                     <span className="w-5 h-5 rounded-md bg-[#6c5ce7]/15 flex items-center justify-center shrink-0 mt-0.5" style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#a29bfe' }}>{i + 1}</span>
-                    <p className="text-white/50" style={{ fontSize: '0.8125rem', lineHeight: 1.5 }}>{q}</p>
+                    <p className="text-muted-foreground" style={{ fontSize: '0.8125rem', lineHeight: 1.5 }}>{q}</p>
                   </div>
                 ))}
               </div>
@@ -420,7 +420,7 @@ export function PlanBuilderPage() {
               <textarea
                 value={answerText} onChange={(e) => setAnswerText(e.target.value)}
                 placeholder={t('pb_answer_hint')} rows={4} maxLength={2000}
-                className="w-full rounded-2xl bg-white/[0.04] border border-white/[0.08] px-4 py-3 text-white placeholder-white/20 resize-none focus:outline-none focus:border-[#6c5ce7]/40 transition-colors"
+                className="w-full rounded-2xl bg-ui-button border border-ui-button px-4 py-3 text-foreground placeholder-ui-tertiary resize-none focus:outline-none focus:border-[#6c5ce7]/40 transition-colors"
                 style={{ fontSize: '0.9375rem', lineHeight: 1.6 }}
               />
               <div className="flex items-center justify-end -mt-1">
@@ -439,7 +439,7 @@ export function PlanBuilderPage() {
 
               {/* Continue / Generate button */}
               <motion.button whileTap={{ scale: 0.97 }} onClick={handleContinue} disabled={answerText.trim().length < 5 || isSubmitting}
-                className={`w-full h-14 rounded-2xl flex items-center justify-center gap-2.5 transition-all ${answerText.trim().length >= 5 ? 'bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe] text-white shadow-lg' : 'bg-white/[0.04] text-white/20'}`}
+                className={`w-full h-14 rounded-2xl flex items-center justify-center gap-2.5 transition-all ${answerText.trim().length >= 5 ? 'bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe] text-white shadow-lg' : 'bg-ui-button text-ui-tertiary'}`}
                 style={{ fontSize: '1.0625rem', fontWeight: 600, boxShadow: answerText.trim().length >= 5 ? '0 8px 32px rgba(108,92,231,0.3)' : 'none' }}>
                 {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
                 {stepNumber + 1 >= totalSteps ? t('pb_last_step') : t('pb_continue')}
@@ -458,8 +458,8 @@ export function PlanBuilderPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[#a29bfe] mb-0.5" style={{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.08em' }}>{t('pb_preview_title').toUpperCase()}</p>
-                    <h2 className="text-white" style={{ fontSize: '1.25rem', fontWeight: 700 }}>{plan.programTitle}</h2>
-                    {plan.programSubtitle && <p className="text-white/40 mt-0.5" style={{ fontSize: '0.8125rem' }}>{plan.programSubtitle}</p>}
+                    <h2 className="text-foreground" style={{ fontSize: '1.25rem', fontWeight: 700 }}>{plan.programTitle}</h2>
+                    {plan.programSubtitle && <p className="text-muted-foreground mt-0.5" style={{ fontSize: '0.8125rem' }}>{plan.programSubtitle}</p>}
                     <div className="flex items-center gap-3 mt-2">
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#6c5ce7]/10 text-[#a29bfe]" style={{ fontSize: '0.6875rem', fontWeight: 500 }}>
                         <Timer className="w-3 h-3" /> {plan.durationDays || 7} {t('shared_days_unit')}
@@ -493,36 +493,36 @@ export function PlanBuilderPage() {
                             <span className="text-[#a29bfe]" style={{ fontSize: '0.8125rem', fontWeight: 700 }}>{day.dayNumber}</span>
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-white truncate" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>{day.title}</p>
-                            <p className="text-white/30 truncate" style={{ fontSize: '0.75rem' }}>{t('pb_tasks_n', { n: day.tasks?.length || 0 })}</p>
+                            <p className="text-foreground truncate" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>{day.title}</p>
+                            <p className="text-ui-tertiary truncate" style={{ fontSize: '0.75rem' }}>{t('pb_tasks_n', { n: day.tasks?.length || 0 })}</p>
                           </div>
-                          {isExpanded ? <ChevronUp className="w-4 h-4 text-white/30 shrink-0" /> : <ChevronDown className="w-4 h-4 text-white/30 shrink-0" />}
+                          {isExpanded ? <ChevronUp className="w-4 h-4 text-ui-tertiary shrink-0" /> : <ChevronDown className="w-4 h-4 text-ui-tertiary shrink-0" />}
                         </div>
 
                         <AnimatePresence>
                           {isExpanded && (
                             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25 }} className="overflow-hidden">
-                              <div className="mt-3 pt-3 border-t border-white/[0.06] space-y-3">
-                                {day.description && <p className="text-white/40" style={{ fontSize: '0.8125rem', lineHeight: 1.5 }}>{day.description}</p>}
+                              <div className="mt-3 pt-3 space-y-3" style={{ borderTop: '1px solid var(--glass-border-subtle)' }}>
+                                {day.description && <p className="text-ui-secondary" style={{ fontSize: '0.8125rem', lineHeight: 1.5 }}>{day.description}</p>}
                                 {day.coachMessage && (
                                   <div className="p-3 rounded-xl bg-[#6c5ce7]/[0.06] border border-[#6c5ce7]/10">
                                     <p className="text-[#a29bfe]/70 mb-1" style={{ fontSize: '0.6275rem', fontWeight: 600, letterSpacing: '0.05em' }}>{t('pb_morning_msg')}</p>
-                                    <p className="text-white/55" style={{ fontSize: '0.8125rem', lineHeight: 1.5, fontStyle: 'italic' }}>&ldquo;{day.coachMessage}&rdquo;</p>
+                                    <p className="text-muted-foreground" style={{ fontSize: '0.8125rem', lineHeight: 1.5, fontStyle: 'italic' }}>&ldquo;{day.coachMessage}&rdquo;</p>
                                   </div>
                                 )}
                                 <div className="space-y-2">
                                   {(day.tasks || []).map((task: any, idx: number) => (
-                                    <div key={idx} className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-3">
+                                    <div key={idx} className="rounded-xl p-3" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
                                       <div className="flex items-start gap-2.5">
                                         <span style={{ fontSize: '1rem' }}>{TASK_TYPE_EMOJI[task.type] || '\u2728'}</span>
                                         <div className="flex-1 min-w-0">
                                           <div className="flex items-center gap-2 mb-1">
-                                            <p className="text-white" style={{ fontSize: '0.875rem', fontWeight: 600 }}>{task.title}</p>
+                                            <p className="text-foreground" style={{ fontSize: '0.875rem', fontWeight: 600 }}>{task.title}</p>
                                             <span className={`px-1.5 py-0 rounded text-[0.6rem] font-medium ${TASK_TYPE_COLORS[task.type] || TASK_TYPE_COLORS.action}`}>{task.type}</span>
                                           </div>
-                                          <p className="text-white/35" style={{ fontSize: '0.8125rem', lineHeight: 1.45 }}>{task.description}</p>
+                                          <p className="text-ui-tertiary" style={{ fontSize: '0.8125rem', lineHeight: 1.45 }}>{task.description}</p>
                                           <div className="flex items-center gap-3 mt-2">
-                                            {task.estimatedMinutes && <span className="inline-flex items-center gap-1 text-white/25" style={{ fontSize: '0.6875rem' }}><Clock className="w-3 h-3" /> {t('pb_est_time', { min: task.estimatedMinutes })}</span>}
+                                            {task.estimatedMinutes && <span className="inline-flex items-center gap-1 text-ui-tertiary" style={{ fontSize: '0.6875rem' }}><Clock className="w-3 h-3" /> {t('pb_est_time', { min: task.estimatedMinutes })}</span>}
                                             {task.reminderTime && <span className="inline-flex items-center gap-1 text-[#a29bfe]/50" style={{ fontSize: '0.6875rem' }}><Bell className="w-3 h-3" /> {t('pb_reminder_at', { time: task.reminderTime })}</span>}
                                           </div>
                                           {task.whyItMatters && (
@@ -555,7 +555,7 @@ export function PlanBuilderPage() {
                                 {day.reflectionPrompt && (
                                   <div className="p-2.5 rounded-xl bg-amber-500/[0.06] border border-amber-500/10">
                                     <p className="text-amber-300/60" style={{ fontSize: '0.6275rem', fontWeight: 600, letterSpacing: '0.05em' }}>{t('pb_reflection')}</p>
-                                    <p className="text-white/35 mt-1" style={{ fontSize: '0.8125rem', fontStyle: 'italic' }}>{day.reflectionPrompt}</p>
+                                    <p className="text-ui-tertiary mt-1" style={{ fontSize: '0.8125rem', fontStyle: 'italic' }}>{day.reflectionPrompt}</p>
                                   </div>
                                 )}
                               </div>
@@ -575,7 +575,7 @@ export function PlanBuilderPage() {
                   style={{ fontSize: '1.0625rem', fontWeight: 600, boxShadow: '0 8px 32px rgba(108,92,231,0.3)' }}>
                   {isActivating ? <><Loader2 className="w-5 h-5 animate-spin" /> {t('pb_activating')}</> : <><Rocket className="w-5 h-5" /> {t('pb_start_plan')}</>}
                 </motion.button>
-                <button onClick={handleRegenerate} disabled={isActivating} className="w-full h-12 rounded-xl bg-white/[0.04] border border-white/[0.06] text-white/50 flex items-center justify-center gap-2" style={{ fontSize: '0.875rem', fontWeight: 500 }}>
+                <button onClick={handleRegenerate} disabled={isActivating} className="w-full h-12 rounded-xl bg-ui-button border border-ui-button text-muted-foreground flex items-center justify-center gap-2" style={{ fontSize: '0.875rem', fontWeight: 500 }}>
                   <RefreshCw className="w-4 h-4" />{t('pb_regenerate')}
                 </button>
               </div>

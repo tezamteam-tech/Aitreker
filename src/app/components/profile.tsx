@@ -220,12 +220,12 @@ export function ProfilePage() {
             initial={{ opacity: 0, y: -30 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -30 }}
-            className="fixed top-12 left-1/2 -translate-x-1/2 z-[60] px-5 py-2.5 rounded-2xl bg-liquid-glass-toast border border-white/[0.1] shadow-2xl"
+            className="fixed top-12 left-1/2 -translate-x-1/2 z-[60] px-5 py-2.5 rounded-2xl bg-liquid-glass-toast border border-[var(--glass-border)] shadow-2xl"
             style={{ boxShadow: '0 12px 40px rgba(0,0,0,0.5)' }}
           >
             <div className="flex items-center gap-2">
               <Check className="w-4 h-4 text-emerald-400" />
-              <p className="text-white" style={{ fontSize: '0.875rem', fontWeight: 500 }}>{toast}</p>
+              <p className="text-foreground" style={{ fontSize: '0.875rem', fontWeight: 500 }}>{toast}</p>
             </div>
           </motion.div>
         )}
@@ -258,15 +258,15 @@ export function ProfilePage() {
             </span>
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="text-white truncate" style={{ fontSize: '1.25rem', fontWeight: 700 }}>
+            <h2 className="text-foreground truncate" style={{ fontSize: '1.25rem', fontWeight: 700 }}>
               {user?.firstName} {user?.lastName}
             </h2>
             <div className="flex items-center gap-2 mt-0.5">
               {user?.username && (
-                <p className="text-white/40 truncate" style={{ fontSize: '0.8125rem' }}>@{user.username}</p>
+                <p className="text-ui-secondary truncate" style={{ fontSize: '0.8125rem' }}>@{user.username}</p>
               )}
-              <span className="text-white/10">·</span>
-              <p className="text-white/20 shrink-0" style={{ fontSize: '0.6875rem' }}>
+              <span className="text-ui-tertiary">·</span>
+              <p className="text-ui-tertiary shrink-0" style={{ fontSize: '0.6875rem' }}>
                 ID: {user?.telegramId}
               </p>
             </div>
@@ -285,8 +285,8 @@ export function ProfilePage() {
               <CalendarCheck className="w-5 h-5 text-emerald-400" />
             </div>
             <div>
-              <p className="text-white" style={{ fontSize: '1.25rem', fontWeight: 700 }}>{completedDays}</p>
-              <p className="text-white/40" style={{ fontSize: '0.6875rem' }}>{t('profile_completed')}</p>
+              <p className="text-foreground" style={{ fontSize: '1.25rem', fontWeight: 700 }}>{completedDays}</p>
+              <p className="text-ui-secondary" style={{ fontSize: '0.6875rem' }}>{t('profile_completed')}</p>
             </div>
           </GlassCard>
 
@@ -295,8 +295,8 @@ export function ProfilePage() {
               <Flame className="w-5 h-5 text-amber-400" />
             </div>
             <div>
-              <p className="text-white" style={{ fontSize: '1.25rem', fontWeight: 700 }}>{skippedDays}</p>
-              <p className="text-white/40" style={{ fontSize: '0.6875rem' }}>{t('profile_skipped')}</p>
+              <p className="text-foreground" style={{ fontSize: '1.25rem', fontWeight: 700 }}>{skippedDays}</p>
+              <p className="text-ui-secondary" style={{ fontSize: '0.6875rem' }}>{t('profile_skipped')}</p>
             </div>
           </GlassCard>
 
@@ -305,8 +305,8 @@ export function ProfilePage() {
               <Trophy className="w-5 h-5 text-[#fd79a8]" />
             </div>
             <div>
-              <p className="text-white" style={{ fontSize: '1.25rem', fontWeight: 700 }}>{totalReflections}</p>
-              <p className="text-white/40" style={{ fontSize: '0.6875rem' }}>{t('profile_reflections')}</p>
+              <p className="text-foreground" style={{ fontSize: '1.25rem', fontWeight: 700 }}>{totalReflections}</p>
+              <p className="text-ui-secondary" style={{ fontSize: '0.6875rem' }}>{t('profile_reflections')}</p>
             </div>
           </GlassCard>
 
@@ -320,7 +320,7 @@ export function ProfilePage() {
                 style={{ fontSize: '1.25rem', fontWeight: 700 }}
                 glowColor="rgba(162, 155, 254, 0.3)"
               />
-              <p className="text-white/40" style={{ fontSize: '0.6875rem' }}>{t('total_xp')}</p>
+              <p className="text-ui-secondary" style={{ fontSize: '0.6875rem' }}>{t('total_xp')}</p>
             </div>
           </GlassCard>
         </motion.div>
@@ -344,12 +344,12 @@ export function ProfilePage() {
                   <Crown className={`w-5 h-5 ${subscriptionActive ? 'text-[#a29bfe]' : 'text-amber-400'}`} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
+                  <p className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
                     {subscriptionActive
                       ? (t('profile_language') === 'Язык' ? 'Premium активна' : 'Premium Active')
                       : t('premium_free_plan')}
                   </p>
-                  <p className={`mt-0.5 ${subscriptionActive ? 'text-white/30' : 'text-amber-400/70'}`} style={{ fontSize: '0.75rem' }}>
+                  <p className={`mt-0.5 ${subscriptionActive ? 'text-ui-tertiary' : 'text-amber-400/70'}`} style={{ fontSize: '0.75rem' }}>
                     {subscriptionActive
                       ? (t('profile_language') === 'Язык'
                           ? `Осталось ${subscriptionDaysLeft} ${subscriptionDaysLeft === 1 ? 'день' : subscriptionDaysLeft < 5 ? 'дня' : 'дней'}`
@@ -359,10 +359,10 @@ export function ProfilePage() {
                 </div>
                 {subscriptionActive && subscriptionDaysLeft > 0 && (
                   <div className="shrink-0 text-right">
-                    <span className={`text-white font-bold ${subscriptionDaysLeft <= 5 ? 'text-amber-400' : 'text-[#a29bfe]'}`} style={{ fontSize: '1.5rem', fontWeight: 700 }}>
+                    <span className={`font-bold ${subscriptionDaysLeft <= 5 ? 'text-amber-400' : 'text-[#a29bfe]'}`} style={{ fontSize: '1.5rem', fontWeight: 700 }}>
                       {subscriptionDaysLeft}
                     </span>
-                    <p className="text-white/20" style={{ fontSize: '0.625rem' }}>
+                    <p className="text-ui-tertiary" style={{ fontSize: '0.625rem' }}>
                       {t('profile_language') === 'Язык' ? 'дней' : 'days'}
                     </p>
                   </div>

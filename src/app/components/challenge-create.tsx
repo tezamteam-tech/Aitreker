@@ -182,7 +182,7 @@ export function ChallengeCreatePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-white text-center mb-2"
+            className="text-foreground text-center mb-2"
             style={{ fontSize: '1.5rem', fontWeight: 700 }}
           >
             {t('cc_created')}
@@ -191,7 +191,7 @@ export function ChallengeCreatePage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="text-white/40 text-center mb-8"
+            className="text-ui-secondary text-center mb-8"
             style={{ fontSize: '0.9375rem' }}
           >
             {created.depositAmount > 0
@@ -207,20 +207,20 @@ export function ChallengeCreatePage() {
           >
             <GlassCard variant="elevated" className="mb-4">
               <div className="flex items-center gap-2 mb-1">
-                <p className="text-white" style={{ fontSize: '1rem', fontWeight: 600 }}>{created.title}</p>
+                <p className="text-foreground" style={{ fontSize: '1rem', fontWeight: 600 }}>{created.title}</p>
                 {created.visibility === 'private' && (
                   <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400" style={{ fontSize: '0.5625rem', fontWeight: 600 }}>
                     <Lock className="w-2.5 h-2.5" />
                   </span>
                 )}
               </div>
-              <p className="text-white/35 mb-3" style={{ fontSize: '0.8125rem' }}>
+              <p className="text-ui-secondary mb-3" style={{ fontSize: '0.8125rem' }}>
                 {created.type === 'contract' ? t('cc_contract_label') : t('cc_pool_label')}
                 {created.depositAmount > 0 && ` \u00B7 ${created.depositAmount} ${created.currency === 'stars' ? 'Stars' : 'TON'}`}
                 {` \u00B7 ${t('cc_days', { count: created.durationDays })}`}
               </p>
               {created.rulesText && (
-                <p className="text-white/25" style={{ fontSize: '0.75rem', lineHeight: 1.5 }}>
+                <p className="text-ui-tertiary" style={{ fontSize: '0.75rem', lineHeight: 1.5 }}>
                   {created.rulesText}
                 </p>
               )}
@@ -231,13 +231,13 @@ export function ChallengeCreatePage() {
               <GlassCard variant="elevated" className="mb-4">
                 <div className="flex items-center gap-2 mb-2">
                   <KeyRound className="w-4 h-4 text-amber-400" />
-                  <p className="text-white/60" style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.05em' }}>
+                  <p className="text-muted-foreground" style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.05em' }}>
                     {t('cc_invite_code_label')}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 bg-white/[0.06] rounded-xl px-4 py-3 text-center">
-                    <p className="text-white font-mono" style={{ fontSize: '1.5rem', fontWeight: 700, letterSpacing: '0.3em' }}>
+                  <div className="flex-1 bg-[var(--glass-bg-card)] rounded-xl px-4 py-3 text-center">
+                    <p className="text-foreground font-mono" style={{ fontSize: '1.5rem', fontWeight: 700, letterSpacing: '0.3em' }}>
                       {created.inviteCode}
                     </p>
                   </div>
@@ -245,17 +245,17 @@ export function ChallengeCreatePage() {
                     whileTap={{ scale: 0.93 }}
                     onClick={handleCopyCode}
                     className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
-                      codeCopied ? 'bg-emerald-500/20' : 'bg-white/[0.06]'
+                      codeCopied ? 'bg-emerald-500/20' : 'bg-[var(--glass-bg-card)]'
                     }`}
                   >
                     {codeCopied ? (
                       <Check className="w-5 h-5 text-emerald-400" />
                     ) : (
-                      <Copy className="w-5 h-5 text-white/40" />
+                      <Copy className="w-5 h-5 text-ui-icon-secondary" />
                     )}
                   </motion.button>
                 </div>
-                <p className="text-white/25 text-center mt-2" style={{ fontSize: '0.75rem' }}>
+                <p className="text-ui-tertiary text-center mt-2" style={{ fontSize: '0.75rem' }}>
                   {t('cc_share_code')}
                 </p>
               </GlassCard>
@@ -264,24 +264,24 @@ export function ChallengeCreatePage() {
             {/* Invite link (for pool type and open challenges) */}
             {(created.type === 'pool' || created.visibility === 'open') && (
               <GlassCard variant="elevated" className="mb-4">
-                <p className="text-white/50 mb-2" style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.05em' }}>
+                <p className="text-ui-secondary mb-2" style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.05em' }}>
                   {t('cc_invite_link')}
                 </p>
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 bg-white/[0.04] rounded-lg px-3 py-2.5 truncate">
-                    <p className="text-white/60 truncate" style={{ fontSize: '0.8125rem' }}>{inviteLink}</p>
+                  <div className="flex-1 bg-[var(--ui-input-bg)] rounded-lg px-3 py-2.5 truncate">
+                    <p className="text-muted-foreground truncate" style={{ fontSize: '0.8125rem' }}>{inviteLink}</p>
                   </div>
                   <motion.button
                     whileTap={{ scale: 0.93 }}
                     onClick={handleCopyLink}
                     className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
-                      copied ? 'bg-emerald-500/20' : 'bg-white/[0.06]'
+                      copied ? 'bg-emerald-500/20' : 'bg-[var(--glass-bg-card)]'
                     }`}
                   >
                     {copied ? (
                       <Check className="w-4 h-4 text-emerald-400" />
                     ) : (
-                      <Copy className="w-4 h-4 text-white/40" />
+                      <Copy className="w-4 h-4 text-ui-icon-secondary" />
                     )}
                   </motion.button>
                   <motion.button
@@ -306,7 +306,7 @@ export function ChallengeCreatePage() {
               </motion.button>
               <button
                 onClick={() => navigate('/challenges')}
-                className="w-full h-11 text-white/30 flex items-center justify-center"
+                className="w-full h-11 text-ui-tertiary flex items-center justify-center"
                 style={{ fontSize: '0.875rem' }}
               >
                 {t('chd_back')}
@@ -337,7 +337,7 @@ export function ChallengeCreatePage() {
           transition={{ delay: 0.05 }}
           className="mb-6"
         >
-          <p className="text-white/50 mb-3 px-1" style={{ fontSize: '0.8125rem', fontWeight: 600, letterSpacing: '0.05em' }}>
+          <p className="text-ui-secondary mb-3 px-1" style={{ fontSize: '0.8125rem', fontWeight: 600, letterSpacing: '0.05em' }}>
             {t('cc_type')}
           </p>
           <div className="space-y-2.5">
@@ -358,13 +358,13 @@ export function ChallengeCreatePage() {
                     <item.icon className={`w-5 h-5 ${item.color}`} />
                   </div>
                   <div className="flex-1">
-                    <p className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>{t(item.labelKey)}</p>
-                    <p className="text-white/35 mt-0.5" style={{ fontSize: '0.8125rem', lineHeight: 1.4 }}>
+                    <p className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>{t(item.labelKey)}</p>
+                    <p className="text-ui-secondary mt-0.5" style={{ fontSize: '0.8125rem', lineHeight: 1.4 }}>
                       {t(item.sublabelKey)}
                     </p>
                   </div>
                   <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${
-                    isActive ? 'border-[#6c5ce7] bg-[#6c5ce7]' : 'border-white/20'
+                    isActive ? 'border-[#6c5ce7] bg-[#6c5ce7]' : 'border-[var(--glass-border)]'
                   }`}>
                     {isActive && <Check className="w-3 h-3 text-white" />}
                   </div>
@@ -381,7 +381,7 @@ export function ChallengeCreatePage() {
           transition={{ delay: 0.07 }}
           className="mb-6"
         >
-          <p className="text-white/50 mb-3 px-1" style={{ fontSize: '0.8125rem', fontWeight: 600, letterSpacing: '0.05em' }}>
+          <p className="text-ui-secondary mb-3 px-1" style={{ fontSize: '0.8125rem', fontWeight: 600, letterSpacing: '0.05em' }}>
             {t('cc_visibility')}
           </p>
           <div className="flex gap-2.5">
@@ -396,18 +396,18 @@ export function ChallengeCreatePage() {
                   }}
                   className={`flex-1 flex items-center gap-3 p-3.5 rounded-xl border transition-all ${
                     isActive
-                      ? 'bg-white/[0.06] border-[#6c5ce7]/30'
-                      : 'bg-white/[0.02] border-white/[0.05]'
+                      ? 'bg-[var(--glass-bg-card)] border-[#6c5ce7]/30'
+                      : 'bg-[var(--glass-bg-row)] border-[var(--glass-border-subtle)]'
                   }`}
                 >
                   <div className={`w-9 h-9 rounded-lg ${item.bgColor} flex items-center justify-center shrink-0`}>
                     <item.icon className={`w-4 h-4 ${item.color}`} />
                   </div>
                   <div className="text-left">
-                    <p className={`${isActive ? 'text-white' : 'text-white/50'}`} style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+                    <p className={`${isActive ? 'text-foreground' : 'text-ui-secondary'}`} style={{ fontSize: '0.875rem', fontWeight: 600 }}>
                       {t(item.labelKey)}
                     </p>
-                    <p className="text-white/25" style={{ fontSize: '0.6875rem' }}>
+                    <p className="text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>
                       {t(item.sublabelKey)}
                     </p>
                   </div>
@@ -424,7 +424,7 @@ export function ChallengeCreatePage() {
           transition={{ delay: 0.1 }}
           className="mb-6"
         >
-          <p className="text-white/50 mb-3 px-1" style={{ fontSize: '0.8125rem', fontWeight: 600, letterSpacing: '0.05em' }}>
+          <p className="text-ui-secondary mb-3 px-1" style={{ fontSize: '0.8125rem', fontWeight: 600, letterSpacing: '0.05em' }}>
             {t('cc_title_label')}
           </p>
           <GlassCard variant="elevated" padding="sm">
@@ -432,7 +432,7 @@ export function ChallengeCreatePage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={t('cc_title_placeholder')}
-              className="w-full bg-transparent text-white placeholder-white/20 outline-none px-1"
+              className="w-full bg-transparent text-foreground placeholder-[var(--ui-text-tertiary)] outline-none px-1"
               style={{ fontSize: '0.9375rem' }}
               maxLength={80}
             />
@@ -446,7 +446,7 @@ export function ChallengeCreatePage() {
           transition={{ delay: 0.15 }}
           className="mb-6"
         >
-          <p className="text-white/50 mb-3 px-1" style={{ fontSize: '0.8125rem', fontWeight: 600, letterSpacing: '0.05em' }}>
+          <p className="text-ui-secondary mb-3 px-1" style={{ fontSize: '0.8125rem', fontWeight: 600, letterSpacing: '0.05em' }}>
             {t('cc_deposit')}
           </p>
           <div className="flex gap-3">
@@ -455,7 +455,7 @@ export function ChallengeCreatePage() {
                 value={depositAmount}
                 onChange={(e) => setDepositAmount(e.target.value.replace(/[^0-9]/g, ''))}
                 placeholder="0"
-                className="w-full bg-transparent text-white placeholder-white/20 outline-none px-1"
+                className="w-full bg-transparent text-foreground placeholder-[var(--ui-text-tertiary)] outline-none px-1"
                 style={{ fontSize: '0.9375rem' }}
                 type="text"
                 inputMode="numeric"
@@ -473,12 +473,12 @@ export function ChallengeCreatePage() {
                     }}
                     className={`h-full px-3.5 rounded-xl border flex items-center gap-1.5 transition-all ${
                       isActive
-                        ? 'bg-white/[0.06] border-[#6c5ce7]/30'
-                        : 'bg-white/[0.02] border-white/[0.05]'
+                        ? 'bg-[var(--glass-bg-card)] border-[#6c5ce7]/30'
+                        : 'bg-[var(--glass-bg-row)] border-[var(--glass-border-subtle)]'
                     }`}
                   >
                     <c.icon className={`w-3.5 h-3.5 ${c.color}`} />
-                    <span className={`${isActive ? 'text-white' : 'text-white/40'}`} style={{ fontSize: '0.8125rem', fontWeight: 500 }}>
+                    <span className={`${isActive ? 'text-foreground' : 'text-ui-secondary'}`} style={{ fontSize: '0.8125rem', fontWeight: 500 }}>
                       {c.label}
                     </span>
                   </button>
@@ -488,7 +488,7 @@ export function ChallengeCreatePage() {
           </div>
           {/* Available balance hint */}
           <div className="flex items-center justify-between mt-2 px-1">
-            <span className="text-white/25" style={{ fontSize: '0.6875rem' }}>
+            <span className="text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>
               {t('cc_available_label')}: {currency === 'stars' ? `${availableStars} Stars` : `${availableTon.toFixed(1)} TON`}
             </span>
             {depositNum > 0 && !hasEnoughFunds && (
@@ -498,7 +498,7 @@ export function ChallengeCreatePage() {
             )}
           </div>
           {depositNum > 0 && hasEnoughFunds && (
-            <p className="text-white/20 mt-1.5 px-1" style={{ fontSize: '0.6875rem' }}>
+            <p className="text-ui-tertiary mt-1.5 px-1" style={{ fontSize: '0.6875rem' }}>
               {t('cc_deposit_frozen_info')}
             </p>
           )}
@@ -511,7 +511,7 @@ export function ChallengeCreatePage() {
           transition={{ delay: 0.2 }}
           className="mb-6"
         >
-          <p className="text-white/50 mb-3 px-1" style={{ fontSize: '0.8125rem', fontWeight: 600, letterSpacing: '0.05em' }}>
+          <p className="text-ui-secondary mb-3 px-1" style={{ fontSize: '0.8125rem', fontWeight: 600, letterSpacing: '0.05em' }}>
             {t('cc_duration')}
           </p>
           <div className="flex gap-2">
@@ -526,8 +526,8 @@ export function ChallengeCreatePage() {
                   }}
                   className={`flex-1 h-10 rounded-xl border flex items-center justify-center transition-all ${
                     isActive
-                      ? 'bg-[#6c5ce7]/20 border-[#6c5ce7]/30 text-white'
-                      : 'bg-white/[0.02] border-white/[0.05] text-white/40'
+                      ? 'bg-[#6c5ce7]/20 border-[#6c5ce7]/30 text-foreground'
+                      : 'bg-[var(--glass-bg-row)] border-[var(--glass-border-subtle)] text-ui-secondary'
                   }`}
                   style={{ fontSize: '0.8125rem', fontWeight: 500 }}
                 >
@@ -545,7 +545,7 @@ export function ChallengeCreatePage() {
           transition={{ delay: 0.25 }}
           className="mb-8"
         >
-          <p className="text-white/50 mb-3 px-1" style={{ fontSize: '0.8125rem', fontWeight: 600, letterSpacing: '0.05em' }}>
+          <p className="text-ui-secondary mb-3 px-1" style={{ fontSize: '0.8125rem', fontWeight: 600, letterSpacing: '0.05em' }}>
             {t('cc_rules')}
           </p>
           <GlassCard variant="elevated" padding="sm">
@@ -553,7 +553,7 @@ export function ChallengeCreatePage() {
               value={rulesText}
               onChange={(e) => setRulesText(e.target.value)}
               placeholder={t('cc_rules_placeholder')}
-              className="w-full bg-transparent text-white placeholder-white/20 resize-none outline-none px-1 min-h-[70px]"
+              className="w-full bg-transparent text-foreground placeholder-[var(--ui-text-tertiary)] resize-none outline-none px-1 min-h-[70px]"
               style={{ fontSize: '0.9375rem', lineHeight: 1.5 }}
               maxLength={300}
             />
@@ -575,7 +575,7 @@ export function ChallengeCreatePage() {
                 }
               </div>
               <div className="flex-1 min-w-0">
-                <p className={`${hasEnoughFunds ? 'text-white/40' : 'text-red-400/70'}`} style={{ fontSize: '0.75rem', lineHeight: 1.4 }}>
+                <p className={`${hasEnoughFunds ? 'text-ui-secondary' : 'text-red-400/70'}`} style={{ fontSize: '0.75rem', lineHeight: 1.4 }}>
                   {hasEnoughFunds
                     ? t('cc_will_be_frozen', { amount: depositNum, currency: currency === 'stars' ? 'Stars' : 'TON' })
                     : t('cc_insufficient_wallet')}
@@ -596,7 +596,7 @@ export function ChallengeCreatePage() {
               <div className="w-8 h-8 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0">
                 <Lock className="w-4 h-4 text-amber-400" />
               </div>
-              <p className="text-white/40" style={{ fontSize: '0.75rem', lineHeight: 1.4 }}>
+              <p className="text-ui-secondary" style={{ fontSize: '0.75rem', lineHeight: 1.4 }}>
                 {t('cc_private_sub')}. {t('cc_share_code')}.
               </p>
             </GlassCard>
@@ -628,7 +628,7 @@ export function ChallengeCreatePage() {
             className={`w-full h-14 rounded-2xl flex items-center justify-center gap-2.5 transition-all ${
               title.trim() && hasEnoughFunds
                 ? 'bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe] text-white shadow-lg'
-                : 'bg-white/[0.03] text-white/20'
+                : 'bg-[var(--glass-bg-row)] text-ui-tertiary'
             }`}
             style={{ fontSize: '1.0625rem', fontWeight: 600, boxShadow: title.trim() && hasEnoughFunds ? '0 8px 32px rgba(108,92,231,0.3)' : 'none' }}
           >

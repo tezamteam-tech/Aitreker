@@ -326,21 +326,21 @@ export function FocusTimerPage() {
               {isActive || phase === 'completed' ? (
                 <>
                   <p
-                    className="text-white tabular-nums"
+                    className="text-foreground tabular-nums"
                     style={{ fontSize: '3.5rem', fontWeight: 200, letterSpacing: '-0.02em', lineHeight: 1 }}
                   >
                     {formatTime(secondsLeft)}
                   </p>
-                  <p className="text-white/30 mt-2" style={{ fontSize: '0.8125rem' }}>
+                  <p className="text-ui-tertiary mt-2" style={{ fontSize: '0.8125rem' }}>
                     {phase === 'paused' ? t('focus_pause') : phase === 'completed' ? t('focus_complete') : t('focus_keep_going')}
                   </p>
                 </>
               ) : (
                 <>
-                  <p className="text-white" style={{ fontSize: '3.5rem', fontWeight: 200, letterSpacing: '-0.02em', lineHeight: 1 }}>
+                  <p className="text-foreground" style={{ fontSize: '3.5rem', fontWeight: 200, letterSpacing: '-0.02em', lineHeight: 1 }}>
                     {selectedMinutes}
                   </p>
-                  <p className="text-white/30 mt-2" style={{ fontSize: '0.9375rem' }}>
+                  <p className="text-ui-tertiary mt-2" style={{ fontSize: '0.9375rem' }}>
                     {t('focus_minutes', { n: selectedMinutes })}
                   </p>
                 </>
@@ -359,7 +359,7 @@ export function FocusTimerPage() {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
             >
-              <p className="text-white/40 mb-3 px-1" style={{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.08em' }}>
+              <p className="text-ui-secondary mb-3 px-1" style={{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.08em' }}>
                 {t('focus_select_duration')}
               </p>
               <div className="grid grid-cols-4 gap-2.5 mb-5">
@@ -376,10 +376,10 @@ export function FocusTimerPage() {
                           : 'bg-white/[0.04] border border-white/[0.06]'
                       }`}
                     >
-                      <span className={isSelected ? 'text-white' : 'text-white/60'} style={{ fontSize: '1.125rem', fontWeight: 600 }}>
+                      <span className={isSelected ? 'text-foreground' : 'text-muted-foreground'} style={{ fontSize: '1.125rem', fontWeight: 600 }}>
                         {mins}
                       </span>
-                      <span className="text-white/30" style={{ fontSize: '0.625rem' }}>min</span>
+                      <span className="text-ui-tertiary" style={{ fontSize: '0.625rem' }}>min</span>
                     </motion.button>
                   );
                 })}
@@ -392,7 +392,7 @@ export function FocusTimerPage() {
                   onChange={(e) => setTag(e.target.value)}
                   placeholder={t('focus_tag_placeholder')}
                   maxLength={60}
-                  className="w-full h-12 rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 text-white placeholder:text-white/20 outline-none focus:border-[#6c5ce7]/40 transition-colors"
+                  className="w-full h-12 rounded-xl bg-ui-button border border-ui-button px-4 text-foreground placeholder:text-ui-tertiary outline-none focus:border-[#6c5ce7]/40 transition-colors"
                   style={{ fontSize: '0.9375rem' }}
                 />
               </div>
@@ -422,7 +422,7 @@ export function FocusTimerPage() {
                 <div className="text-center mb-5">
                   <GlassCard padding="sm" className="inline-flex items-center gap-2 px-4">
                     <Target className="w-3.5 h-3.5 text-[#a29bfe]" />
-                    <span className="text-white/50" style={{ fontSize: '0.8125rem' }}>{tag}</span>
+                    <span className="text-muted-foreground" style={{ fontSize: '0.8125rem' }}>{tag}</span>
                   </GlassCard>
                 </div>
               )}

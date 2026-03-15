@@ -269,13 +269,13 @@ export function JournalPage() {
         {/* Search */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="mb-4">
           <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-ui-tertiary" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t('journal_search')}
-              className="w-full h-11 rounded-xl bg-white/[0.04] border border-white/[0.06] pl-10 pr-4 text-white placeholder:text-white/20 outline-none focus:border-[#6c5ce7]/40 transition-colors"
+              className="w-full h-11 rounded-xl bg-ui-button border border-ui-button pl-10 pr-4 text-foreground placeholder:text-ui-tertiary outline-none focus:border-[#6c5ce7]/40 transition-colors"
               style={{ fontSize: '0.875rem' }}
             />
           </div>
@@ -292,8 +292,8 @@ export function JournalPage() {
                 onClick={() => { hapticFeedback('light'); setTypeFilter(f); }}
                 className={`shrink-0 px-4 py-1.5 rounded-full transition-all ${
                   isActive
-                    ? 'bg-[#6c5ce7]/20 border border-[#6c5ce7]/40 text-white'
-                    : 'bg-white/[0.04] border border-white/[0.06] text-white/40'
+                    ? 'bg-[#6c5ce7]/20 border border-[#6c5ce7]/40 text-foreground'
+                    : 'bg-ui-button border border-ui-button text-muted-foreground'
                 }`}
                 style={{ fontSize: '0.8125rem', fontWeight: isActive ? 600 : 400 }}
               >
@@ -306,19 +306,19 @@ export function JournalPage() {
         {/* Notes list grouped by date */}
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 text-white/20 animate-spin" />
+            <Loader2 className="w-6 h-6 text-ui-tertiary animate-spin" />
           </div>
         ) : notes.length === 0 ? (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16">
-            <BookOpen className="w-10 h-10 text-white/10 mx-auto mb-3" />
-            <p className="text-white/30" style={{ fontSize: '0.9375rem', fontWeight: 500 }}>{t('journal_empty')}</p>
-            <p className="text-white/15 mt-1" style={{ fontSize: '0.8125rem' }}>{t('journal_empty_desc')}</p>
+            <BookOpen className="w-10 h-10 text-ui-tertiary mx-auto mb-3" />
+            <p className="text-ui-secondary" style={{ fontSize: '0.9375rem', fontWeight: 500 }}>{t('journal_empty')}</p>
+            <p className="text-ui-tertiary mt-1" style={{ fontSize: '0.8125rem' }}>{t('journal_empty_desc')}</p>
           </motion.div>
         ) : (
           <div className="space-y-6">
             {grouped.map(({ label, items }) => (
               <div key={label}>
-                <p className="text-white/30 mb-2 px-1" style={{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.06em' }}>
+                <p className="text-ui-tertiary mb-2 px-1" style={{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.06em' }}>
                   {label.toUpperCase()}
                 </p>
                 <div className="space-y-2">
@@ -362,9 +362,9 @@ export function JournalPage() {
               className="w-full max-w-lg rounded-t-3xl bg-liquid-glass glass-sheet glass-sheet-bottom p-6 pb-10 max-h-[90vh] overflow-y-auto"
             >
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-white" style={{ fontSize: '1.25rem', fontWeight: 700 }}>{t('journal_add')}</h2>
-                <button onClick={() => setShowAdd(false)} className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center">
-                  <X className="w-4 h-4 text-white/40" />
+                <h2 className="text-foreground" style={{ fontSize: '1.25rem', fontWeight: 700 }}>{t('journal_add')}</h2>
+                <button onClick={() => setShowAdd(false)} className="w-8 h-8 rounded-lg bg-ui-close flex items-center justify-center">
+                  <X className="w-4 h-4 text-ui-icon-secondary" />
                 </button>
               </div>
 
@@ -374,7 +374,7 @@ export function JournalPage() {
                 placeholder={t('journal_add_placeholder')}
                 rows={5}
                 autoFocus
-                className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] p-4 text-white placeholder:text-white/20 outline-none focus:border-[#6c5ce7]/40 transition-colors resize-none mb-3"
+                className="w-full rounded-xl bg-ui-button border border-ui-button p-4 text-foreground placeholder:text-ui-tertiary outline-none focus:border-[#6c5ce7]/40 transition-colors resize-none mb-3"
                 style={{ fontSize: '0.9375rem', lineHeight: 1.6 }}
               />
 
@@ -461,27 +461,27 @@ export function JournalPage() {
                   <div className="w-9 h-9 rounded-xl bg-[#e17055]/15 flex items-center justify-center">
                     <ListTodo className="w-5 h-5 text-[#e17055]" />
                   </div>
-                  <h2 className="text-white" style={{ fontSize: '1.125rem', fontWeight: 700 }}>{t('task_from_note')}</h2>
+                  <h2 className="text-foreground" style={{ fontSize: '1.125rem', fontWeight: 700 }}>{t('task_from_note')}</h2>
                 </div>
-                <button onClick={() => setShowTaskModal(false)} className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center">
-                  <X className="w-4 h-4 text-white/40" />
+                <button onClick={() => setShowTaskModal(false)} className="w-8 h-8 rounded-lg bg-ui-close flex items-center justify-center">
+                  <X className="w-4 h-4 text-ui-icon-secondary" />
                 </button>
               </div>
 
               {/* Note text preview / editable */}
-              <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-3.5 mb-4">
+              <div className="rounded-xl p-3.5 mb-4" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
                 <textarea
                   value={taskNoteText}
                   onChange={(e) => setTaskNoteText(e.target.value)}
                   rows={3}
-                  className="w-full bg-transparent text-white outline-none resize-none placeholder:text-white/20"
+                  className="w-full bg-transparent text-foreground outline-none resize-none placeholder:text-ui-tertiary"
                   style={{ fontSize: '0.875rem', lineHeight: 1.5 }}
                   placeholder={t('task_title')}
                 />
               </div>
 
               {/* Reminder section */}
-              <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-4 mb-5">
+              <div className="rounded-xl p-4 mb-5" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
                     {taskReminder ? (
@@ -490,8 +490,8 @@ export function JournalPage() {
                       <BellOff className="w-4 h-4 text-white/25" />
                     )}
                     <div>
-                      <p className="text-white" style={{ fontSize: '0.875rem', fontWeight: 600 }}>{t('task_reminder')}</p>
-                      <p className="text-white/30" style={{ fontSize: '0.6875rem' }}>
+                      <p className="text-foreground" style={{ fontSize: '0.875rem', fontWeight: 600 }}>{t('task_reminder')}</p>
+                      <p className="text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>
                         {taskReminder ? t('task_reminder_on') : t('task_reminder_off')}
                       </p>
                     </div>
@@ -506,7 +506,7 @@ export function JournalPage() {
                       }
                     }}
                     className={`w-12 h-7 rounded-full transition-colors flex items-center px-0.5 ${
-                      taskReminder ? 'bg-[#e17055]' : 'bg-white/[0.08]'
+                      taskReminder ? 'bg-[#e17055]' : 'bg-[var(--switch-background)]'
                     }`}
                   >
                     <motion.div
@@ -525,11 +525,11 @@ export function JournalPage() {
                       exit={{ height: 0, opacity: 0 }}
                       className="overflow-hidden"
                     >
-                      <div className="pt-4 mt-3 border-t border-white/[0.05] space-y-3">
+                      <div className="pt-4 mt-3 space-y-3" style={{ borderTop: '1px solid var(--glass-border-subtle)' }}>
                         {/* Time */}
                         <div className="flex items-center gap-3">
                           <Clock className="w-4 h-4 text-[#e17055]/60 shrink-0" />
-                          <p className="text-white/50 flex-1" style={{ fontSize: '0.8125rem' }}>{t('task_reminder_time')}</p>
+                          <p className="text-muted-foreground flex-1" style={{ fontSize: '0.8125rem' }}>{t('task_reminder_time')}</p>
                           <input
                             type="time"
                             value={taskReminderTime}
@@ -539,7 +539,7 @@ export function JournalPage() {
                                 setTaskStartDate(computeDefaultStartDate(e.target.value));
                               }
                             }}
-                            className="h-9 px-3 rounded-lg bg-white/[0.04] border border-white/[0.08] text-white outline-none focus:border-[#e17055]/40"
+                            className="h-9 px-3 rounded-lg bg-ui-button border border-ui-button text-foreground outline-none focus:border-[#e17055]/40"
                             style={{ fontSize: '0.875rem', colorScheme: 'dark' }}
                           />
                         </div>
@@ -547,20 +547,20 @@ export function JournalPage() {
                         {/* Date */}
                         <div className="flex items-center gap-3">
                           <Clock className="w-4 h-4 text-[#e17055]/60 shrink-0" />
-                          <p className="text-white/50 flex-1" style={{ fontSize: '0.8125rem' }}>{t('task_start_date')}</p>
+                          <p className="text-muted-foreground flex-1" style={{ fontSize: '0.8125rem' }}>{t('task_start_date')}</p>
                           <input
                             type="date"
                             value={taskStartDate || computeDefaultStartDate(taskReminderTime)}
                             onChange={(e) => setTaskStartDate(e.target.value)}
                             min={new Date().toISOString().slice(0, 10)}
-                            className="h-9 px-3 rounded-lg bg-white/[0.04] border border-white/[0.08] text-white/60 outline-none focus:border-[#e17055]/40"
+                            className="h-9 px-3 rounded-lg bg-ui-button border border-ui-button text-muted-foreground outline-none focus:border-[#e17055]/40"
                             style={{ fontSize: '0.8125rem', colorScheme: 'dark' }}
                           />
                         </div>
 
                         {/* Frequency */}
                         <div>
-                          <p className="text-white/30 mb-2" style={{ fontSize: '0.6875rem', fontWeight: 600 }}>{t('task_reminder_freq')}</p>
+                          <p className="text-ui-tertiary mb-2" style={{ fontSize: '0.6875rem', fontWeight: 600 }}>{t('task_reminder_freq')}</p>
                           <div className="flex gap-2">
                             {(['daily', 'weekdays', 'once'] as const).map(f => (
                               <button
@@ -568,8 +568,8 @@ export function JournalPage() {
                                 onClick={() => { hapticFeedback('light'); setTaskFrequency(f); }}
                                 className={`px-3.5 py-1.5 rounded-full transition-all ${
                                   taskFrequency === f
-                                    ? 'bg-[#e17055]/20 border border-[#e17055]/40 text-white'
-                                    : 'bg-white/[0.04] border border-white/[0.06] text-white/40'
+                                    ? 'bg-[#e17055]/20 border border-[#e17055]/40 text-foreground'
+                                    : 'bg-ui-button border border-ui-button text-muted-foreground'
                                 }`}
                                 style={{ fontSize: '0.75rem', fontWeight: taskFrequency === f ? 600 : 400 }}
                               >
@@ -678,7 +678,7 @@ function NoteCard({
                 {t(`note_type_${note.type}`)}
               </span>
               {note.relatedDayNumber != null && (
-                <span className="text-white/20" style={{ fontSize: '0.625rem' }}>
+                <span className="text-ui-tertiary" style={{ fontSize: '0.625rem' }}>
                   &middot; {t('journal_day_ref', { day: note.relatedDayNumber })}
                 </span>
               )}
@@ -687,13 +687,13 @@ function NoteCard({
                   <Mic className="w-3 h-3" />
                 </span>
               )}
-              <span className="text-white/15 ml-auto shrink-0" style={{ fontSize: '0.625rem' }}>
+              <span className="text-ui-tertiary ml-auto shrink-0" style={{ fontSize: '0.625rem' }}>
                 {formatTime(note.createdAt)}
               </span>
             </div>
 
             {note.contentText && (
-              <p className="text-white/70 whitespace-pre-wrap" style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
+              <p className="text-ui-icon-primary whitespace-pre-wrap" style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
                 {note.contentText.length > 200 ? note.contentText.slice(0, 200) + '...' : note.contentText}
               </p>
             )}
@@ -708,7 +708,7 @@ function NoteCard({
         </div>
 
         {/* ---- Action bar — always visible, mobile-friendly ---- */}
-        <div className="flex items-center gap-2 mt-3 pt-2.5 border-t border-white/[0.04]">
+        <div className="flex items-center gap-2 mt-3 pt-2.5" style={{ borderTop: '1px solid var(--glass-border-subtle)' }}>
           {/* Create task button */}
           {note.contentText && (
             <motion.button
@@ -750,10 +750,11 @@ function NoteCard({
                 exit={{ scale: 0.85, opacity: 0 }}
                 whileTap={{ scale: 0.93 }}
                 onClick={() => onDeleteToggle(note.id)}
-                className="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-white/[0.04] border border-white/[0.06] active:bg-white/[0.08] transition-colors"
+                className="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-ui-button active:bg-[var(--ui-button-active)] transition-colors"
+                style={{ border: '1px solid var(--glass-border-subtle)' }}
               >
-                <Trash2 className="w-3.5 h-3.5 text-white/25" />
-                <span className="text-white/25" style={{ fontSize: '0.6875rem', fontWeight: 500 }}>
+                <Trash2 className="w-3.5 h-3.5 text-ui-tertiary" />
+                <span className="text-ui-tertiary" style={{ fontSize: '0.6875rem', fontWeight: 500 }}>
                   {t('journal_delete')}
                 </span>
               </motion.button>

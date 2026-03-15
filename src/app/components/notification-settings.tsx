@@ -222,14 +222,14 @@ export function NotificationSettingsSection() {
           {isEnabled ? (
             <Bell className="w-5 h-5 text-amber-400" />
           ) : (
-            <BellOff className="w-5 h-5 text-white/30" />
+            <BellOff className="w-5 h-5 text-ui-tertiary" />
           )}
         </div>
         <div className="flex-1 text-left">
-          <p className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
+          <p className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
             {t('notif_title')}
           </p>
-          <p className="text-white/40" style={{ fontSize: '0.75rem' }}>
+          <p className="text-ui-secondary" style={{ fontSize: '0.75rem' }}>
             {isEnabled ? t('notif_active') : t('notif_disabled')}
           </p>
         </div>
@@ -238,12 +238,12 @@ export function NotificationSettingsSection() {
             <div className="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.6)]" />
           )}
           {!isEnabled && prefs && (
-            <div className="w-2.5 h-2.5 rounded-full bg-white/20" />
+            <div className="w-2.5 h-2.5 rounded-full bg-[var(--ui-text-tertiary)]" />
           )}
           {isExpanded ? (
-            <ChevronUp className="w-4 h-4 text-white/20" />
+            <ChevronUp className="w-4 h-4 text-ui-tertiary" />
           ) : (
-            <ChevronDown className="w-4 h-4 text-white/20" />
+            <ChevronDown className="w-4 h-4 text-ui-tertiary" />
           )}
         </div>
       </button>
@@ -261,7 +261,7 @@ export function NotificationSettingsSection() {
             <div className="px-2 pb-3 space-y-3">
               {/* Loading state */}
               {isLoading && !prefs && (
-                <div className="flex items-center justify-center py-4 gap-2 text-white/40">
+                <div className="flex items-center justify-center py-4 gap-2 text-ui-secondary">
                   <Loader2 className="w-4 h-4 animate-spin" />
                   <span style={{ fontSize: '0.8125rem' }}>{t('loading')}</span>
                 </div>
@@ -280,7 +280,7 @@ export function NotificationSettingsSection() {
                   />
 
                   {/* Divider */}
-                  <div className="h-px bg-white/[0.06] mx-2" />
+                  <div className="h-px bg-[var(--ui-separator)] mx-2" />
 
                   {/* Sub-preferences */}
                   <ToggleRow
@@ -326,7 +326,7 @@ export function NotificationSettingsSection() {
                       {/* Time picker row */}
                       <div className="flex items-center gap-3 py-2 px-1">
                         <Clock className="w-3.5 h-3.5 text-blue-400/60" />
-                        <span className="text-white/50" style={{ fontSize: '0.75rem' }}>
+                        <span className="text-ui-secondary" style={{ fontSize: '0.75rem' }}>
                           {t('notif_digest_time')}
                         </span>
                         <input
@@ -345,7 +345,7 @@ export function NotificationSettingsSection() {
                               setTimeout(() => setReminderTimeSaved(false), 2000);
                             }
                           }}
-                          className="bg-white/[0.06] border border-white/10 rounded-lg px-2 py-1 text-white/80 text-center outline-none focus:border-blue-400/40 transition-colors"
+                          className="bg-[var(--glass-bg-card)] border border-[var(--glass-border)] rounded-lg px-2 py-1 text-foreground/80 text-center outline-none focus:border-blue-400/40 transition-colors"
                           style={{ fontSize: '0.8125rem', width: '5.5rem', colorScheme: 'dark' }}
                         />
                         {reminderTimeSaved && (
@@ -354,12 +354,12 @@ export function NotificationSettingsSection() {
                       </div>
                       {/* Timezone indicator */}
                       <div className="flex items-center gap-2 px-1 pb-1">
-                        <Globe className="w-3 h-3 text-white/20" />
-                        <span className="text-white/25" style={{ fontSize: '0.6875rem' }}>
+                        <Globe className="w-3 h-3 text-ui-tertiary" />
+                        <span className="text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>
                           {t('notif_timezone')} {utcOffsetLabel}
                         </span>
                         <span
-                          className="text-white/15 italic"
+                          className="text-ui-tertiary italic"
                           style={{ fontSize: '0.625rem' }}
                         >
                           ({t('notif_timezone_auto')})
@@ -391,7 +391,7 @@ export function NotificationSettingsSection() {
 
               {/* Saving indicator */}
               {isSaving && (
-                <div className="flex items-center justify-center gap-1.5 text-white/30">
+                <div className="flex items-center justify-center gap-1.5 text-ui-tertiary">
                   <Loader2 className="w-3 h-3 animate-spin" />
                   <span style={{ fontSize: '0.6875rem' }}>{t('saving')}</span>
                 </div>
@@ -440,8 +440,8 @@ export function NotificationSettingsSection() {
               </button>
 
               {/* Info */}
-              <div className="rounded-xl bg-white/[0.02] p-3">
-                <p className="text-white/30" style={{ fontSize: '0.6875rem', lineHeight: 1.5 }}>
+              <div className="rounded-xl bg-[var(--glass-bg-row)] p-3">
+                <p className="text-ui-tertiary" style={{ fontSize: '0.6875rem', lineHeight: 1.5 }}>
                   {t('notif_info')}
                 </p>
               </div>
@@ -570,7 +570,7 @@ export function NotificationSettingsPage() {
                     {isEnabled ? (
                       <Bell className="w-6 h-6 text-amber-400" />
                     ) : (
-                      <BellOff className="w-6 h-6 text-white/25" />
+                      <BellOff className="w-6 h-6 text-ui-tertiary" />
                     )}
                   </div>
                   <div className="flex-1">
@@ -631,7 +631,7 @@ export function NotificationSettingsPage() {
                       disabled={!prefs.enabled}
                       onToggle={() => updatePref('dayComplete', !prefs.dayComplete)}
                     />
-                    <div className="h-px bg-white/[0.04] mx-2" />
+                    <div className="h-px bg-[var(--ui-separator)] mx-2" />
                     <ToggleRow
                       icon={Flame}
                       label={t('notif_streak')}
@@ -641,7 +641,7 @@ export function NotificationSettingsPage() {
                       disabled={!prefs.enabled}
                       onToggle={() => updatePref('streakMilestones', !prefs.streakMilestones)}
                     />
-                    <div className="h-px bg-white/[0.04] mx-2" />
+                    <div className="h-px bg-[var(--ui-separator)] mx-2" />
                     <ToggleRow
                       icon={Trophy}
                       label={t('notif_challenge')}
@@ -651,7 +651,7 @@ export function NotificationSettingsPage() {
                       disabled={!prefs.enabled}
                       onToggle={() => updatePref('challengeUpdates', !prefs.challengeUpdates)}
                     />
-                    <div className="h-px bg-white/[0.04] mx-2" />
+                    <div className="h-px bg-[var(--ui-separator)] mx-2" />
                     <ToggleRow
                       icon={Calendar}
                       label={t('notif_daily')}
@@ -673,7 +673,7 @@ export function NotificationSettingsPage() {
                       >
                         <div className="flex items-center gap-3 py-2 px-1">
                           <Clock className="w-3.5 h-3.5 text-blue-400/60" />
-                          <span className="text-white/50" style={{ fontSize: '0.75rem' }}>
+                          <span className="text-ui-secondary" style={{ fontSize: '0.75rem' }}>
                             {t('notif_digest_time')}
                           </span>
                           <input
@@ -691,7 +691,7 @@ export function NotificationSettingsPage() {
                                 setTimeout(() => setReminderTimeSaved(false), 2000);
                               }
                             }}
-                            className="bg-white/[0.06] border border-white/10 rounded-lg px-2 py-1 text-white/80 text-center outline-none focus:border-blue-400/40 transition-colors"
+                            className="bg-[var(--glass-bg-card)] border border-[var(--glass-border)] rounded-lg px-2 py-1 text-foreground/80 text-center outline-none focus:border-blue-400/40 transition-colors"
                             style={{ fontSize: '0.8125rem', width: '5.5rem', colorScheme: 'dark' }}
                           />
                           {reminderTimeSaved && (
@@ -699,18 +699,18 @@ export function NotificationSettingsPage() {
                           )}
                         </div>
                         <div className="flex items-center gap-2 px-1 pb-1">
-                          <Globe className="w-3 h-3 text-white/20" />
-                          <span className="text-white/25" style={{ fontSize: '0.6875rem' }}>
+                          <Globe className="w-3 h-3 text-ui-tertiary" />
+                          <span className="text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>
                             {t('notif_timezone')} {utcOffsetLabel}
                           </span>
-                          <span className="text-white/15 italic" style={{ fontSize: '0.625rem' }}>
+                          <span className="text-ui-tertiary italic" style={{ fontSize: '0.625rem' }}>
                             ({t('notif_timezone_auto')})
                           </span>
                         </div>
                       </motion.div>
                     )}
 
-                    <div className="h-px bg-white/[0.04] mx-2" />
+                    <div className="h-px bg-[var(--ui-separator)] mx-2" />
                     <ToggleRow
                       icon={Bot}
                       label={t('notif_coach')}
@@ -720,7 +720,7 @@ export function NotificationSettingsPage() {
                       disabled={!prefs.enabled}
                       onToggle={() => updatePref('coachTips', !prefs.coachTips)}
                     />
-                    <div className="h-px bg-white/[0.04] mx-2" />
+                    <div className="h-px bg-[var(--ui-separator)] mx-2" />
 
                     {/* Evening Summary toggle */}
                     <ToggleRow
@@ -754,10 +754,10 @@ export function NotificationSettingsPage() {
                     <Scale className="w-4 h-4 text-cyan-400" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-white/90" style={{ fontSize: '0.8125rem', fontWeight: 500 }}>
+                    <p className="text-foreground/90" style={{ fontSize: '0.8125rem', fontWeight: 500 }}>
                       {t('notif_weigh_day')}
                     </p>
-                    <p className="text-white/30" style={{ fontSize: '0.6875rem' }}>
+                    <p className="text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>
                       {t('notif_weigh_day_desc')}
                     </p>
                   </div>
@@ -776,7 +776,7 @@ export function NotificationSettingsPage() {
 
             {/* Saving indicator */}
             {isSaving && (
-              <div className="flex items-center justify-center gap-1.5 text-white/30">
+              <div className="flex items-center justify-center gap-1.5 text-ui-tertiary">
                 <Loader2 className="w-3 h-3 animate-spin" />
                 <span style={{ fontSize: '0.6875rem' }}>{t('saving')}</span>
               </div>
@@ -837,8 +837,8 @@ export function NotificationSettingsPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25 }}
             >
-              <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-4">
-                <p className="text-white/30" style={{ fontSize: '0.75rem', lineHeight: 1.6 }}>
+              <div className="rounded-xl bg-[var(--glass-bg-row)] border border-[var(--glass-border-subtle)] p-4">
+                <p className="text-ui-tertiary" style={{ fontSize: '0.75rem', lineHeight: 1.6 }}>
                   {t('notif_info')}
                 </p>
               </div>

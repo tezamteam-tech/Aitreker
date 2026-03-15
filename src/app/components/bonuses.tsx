@@ -365,7 +365,7 @@ export function BonusesPage() {
                 {/* Days left progress bar */}
                 {data.subscription.isActive && data.subscription.daysLeft <= 30 && (
                   <div className="mt-3">
-                    <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                    <div className="h-1.5 rounded-full bg-ui-progress overflow-hidden">
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${Math.min(100, (data.subscription.daysLeft / 30) * 100)}%` }}
@@ -542,7 +542,7 @@ export function BonusesPage() {
                       {t('bonus_referral_progress', { n: currentProgress })}
                     </span>
                   </div>
-                  <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden">
+                  <div className="h-2 rounded-full bg-ui-progress overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${progressPercent}%` }}
@@ -572,7 +572,8 @@ export function BonusesPage() {
                 {referralLink && (
                   <button
                     onClick={handleCopyLink}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] active:bg-white/[0.06] transition-colors"
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-ui-button active:bg-[var(--ui-button-active)] transition-colors"
+                    style={{ border: '1px solid var(--glass-border-subtle)' }}
                   >
                     <div className="flex-1 min-w-0 text-left">
                       <p className="text-muted-foreground/40 truncate" style={{ fontSize: '0.6875rem', fontFamily: 'monospace' }}>

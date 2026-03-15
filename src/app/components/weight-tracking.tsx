@@ -69,8 +69,8 @@ function CustomTooltip({ active, payload, label }: any) {
         backdropFilter: 'blur(12px)',
       }}
     >
-      <p className="text-white/50 text-xs mb-0.5">{payload[0]?.payload?.dateLabel}</p>
-      <p className="text-white font-semibold text-sm">{payload[0]?.value} {t('unit_kg')}</p>
+      <p className="text-muted-foreground text-xs mb-0.5">{payload[0]?.payload?.dateLabel}</p>
+      <p className="text-foreground font-semibold text-sm">{payload[0]?.value} {t('unit_kg')}</p>
     </div>
   );
 }
@@ -293,14 +293,14 @@ export function WeightTrackingPage() {
                 ) : stats.trend === 'up' ? (
                   <TrendingUp className="w-4 h-4 text-[#ff6b6b]" />
                 ) : (
-                  <Minus className="w-4 h-4 text-white/40" />
+                  <Minus className="w-4 h-4 text-ui-icon-secondary" />
                 )}
                 <span className={`text-sm font-medium ${
                   stats.trend === 'down'
                     ? 'text-[#00cec9]'
                     : stats.trend === 'up'
                     ? 'text-[#ff6b6b]'
-                    : 'text-white/40'
+                    : 'text-ui-secondary'
                 }`}>
                   {stats.trend === 'down' ? t('wt_trend_losing') : stats.trend === 'up' ? t('wt_trend_gaining') : t('wt_trend_stable')}
                 </span>
@@ -350,7 +350,7 @@ export function WeightTrackingPage() {
                   className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all ${
                     timeRange === r.key
                       ? 'bg-[#6c5ce7]/30 text-[#a29bfe] border border-[#6c5ce7]/30'
-                      : 'text-white/40 border border-transparent'
+                      : 'text-ui-secondary border border-transparent'
                   }`}
                 >
                   {r.label}
@@ -421,8 +421,8 @@ export function WeightTrackingPage() {
             <div className="h-[200px] flex items-center justify-center">
               <div className="text-center">
                 <Scale className="w-10 h-10 text-[#6c5ce7]/30 mx-auto mb-3" />
-                <p className="text-white/40 text-sm">{chartData[0].weight} {t('unit_kg')}</p>
-                <p className="text-white/20 text-xs mt-1">
+                <p className="text-ui-secondary text-sm">{chartData[0].weight} {t('unit_kg')}</p>
+                <p className="text-ui-tertiary text-xs mt-1">
                   {t('weight_need_more')}
                 </p>
               </div>
@@ -430,11 +430,11 @@ export function WeightTrackingPage() {
           ) : (
             <div className="h-[200px] flex items-center justify-center">
               <div className="text-center">
-                <Scale className="w-10 h-10 text-white/10 mx-auto mb-3" />
-                <p className="text-white/30 text-sm">
+                <Scale className="w-10 h-10 text-ui-tertiary mx-auto mb-3" />
+                <p className="text-ui-secondary text-sm">
                   {t('weight_no_data')}
                 </p>
-                <p className="text-white/20 text-xs mt-1">
+                <p className="text-ui-tertiary text-xs mt-1">
                   {t('weight_log_first')}
                 </p>
               </div>
