@@ -265,25 +265,24 @@ export function ScanFoodPage() {
               {!imageData ? (
                 <div className="flex-1 flex flex-col items-center justify-center">
                   <motion.div
-                    initial={{ scale: 0.9, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ delay: 0.1 }}
+                    animate={{ scale: [1, 1.05, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
                     className="w-32 h-32 rounded-[2rem] bg-white/[0.04] border-2 border-dashed border-white/[0.12] flex items-center justify-center mb-6"
                   >
-                    <Camera className="w-12 h-12 text-white/20" />
+                    <Camera className="w-12 h-12 text-ui-icon-tertiary" />
                   </motion.div>
 
                   <h2
-                    className="text-white mb-2 text-center"
+                    className="text-foreground mb-2 text-center"
                     style={{ fontSize: '1.375rem', fontWeight: 700 }}
                   >
-                    {t('scan_take_photo')}
+                    {t('scan_title')}
                   </h2>
                   <p
-                    className="text-white/40 text-center max-w-[280px] mb-8"
+                    className="text-muted-foreground text-center max-w-[280px] mb-8"
                     style={{ fontSize: '0.875rem', lineHeight: 1.5 }}
                   >
-                    {t('scan_ai_desc')}
+                    {t('scan_desc')}
                   </p>
 
                   <div className="w-full space-y-3 max-w-[320px]">

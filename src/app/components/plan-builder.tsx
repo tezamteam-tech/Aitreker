@@ -253,8 +253,8 @@ export function PlanBuilderPage() {
         <PageHeader
           title={t('pb_title')}
           actions={
-            <button onClick={() => { hapticFeedback('light'); navigate('/plan-history'); }} className="relative w-10 h-10 rounded-xl bg-white/[0.06] flex items-center justify-center">
-              <History className="w-5 h-5 text-white/40" />
+            <button onClick={() => { hapticFeedback('light'); navigate('/plan-history'); }} className="relative w-10 h-10 rounded-xl bg-ui-button border border-ui-button flex items-center justify-center">
+              <History className="w-5 h-5 text-ui-icon-secondary" />
               {draftsCount > 0 && (
                 <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#e17055] text-white flex items-center justify-center" style={{ fontSize: '0.625rem', fontWeight: 700 }}>
                   {draftsCount}
@@ -276,11 +276,11 @@ export function PlanBuilderPage() {
 
               {/* Duration selector */}
               <div>
-                <label className="block text-white/50 mb-2" style={{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.08em' }}>{t('pb_duration_label')}</label>
+                <label className="block text-muted-foreground mb-2" style={{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.08em' }}>{t('pb_duration_label')}</label>
                 <div className="grid grid-cols-3 gap-2">
                   {DURATIONS.map((d) => (
                     <button key={d} onClick={() => { hapticFeedback('light'); setDurationDays(d); }}
-                      className={`py-3 rounded-xl border flex flex-col items-center gap-1 transition-all ${durationDays === d ? 'bg-[#6c5ce7]/15 border-[#6c5ce7]/40 text-white' : 'bg-white/[0.03] border-white/[0.06] text-white/50'}`}>
+                      className={`py-3 rounded-xl border flex flex-col items-center gap-1 transition-all ${durationDays === d ? 'bg-[#6c5ce7]/15 border-[#6c5ce7]/40 text-foreground' : 'bg-ui-button border-ui-button text-ui-text-secondary'}`}>
                       <span style={{ fontSize: '1.25rem', fontWeight: 700 }}>{d}</span>
                       <span style={{ fontSize: '0.6875rem' }}>{t(`pb_${d}d_desc`)}</span>
                     </button>
@@ -290,26 +290,26 @@ export function PlanBuilderPage() {
 
               {/* Situation */}
               <div>
-                <label className="block text-white/50 mb-2" style={{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.08em' }}>{t('pb_situation_label')}</label>
+                <label className="block text-muted-foreground mb-2" style={{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.08em' }}>{t('pb_situation_label')}</label>
                 <textarea value={userText} onChange={(e) => setUserText(e.target.value)} placeholder={t('pb_situation_placeholder')} rows={5} maxLength={2000}
-                  className="w-full rounded-2xl bg-white/[0.04] border border-white/[0.08] px-4 py-3 text-white placeholder-white/20 resize-none focus:outline-none focus:border-[#6c5ce7]/40 transition-colors" style={{ fontSize: '0.9375rem', lineHeight: 1.6 }} />
+                  className="w-full rounded-2xl ui-input border px-4 py-3 resize-none focus:outline-none focus:border-[#6c5ce7]/40 transition-colors" style={{ fontSize: '0.9375rem', lineHeight: 1.6 }} />
                 <div className="flex items-center justify-between mt-1">
                   <VoiceInput
                     onTranscript={(text) => setUserText((prev) => prev ? prev + ' ' + text : text)}
                     language={lang}
                     size="sm"
                   />
-                  <p className="text-white/20" style={{ fontSize: '0.6875rem' }}>{userText.length}/2000</p>
+                  <p className="text-ui-text-tertiary" style={{ fontSize: '0.6875rem' }}>{userText.length}/2000</p>
                 </div>
               </div>
 
               {/* Time per day */}
               <div>
-                <label className="block text-white/50 mb-2" style={{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.08em' }}>{t('pb_time_label')}</label>
+                <label className="block text-muted-foreground mb-2" style={{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.08em' }}>{t('pb_time_label')}</label>
                 <div className="flex gap-2">
                   {TIME_OPTIONS.map((m) => (
                     <button key={m} onClick={() => { hapticFeedback('light'); setTimePerDay(m); }}
-                      className={`flex-1 py-2.5 rounded-xl border text-center transition-all ${timePerDay === m ? 'bg-[#6c5ce7]/15 border-[#6c5ce7]/40 text-white' : 'bg-white/[0.03] border-white/[0.06] text-white/50'}`} style={{ fontSize: '0.8125rem', fontWeight: 500 }}>
+                      className={`flex-1 py-2.5 rounded-xl border text-center transition-all ${timePerDay === m ? 'bg-[#6c5ce7]/15 border-[#6c5ce7]/40 text-foreground' : 'bg-ui-button border-ui-button text-ui-text-secondary'}`} style={{ fontSize: '0.8125rem', fontWeight: 500 }}>
                       {t(`pb_time_${m}`)}
                     </button>
                   ))}
@@ -318,13 +318,13 @@ export function PlanBuilderPage() {
 
               {/* Preferred time */}
               <div>
-                <label className="block text-white/50 mb-2" style={{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.08em' }}>{t('pb_preferred_time_label')}</label>
+                <label className="block text-muted-foreground mb-2" style={{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.08em' }}>{t('pb_preferred_time_label')}</label>
                 <div className="grid grid-cols-4 gap-2">
                   {PREFERRED_TIMES.map((pt) => {
                     const Icon = PREFERRED_TIME_ICONS[pt];
                     return (
                       <button key={pt} onClick={() => { hapticFeedback('light'); setPreferredTime(pt); }}
-                        className={`py-2.5 rounded-xl border flex flex-col items-center gap-1.5 transition-all ${preferredTime === pt ? 'bg-[#6c5ce7]/15 border-[#6c5ce7]/40 text-white' : 'bg-white/[0.03] border-white/[0.06] text-white/50'}`}>
+                        className={`py-2.5 rounded-xl border flex flex-col items-center gap-1.5 transition-all ${preferredTime === pt ? 'bg-[#6c5ce7]/15 border-[#6c5ce7]/40 text-foreground' : 'bg-ui-button border-ui-button text-ui-text-secondary'}`}>
                         <Icon className="w-4 h-4" />
                         <span style={{ fontSize: '0.6875rem', fontWeight: 500 }}>{t(`pb_${pt === 'day' ? 'day' : pt === 'morning' ? 'morning' : pt === 'evening' ? 'evening' : 'any_time'}`)}</span>
                       </button>
@@ -335,11 +335,11 @@ export function PlanBuilderPage() {
 
               {/* Schedule */}
               <div>
-                <label className="block text-white/50 mb-2" style={{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.08em' }}>{t('pb_schedule_label')}</label>
+                <label className="block text-muted-foreground mb-2" style={{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.08em' }}>{t('pb_schedule_label')}</label>
                 <div className="flex gap-2">
                   {SCHEDULES.map((s) => (
                     <button key={s} onClick={() => { hapticFeedback('light'); setSchedule(s); }}
-                      className={`flex-1 py-2.5 rounded-xl border text-center transition-all ${schedule === s ? 'bg-[#6c5ce7]/15 border-[#6c5ce7]/40 text-white' : 'bg-white/[0.03] border-white/[0.06] text-white/50'}`} style={{ fontSize: '0.8125rem', fontWeight: 500 }}>
+                      className={`flex-1 py-2.5 rounded-xl border text-center transition-all ${schedule === s ? 'bg-[#6c5ce7]/15 border-[#6c5ce7]/40 text-foreground' : 'bg-ui-button border-ui-button text-ui-text-secondary'}`} style={{ fontSize: '0.8125rem', fontWeight: 500 }}>
                       {t(`pb_${s}`)}
                     </button>
                   ))}
@@ -348,11 +348,11 @@ export function PlanBuilderPage() {
 
               {/* Generate */}
               <motion.button whileTap={{ scale: 0.97 }} onClick={handleGenerate} disabled={!canGenerate}
-                className={`w-full h-14 rounded-2xl flex items-center justify-center gap-2.5 transition-all ${canGenerate ? 'bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe] text-white shadow-lg' : 'bg-white/[0.04] text-white/20'}`}
+                className={`w-full h-14 rounded-2xl flex items-center justify-center gap-2.5 transition-all ${canGenerate ? 'bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe] text-white shadow-lg' : 'bg-ui-button text-ui-text-tertiary'}`}
                 style={{ fontSize: '1.0625rem', fontWeight: 600, boxShadow: canGenerate ? '0 8px 32px rgba(108,92,231,0.3)' : 'none' }}>
                 <Sparkles className="w-5 h-5" />{t('pb_generate')}
               </motion.button>
-              {!canGenerate && userText.length > 0 && <p className="text-center text-white/25" style={{ fontSize: '0.75rem' }}>{t('pb_min_text')}</p>}
+              {!canGenerate && userText.length > 0 && <p className="text-center text-ui-text-tertiary" style={{ fontSize: '0.75rem' }}>{t('pb_min_text')}</p>}
             </motion.div>
           )}
 
@@ -364,15 +364,15 @@ export function PlanBuilderPage() {
                 transition={{ duration: 2, repeat: Infinity }}>
                 <Brain className="w-10 h-10 text-[#a29bfe]" />
               </motion.div>
-              <h2 className="text-white text-lg font-semibold mb-3">{t('pb_generating')}</h2>
+              <h2 className="text-foreground text-lg font-semibold mb-3">{t('pb_generating')}</h2>
               <AnimatePresence mode="wait">
-                <motion.p key={loadingStep} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="text-white/40 text-sm text-center">
+                <motion.p key={loadingStep} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="text-muted-foreground text-sm text-center">
                   {loadingSteps[loadingStep]}
                 </motion.p>
               </AnimatePresence>
               <div className="flex gap-2 mt-6">
                 {loadingSteps.map((_, i) => (
-                  <motion.div key={i} className={`w-2 h-2 rounded-full ${i <= loadingStep ? 'bg-[#6c5ce7]' : 'bg-white/10'}`}
+                  <motion.div key={i} className={`w-2 h-2 rounded-full ${i <= loadingStep ? 'bg-[#6c5ce7]' : 'bg-ui-progress'}`}
                     animate={i === loadingStep ? { scale: [1, 1.4, 1] } : {}} transition={{ duration: 0.6, repeat: i === loadingStep ? Infinity : 0 }} />
                 ))}
               </div>
