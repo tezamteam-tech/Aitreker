@@ -111,6 +111,7 @@ export const SEED_USER: User = {
   xp: 42,
   dailyReminderTime: null,
   utcOffset: null,
+  weighInDay: null,
   activeProgramId: null,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),

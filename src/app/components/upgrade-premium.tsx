@@ -24,7 +24,6 @@ import {
   Shield,
   Gift,
   Send,
-  ArrowLeft,
   Infinity,
   RotateCcw,
   CalendarDays,
@@ -38,8 +37,10 @@ import {
 import { GlassCard } from './glass-card';
 import { useAuth } from './auth-context';
 import { api } from './api-client';
-import { hapticFeedback, hapticSuccess, closeMiniApp } from './telegram';
+import { hapticFeedback, hapticSuccess, openTelegramLink } from './telegram';
 import { useTranslation } from './i18n';
+import { BOT_USERNAME } from './bot-config';
+import { PageHeader } from './page-header';
 
 // ---- Types ----
 type PlanId = '30' | '60' | '90';
@@ -173,15 +174,7 @@ export function UpgradePremiumPage() {
 
   return (
     <div className="min-h-screen pb-28">
-      {/* Header */}
-      <div className="sticky top-0 z-20 px-4 pt-3 pb-2" style={{ paddingTop: 'max(env(safe-area-inset-top, 12px), 12px)' }}>
-        <button
-          onClick={() => navigate(-1)}
-          className="w-9 h-9 rounded-xl bg-white/[0.06] flex items-center justify-center"
-        >
-          <ArrowLeft className="w-4 h-4 text-white/60" />
-        </button>
-      </div>
+      <PageHeader title={t('up_title')} />
 
       <div className="px-5 max-w-md mx-auto">
         {/* Hero */}
@@ -443,7 +436,7 @@ export function UpgradePremiumPage() {
                 {t('up_open_chat')}
               </p>
               <button
-                onClick={() => { try { closeMiniApp(); } catch { window.close(); } }}
+                onClick={() => openTelegramLink(`https://t.me/${BOT_USERNAME}`)}
                 className="mt-3 px-5 py-2 rounded-xl bg-green-500/20 text-green-400"
                 style={{ fontSize: '0.8125rem', fontWeight: 600 }}
               >
@@ -763,15 +756,7 @@ function PremiumDashboard() {
 
   return (
     <div className="min-h-screen pb-28">
-      {/* Header */}
-      <div className="sticky top-0 z-20 px-4 pt-3 pb-2" style={{ paddingTop: 'max(env(safe-area-inset-top, 12px), 12px)' }}>
-        <button
-          onClick={() => navigate(-1)}
-          className="w-9 h-9 rounded-xl bg-white/[0.06] flex items-center justify-center"
-        >
-          <ArrowLeft className="w-4 h-4 text-white/60" />
-        </button>
-      </div>
+      <PageHeader title="Premium" />
 
       <div className="px-5 max-w-md mx-auto space-y-4">
         {/* Status Hero Card */}
@@ -1067,7 +1052,7 @@ function PremiumDashboard() {
                   {t('up_invoice_sent')}
                 </p>
                 <button
-                  onClick={() => { try { closeMiniApp(); } catch { window.close(); } }}
+                  onClick={() => openTelegramLink(`https://t.me/${BOT_USERNAME}`)}
                   className="mt-2 px-5 py-2 rounded-xl bg-green-500/20 text-green-400"
                   style={{ fontSize: '0.8125rem', fontWeight: 600 }}
                 >

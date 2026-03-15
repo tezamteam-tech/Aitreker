@@ -30,9 +30,7 @@ import {
   Clock,
   UserPlus,
   Star,
-  Gem,
   Bell,
-  Wallet,
   Bold,
   Italic,
   Underline,
@@ -229,10 +227,7 @@ function UsersSection() {
   const [notifText, setNotifText] = useState('');
   const [notifStatus, setNotifStatus] = useState<'sent' | 'error' | null>(null);
   const [notifError, setNotifError] = useState<string>('');
-  const [creditCurrency, setCreditCurrency] = useState<'stars' | 'ton'>('stars');
-  const [creditAmount, setCreditAmount] = useState('');
-  const [creditStatus, setCreditStatus] = useState<string | null>(null);
-  const [userWallet, setUserWallet] = useState<{ starsBalance: number; tonBalance: number; starsReserved: number; tonReserved: number } | null>(null);
+  // Credit wallet removed — only subscription management is available
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleteStatus, setDeleteStatus] = useState<string | null>(null);
 
@@ -291,28 +286,14 @@ function UsersSection() {
     }
   };
 
-  // Load wallet when user is selected
-  const loadUserWallet = useCallback(async (userId: string) => {
-    setUserWallet(null);
-    try {
-      const w = await api.adminGetUserWallet(userId);
-      setUserWallet(w);
-    } catch (err) {
-      console.error('[Admin] Wallet load error:', err);
-    }
-  }, []);
-
   const handleSelectUser = useCallback((user: AdminUser) => {
     hapticFeedback('light');
     setSelectedUser(user);
     setNotifText('');
     setNotifStatus(null);
-    setCreditAmount('');
-    setCreditStatus(null);
     setDeleteConfirm(false);
     setDeleteStatus(null);
-    loadUserWallet(user.id);
-  }, [loadUserWallet]);
+  }, []);
 
   const handleSendNotification = async (userId: string) => {
     if (!notifText.trim()) return;
@@ -333,32 +314,6 @@ function UsersSection() {
       console.error('[Admin] Notification error:', err);
       setNotifStatus('error');
       setNotifError(err?.message || String(err));
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleCreditWallet = async (userId: string) => {
-    const amount = parseFloat(creditAmount);
-    if (!amount || amount <= 0) return;
-    setActionLoading(true);
-    setCreditStatus(null);
-    try {
-      const res = await api.adminCreditWallet(userId, creditCurrency, amount);
-      if (res.success) {
-        hapticSuccess();
-        setCreditStatus(`OK: ${creditCurrency === 'stars' ? '★' : 'TON'} ${amount}`);
-        setCreditAmount('');
-        setUserWallet({
-          starsBalance: res.starsBalance,
-          tonBalance: res.tonBalance,
-          starsReserved: userWallet?.starsReserved || 0,
-          tonReserved: userWallet?.tonReserved || 0,
-        });
-      }
-    } catch (err) {
-      console.error('[Admin] Credit error:', err);
-      setCreditStatus('Error');
     } finally {
       setActionLoading(false);
     }
@@ -457,28 +412,40 @@ function UsersSection() {
                 className="w-full text-left"
               >
                 <GlassCard className="p-3">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    {/* Avatar */}
+                    <div className="w-10 h-10 rounded-full bg-white/[0.08] flex items-center justify-center shrink-0 overflow-hidden">
+                      {user.photoUrl ? (
+                        <img src={user.photoUrl} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <Users className="w-4 h-4 text-white/20" />
+                      )}
+                    </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="text-white truncate" style={{ fontSize: '0.875rem', fontWeight: 600 }}>
                           {user.displayName}
                         </span>
-                        {user.telegramUsername && (
-                          <span className="text-[#a29bfe] shrink-0" style={{ fontSize: '0.75rem', fontWeight: 500 }}>
-                            @{user.telegramUsername}
-                          </span>
-                        )}
                         {user.isSubscriptionActive && (
                           <Crown className="w-3.5 h-3.5 text-[#6c5ce7] shrink-0" />
                         )}
                       </div>
-                      <div className="flex items-center gap-2 mt-0.5">
+                      {user.telegramUsername && (
+                        <span className="text-[#a29bfe] block" style={{ fontSize: '0.75rem', fontWeight: 500 }}>
+                          @{user.telegramUsername}
+                        </span>
+                      )}
+                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                         <span className="text-white/20" style={{ fontSize: '0.6875rem' }}>
                           ID: {user.telegramId}
                         </span>
-                        {user.phoneNumber && (
-                          <span className="text-white/20" style={{ fontSize: '0.6875rem' }}>
-                            {user.phoneNumber}
+                        {user.height && user.weight ? (
+                          <span className="text-white/30" style={{ fontSize: '0.6875rem' }}>
+                            {user.height}{t('adm_cm')} · {user.weight}{t('adm_kg')}
+                          </span>
+                        ) : (
+                          <span className="text-white/15 italic" style={{ fontSize: '0.6875rem' }}>
+                            {t('adm_no_body_data')}
                           </span>
                         )}
                         {(user.referralCount || 0) > 0 && (
@@ -489,7 +456,7 @@ function UsersSection() {
                         )}
                       </div>
                     </div>
-                    <div className="text-right shrink-0 ml-2">
+                    <div className="text-right shrink-0 ml-1">
                       {user.isSubscriptionActive ? (
                         <span className="text-green-400" style={{ fontSize: '0.6875rem' }}>
                           {t('adm_sub_active')}
@@ -562,8 +529,15 @@ function UsersSection() {
               className="w-full max-w-md bg-liquid-glass-panel border-t border-white/[0.1] rounded-t-3xl p-5 pb-8"
               onClick={e => e.stopPropagation()}
             >
-              {/* Close button */}
-              <div className="flex items-center justify-between mb-4">
+              {/* Close button + avatar */}
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-full bg-white/[0.08] flex items-center justify-center shrink-0 overflow-hidden">
+                  {selectedUser.photoUrl ? (
+                    <img src={selectedUser.photoUrl} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <Users className="w-5 h-5 text-white/20" />
+                  )}
+                </div>
                 <div className="min-w-0 flex-1">
                   <h3 className="text-white" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
                     {selectedUser.displayName}
@@ -587,6 +561,16 @@ function UsersSection() {
                 {selectedUser.telegramUsername && <InfoRow label="Username" value={`@${selectedUser.telegramUsername}`} />}
                 {selectedUser.phoneNumber && <InfoRow label={t('adm_phone')} value={selectedUser.phoneNumber} />}
                 <InfoRow label={t('adm_language')} value={selectedUser.language?.toUpperCase() || '—'} />
+                <InfoRow
+                  label={t('adm_height')}
+                  value={selectedUser.height ? `${selectedUser.height} ${t('adm_cm')}` : '—'}
+                  color={selectedUser.height ? undefined : 'rgba(255,255,255,0.15)'}
+                />
+                <InfoRow
+                  label={t('adm_weight')}
+                  value={selectedUser.weight ? `${selectedUser.weight} ${t('adm_kg')}` : '—'}
+                  color={selectedUser.weight ? undefined : 'rgba(255,255,255,0.15)'}
+                />
                 <InfoRow label="XP" value={String(selectedUser.xp)} />
                 <InfoRow label={t('adm_referrals')} value={String(selectedUser.referralCount)} />
                 <InfoRow
@@ -605,42 +589,6 @@ function UsersSection() {
                   value={selectedUser.totalPaid ? `★ ${selectedUser.totalPaid}` : '—'}
                   color={selectedUser.totalPaid ? '#fdcb6e' : undefined}
                 />
-              </div>
-
-              {/* Wallet Info */}
-              <div className="mb-4 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-                <div className="flex items-center gap-2 mb-2">
-                  <Wallet className="w-3.5 h-3.5 text-[#a29bfe]" />
-                  <span className="text-white/40" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
-                    {t('adm_wallet')}
-                  </span>
-                </div>
-                {userWallet ? (
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <div className="text-white/30" style={{ fontSize: '0.6875rem' }}>Stars</div>
-                      <div className="flex items-center gap-1">
-                        <Star className="w-3 h-3 text-amber-400" />
-                        <span className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 700 }}>{userWallet.starsBalance}</span>
-                        {(userWallet.starsReserved || 0) > 0 && (
-                          <span className="text-amber-400/50" style={{ fontSize: '0.6875rem' }}>({userWallet.starsReserved})</span>
-                        )}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-white/30" style={{ fontSize: '0.6875rem' }}>TON</div>
-                      <div className="flex items-center gap-1">
-                        <Gem className="w-3 h-3 text-blue-400" />
-                        <span className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 700 }}>{userWallet.tonBalance}</span>
-                        {(userWallet.tonReserved || 0) > 0 && (
-                          <span className="text-blue-400/50" style={{ fontSize: '0.6875rem' }}>({userWallet.tonReserved})</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <Loader2 className="w-4 h-4 text-white/20 animate-spin" />
-                )}
               </div>
 
               {/* ---- Section: Subscription ---- */}
@@ -764,55 +712,6 @@ function UsersSection() {
                     <div className="text-sm" style={{ color: notifStatus === 'sent' ? '#00cec9' : '#e17055' }}>
                       {notifStatus === 'sent' ? t('adm_notif_sent') : t('adm_error')}
                       {notifError && <span className="ml-1">({notifError})</span>}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* ---- Section: Credit Wallet ---- */}
-              <div className="mb-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <Wallet className="w-3.5 h-3.5 text-[#a29bfe]" />
-                  <span className="text-white/40" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
-                    {t('adm_section_credit')}
-                  </span>
-                </div>
-                <div className="space-y-2">
-                  {/* Credit Wallet */}
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1 bg-white/[0.04] rounded-xl px-2 py-1.5">
-                      <input
-                        type="number"
-                        value={creditAmount}
-                        onChange={(e) => setCreditAmount(e.target.value)}
-                        className="w-14 bg-transparent text-center text-white outline-none"
-                        style={{ fontSize: '0.875rem', fontWeight: 600 }}
-                      />
-                      <select
-                        value={creditCurrency}
-                        onChange={(e) => setCreditCurrency(e.target.value as 'stars' | 'ton')}
-                        className="bg-transparent text-white/40 outline-none"
-                        style={{ fontSize: '0.875rem', fontWeight: 600 }}
-                      >
-                        <option value="stars" style={{ background: '#141420' }}>★ Stars</option>
-                        <option value="ton" style={{ background: '#141420' }}>◆ TON</option>
-                      </select>
-                    </div>
-                    <button
-                      onClick={() => handleCreditWallet(selectedUser.id)}
-                      disabled={actionLoading || !creditAmount.trim()}
-                      className="py-2.5 px-3 rounded-xl bg-[#6c5ce7] text-white flex items-center justify-center gap-1.5 disabled:opacity-50"
-                      style={{ fontSize: '0.8125rem', fontWeight: 600 }}
-                    >
-                      {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wallet className="w-4 h-4" />}
-                      {t('adm_credit')}
-                    </button>
-                  </div>
-
-                  {/* Credit Status */}
-                  {creditStatus && (
-                    <div className="text-sm" style={{ color: creditStatus.startsWith('OK') ? '#00cec9' : '#e17055' }}>
-                      {creditStatus}
                     </div>
                   )}
                 </div>

@@ -55,6 +55,8 @@ import {
   notifyChallengeExpiring,
   notifyCalorieSurplus,
   notifyMorningWorkout,
+  notifyNutritionMorning,
+  notifyEveningSummary,
   getNotificationPrefs,
   setNotificationPrefs,
   computeStreak,
@@ -759,6 +761,7 @@ app.post(`${PREFIX}/auth/telegram`, async (c) => {
         xp: 0,
         dailyReminderTime: "10:00",
         utcOffset: 0,
+        weighInDay: 1,
         activeProgramId: null,
         subscriptionExpiresAt: subExpiresAt,
         referralCode,
@@ -1249,7 +1252,7 @@ app.put(`${PREFIX}/me`, async (c) => {
     }
 
     const body = await c.req.json();
-    const allowedFields = ["language", "tone", "selectedGoal", "firstName", "lastName", "dailyReminderTime", "utcOffset", "privacySettings"];
+    const allowedFields = ["language", "tone", "selectedGoal", "firstName", "lastName", "dailyReminderTime", "utcOffset", "privacySettings", "weighInDay"];
 
     for (const field of allowedFields) {
       if (body[field] !== undefined) {
@@ -3961,6 +3964,11 @@ app.get(`${PREFIX}/notifications/daily-digest`, async (c) => {
         const userDedupKey = `become:cron:digest:${user.id}:${today}`;
         const alreadySent = await kv.get(userDedupKey);
         if (alreadySent) continue;
+
+        // Skip if nutrition morning already sent today (avoid double notifications)
+        const nutritionDedupKey = `become:cron:nutrition_morning:${user.id}:${today}`;
+        const nutritionAlreadySent = await kv.get(nutritionDedupKey);
+        if (nutritionAlreadySent) continue;
 
         // Load program and day data
         const prog = await kv.get(`become:program:${user.activeProgramId}`);
@@ -8165,15 +8173,29 @@ app.get(`${PREFIX}/cron/trigger`, async (c) => {
     const authHeader = c.req.header("Authorization") || `Bearer ${Deno.env.get("SUPABASE_ANON_KEY") || ""}`;
     const results: Record<string, any> = {};
 
+    // Primary: Smart Nutrition Morning (meal plan + workout + weekly weigh-in)
+    try {
+      const r0 = await fetch(`${baseUrl}/cron/nutrition-morning`, { headers: { Authorization: authHeader } });
+      results.nutritionMorning = await r0.json();
+    } catch (err) { results.nutritionMorning = { error: String(err) }; }
+
+    // Legacy: Strategic daily goals (for users with active strategic goals)
     try {
       const r1 = await fetch(`${baseUrl}/notifications/strategic-daily`, { headers: { Authorization: authHeader } });
       results.strategicDaily = await r1.json();
     } catch (err) { results.strategicDaily = { error: String(err) }; }
 
+    // Legacy: BECOME program daily digest (for users with activeProgramId)
     try {
       const r2 = await fetch(`${baseUrl}/notifications/daily-digest`, { headers: { Authorization: authHeader } });
       results.dailyDigest = await r2.json();
     } catch (err) { results.dailyDigest = { error: String(err) }; }
+
+    // Evening summary: daily nutrition wrap-up (calories, macros, activity)
+    try {
+      const r3 = await fetch(`${baseUrl}/cron/evening-summary`, { headers: { Authorization: authHeader } });
+      results.eveningSummary = await r3.json();
+    } catch (err) { results.eveningSummary = { error: String(err) }; }
 
     console.log("[Cron] Results:", JSON.stringify(results));
     return c.json({ success: true, timestamp: new Date().toISOString(), results });
@@ -11146,6 +11168,9 @@ app.get(`${PREFIX}/admin/users`, async (c) => {
       }
     }
 
+    // Fetch user profiles (height/weight) in batches — after filtering & pagination below
+    // (we'll do it after pagination to minimize KV calls)
+
     // Filter
     let filtered = users;
     if (search) {
@@ -11177,6 +11202,21 @@ app.get(`${PREFIX}/admin/users`, async (c) => {
     const offset = (page - 1) * limit;
     const paginated = filtered.slice(offset, offset + limit);
 
+    // Fetch user profiles (height/weight) for paginated users
+    const profileMap: Record<string, any> = {};
+    for (let i = 0; i < paginated.length; i += batchSize) {
+      const batch = paginated.slice(i, i + batchSize);
+      const profileKeys = batch.map((u: any) => `become:user_profile:${u.telegramId}`);
+      try {
+        const profiles = await kv.mget(profileKeys);
+        profiles.forEach((p: any, idx: number) => {
+          if (p && batch[idx]) {
+            profileMap[batch[idx].id] = p;
+          }
+        });
+      } catch (_) { /* non-critical */ }
+    }
+
     // Fetch payment totals for paginated users
     const paymentTotals: Record<string, number> = {};
     for (const u of paginated) {
@@ -11198,21 +11238,27 @@ app.get(`${PREFIX}/admin/users`, async (c) => {
     }
 
     return c.json({
-      users: paginated.map((u) => ({
-        id: u.id,
-        displayName: u.displayName || u.firstName || "Unknown",
-        telegramId: u.telegramId,
-        telegramUsername: u.telegramUsername,
-        phoneNumber: u.phoneNumber,
-        language: u.language,
-        subscriptionExpiresAt: u.subscriptionExpiresAt,
-        isSubscriptionActive: u.subscriptionExpiresAt ? new Date(u.subscriptionExpiresAt).getTime() > Date.now() : false,
-        referralCode: u.referralCode,
-        referralCount: u.referralCount || 0,
-        xp: u.xp || 0,
-        totalPaid: paymentTotals[u.id] || 0,
-        createdAt: u.createdAt,
-      })),
+      users: paginated.map((u) => {
+        const prof = profileMap[u.id];
+        return {
+          id: u.id,
+          displayName: u.displayName || u.firstName || "Unknown",
+          telegramId: u.telegramId,
+          telegramUsername: u.telegramUsername,
+          phoneNumber: u.phoneNumber,
+          photoUrl: u.photoUrl || null,
+          language: u.language,
+          subscriptionExpiresAt: u.subscriptionExpiresAt,
+          isSubscriptionActive: u.subscriptionExpiresAt ? new Date(u.subscriptionExpiresAt).getTime() > Date.now() : false,
+          referralCode: u.referralCode,
+          referralCount: u.referralCount || 0,
+          xp: u.xp || 0,
+          totalPaid: paymentTotals[u.id] || 0,
+          height: prof?.height || null,
+          weight: prof?.weight || null,
+          createdAt: u.createdAt,
+        };
+      }),
       total,
       page,
       limit,
@@ -11258,7 +11304,7 @@ app.post(`${PREFIX}/admin/subscription`, async (c) => {
           const lang = user.language === "ru" ? "ru" : "en";
           const text = lang === "ru"
             ? `🎁 <b>Вам выдана подписка!</b>\n\nАдминистратор выдал вам <b>${daysToAdd} дней</b> подписки.\nДействует до: <b>${new Date(user.subscriptionExpiresAt).toLocaleDateString("ru-RU")}</b>`
-            : `🎁 <b>Subscription granted!</b>\n\nAdmin granted you <b>${daysToAdd} days</b> subscription.\nValid until: <b>${new Date(user.subscriptionExpiresAt).toLocaleDateString("en-US")}</b>`;
+            : `���� <b>Subscription granted!</b>\n\nAdmin granted you <b>${daysToAdd} days</b> subscription.\nValid until: <b>${new Date(user.subscriptionExpiresAt).toLocaleDateString("en-US")}</b>`;
           await sendMessage(Number(user.telegramId), text);
         }
       } catch (_) { /* non-critical */ }
@@ -12135,23 +12181,41 @@ app.delete(`${PREFIX}/weight-log/:entryId`, async (c) => {
 });
 
 // ---- POST /weight-log/check-reminder ----
-// Check if user needs a weigh-in reminder. Sends Telegram notification
-// if they haven't logged weight today. Daily dedup via KV.
+// Weekly weigh-in reminder — ONLY on Mondays. Sends Telegram notification
+// if user hasn't logged weight this week. Weekly dedup via KV.
 app.post(`${PREFIX}/weight-log/check-reminder`, async (c) => {
   try {
     const auth = await resolveUser(c);
     if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
 
-    const today = new Date().toISOString().slice(0, 10);
-    const dedupKey = `become:weighin_reminder:${auth.userId}:${today}`;
-    
-    // Check if already sent today
-    const alreadySent = await kv.get(dedupKey);
-    if (alreadySent) {
-      return c.json({ sent: false, reason: "already_sent_today" });
+    const now = new Date();
+    const today = now.toISOString().slice(0, 10);
+
+    // Load user to check preferred weigh-in day (default 1=Monday)
+    const userData = await kv.get(`become:user:${auth.userId}`);
+    const preferredDay = userData?.weighInDay ?? 1; // 0=Sun..6=Sat, default Mon
+
+    // Calculate user's local day of week using their utcOffset
+    const userOffset = userData?.utcOffset || 0;
+    const userLocalMs = now.getTime() + userOffset * 60 * 1000;
+    const userLocalDay = new Date(userLocalMs).getUTCDay();
+
+    // Only send reminders on user's preferred weigh-in day
+    if (userLocalDay !== preferredDay) {
+      return c.json({ sent: false, reason: "not_weigh_in_day" });
     }
 
-    // Check if user has logged weight today
+    // Weekly dedup: use week number to avoid duplicate sends
+    const weekKey = `${now.getUTCFullYear()}-W${String(Math.ceil((now.getTime() - new Date(now.getUTCFullYear(), 0, 1).getTime()) / 604800000)).padStart(2, "0")}`;
+    const dedupKey = `become:weighin_reminder:${auth.userId}:${weekKey}`;
+    
+    // Check if already sent this week
+    const alreadySent = await kv.get(dedupKey);
+    if (alreadySent) {
+      return c.json({ sent: false, reason: "already_sent_this_week" });
+    }
+
+    // Check if user has logged weight today (no need to remind)
     const dateIndexKey = `become:weight_idx:${auth.userId}`;
     const dateIndex: Array<{ date: string; entryId: string }> = (await kv.get(dateIndexKey)) || [];
     const todayEntry = dateIndex.find((d: any) => d.date === today);
@@ -12183,12 +12247,12 @@ app.post(`${PREFIX}/weight-log/check-reminder`, async (c) => {
       ? Math.floor((Date.now() - new Date(lastDate).getTime()) / 86400000)
       : 0;
 
-    // Send reminder
+    // Send weekly weigh-in reminder
     const lang = user.language || "en";
     const emoji = "\u2696\uFE0F";
     const text = lang === "ru"
-      ? `${emoji} \u041D\u0435 \u0437\u0430\u0431\u0443\u0434\u044C\u0442\u0435 \u0432\u0437\u0432\u0435\u0441\u0438\u0442\u044C\u0441\u044F \u0441\u0435\u0433\u043E\u0434\u043D\u044F!\n\n${daysSinceLast > 1 ? `\u041F\u043E\u0441\u043B\u0435\u0434\u043D\u0435\u0435 \u0432\u0437\u0432\u0435\u0448\u0438\u0432\u0430\u043D\u0438\u0435: ${daysSinceLast} \u0434\u043D. \u043D\u0430\u0437\u0430\u0434.` : "\u0420\u0435\u0433\u0443\u043B\u044F\u0440\u043D\u043E\u0435 \u043E\u0442\u0441\u043B\u0435\u0436\u0438\u0432\u0430\u043D\u0438\u0435 \u043F\u043E\u043C\u043E\u0433\u0430\u0435\u0442 \u0432\u0438\u0434\u0435\u0442\u044C \u043F\u0440\u043E\u0433\u0440\u0435\u0441\u0441."}\n\n\u041E\u0442\u043A\u0440\u043E\u0439\u0442\u0435 \u043F\u0440\u0438\u043B\u043E\u0436\u0435\u043D\u0438\u0435, \u0447\u0442\u043E\u0431\u044B \u0437\u0430\u043F\u0438\u0441\u0430\u0442\u044C \u0432\u0435\u0441.`
-      : `${emoji} Don't forget to weigh in today!\n\n${daysSinceLast > 1 ? `Last weigh-in: ${daysSinceLast} days ago.` : "Regular tracking helps you see your progress."}\n\nOpen the app to log your weight.`;
+      ? `${emoji} <b>Еженедельное взвешивание!</b>\n\nПонедельник — лучший день для контроля прогресса.${daysSinceLast > 7 ? `\n\u{231A} Последнее взвешивание: ${daysSinceLast} дн. назад.` : ""}\n\nОткройте приложение, чтобы записать вес.`
+      : `${emoji} <b>Weekly weigh-in!</b>\n\nMonday is the best day to track your progress.${daysSinceLast > 7 ? `\n\u{231A} Last weigh-in: ${daysSinceLast} days ago.` : ""}\n\nOpen the app to log your weight.`;
 
     const keyboard = [[
       webAppButton(lang === "ru" ? "\uD83D\uDCCA \u0417\u0430\u043F\u0438\u0441\u0430\u0442\u044C \u0432\u0435\u0441" : "\uD83D\uDCCA Log Weight", "weight"),
@@ -12196,10 +12260,10 @@ app.post(`${PREFIX}/weight-log/check-reminder`, async (c) => {
 
     await sendMessage(user.telegramId, text, { reply_markup: { inline_keyboard: keyboard } });
 
-    // Mark as sent today
+    // Mark as sent this week
     await kv.set(dedupKey, { sentAt: new Date().toISOString() });
 
-    console.log(`[WeighIn Reminder] Sent to user ${auth.userId} (${daysSinceLast} days since last)`);
+    console.log(`[WeighIn Reminder] Weekly Monday reminder sent to user ${auth.userId} (${daysSinceLast} days since last)`);
     return c.json({ sent: true, daysSinceLast });
   } catch (err) {
     console.log("POST /weight-log/check-reminder error:", err);
@@ -13435,6 +13499,327 @@ app.post(`${PREFIX}/cron/morning-workout-reminder`, async (c) => {
     return c.json({ success: true, sent, errors, date: today });
   } catch (err) {
     console.log("POST /cron/morning-workout-reminder error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ============================================================
+// Smart Nutrition Morning Cron — PRIMARY daily notification
+// ============================================================
+// Sends each user a contextual morning message:
+// - Today's meal plan (if generated)
+// - Today's workout plan (if generated)
+// - Calorie target reminder
+// - Weekly weigh-in (Mondays only)
+// Replaces the old daily-digest for nutrition users.
+// ============================================================
+
+app.get(`${PREFIX}/cron/nutrition-morning`, async (c) => {
+  try {
+    const now = new Date();
+    const today = now.toISOString().slice(0, 10);
+    const isMonday = now.getUTCDay() === 1;
+
+    // Global dedup: prevent double-firing within same minute
+    const utcMin = `${String(now.getUTCHours()).padStart(2, "0")}:${String(now.getUTCMinutes()).padStart(2, "0")}`;
+    const globalDedupKey = `become:cron:nutrition_morning:${utcMin}`;
+    const alreadyRan = await kv.get(globalDedupKey);
+    if (alreadyRan) {
+      return c.json({ success: true, sent: 0, skipped: "already_ran_this_minute" });
+    }
+    await kv.set(globalDedupKey, { ts: now.toISOString() });
+
+    const users = await kv.getByPrefix("become:user:");
+    let sent = 0;
+    let checked = 0;
+    const errors: string[] = [];
+
+    for (const user of (users || [])) {
+      if (!user.telegramId || !user.id) continue;
+      checked++;
+
+      try {
+        // Check notification prefs
+        const prefs = await getNotificationPrefs(user.id);
+        if (!prefs.enabled || !prefs.dailyReminder) continue;
+
+        // User's preferred digest time (default "09:00")
+        const preferredTime = user.dailyReminderTime || "09:00";
+        const [prefH, prefM] = preferredTime.split(":").map(Number);
+        if (isNaN(prefH) || isNaN(prefM)) continue;
+
+        // Convert user's preferred local time to UTC using their offset
+        const userOffset = user.utcOffset || 0;
+        const prefMinutesUTC = (prefH * 60 + prefM) - userOffset;
+        const normalizedPrefUTC = ((prefMinutesUTC % 1440) + 1440) % 1440;
+        const currentMinutesUTC = now.getUTCHours() * 60 + now.getUTCMinutes();
+
+        // Check if current UTC time is within ±7 minutes of the target
+        const diff = Math.abs(currentMinutesUTC - normalizedPrefUTC);
+        const wrappedDiff = Math.min(diff, 1440 - diff);
+        if (wrappedDiff > 7) continue;
+
+        // Per-user dedup: only one notification per day
+        const userDedupKey = `become:cron:nutrition_morning:${user.id}:${today}`;
+        const alreadySent = await kv.get(userDedupKey);
+        if (alreadySent) continue;
+
+        const firstName = user.firstName || user.first_name || "Friend";
+        const calorieTarget = user.daily_calorie_target || 0;
+
+        // Load today's meal plan (latest generated plan)
+        let mealPlanSummary: { meals: Array<{ name: string; calories: number }>; totalCalories: number } | null = null;
+        try {
+          const mealPlanIndex: string[] = (await kv.get(`become:meal_plans_index:${user.id}`)) || [];
+          if (mealPlanIndex.length > 0) {
+            const latestPlan = await kv.get(`become:meal_plans:${user.id}:${mealPlanIndex[0]}`);
+            if (latestPlan?.meal_data?.days) {
+              const daysSinceCreation = Math.max(1, Math.ceil(
+                (now.getTime() - new Date(latestPlan.created_at || now).getTime()) / (24 * 60 * 60 * 1000)
+              ));
+              const dayNum = Math.min(daysSinceCreation, latestPlan.meal_data.days.length);
+              const todayMeals = latestPlan.meal_data.days.find((d: any) => d.day === dayNum)
+                || latestPlan.meal_data.days[0];
+              if (todayMeals?.meals?.length > 0) {
+                const meals = todayMeals.meals.map((m: any) => ({
+                  name: m.name || m.meal_type || "Meal",
+                  calories: m.calories || 0,
+                }));
+                const totalCalories = meals.reduce((s: number, m: any) => s + m.calories, 0);
+                mealPlanSummary = { meals, totalCalories };
+              }
+            }
+          }
+        } catch (mealErr) {
+          console.log(`[NutritionMorning] Meal plan load error for ${user.id}: ${mealErr}`);
+        }
+
+        // Load today's workout plan
+        let workoutSummary: { name: string; durationMin: number; caloriesBurn: number } | null = null;
+        try {
+          const workoutIndex: string[] = (await kv.get(`become:workout_plans_index:${user.id}`)) || [];
+          if (workoutIndex.length > 0) {
+            const latestPlan = await kv.get(`become:workout_plans:${user.id}:${workoutIndex[0]}`);
+            if (latestPlan?.workout_data?.days) {
+              const daysSinceCreation = Math.max(1, Math.ceil(
+                (now.getTime() - new Date(latestPlan.created_at || now).getTime()) / (24 * 60 * 60 * 1000)
+              ) + 1);
+              const dayNum = Math.min(daysSinceCreation, latestPlan.workout_data.days.length);
+              const todayDay = latestPlan.workout_data.days.find((d: any) => d.day === dayNum)
+                || latestPlan.workout_data.days[0];
+              if (todayDay) {
+                workoutSummary = {
+                  name: todayDay.name || todayDay.workout_type || latestPlan.workout_type || "Workout",
+                  durationMin: todayDay.duration_min || 30,
+                  caloriesBurn: todayDay.calories_burn || 200,
+                };
+              }
+            }
+          }
+        } catch (workoutErr) {
+          console.log(`[NutritionMorning] Workout plan load error for ${user.id}: ${workoutErr}`);
+        }
+
+        // Compute nutrition tracking streak (consecutive days with food entries)
+        let nutritionStreak = 0;
+        try {
+          for (let i = 1; i <= 30; i++) {
+            const dStr = new Date(now.getTime() - i * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+            const dayFood: string[] = (await kv.get(`become:food_idx:${user.id}:${dStr}`)) || [];
+            if (dayFood.length > 0) {
+              nutritionStreak++;
+            } else {
+              break;
+            }
+          }
+        } catch { /* ignore streak errors */ }
+
+        // Check if it's user's preferred weigh-in day in their local timezone
+        const userLocalMs = now.getTime() + (user.utcOffset || 0) * 60 * 1000;
+        const userLocalDay = new Date(userLocalMs).getUTCDay();
+        const preferredWeighInDay = user.weighInDay ?? 1; // default Monday
+        const isWeighInDay = userLocalDay === preferredWeighInDay;
+
+        await notifyNutritionMorning(user.id, Number(user.telegramId), {
+          firstName,
+          calorieTarget,
+          isMonday: isWeighInDay, // repurposed: now means "is weigh-in day"
+          mealPlanSummary,
+          workoutSummary,
+          nutritionStreak: nutritionStreak > 0 ? nutritionStreak : undefined,
+        });
+
+        // Mark as sent for today
+        await kv.set(userDedupKey, { sentAt: now.toISOString() });
+        sent++;
+      } catch (ue) {
+        const errMsg = `[NutritionMorning] Error for user ${user.id}: ${ue}`;
+        console.log(errMsg);
+        errors.push(errMsg);
+      }
+    }
+
+    console.log(`[Cron] Nutrition morning at ${utcMin} UTC — checked ${checked} users, sent ${sent}`);
+    return c.json({ success: true, sent, checked, utcMinute: utcMin, errors: errors.length > 0 ? errors : undefined });
+  } catch (err) {
+    console.log("GET /cron/nutrition-morning error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ============================================================
+// Evening Summary Cron — daily nutrition wrap-up
+// ============================================================
+// Sends each user a personalized evening summary with:
+// - Calories consumed vs target
+// - Macros (protein/fat/carbs)
+// - Calories burned
+// - Meals logged count, workouts count
+// Runs every 15 min — checks if it's time based on user's
+// evening time (dailyReminderTime + 10 hours, or default 21:00)
+// ============================================================
+
+app.get(`${PREFIX}/cron/evening-summary`, async (c) => {
+  try {
+    const now = new Date();
+    const today = now.toISOString().slice(0, 10);
+
+    // Global dedup
+    const utcMin = `${String(now.getUTCHours()).padStart(2, "0")}:${String(now.getUTCMinutes()).padStart(2, "0")}`;
+    const globalDedupKey = `become:cron:evening_summary:${utcMin}`;
+    const alreadyRan = await kv.get(globalDedupKey);
+    if (alreadyRan) {
+      return c.json({ success: true, sent: 0, skipped: "already_ran_this_minute" });
+    }
+    await kv.set(globalDedupKey, { ts: now.toISOString() });
+
+    const users = await kv.getByPrefix("become:user:");
+    let sent = 0;
+    let checked = 0;
+    const errors: string[] = [];
+
+    for (const user of (users || [])) {
+      if (!user.telegramId || !user.id) continue;
+      checked++;
+
+      try {
+        const prefs = await getNotificationPrefs(user.id);
+        if (!prefs.enabled || !prefs.eveningDigest) continue;
+
+        // Evening time = morning time + 10 hours (default: 09:00 + 10 = 19:00)
+        // But capped at 21:00 for user comfort
+        const morningTime = user.dailyReminderTime || "09:00";
+        const [mH, mM] = morningTime.split(":").map(Number);
+        if (isNaN(mH) || isNaN(mM)) continue;
+        const eveningH = Math.min(mH + 10, 21);
+        const eveningM = mM;
+
+        // Convert to UTC
+        const userOffset = user.utcOffset || 0;
+        const prefMinutesUTC = (eveningH * 60 + eveningM) - userOffset;
+        const normalizedPrefUTC = ((prefMinutesUTC % 1440) + 1440) % 1440;
+        const currentMinutesUTC = now.getUTCHours() * 60 + now.getUTCMinutes();
+
+        const diff = Math.abs(currentMinutesUTC - normalizedPrefUTC);
+        const wrappedDiff = Math.min(diff, 1440 - diff);
+        if (wrappedDiff > 7) continue;
+
+        // Per-user dedup
+        const userDedupKey = `become:cron:evening_summary:${user.id}:${today}`;
+        const alreadySent = await kv.get(userDedupKey);
+        if (alreadySent) continue;
+
+        const firstName = user.firstName || user.first_name || "Friend";
+        const calorieTarget = user.daily_calorie_target || 2000;
+
+        // Load today's food entries
+        let caloriesConsumed = 0;
+        let protein = 0;
+        let fat = 0;
+        let carbs = 0;
+        let mealsLogged = 0;
+
+        try {
+          const foodIdx: string[] = (await kv.get(`become:food_idx:${user.id}:${today}`)) || [];
+          mealsLogged = foodIdx.length;
+          if (foodIdx.length > 0) {
+            const foodKeys = foodIdx.map((id: string) => `become:food:${user.id}:${id}`);
+            const foodEntries = await kv.mget(foodKeys);
+            for (const entry of foodEntries) {
+              if (!entry) continue;
+              caloriesConsumed += entry.calories || 0;
+              protein += entry.protein || 0;
+              fat += entry.fat || 0;
+              carbs += entry.carbs || 0;
+            }
+          }
+        } catch (foodErr) {
+          console.log(`[EveningSummary] Food load error for ${user.id}: ${foodErr}`);
+        }
+
+        // Load today's burned calories (smartburn + workout)
+        let caloriesBurned = 0;
+        let workoutsCompleted = 0;
+        try {
+          const sbTotals = await kv.get(`become:smartburn_totals:${user.id}:${today}`);
+          if (sbTotals?.totalCalories) caloriesBurned += sbTotals.totalCalories;
+          if (sbTotals?.count) workoutsCompleted += sbTotals.count;
+
+          const wLog = await kv.get(`become:workout_log:${user.id}:${today}`);
+          if (wLog?.caloriesBurned) {
+            caloriesBurned += wLog.caloriesBurned;
+            workoutsCompleted++;
+          }
+        } catch { /* ignore */ }
+
+        // Skip if absolutely no data (no meals, no workouts)
+        // But still send to users who have at least some history — encourages consistency
+        if (mealsLogged === 0 && workoutsCompleted === 0) {
+          // Only send "no data" message if user has been tracking before (has food history)
+          const hasHistory = await kv.get(`become:food_idx:${user.id}:${new Date(now.getTime() - 86400000).toISOString().slice(0, 10)}`);
+          if (!hasHistory || (hasHistory as string[]).length === 0) continue;
+        }
+
+        // Compute nutrition streak
+        let nutritionStreak = 0;
+        try {
+          for (let i = 0; i <= 30; i++) {
+            const dStr = i === 0 ? today : new Date(now.getTime() - i * 86400000).toISOString().slice(0, 10);
+            const dayFood: string[] = (await kv.get(`become:food_idx:${user.id}:${dStr}`)) || [];
+            if (dayFood.length > 0) {
+              nutritionStreak++;
+            } else if (i > 0) {
+              break;
+            }
+          }
+        } catch { /* ignore */ }
+
+        await notifyEveningSummary(user.id, Number(user.telegramId), {
+          firstName,
+          calorieTarget,
+          caloriesConsumed: Math.round(caloriesConsumed),
+          caloriesBurned: Math.round(caloriesBurned),
+          protein: Math.round(protein),
+          fat: Math.round(fat),
+          carbs: Math.round(carbs),
+          mealsLogged,
+          workoutsCompleted,
+          nutritionStreak,
+        });
+
+        await kv.set(userDedupKey, { sentAt: now.toISOString() });
+        sent++;
+      } catch (ue) {
+        const errMsg = `[EveningSummary] Error for user ${user.id}: ${ue}`;
+        console.log(errMsg);
+        errors.push(errMsg);
+      }
+    }
+
+    console.log(`[Cron] Evening summary at ${utcMin} UTC — checked ${checked} users, sent ${sent}`);
+    return c.json({ success: true, sent, checked, utcMinute: utcMin, errors: errors.length > 0 ? errors : undefined });
+  } catch (err) {
+    console.log("GET /cron/evening-summary error:", err);
     return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
   }
 });

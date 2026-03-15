@@ -18,6 +18,7 @@ export interface User {
   xp: number;
   dailyReminderTime: string | null; // HH:MM local time, default "09:00"
   utcOffset: number | null; // minutes, e.g. 180 for UTC+3
+  weighInDay: number | null; // 0=Sun, 1=Mon(default), ..., 6=Sat
   activeProgramId: string | null;
   subscriptionExpiresAt: string | null;
   referralCode: string | null;

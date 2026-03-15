@@ -14,6 +14,8 @@ import {
   Send,
   Clock,
   Globe,
+  Moon,
+  Scale,
 } from 'lucide-react';
 import { GlassCard } from './glass-card';
 import { api, type NotificationPrefs } from './api-client';
@@ -21,6 +23,37 @@ import { hapticFeedback } from './telegram';
 import { useTranslation } from './i18n';
 import { useAuth } from './auth-context';
 import { PageHeader } from './page-header';
+
+const DAY_KEYS = ['day_sun', 'day_mon', 'day_tue', 'day_wed', 'day_thu', 'day_fri', 'day_sat'] as const;
+
+function WeighInDayPicker({ value, onChange, t, disabled }: {
+  value: number;
+  onChange: (day: number) => void;
+  t: (key: string) => string;
+  disabled?: boolean;
+}) {
+  return (
+    <div className={`flex gap-1.5 ${disabled ? 'opacity-40 pointer-events-none' : ''}`}>
+      {DAY_KEYS.map((key, idx) => (
+        <button
+          key={key}
+          onClick={() => {
+            hapticFeedback('light');
+            onChange(idx);
+          }}
+          className={`flex-1 py-1.5 rounded-lg text-center transition-all ${
+            idx === value
+              ? 'bg-cyan-500/25 text-cyan-300 border border-cyan-500/30'
+              : 'bg-white/[0.04] text-white/30 border border-transparent'
+          }`}
+          style={{ fontSize: '0.6875rem', fontWeight: idx === value ? 600 : 400 }}
+        >
+          {t(key)}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 interface ToggleRowProps {
   icon: React.ElementType;
@@ -343,6 +376,15 @@ export function NotificationSettingsSection() {
                     enabled={prefs.coachTips}
                     disabled={!prefs.enabled}
                     onToggle={() => updatePref('coachTips', !prefs.coachTips)}
+                  />
+                  <ToggleRow
+                    icon={Moon}
+                    label={t('notif_evening')}
+                    description={t('notif_evening_desc')}
+                    color="text-indigo-400"
+                    enabled={prefs.eveningDigest}
+                    disabled={!prefs.enabled}
+                    onToggle={() => updatePref('eveningDigest', !prefs.eveningDigest)}
                   />
                 </div>
               )}
@@ -678,8 +720,57 @@ export function NotificationSettingsPage() {
                       disabled={!prefs.enabled}
                       onToggle={() => updatePref('coachTips', !prefs.coachTips)}
                     />
+                    <div className="h-px bg-white/[0.04] mx-2" />
+
+                    {/* Evening Summary toggle */}
+                    <ToggleRow
+                      icon={Moon}
+                      label={t('notif_evening')}
+                      description={t('notif_evening_desc')}
+                      color="text-indigo-400"
+                      enabled={prefs.eveningDigest}
+                      disabled={!prefs.enabled}
+                      onToggle={() => updatePref('eveningDigest', !prefs.eveningDigest)}
+                    />
                   </div>
                 )}
+              </GlassCard>
+            </motion.div>
+
+            {/* Weigh-in Day Selector */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <div className="flex items-center gap-2 mb-2.5 px-1">
+                <span className="text-muted-foreground/40" style={{ fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                  {t('notif_weigh_day')}
+                </span>
+              </div>
+              <GlassCard className="!p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-cyan-500/10">
+                    <Scale className="w-4 h-4 text-cyan-400" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-white/90" style={{ fontSize: '0.8125rem', fontWeight: 500 }}>
+                      {t('notif_weigh_day')}
+                    </p>
+                    <p className="text-white/30" style={{ fontSize: '0.6875rem' }}>
+                      {t('notif_weigh_day_desc')}
+                    </p>
+                  </div>
+                </div>
+                <WeighInDayPicker
+                  value={user?.weighInDay ?? 1}
+                  onChange={(day) => {
+                    hapticFeedback('medium');
+                    updateUser({ weighInDay: day } as any);
+                  }}
+                  t={t}
+                  disabled={!prefs?.enabled || !prefs?.dailyReminder}
+                />
               </GlassCard>
             </motion.div>
 

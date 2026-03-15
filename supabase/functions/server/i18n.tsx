@@ -538,37 +538,81 @@ const translations: Record<string, Record<Lang, string>> = {
     en: "\u{2795} Create Plan",
     ru: "\u{2795} Создать план",
   },
+
+  // === Smart Nutrition Morning Reminder ===
+  notif_nutrition_morning_greetings: {
+    en: "Good morning!|Rise and shine!|New day, new goals!|Let's eat smart today!|Ready for a great day?",
+    ru: "Доброе утро!|Новый день!|Отличного дня!|Питаемся правильно!|Готовы к новому дню?",
+  },
+  notif_nutrition_morning_calorie_target: {
+    en: "\u{1F3AF} Your calorie target: <b>{target} kcal</b>",
+    ru: "\u{1F3AF} Ваша цель: <b>{target} ккал</b>",
+  },
+  notif_nutrition_morning_meal_header: {
+    en: "\u{1F372} <b>Today's meal plan:</b>",
+    ru: "\u{1F372} <b>План питания на сегодня:</b>",
+  },
+  notif_nutrition_morning_workout_header: {
+    en: "\u{1F3CB}\u{FE0F} <b>Today's workout:</b>",
+    ru: "\u{1F3CB}\u{FE0F} <b>Тренировка на сегодня:</b>",
+  },
+  notif_nutrition_morning_no_plans: {
+    en: "Open the app to scan meals and track your calories today!",
+    ru: "Откройте приложение, чтобы сканировать еду и отслеживать калории!",
+  },
+  notif_nutrition_morning_weigh_in: {
+    en: "\n\u{2696}\u{FE0F} <b>Weekly weigh-in!</b> Monday is the best day to track your progress. Log your weight today.",
+    ru: "\n\u{2696}\u{FE0F} <b>Еженедельное взвешивание!</b> Понедельник — лучший день для контроля прогресса. Запишите вес сегодня.",
+  },
+  btn_open_nutrition: {
+    en: "\u{1F4F1} Open Proper Food AI",
+    ru: "\u{1F4F1} Открыть Proper Food AI",
+  },
+
+  // === Evening Summary Notification ===
+  notif_evening_greetings: {
+    en: "Good evening|Day's wrapping up|Almost done for today|Time to review|End of day",
+    ru: "Добрый вечер|День подходит к концу|Подводим итоги|Время обзора|Конец дня",
+  },
+  notif_evening_summary_header: {
+    en: "\u{1F4CB} <b>Your daily nutrition summary:</b>",
+    ru: "\u{1F4CB} <b>Итоги питания за день:</b>",
+  },
+  notif_evening_no_data: {
+    en: "\u{1F4AD} You didn't log any meals today. Try to track tomorrow — it really helps!",
+    ru: "\u{1F4AD} Сегодня вы не записали ни одного приёма пищи. Попробуйте завтра — это правда помогает!",
+  },
+  notif_evening_over: {
+    en: "\u{1F4AA} You went a bit over your target today. No worries — tomorrow is a fresh start!",
+    ru: "\u{1F4AA} Сегодня немного превысили норму. Ничего — завтра новый день!",
+  },
+  notif_evening_good: {
+    en: "\u{2705} Great job staying within your calorie target today! Keep it up!",
+    ru: "\u{2705} Отличная работа — уложились в норму калорий! Так держать!",
+  },
+
+  // === Weigh-in Day Selection ===
+  notif_weigh_in_day: {
+    en: "Weigh-in day",
+    ru: "День взвешивания",
+  },
+  notif_weigh_in_day_desc: {
+    en: "Weekly reminder to log your weight",
+    ru: "Еженедельное напоминание записать вес",
+  },
+  notif_evening_digest: {
+    en: "Evening summary",
+    ru: "Вечерний итог",
+  },
+  notif_evening_digest_desc: {
+    en: "Calories, macros & activity at end of day",
+    ru: "Калории, макросы и активность в конце дня",
+  },
+  day_mon: { en: "Mon", ru: "Пн" },
+  day_tue: { en: "Tue", ru: "Вт" },
+  day_wed: { en: "Wed", ru: "Ср" },
+  day_thu: { en: "Thu", ru: "Чт" },
+  day_fri: { en: "Fri", ru: "Пт" },
+  day_sat: { en: "Sat", ru: "Сб" },
+  day_sun: { en: "Sun", ru: "Вс" },
 };
-
-/**
- * Translate a key into the given language, with optional {placeholder} interpolation.
- * Falls back to English, then to the raw key if not found.
- */
-export function t(key: string, lang: Lang, vars?: Record<string, string | number>): string {
-  const entry = translations[key];
-  let str = entry?.[lang] ?? entry?.["en"] ?? key;
-  if (vars) {
-    for (const [k, v] of Object.entries(vars)) {
-      str = str.replaceAll(`{${k}}`, String(v));
-    }
-  }
-  return str;
-}
-
-/**
- * Resolve the user's preferred language from KV store.
- * Looks up `become:user:{userId}` → `.language`, falls back to "en".
- * Accepts a KV-like object with a `get` method.
- */
-export async function getUserLang(
-  userId: string,
-  kvStore: { get: (key: string) => Promise<any> },
-): Promise<Lang> {
-  try {
-    const user = await kvStore.get(`become:user:${userId}`);
-    if (user?.language) return detectLang(user.language);
-  } catch {
-    // fallback
-  }
-  return "en";
-}

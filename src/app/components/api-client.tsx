@@ -1643,6 +1643,7 @@ export interface NotificationPrefs {
   streakMilestones: boolean;
   challengeUpdates: boolean;
   dailyReminder: boolean;
+  eveningDigest: boolean;
   coachTips: boolean;
 }
 
@@ -1886,6 +1887,7 @@ export interface AdminUser {
   telegramId: string;
   telegramUsername: string | null;
   phoneNumber: string | null;
+  photoUrl: string | null;
   language: string;
   subscriptionExpiresAt: string | null;
   isSubscriptionActive: boolean;
@@ -1893,6 +1895,8 @@ export interface AdminUser {
   referralCount: number;
   xp: number;
   totalPaid: number;
+  height: number | null;
+  weight: number | null;
   createdAt: string;
 }
 

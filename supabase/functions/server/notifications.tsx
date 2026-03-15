@@ -32,6 +32,7 @@ export interface NotificationPrefs {
   streakMilestones: boolean; // 3, 5, 7 day streaks
   challengeUpdates: boolean; // someone joined your challenge, etc.
   dailyReminder: boolean; // morning reminder
+  eveningDigest: boolean; // evening summary with calories/macros
   coachTips: boolean; // periodic coach tips
 }
 
@@ -41,6 +42,7 @@ const DEFAULT_PREFS: NotificationPrefs = {
   streakMilestones: true,
   challengeUpdates: true,
   dailyReminder: true,
+  eveningDigest: true,
   coachTips: true,
 };
 
@@ -735,5 +737,198 @@ export async function notifyMorningWorkout(
   if (btn.length) keyboard.push(btn);
 
   console.log(`[Notifications] Morning workout for user ${userId}: ${opts.workoutName}, ${opts.durationMin}min, ${opts.caloriesBurn}cal, lang=${lang}`);
+  await safeSend(telegramId, lines.join("\n"), keyboard);
+}
+
+/**
+ * Smart Nutrition Morning Reminder — the PRIMARY daily notification for Proper Food AI.
+ * Contextual: shows meal plan + workout plan for today.
+ * On Mondays: includes weekly weigh-in reminder.
+ * Falls back to a motivational "track your food" message if no plans exist.
+ */
+export async function notifyNutritionMorning(
+  userId: string,
+  telegramId: number,
+  opts: {
+    firstName: string;
+    calorieTarget?: number;
+    isMonday: boolean;
+    mealPlanSummary?: { meals: Array<{ name: string; calories: number }>; totalCalories: number } | null;
+    workoutSummary?: { name: string; durationMin: number; caloriesBurn: number } | null;
+    nutritionStreak?: number;
+  }
+): Promise<void> {
+  const prefs = await getNotificationPrefs(userId);
+  if (!prefs.enabled || !prefs.dailyReminder) return;
+
+  const lang = await getUserLang(userId, kv);
+  const { firstName, calorieTarget, isMonday, mealPlanSummary, workoutSummary, nutritionStreak } = opts;
+
+  const greetings = t("notif_nutrition_morning_greetings", lang).split("|");
+  const greeting = greetings[Math.floor(Math.random() * greetings.length)];
+
+  const lines: string[] = [
+    `\u{2600}\u{FE0F} <b>${greeting}, ${firstName}!</b>`,
+    ``,
+  ];
+
+  // Calorie target
+  if (calorieTarget && calorieTarget > 0) {
+    lines.push(t("notif_nutrition_morning_calorie_target", lang, { target: calorieTarget }));
+    lines.push(``);
+  }
+
+  let hasContent = false;
+
+  // Meal plan for today
+  if (mealPlanSummary && mealPlanSummary.meals.length > 0) {
+    lines.push(t("notif_nutrition_morning_meal_header", lang));
+    for (const meal of mealPlanSummary.meals.slice(0, 5)) {
+      lines.push(`  \u2022 ${meal.name} — ${meal.calories} ${lang === "ru" ? "ккал" : "cal"}`);
+    }
+    lines.push(`  \u{1F4CA} ${lang === "ru" ? "Итого" : "Total"}: ~${mealPlanSummary.totalCalories} ${lang === "ru" ? "ккал" : "cal"}`);
+    hasContent = true;
+  }
+
+  // Workout for today
+  if (workoutSummary) {
+    if (hasContent) lines.push(``);
+    lines.push(t("notif_nutrition_morning_workout_header", lang));
+    lines.push(`  \u{1F3CB}\u{FE0F} ${workoutSummary.name}`);
+    lines.push(`  \u{23F1} ~${workoutSummary.durationMin} ${lang === "ru" ? "мин" : "min"} \u2022 \u{1F525} ~${workoutSummary.caloriesBurn} ${lang === "ru" ? "ккал" : "cal"}`);
+    hasContent = true;
+  }
+
+  // No plans → general encouragement
+  if (!hasContent) {
+    lines.push(t("notif_nutrition_morning_no_plans", lang));
+  }
+
+  // Monday weigh-in
+  if (isMonday) {
+    lines.push(t("notif_nutrition_morning_weigh_in", lang));
+  }
+
+  // Nutrition streak
+  if (nutritionStreak && nutritionStreak >= 3) {
+    lines.push(``);
+    lines.push(`\u{1F525} ${lang === "ru" ? "Серия трекинга" : "Tracking streak"}: ${nutritionStreak} ${lang === "ru" ? "дней" : "days"}`);
+  }
+
+  const keyboard: InlineKeyboardButton[][] = [];
+  const btn = appButton(t("btn_open_nutrition", lang));
+  if (btn.length) keyboard.push(btn);
+  if (isMonday) {
+    const wBtn = appButton(t("btn_log_weight", lang), "weight");
+    if (wBtn.length) keyboard.push(wBtn);
+  }
+
+  console.log(`[Notifications] Smart nutrition morning for user ${userId} (${firstName}), meal=${!!mealPlanSummary}, workout=${!!workoutSummary}, monday=${isMonday}, lang=${lang}`);
+  await safeSend(telegramId, lines.join("\n"), keyboard);
+}
+
+/**
+ * Evening Summary — daily wrap-up with calories consumed, burned, macros, and progress.
+ * Sent around user's preferred evening time (default: 3 hours before midnight, or configurable).
+ * Gated by eveningDigest pref.
+ */
+export async function notifyEveningSummary(
+  userId: string,
+  telegramId: number,
+  opts: {
+    firstName: string;
+    calorieTarget: number;
+    caloriesConsumed: number;
+    caloriesBurned: number;
+    protein: number;
+    fat: number;
+    carbs: number;
+    mealsLogged: number;
+    workoutsCompleted: number;
+    nutritionStreak: number;
+  }
+): Promise<void> {
+  const prefs = await getNotificationPrefs(userId);
+  if (!prefs.enabled || !prefs.eveningDigest) return;
+
+  const lang = await getUserLang(userId, kv);
+  const { firstName, calorieTarget, caloriesConsumed, caloriesBurned, protein, fat, carbs, mealsLogged, workoutsCompleted, nutritionStreak } = opts;
+
+  const netCalories = caloriesConsumed - caloriesBurned;
+  const remaining = calorieTarget - netCalories;
+  const isOverTarget = remaining < 0;
+
+  const greetings = t("notif_evening_greetings", lang).split("|");
+  const greeting = greetings[Math.floor(Math.random() * greetings.length)];
+
+  const lines: string[] = [
+    `\u{1F319} <b>${greeting}, ${firstName}!</b>`,
+    ``,
+    t("notif_evening_summary_header", lang),
+    ``,
+  ];
+
+  // Calorie balance
+  lines.push(`\u{1F4CA} <b>${lang === "ru" ? "Калории" : "Calories"}:</b>`);
+  lines.push(`  \u{1F37D}\u{FE0F} ${lang === "ru" ? "Съедено" : "Consumed"}: ${caloriesConsumed} ${lang === "ru" ? "ккал" : "cal"}`);
+  if (caloriesBurned > 0) {
+    lines.push(`  \u{1F525} ${lang === "ru" ? "Сожжено" : "Burned"}: ${caloriesBurned} ${lang === "ru" ? "ккал" : "cal"}`);
+    lines.push(`  \u{1F3AF} ${lang === "ru" ? "Нетто" : "Net"}: ${netCalories} / ${calorieTarget} ${lang === "ru" ? "ккал" : "cal"}`);
+  } else {
+    lines.push(`  \u{1F3AF} ${lang === "ru" ? "Цель" : "Target"}: ${caloriesConsumed} / ${calorieTarget} ${lang === "ru" ? "ккал" : "cal"}`);
+  }
+
+  // Remaining / Over
+  if (isOverTarget) {
+    lines.push(`  \u{26A0}\u{FE0F} ${lang === "ru" ? "Превышение" : "Over"}: +${Math.abs(remaining)} ${lang === "ru" ? "ккал" : "cal"}`);
+  } else if (remaining > 0 && caloriesConsumed > 0) {
+    lines.push(`  \u{2705} ${lang === "ru" ? "Осталось" : "Remaining"}: ${remaining} ${lang === "ru" ? "ккал" : "cal"}`);
+  }
+
+  // Macros
+  if (protein > 0 || fat > 0 || carbs > 0) {
+    lines.push(``);
+    lines.push(`\u{1F4DD} <b>${lang === "ru" ? "Макронутриенты" : "Macros"}:</b>`);
+    const macroLine = [
+      `\u{1F969} ${lang === "ru" ? "Б" : "P"}: ${protein}${lang === "ru" ? "г" : "g"}`,
+      `\u{1F9C8} ${lang === "ru" ? "Ж" : "F"}: ${fat}${lang === "ru" ? "г" : "g"}`,
+      `\u{1F35E} ${lang === "ru" ? "У" : "C"}: ${carbs}${lang === "ru" ? "г" : "g"}`,
+    ].join("  \u2022  ");
+    lines.push(`  ${macroLine}`);
+  }
+
+  // Activity summary
+  lines.push(``);
+  const actItems: string[] = [];
+  if (mealsLogged > 0) {
+    actItems.push(`\u{1F372} ${mealsLogged} ${lang === "ru" ? (mealsLogged === 1 ? "приём пищи" : "приёмов пищи") : (mealsLogged === 1 ? "meal" : "meals")}`);
+  }
+  if (workoutsCompleted > 0) {
+    actItems.push(`\u{1F3CB}\u{FE0F} ${workoutsCompleted} ${lang === "ru" ? (workoutsCompleted === 1 ? "тренировка" : "тренировок") : (workoutsCompleted === 1 ? "workout" : "workouts")}`);
+  }
+  if (actItems.length > 0) {
+    lines.push(actItems.join("  \u2022  "));
+  }
+
+  // Streak
+  if (nutritionStreak >= 2) {
+    lines.push(`\u{1F525} ${lang === "ru" ? "Серия трекинга" : "Tracking streak"}: ${nutritionStreak} ${lang === "ru" ? "дней" : "days"}`);
+  }
+
+  // Verdict
+  lines.push(``);
+  if (caloriesConsumed === 0) {
+    lines.push(t("notif_evening_no_data", lang));
+  } else if (isOverTarget) {
+    lines.push(t("notif_evening_over", lang));
+  } else {
+    lines.push(t("notif_evening_good", lang));
+  }
+
+  const keyboard: InlineKeyboardButton[][] = [];
+  const btn = appButton(t("btn_open_nutrition", lang));
+  if (btn.length) keyboard.push(btn);
+
+  console.log(`[Notifications] Evening summary for user ${userId} (${firstName}): ${caloriesConsumed}/${calorieTarget} cal, P=${protein} F=${fat} C=${carbs}, burned=${caloriesBurned}, meals=${mealsLogged}, lang=${lang}`);
   await safeSend(telegramId, lines.join("\n"), keyboard);
 }

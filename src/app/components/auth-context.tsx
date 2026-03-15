@@ -114,6 +114,7 @@ function buildFastPathUser(): User | null {
       xp: 0,
       dailyReminderTime: null,
       utcOffset: null,
+      weighInDay: null,
       activeProgramId: null,
       subscriptionExpiresAt: null,
       referralCode: null,

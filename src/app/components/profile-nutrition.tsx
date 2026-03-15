@@ -31,7 +31,7 @@ import {
 } from 'lucide-react';
 import { GlassCard } from './glass-card';
 import { useAuth } from './auth-context';
-import { hapticFeedback, hapticSuccess } from './telegram';
+import { hapticFeedback, hapticSuccess, openTelegramLink } from './telegram';
 import { useTranslation } from './i18n';
 import { PageHeader } from './page-header';
 import { api, getUserLang } from './api-client';
@@ -315,11 +315,17 @@ export function ProfileNutritionPage() {
 
   const handleReferralShare = () => {
     hapticFeedback('medium');
-    if (!user?.referralCode) return;
-    const referralLink = buildStartLink(`ref_${user.referralCode}`);
-    const shareText = `Join me on this fitness journey! Track your nutrition and workouts with AI.\n\n${referralLink}`;
-    if (window.Telegram?.WebApp) {
-      window.Telegram.WebApp.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(shareText)}`);
+    // Use referral code if available, otherwise fall back to telegramId
+    const code = user?.referralCode || (user?.telegramId ? String(user.telegramId) : null);
+    if (!code) return;
+    const referralLink = buildStartLink(`ref_${code}`);
+    const shareText = `Join me on this fitness journey! Track your nutrition and workouts with AI.`;
+    // Use Telegram's native share dialog via t.me/share/url
+    try {
+      openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(shareText)}`);
+    } catch {
+      // Fallback: copy to clipboard
+      navigator.clipboard?.writeText(referralLink);
     }
   };
 
