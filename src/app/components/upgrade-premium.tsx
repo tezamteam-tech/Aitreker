@@ -27,6 +27,13 @@ import {
   ArrowLeft,
   Infinity,
   RotateCcw,
+  CalendarDays,
+  Clock,
+  CreditCard,
+  ChevronDown,
+  ChevronUp,
+  Receipt,
+  TrendingUp,
 } from 'lucide-react';
 import { GlassCard } from './glass-card';
 import { useAuth } from './auth-context';
@@ -161,28 +168,7 @@ export function UpgradePremiumPage() {
 
   // Already premium
   if (subscriptionActive && !usageLoading) {
-    return (
-      <div className="min-h-screen px-5 pb-28" style={{ paddingTop: '6px' }}>
-        <div className="max-w-md mx-auto text-center pt-12">
-          <div className="w-20 h-20 mx-auto mb-5 rounded-3xl bg-gradient-to-br from-[#ffd700]/20 to-[#ffd700]/5 flex items-center justify-center border border-[#ffd700]/20">
-            <Crown className="w-10 h-10 text-[#ffd700]" />
-          </div>
-          <h1 className="text-white mb-2" style={{ fontSize: '1.5rem', fontWeight: 700 }}>
-            {t('up_already_title')}
-          </h1>
-          <p className="text-white/50 mb-8" style={{ fontSize: '0.9375rem' }}>
-            {t('up_already_desc')}
-          </p>
-          <button
-            onClick={() => navigate(-1)}
-            className="px-6 py-3 rounded-xl bg-white/[0.06] text-white/70"
-            style={{ fontSize: '0.9375rem' }}
-          >
-            {t('up_go_back')}
-          </button>
-        </div>
-      </div>
-    );
+    return <PremiumDashboard />;
   }
 
   return (
@@ -663,6 +649,482 @@ function ComparisonRow({
         ) : (
           <div className="flex items-center justify-center">{premium}</div>
         )}
+      </div>
+    </div>
+  );
+}
+
+interface PaymentRecord {
+  id: string;
+  currency: string;
+  amount: number;
+  daysAdded: number;
+  createdAt: string;
+  payload?: string;
+  type?: string;
+}
+
+function PremiumDashboard() {
+  const navigate = useNavigate();
+  const { subscriptionActive, subscriptionDaysLeft, refreshSubscription } = useAuth();
+  const { t, lang } = useTranslation();
+
+  const [subStatus, setSubStatus] = useState<{
+    isActive: boolean;
+    expiresAt: string | null;
+    daysLeft: number;
+    isAdmin: boolean;
+  } | null>(null);
+  const [payments, setPayments] = useState<PaymentRecord[]>([]);
+  const [loadingStatus, setLoadingStatus] = useState(true);
+  const [loadingPayments, setLoadingPayments] = useState(true);
+  const [showAllPayments, setShowAllPayments] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<PlanId>('60');
+  const [purchasing, setPurchasing] = useState(false);
+  const [paymentResult, setPaymentResult] = useState<'idle' | 'success' | 'error' | 'pending'>('idle');
+
+  const plan = PLANS.find(p => p.id === selectedPlan)!;
+
+  useEffect(() => {
+    api.getSubscriptionStatus()
+      .then(setSubStatus)
+      .catch(err => console.error('[PremiumDash] sub status error:', err))
+      .finally(() => setLoadingStatus(false));
+
+    api.getPaymentHistory()
+      .then(res => setPayments(res.payments || []))
+      .catch(err => console.error('[PremiumDash] payments error:', err))
+      .finally(() => setLoadingPayments(false));
+  }, []);
+
+  const expiresFormatted = subStatus?.expiresAt
+    ? new Date(subStatus.expiresAt).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', {
+        day: 'numeric', month: 'long', year: 'numeric',
+      })
+    : null;
+
+  const daysLeft = subStatus?.daysLeft ?? subscriptionDaysLeft;
+  const urgencyColor = daysLeft <= 3
+    ? 'text-red-400'
+    : daysLeft <= 7
+    ? 'text-amber-400'
+    : 'text-emerald-400';
+
+  const totalStars = payments.reduce((sum, p) => sum + (p.currency === 'XTR' ? p.amount : 0), 0);
+  const totalDays = payments.reduce((sum, p) => sum + (p.daysAdded || 0), 0);
+
+  const handleExtend = useCallback(async () => {
+    hapticFeedback('medium');
+    setPurchasing(true);
+    setPaymentResult('idle');
+
+    try {
+      const tgWebApp = (window as any).Telegram?.WebApp;
+      if (tgWebApp?.openInvoice) {
+        const res = await api.createInvoiceLink(selectedPlan);
+        if (res.success && res.invoiceLink) {
+          tgWebApp.openInvoice(res.invoiceLink, async (status: string) => {
+            if (status === 'paid') {
+              hapticSuccess();
+              setPaymentResult('success');
+              try { await api.activateSubscription(selectedPlan, res.stars); } catch {}
+              await refreshSubscription();
+              const [newStatus, newPayments] = await Promise.all([
+                api.getSubscriptionStatus(),
+                api.getPaymentHistory(),
+              ]);
+              setSubStatus(newStatus);
+              setPayments(newPayments.payments || []);
+            } else if (status === 'cancelled') {
+              setPaymentResult('idle');
+            } else {
+              setPaymentResult('error');
+            }
+            setPurchasing(false);
+          });
+          return;
+        }
+      }
+      const res = await api.createInvoice(selectedPlan);
+      if (res.success && res.sentToChat) {
+        hapticSuccess();
+        setPaymentResult('pending');
+      } else {
+        setPaymentResult('error');
+      }
+    } catch {
+      setPaymentResult('error');
+    } finally {
+      setPurchasing(false);
+    }
+  }, [selectedPlan, refreshSubscription]);
+
+  const visiblePayments = showAllPayments ? payments : payments.slice(0, 5);
+
+  return (
+    <div className="min-h-screen pb-28">
+      {/* Header */}
+      <div className="sticky top-0 z-20 px-4 pt-3 pb-2" style={{ paddingTop: 'max(env(safe-area-inset-top, 12px), 12px)' }}>
+        <button
+          onClick={() => navigate(-1)}
+          className="w-9 h-9 rounded-xl bg-white/[0.06] flex items-center justify-center"
+        >
+          <ArrowLeft className="w-4 h-4 text-white/60" />
+        </button>
+      </div>
+
+      <div className="px-5 max-w-md mx-auto space-y-4">
+        {/* Status Hero Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+        >
+          <GlassCard className="!p-0 overflow-hidden">
+            <div className="relative px-5 pt-5 pb-4" style={{
+              background: 'linear-gradient(135deg, rgba(255,215,0,0.12) 0%, rgba(255,215,0,0.03) 100%)',
+            }}>
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#ffd700]/25 to-[#ffd700]/5 flex items-center justify-center border border-[#ffd700]/20 flex-shrink-0">
+                  <Crown className="w-7 h-7 text-[#ffd700]" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="text-white" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
+                      Premium
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400" style={{ fontSize: '0.625rem', fontWeight: 700 }}>
+                      {t('up_sub_active')}
+                    </span>
+                  </div>
+                  {loadingStatus ? (
+                    <div className="flex items-center gap-1.5 text-white/30">
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      <span style={{ fontSize: '0.75rem' }}>{t('loading')}</span>
+                    </div>
+                  ) : (
+                    <p className="text-white/40" style={{ fontSize: '0.75rem' }}>
+                      {subStatus?.isAdmin
+                        ? t('up_sub_admin')
+                        : expiresFormatted
+                        ? `${t('up_sub_until')} ${expiresFormatted}`
+                        : t('up_already_desc')}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {!loadingStatus && (
+              <div className="grid grid-cols-3 divide-x divide-white/[0.06] px-2 py-3">
+                <div className="text-center px-2">
+                  <p className={`${urgencyColor}`} style={{ fontSize: '1.25rem', fontWeight: 800 }}>
+                    {subStatus?.isAdmin ? '∞' : daysLeft}
+                  </p>
+                  <p className="text-white/30" style={{ fontSize: '0.625rem', fontWeight: 500 }}>
+                    {t('up_sub_days_left')}
+                  </p>
+                </div>
+                <div className="text-center px-2">
+                  <p className="text-white/80" style={{ fontSize: '1.25rem', fontWeight: 800 }}>
+                    {totalStars}
+                  </p>
+                  <p className="text-white/30" style={{ fontSize: '0.625rem', fontWeight: 500 }}>
+                    Stars {t('up_sub_spent')}
+                  </p>
+                </div>
+                <div className="text-center px-2">
+                  <p className="text-white/80" style={{ fontSize: '1.25rem', fontWeight: 800 }}>
+                    {payments.length}
+                  </p>
+                  <p className="text-white/30" style={{ fontSize: '0.625rem', fontWeight: 500 }}>
+                    {t('up_sub_payments_count')}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {!loadingStatus && !subStatus?.isAdmin && daysLeft <= 7 && daysLeft > 0 && (
+              <div className={`mx-4 mb-4 rounded-xl p-3 border ${
+                daysLeft <= 3
+                  ? 'bg-red-500/10 border-red-500/20'
+                  : 'bg-amber-500/10 border-amber-500/20'
+              }`}>
+                <div className="flex items-center gap-2">
+                  <Clock className={`w-4 h-4 flex-shrink-0 ${daysLeft <= 3 ? 'text-red-400' : 'text-amber-400'}`} />
+                  <p className={daysLeft <= 3 ? 'text-red-400' : 'text-amber-400'} style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
+                    {t('up_sub_expiring', { n: daysLeft })}
+                  </p>
+                </div>
+              </div>
+            )}
+          </GlassCard>
+        </motion.div>
+
+        {/* Payment History */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.12 }}
+        >
+          <div className="flex items-center justify-between mb-2.5 px-1">
+            <div className="flex items-center gap-2">
+              <Receipt className="w-3.5 h-3.5 text-white/25" />
+              <span className="text-white/40" style={{ fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                {t('up_sub_history')}
+              </span>
+            </div>
+            {payments.length > 0 && (
+              <span className="text-white/20" style={{ fontSize: '0.6875rem' }}>
+                {t('up_sub_total_days', { n: totalDays })}
+              </span>
+            )}
+          </div>
+
+          <GlassCard className="!p-0 overflow-hidden">
+            {loadingPayments ? (
+              <div className="flex items-center justify-center py-8 gap-2 text-white/30">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span style={{ fontSize: '0.8125rem' }}>{t('loading')}</span>
+              </div>
+            ) : payments.length === 0 ? (
+              <div className="text-center py-8 px-4">
+                <CreditCard className="w-8 h-8 text-white/10 mx-auto mb-2" />
+                <p className="text-white/25" style={{ fontSize: '0.8125rem' }}>
+                  {t('up_sub_no_payments')}
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="divide-y divide-white/[0.04]">
+                  {visiblePayments.map((payment, idx) => {
+                    const date = new Date(payment.createdAt);
+                    const dateStr = date.toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', {
+                      day: 'numeric', month: 'short', year: 'numeric',
+                    });
+                    const timeStr = date.toLocaleTimeString(lang === 'ru' ? 'ru-RU' : 'en-US', {
+                      hour: '2-digit', minute: '2-digit',
+                    });
+                    const currencyLabel = payment.currency === 'XTR' ? 'Stars' : payment.currency;
+
+                    return (
+                      <motion.div
+                        key={payment.id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: idx * 0.03 }}
+                        className="flex items-center gap-3 px-4 py-3"
+                      >
+                        <div className="w-9 h-9 rounded-xl bg-[#6c5ce7]/10 flex items-center justify-center flex-shrink-0">
+                          <Star className="w-4 h-4 text-[#a29bfe]" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-white/80 truncate" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
+                              {payment.amount} {currencyLabel}
+                            </span>
+                            <span className="px-1.5 py-0.5 rounded bg-[#6c5ce7]/15 text-[#a29bfe]" style={{ fontSize: '0.5625rem', fontWeight: 700 }}>
+                              +{payment.daysAdded} {t('up_sub_days_short')}
+                            </span>
+                          </div>
+                          <p className="text-white/25" style={{ fontSize: '0.6875rem' }}>
+                            {dateStr} · {timeStr}
+                          </p>
+                        </div>
+                        <Check className="w-4 h-4 text-emerald-400/50 flex-shrink-0" />
+                      </motion.div>
+                    );
+                  })}
+                </div>
+
+                {payments.length > 5 && (
+                  <button
+                    onClick={() => { hapticFeedback('light'); setShowAllPayments(!showAllPayments); }}
+                    className="w-full py-2.5 flex items-center justify-center gap-1.5 text-white/30 border-t border-white/[0.04]"
+                    style={{ fontSize: '0.75rem', fontWeight: 500 }}
+                  >
+                    {showAllPayments ? (
+                      <>
+                        <ChevronUp className="w-3.5 h-3.5" />
+                        {t('up_sub_show_less')}
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="w-3.5 h-3.5" />
+                        {t('up_sub_show_all', { n: payments.length })}
+                      </>
+                    )}
+                  </button>
+                )}
+              </>
+            )}
+          </GlassCard>
+        </motion.div>
+
+        {/* Extend Subscription */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <div className="flex items-center gap-2 mb-2.5 px-1">
+            <TrendingUp className="w-3.5 h-3.5 text-white/25" />
+            <span className="text-white/40" style={{ fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+              {t('up_sub_extend')}
+            </span>
+          </div>
+
+          <div className="space-y-2 mb-4">
+            {PLANS.map((p) => {
+              const isSelected = selectedPlan === p.id;
+              const label = p.months === 1
+                ? t('up_1_month')
+                : p.months === 2
+                ? t('up_2_months')
+                : t('up_3_months');
+              const perMonth = Math.round(p.stars / p.months);
+
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => { hapticFeedback('light'); setSelectedPlan(p.id); }}
+                  className={`w-full relative rounded-2xl p-3.5 pl-11 text-left transition-all duration-200 ${
+                    isSelected
+                      ? 'bg-[#6c5ce7]/20 border-2 border-[#6c5ce7]'
+                      : 'bg-white/[0.04] border-2 border-transparent'
+                  }`}
+                >
+                  {p.popular && (
+                    <div className="absolute -top-2 right-4 px-2.5 py-0.5 rounded-full bg-[#6c5ce7]">
+                      <span className="text-white" style={{ fontSize: '0.5625rem', fontWeight: 700 }}>
+                        {t('up_popular')}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>{label}</span>
+                        {p.save && (
+                          <span className="px-1.5 py-0.5 rounded-full bg-green-500/20 text-green-400" style={{ fontSize: '0.625rem', fontWeight: 600 }}>
+                            -{p.save}%
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-white/40" style={{ fontSize: '0.75rem' }}>
+                        {p.months > 1
+                          ? `~${perMonth} Stars/${t('up_per_month')}`
+                          : `${p.stars} Stars`
+                        }
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
+                      <span className="text-white" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
+                        {p.stars}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div
+                    className={`absolute top-1/2 -translate-y-1/2 left-3.5 rounded-full border-2 flex items-center justify-center transition-all ${
+                      isSelected ? 'border-[#6c5ce7] bg-[#6c5ce7]' : 'border-white/20'
+                    }`}
+                    style={{ width: '18px', height: '18px' }}
+                  >
+                    {isSelected && <Check className="w-2.5 h-2.5 text-white" />}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Payment status messages */}
+          <AnimatePresence>
+            {paymentResult === 'success' && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0 }}
+                className="mb-3 p-4 rounded-2xl bg-green-500/10 border border-green-500/20 text-center"
+              >
+                <Check className="w-5 h-5 text-green-400 mx-auto mb-1" />
+                <p className="text-green-400" style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+                  {t('up_payment_success')}
+                </p>
+              </motion.div>
+            )}
+            {paymentResult === 'pending' && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0 }}
+                className="mb-3 p-4 rounded-2xl bg-green-500/10 border border-green-500/20 text-center"
+              >
+                <Send className="w-5 h-5 text-green-400 mx-auto mb-1" />
+                <p className="text-green-400" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
+                  {t('up_invoice_sent')}
+                </p>
+                <button
+                  onClick={() => { try { closeMiniApp(); } catch { window.close(); } }}
+                  className="mt-2 px-5 py-2 rounded-xl bg-green-500/20 text-green-400"
+                  style={{ fontSize: '0.8125rem', fontWeight: 600 }}
+                >
+                  {t('up_go_to_chat')}
+                </button>
+              </motion.div>
+            )}
+            {paymentResult === 'error' && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0 }}
+                className="mb-3 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-center"
+              >
+                <span className="text-red-400" style={{ fontSize: '0.8125rem' }}>
+                  {t('up_payment_failed')}
+                </span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Extend button */}
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={handleExtend}
+            disabled={purchasing}
+            className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe] text-white font-semibold flex items-center justify-center gap-2.5 disabled:opacity-50"
+            style={{ fontSize: '0.9375rem', boxShadow: '0 4px 20px rgba(108, 92, 231, 0.35)' }}
+          >
+            {purchasing ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <>
+                <Star className="w-4 h-4 fill-white" />
+                {t('up_sub_extend_btn', { n: plan.stars })}
+              </>
+            )}
+          </motion.button>
+
+          {/* Bonuses link */}
+          <div className="mt-3 text-center">
+            <button
+              onClick={() => { hapticFeedback('light'); navigate('/bonuses'); }}
+              className="text-[#a29bfe] flex items-center justify-center gap-1.5 mx-auto"
+              style={{ fontSize: '0.8125rem' }}
+            >
+              <Gift className="w-3.5 h-3.5" />
+              {t('up_free_days')}
+            </button>
+          </div>
+
+          {/* Security */}
+          <div className="mt-5 flex items-center justify-center gap-2 text-white/15" style={{ fontSize: '0.6875rem' }}>
+            <Shield className="w-3 h-3" />
+            {t('up_secure')}
+          </div>
+        </motion.div>
       </div>
     </div>
   );

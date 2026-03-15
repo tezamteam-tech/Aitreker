@@ -1485,7 +1485,7 @@ export const api = {
 
   // ---- Admin ----
 
-  async adminGetUsers(params?: { search?: string; page?: number; limit?: number; filter?: string }): Promise<{
+  async adminGetUsers(params?: { search?: string; page?: number; limit?: number; filter?: string; sort?: string }): Promise<{
     users: AdminUser[];
     total: number;
     page: number;
@@ -1497,6 +1497,7 @@ export const api = {
     if (params?.page) q.set('page', String(params.page));
     if (params?.limit) q.set('limit', String(params.limit));
     if (params?.filter) q.set('filter', params.filter);
+    if (params?.sort) q.set('sort', params.sort);
     const qs = q.toString();
     return request('GET', `/admin/users${qs ? `?${qs}` : ''}`);
   },
@@ -1515,6 +1516,8 @@ export const api = {
     audience: 'all' | 'subscribers' | 'non_subscribers';
     mediaType?: 'photo' | 'photos' | 'video' | null;
     mediaUrls?: string[];
+    buttonText?: string;
+    buttonUrl?: string;
   }): Promise<{
     success: boolean;
     broadcastId: string;
@@ -1532,6 +1535,7 @@ export const api = {
     expiredSubscribers: number;
     newToday: number;
     totalReferrals: number;
+    topReferrers: { displayName: string; telegramUsername: string | null; referralCount: number }[];
   }> {
     return request('GET', '/admin/stats');
   },

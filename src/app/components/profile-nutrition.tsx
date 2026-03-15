@@ -37,6 +37,7 @@ import { api, getUserLang } from './api-client';
 import { calculateCalories } from './calorie-calculator';
 import { AiCalorieAdvisor } from './ai-calorie-advisor';
 import { SwipeableBottomSheet } from './ui/swipeable-bottom-sheet';
+import { buildStartLink } from './bot-config';
 
 type Gender = 'male' | 'female';
 type ActivityLevel = 'low' | 'medium' | 'high' | 'athlete';
@@ -314,8 +315,8 @@ export function ProfileNutritionPage() {
   const handleReferralShare = () => {
     hapticFeedback('medium');
     if (!user?.referralCode) return;
-    const referralLink = `https://t.me/YOUR_BOT/app?startapp=ref_${user.referralCode}`;
-    const shareText = `Join me on this fitness journey! Track your nutrition and workouts with AI. ${referralLink}`;
+    const referralLink = buildStartLink(`ref_${user.referralCode}`);
+    const shareText = `Join me on this fitness journey! Track your nutrition and workouts with AI.\n\n${referralLink}`;
     if (window.Telegram?.WebApp) {
       window.Telegram.WebApp.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(shareText)}`);
     }
@@ -330,7 +331,6 @@ export function ProfileNutritionPage() {
     { icon: BarChart3, label: t('pn_weight_tracking'), color: '#0984e3', action: () => navigate('/weight') },
     { icon: Bell, label: t('pn_notifications'), color: '#ffeaa7', action: () => navigate('/profile/notifications') },
     { icon: Users, label: t('pn_referrals'), color: '#a29bfe', action: () => navigate('/referrals') },
-    { icon: Settings, label: t('pn_settings'), color: '#74b9ff', action: () => navigate('/profile/settings') },
   ];
 
   return (
@@ -590,6 +590,24 @@ export function ProfileNutritionPage() {
           </div>
         )}
 
+        {/* ======== Share Referral ======== */}
+        <motion.button
+          whileTap={{ scale: 0.98 }}
+          onClick={handleReferralShare}
+          className="w-full p-4 rounded-[20px] bg-gradient-to-br from-[#00cec9] to-[#74b9ff] flex items-center justify-between"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center">
+              <Share2 className="w-5 h-5 text-white" />
+            </div>
+            <div className="text-left">
+              <p className="text-white font-medium text-sm">{t('pn_share_friends')}</p>
+              <p className="text-white/70 text-xs">{t('pn_share_rewards')}</p>
+            </div>
+          </div>
+          <ChevronRight className="w-5 h-5 text-white/80" />
+        </motion.button>
+
         {/* ======== Premium Upgrade / Status ======== */}
         {!isPremium && (
           <motion.button
@@ -614,177 +632,92 @@ export function ProfileNutritionPage() {
           </motion.button>
         )}
 
-        {/* ======== App & Account Section ======== */}
-        <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--glass-bg-card)', border: '1px solid var(--glass-border)' }}>
-          <button
-            onClick={() => toggleSection('app')}
-            className="w-full px-5 py-4 flex items-center justify-between"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#74b9ff]/15 to-[#0984e3]/10 flex items-center justify-center">
-                <Settings className="w-4.5 h-4.5 text-[#74b9ff]" />
-              </div>
-              <p className="text-foreground font-medium text-[0.9375rem]">{t('pn_section_app')}</p>
-            </div>
-            <motion.div
-              animate={{ rotate: expandedSection === 'app' ? 180 : 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <ChevronDown className="w-5 h-5 text-muted-foreground" />
-            </motion.div>
-          </button>
-
-          <AnimatePresence initial={false}>
-            {expandedSection === 'app' && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.25, ease: 'easeInOut' }}
-                className="overflow-hidden"
-              >
-                <div className="px-4 pb-4 space-y-1">
-                  {/* Notifications */}
-                  <button
-                    onClick={() => { hapticFeedback('light'); navigate('/profile/notifications'); }}
-                    className="w-full p-3 rounded-xl flex items-center justify-between"
-                    style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'rgba(253,203,110,0.1)' }}>
-                        <Bell className="w-4 h-4 text-[#ffeaa7]" />
-                      </div>
-                      <span className="text-foreground text-sm font-medium">{t('pn_notifications')}</span>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground/40" />
-                  </button>
-
-                  {/* Referrals — with count badge */}
-                  <button
-                    onClick={() => { hapticFeedback('light'); navigate('/referrals'); }}
-                    className="w-full p-3 rounded-xl flex items-center justify-between"
-                    style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'rgba(162,155,254,0.1)' }}>
-                        <Users className="w-4 h-4 text-[#a29bfe]" />
-                      </div>
-                      <div className="flex flex-col items-start">
-                        <span className="text-foreground text-sm font-medium">{t('pn_referrals')}</span>
-                        {(user?.referralCount ?? 0) > 0 && (
-                          <span className="text-muted-foreground text-[0.625rem]">
-                            {t('pn_referrals_invited', { n: user?.referralCount || 0 })}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {(user?.referralCount ?? 0) > 0 && (
-                        <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-[#a29bfe]/15 text-[#a29bfe] text-[0.625rem] font-bold flex items-center justify-center">
-                          {user?.referralCount}
-                        </span>
-                      )}
-                      <ChevronRight className="w-4 h-4 text-muted-foreground/40" />
-                    </div>
-                  </button>
-
-                  {/* Social Tasks — earn bonus weeks */}
-                  <button
-                    onClick={() => { hapticFeedback('light'); navigate('/bonuses'); }}
-                    className="w-full p-3 rounded-xl flex items-center justify-between"
-                    style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'rgba(0,206,201,0.1)' }}>
-                        <Sparkles className="w-4 h-4 text-[#00cec9]" />
-                      </div>
-                      <div className="flex flex-col items-start">
-                        <span className="text-foreground text-sm font-medium">{t('pn_social_tasks')}</span>
-                        <span className="text-muted-foreground text-[0.625rem]">{t('pn_social_tasks_desc')}</span>
-                      </div>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground/40" />
-                  </button>
-
-                  {/* Subscription */}
-                  <button
-                    onClick={() => { hapticFeedback('light'); navigate('/upgrade'); }}
-                    className="w-full p-3 rounded-xl flex items-center justify-between"
-                    style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: isPremium ? 'rgba(255,215,0,0.1)' : 'rgba(108,92,231,0.1)' }}>
-                        <Crown className="w-4 h-4" style={{ color: isPremium ? '#ffd700' : '#6c5ce7' }} />
-                      </div>
-                      <div className="flex flex-col items-start">
-                        <span className="text-foreground text-sm font-medium">{t('pn_subscription')}</span>
-                        <span className="text-muted-foreground text-[0.625rem]">
-                          {isPremium
-                            ? t('pn_sub_active_days', { n: subscriptionDaysLeft })
-                            : t('pn_sub_free')}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {isPremium && (
-                        <span className="px-1.5 py-0.5 rounded-full bg-[#ffd700]/10 border border-[#ffd700]/20 text-[0.5625rem] text-[#ffd700] font-semibold">PRO</span>
-                      )}
-                      <ChevronRight className="w-4 h-4 text-muted-foreground/40" />
-                    </div>
-                  </button>
-
-                  {/* Settings */}
-                  <button
-                    onClick={() => { hapticFeedback('light'); navigate('/profile/settings'); }}
-                    className="w-full p-3 rounded-xl flex items-center justify-between"
-                    style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'rgba(116,185,255,0.1)' }}>
-                        <Settings className="w-4 h-4 text-[#74b9ff]" />
-                      </div>
-                      <span className="text-foreground text-sm font-medium">{t('pn_settings')}</span>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground/40" />
-                  </button>
-
-                  {/* Developer badge — Tezam.by */}
-                  <div className="pt-2">
-                    <a
-                      href="https://tezam.by"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() => hapticFeedback('light')}
-                      className="w-full py-2.5 rounded-xl flex items-center justify-center gap-1.5 opacity-50 hover:opacity-70 transition-opacity"
-                    >
-                      <Heart className="w-3 h-3 text-muted-foreground" />
-                      <span className="text-muted-foreground text-[0.6875rem]">{t('pn_developed_by')}</span>
-                      <span className="text-foreground/60 text-[0.6875rem] font-medium">Tezam.by</span>
-                    </a>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* ======== Share Referral ======== */}
-        <motion.button
-          whileTap={{ scale: 0.98 }}
-          onClick={handleReferralShare}
-          className="w-full p-4 rounded-[20px] bg-gradient-to-br from-[#00cec9] to-[#74b9ff] flex items-center justify-between"
+        {/* ======== Notifications ======== */}
+        <button
+          onClick={() => { hapticFeedback('light'); navigate('/profile/notifications'); }}
+          className="w-full p-4 rounded-2xl flex items-center justify-between"
+          style={{ background: 'var(--glass-bg-card)', border: '1px solid var(--glass-border)' }}
         >
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center">
-              <Share2 className="w-5 h-5 text-white" />
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(253,203,110,0.1)' }}>
+              <Bell className="w-4.5 h-4.5 text-[#ffeaa7]" />
+            </div>
+            <span className="text-foreground text-[0.9375rem] font-medium">{t('pn_notifications')}</span>
+          </div>
+          <ChevronRight className="w-4 h-4 text-muted-foreground/40" />
+        </button>
+
+        {/* ======== Referrals ======== */}
+        <button
+          onClick={() => { hapticFeedback('light'); navigate('/referrals'); }}
+          className="w-full p-4 rounded-2xl flex items-center justify-between"
+          style={{ background: 'var(--glass-bg-card)', border: '1px solid var(--glass-border)' }}
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(162,155,254,0.1)' }}>
+              <Users className="w-4.5 h-4.5 text-[#a29bfe]" />
             </div>
             <div className="text-left">
-              <p className="text-white font-medium text-sm">{t('pn_share_friends')}</p>
-              <p className="text-white/70 text-xs">{t('pn_share_rewards')}</p>
+              <p className="text-foreground text-[0.9375rem] font-medium">{t('pn_referrals')}</p>
+              {(user?.referralCount ?? 0) > 0 && (
+                <p className="text-muted-foreground text-xs">{t('pn_referrals_invited', { n: user?.referralCount || 0 })}</p>
+              )}
             </div>
           </div>
-          <ChevronRight className="w-5 h-5 text-white/80" />
-        </motion.button>
+          <div className="flex items-center gap-2">
+            {(user?.referralCount ?? 0) > 0 && (
+              <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-[#a29bfe]/15 text-[#a29bfe] text-[0.625rem] font-bold flex items-center justify-center">
+                {user?.referralCount}
+              </span>
+            )}
+            <ChevronRight className="w-4 h-4 text-muted-foreground/40" />
+          </div>
+        </button>
+
+        {/* ======== Social Tasks ======== */}
+        <button
+          onClick={() => { hapticFeedback('light'); navigate('/bonuses'); }}
+          className="w-full p-4 rounded-2xl flex items-center justify-between"
+          style={{ background: 'var(--glass-bg-card)', border: '1px solid var(--glass-border)' }}
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(0,206,201,0.1)' }}>
+              <Sparkles className="w-4.5 h-4.5 text-[#00cec9]" />
+            </div>
+            <div className="text-left">
+              <p className="text-foreground text-[0.9375rem] font-medium">{t('pn_social_tasks')}</p>
+              <p className="text-muted-foreground text-xs">{t('pn_social_tasks_desc')}</p>
+            </div>
+          </div>
+          <ChevronRight className="w-4 h-4 text-muted-foreground/40" />
+        </button>
+
+        {/* ======== Subscription ======== */}
+        <button
+          onClick={() => { hapticFeedback('light'); navigate('/upgrade'); }}
+          className="w-full p-4 rounded-2xl flex items-center justify-between"
+          style={{ background: 'var(--glass-bg-card)', border: '1px solid var(--glass-border)' }}
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: isPremium ? 'rgba(255,215,0,0.1)' : 'rgba(108,92,231,0.1)' }}>
+              <Crown className="w-4.5 h-4.5" style={{ color: isPremium ? '#ffd700' : '#6c5ce7' }} />
+            </div>
+            <div className="text-left">
+              <p className="text-foreground text-[0.9375rem] font-medium">{t('pn_subscription')}</p>
+              <p className="text-muted-foreground text-xs">
+                {isPremium
+                  ? t('pn_sub_active_days', { n: subscriptionDaysLeft })
+                  : t('pn_sub_free')}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {isPremium && (
+              <span className="px-1.5 py-0.5 rounded-full bg-[#ffd700]/10 border border-[#ffd700]/20 text-[0.5625rem] text-[#ffd700] font-semibold">PRO</span>
+            )}
+            <ChevronRight className="w-4 h-4 text-muted-foreground/40" />
+          </div>
+        </button>
 
         {/* ======== Sign Out ======== */}
         <button
@@ -795,6 +728,19 @@ export function ProfileNutritionPage() {
           <LogOut className="w-4.5 h-4.5 text-muted-foreground" />
           <span className="text-foreground/80 text-sm">{t('pn_sign_out')}</span>
         </button>
+
+        {/* ======== Developer Badge — Tezam.by ======== */}
+        <a
+          href="https://tezam.by"
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => hapticFeedback('light')}
+          className="w-full py-3 rounded-2xl flex items-center justify-center gap-2 opacity-50 hover:opacity-70 transition-opacity"
+        >
+          <Heart className="w-3.5 h-3.5 text-muted-foreground" />
+          <span className="text-muted-foreground text-[0.8125rem]">{t('pn_developed_by')}</span>
+          <span className="text-foreground/60 text-[0.8125rem] font-medium">Tezam.by</span>
+        </a>
 
       </div>
 

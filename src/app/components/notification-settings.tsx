@@ -20,6 +20,7 @@ import { api, type NotificationPrefs } from './api-client';
 import { hapticFeedback } from './telegram';
 import { useTranslation } from './i18n';
 import { useAuth } from './auth-context';
+import { PageHeader } from './page-header';
 
 interface ToggleRowProps {
   icon: React.ElementType;
@@ -407,5 +408,353 @@ export function NotificationSettingsSection() {
         )}
       </AnimatePresence>
     </GlassCard>
+  );
+}
+
+// =============================================
+// Full-page Notification Settings
+// =============================================
+export function NotificationSettingsPage() {
+  const [prefs, setPrefs] = useState<NotificationPrefs | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [testSent, setTestSent] = useState<false | 'daily_digest_preview' | 'generic_test'>(false);
+  const [testSending, setTestSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [reminderTime, setReminderTime] = useState('09:00');
+  const [reminderTimeSaved, setReminderTimeSaved] = useState(false);
+  const { t } = useTranslation();
+  const { user, updateUser } = useAuth();
+
+  const utcOffsetLabel = (() => {
+    const offsetMinutes = user?.utcOffset ?? -(new Date().getTimezoneOffset());
+    const sign = offsetMinutes >= 0 ? '+' : '\u2212';
+    const absH = Math.floor(Math.abs(offsetMinutes) / 60);
+    const absM = Math.abs(offsetMinutes) % 60;
+    const utcStr = `UTC${sign}${absH}${absM > 0 ? `:${String(absM).padStart(2, '0')}` : ''}`;
+    try {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const city = tz.split('/').pop()?.replace(/_/g, ' ') || '';
+      return city ? `${utcStr} (${city})` : utcStr;
+    } catch {
+      return utcStr;
+    }
+  })();
+
+  useEffect(() => {
+    if (user?.dailyReminderTime) {
+      setReminderTime(user.dailyReminderTime);
+    }
+  }, [user?.dailyReminderTime]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const p = await api.getNotificationPrefs();
+        setPrefs(p);
+      } catch (err: any) {
+        console.error('[NotifSettingsPage] Failed to fetch prefs:', err);
+        setError(err?.message || 'Failed to load preferences');
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, []);
+
+  const updatePref = async (key: keyof NotificationPrefs, value: boolean) => {
+    if (!prefs) return;
+    const prev = { ...prefs };
+    setPrefs({ ...prefs, [key]: value });
+    setIsSaving(true);
+    try {
+      const updated = await api.updateNotificationPrefs({ [key]: value });
+      setPrefs(updated);
+    } catch (err: any) {
+      console.error('[NotifSettingsPage] Failed to update pref:', err);
+      setPrefs(prev);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleTestNotification = async () => {
+    hapticFeedback('medium');
+    setTestSent(false);
+    setTestSending(true);
+    setError(null);
+    try {
+      const result = await api.sendTestNotification();
+      const resultType = (result.type === 'daily_digest_preview' || result.type === 'generic_test')
+        ? result.type as 'daily_digest_preview' | 'generic_test'
+        : 'generic_test';
+      setTestSent(resultType);
+      setTimeout(() => setTestSent(false), 4000);
+    } catch (err: any) {
+      console.error('[NotifSettingsPage] Test notification failed:', err);
+      setError(err?.message || 'Failed to send test notification');
+    } finally {
+      setTestSending(false);
+    }
+  };
+
+  const isEnabled = prefs?.enabled ?? true;
+
+  return (
+    <div className="min-h-screen pb-28">
+      <div className="relative z-10 px-4 pb-6">
+        <PageHeader title={t('notif_title')} />
+
+        {isLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-6 h-6 text-amber-400 animate-spin" />
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {/* Status banner */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05 }}
+            >
+              <GlassCard className="!p-4 relative overflow-hidden">
+                <div className="flex items-center gap-3">
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                    isEnabled
+                      ? 'bg-gradient-to-br from-amber-500/20 to-amber-600/10'
+                      : 'bg-white/[0.04]'
+                  }`}>
+                    {isEnabled ? (
+                      <Bell className="w-6 h-6 text-amber-400" />
+                    ) : (
+                      <BellOff className="w-6 h-6 text-white/25" />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-foreground" style={{ fontSize: '1rem', fontWeight: 700 }}>
+                      {isEnabled ? t('notif_active') : t('notif_disabled')}
+                    </p>
+                    <p className="text-muted-foreground/50 mt-0.5" style={{ fontSize: '0.75rem' }}>
+                      {t('notif_all_desc')}
+                    </p>
+                  </div>
+                  {isEnabled && (
+                    <div className="w-3 h-3 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]" />
+                  )}
+                </div>
+              </GlassCard>
+            </motion.div>
+
+            {/* Master toggle */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <GlassCard className="!p-3">
+                {prefs && (
+                  <ToggleRow
+                    icon={Bell}
+                    label={t('notif_all')}
+                    description={t('notif_all_desc')}
+                    color="text-amber-400"
+                    enabled={prefs.enabled}
+                    onToggle={() => updatePref('enabled', !prefs.enabled)}
+                  />
+                )}
+              </GlassCard>
+            </motion.div>
+
+            {/* Individual toggles */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+            >
+              <div className="flex items-center gap-2 mb-2.5 px-1">
+                <span className="text-muted-foreground/40" style={{ fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                  {t('notif_categories') || 'Categories'}
+                </span>
+              </div>
+              <GlassCard className="!p-3">
+                {prefs && (
+                  <div className="space-y-0.5">
+                    <ToggleRow
+                      icon={CheckCircle2}
+                      label={t('notif_day_complete')}
+                      description={t('notif_day_complete_desc')}
+                      color="text-emerald-400"
+                      enabled={prefs.dayComplete}
+                      disabled={!prefs.enabled}
+                      onToggle={() => updatePref('dayComplete', !prefs.dayComplete)}
+                    />
+                    <div className="h-px bg-white/[0.04] mx-2" />
+                    <ToggleRow
+                      icon={Flame}
+                      label={t('notif_streak')}
+                      description={t('notif_streak_desc')}
+                      color="text-orange-400"
+                      enabled={prefs.streakMilestones}
+                      disabled={!prefs.enabled}
+                      onToggle={() => updatePref('streakMilestones', !prefs.streakMilestones)}
+                    />
+                    <div className="h-px bg-white/[0.04] mx-2" />
+                    <ToggleRow
+                      icon={Trophy}
+                      label={t('notif_challenge')}
+                      description={t('notif_challenge_desc')}
+                      color="text-yellow-400"
+                      enabled={prefs.challengeUpdates}
+                      disabled={!prefs.enabled}
+                      onToggle={() => updatePref('challengeUpdates', !prefs.challengeUpdates)}
+                    />
+                    <div className="h-px bg-white/[0.04] mx-2" />
+                    <ToggleRow
+                      icon={Calendar}
+                      label={t('notif_daily')}
+                      description={t('notif_daily_desc')}
+                      color="text-blue-400"
+                      enabled={prefs.dailyReminder}
+                      disabled={!prefs.enabled}
+                      onToggle={() => updatePref('dailyReminder', !prefs.dailyReminder)}
+                    />
+
+                    {/* Time picker for daily reminders */}
+                    {prefs.enabled && prefs.dailyReminder && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="ml-11 space-y-1.5 pt-1"
+                      >
+                        <div className="flex items-center gap-3 py-2 px-1">
+                          <Clock className="w-3.5 h-3.5 text-blue-400/60" />
+                          <span className="text-white/50" style={{ fontSize: '0.75rem' }}>
+                            {t('notif_digest_time')}
+                          </span>
+                          <input
+                            type="time"
+                            value={reminderTime}
+                            onChange={(e) => {
+                              setReminderTime(e.target.value);
+                              setReminderTimeSaved(false);
+                            }}
+                            onBlur={() => {
+                              if (reminderTime && reminderTime !== (user?.dailyReminderTime || '09:00')) {
+                                hapticFeedback('light');
+                                updateUser({ dailyReminderTime: reminderTime });
+                                setReminderTimeSaved(true);
+                                setTimeout(() => setReminderTimeSaved(false), 2000);
+                              }
+                            }}
+                            className="bg-white/[0.06] border border-white/10 rounded-lg px-2 py-1 text-white/80 text-center outline-none focus:border-blue-400/40 transition-colors"
+                            style={{ fontSize: '0.8125rem', width: '5.5rem', colorScheme: 'dark' }}
+                          />
+                          {reminderTimeSaved && (
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 px-1 pb-1">
+                          <Globe className="w-3 h-3 text-white/20" />
+                          <span className="text-white/25" style={{ fontSize: '0.6875rem' }}>
+                            {t('notif_timezone')} {utcOffsetLabel}
+                          </span>
+                          <span className="text-white/15 italic" style={{ fontSize: '0.625rem' }}>
+                            ({t('notif_timezone_auto')})
+                          </span>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    <div className="h-px bg-white/[0.04] mx-2" />
+                    <ToggleRow
+                      icon={Bot}
+                      label={t('notif_coach')}
+                      description={t('notif_coach_desc')}
+                      color="text-purple-400"
+                      enabled={prefs.coachTips}
+                      disabled={!prefs.enabled}
+                      onToggle={() => updatePref('coachTips', !prefs.coachTips)}
+                    />
+                  </div>
+                )}
+              </GlassCard>
+            </motion.div>
+
+            {/* Saving indicator */}
+            {isSaving && (
+              <div className="flex items-center justify-center gap-1.5 text-white/30">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                <span style={{ fontSize: '0.6875rem' }}>{t('saving')}</span>
+              </div>
+            )}
+
+            {/* Error */}
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-lg bg-red-500/10 border border-red-500/20 p-3"
+              >
+                <p className="text-red-400 text-center" style={{ fontSize: '0.8125rem' }}>
+                  {error}
+                </p>
+              </motion.div>
+            )}
+
+            {/* Test notification */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={handleTestNotification}
+                disabled={!prefs?.enabled || testSending}
+                className="w-full h-12 rounded-xl bg-amber-500/15 border border-amber-500/20 text-amber-400/80 flex items-center justify-center gap-2.5 disabled:opacity-30"
+                style={{ fontSize: '0.875rem', fontWeight: 600 }}
+              >
+                {testSending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    {t('notif_test_sending')}
+                  </>
+                ) : testSent ? (
+                  <>
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                    <span className="text-emerald-400">
+                      {testSent === 'daily_digest_preview'
+                        ? t('notif_test_sent_digest')
+                        : t('notif_test_sent_generic')}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    {t('notif_test_send')}
+                  </>
+                )}
+              </motion.button>
+            </motion.div>
+
+            {/* Info */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25 }}
+            >
+              <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-4">
+                <p className="text-white/30" style={{ fontSize: '0.75rem', lineHeight: 1.6 }}>
+                  {t('notif_info')}
+                </p>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

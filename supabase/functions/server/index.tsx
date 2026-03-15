@@ -11120,6 +11120,7 @@ app.get(`${PREFIX}/admin/users`, async (c) => {
     const page = parseInt(c.req.query("page") || "1");
     const limit = parseInt(c.req.query("limit") || "50");
     const filter = c.req.query("filter") || "all"; // all | active | expired
+    const sort = c.req.query("sort") || "date"; // date | referrals | name
 
     // Get all user mappings from KV by prefix
     // getByPrefix returns values directly (not {key,value} objects)
@@ -11163,8 +11164,14 @@ app.get(`${PREFIX}/admin/users`, async (c) => {
       filtered = filtered.filter((u) => !u.subscriptionExpiresAt || new Date(u.subscriptionExpiresAt).getTime() <= Date.now());
     }
 
-    // Sort by createdAt desc
-    filtered.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+    // Sort
+    if (sort === "referrals") {
+      filtered.sort((a, b) => (b.referralCount || 0) - (a.referralCount || 0));
+    } else if (sort === "name") {
+      filtered.sort((a, b) => (a.displayName || a.firstName || "").localeCompare(b.displayName || b.firstName || ""));
+    } else {
+      filtered.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+    }
 
     const total = filtered.length;
     const offset = (page - 1) * limit;
@@ -11292,10 +11299,17 @@ app.post(`${PREFIX}/admin/broadcast`, async (c) => {
     const admin = await requireAdmin(c);
     if (!admin) return c.json({ message: "Forbidden: admin only", code: "FORBIDDEN", status: 403 }, 403);
 
-    const { text, audience, mediaType, mediaUrls } = await c.req.json();
+    const { text, audience, mediaType, mediaUrls, buttonText, buttonUrl } = await c.req.json();
     // audience: "all" | "subscribers" | "non_subscribers"
     // mediaType: null | "photo" | "photos" | "video"
     // mediaUrls: string[] — URLs of photos/video
+    // buttonText: optional string — inline button label
+    // buttonUrl: optional string — inline button URL
+
+    // Build inline keyboard if button is provided
+    const inlineKeyboard = (buttonText && buttonUrl) ? {
+      inline_keyboard: [[{ text: buttonText, url: buttonUrl }]]
+    } : undefined;
 
     if (!text && (!mediaUrls || mediaUrls.length === 0)) {
       return c.json({ message: "Text or media required", code: "BAD_REQUEST", status: 400 }, 400);
@@ -11343,19 +11357,23 @@ app.post(`${PREFIX}/admin/broadcast`, async (c) => {
         const chatId = Number(user.telegramId);
 
         if (mediaType === "photos" && mediaUrls && mediaUrls.length > 1) {
-          // Send media group
+          // Send media group (no inline keyboard support for media groups)
           const media = mediaUrls.map((url: string, idx: number) => ({
             type: "photo" as const,
             media: url,
             ...(idx === 0 && text ? { caption: text, parse_mode: "HTML" } : {}),
           }));
           await sendMediaGroup(chatId, media);
+          // If button provided, send it as a separate message after media group
+          if (inlineKeyboard) {
+            await sendMessage(chatId, buttonText, { reply_markup: inlineKeyboard });
+          }
         } else if (mediaType === "photo" && mediaUrls && mediaUrls.length > 0) {
-          await sendPhoto(chatId, mediaUrls[0], text || undefined);
+          await sendPhoto(chatId, mediaUrls[0], text || undefined, inlineKeyboard ? { reply_markup: inlineKeyboard } : undefined);
         } else if (mediaType === "video" && mediaUrls && mediaUrls.length > 0) {
-          await sendVideo(chatId, mediaUrls[0], text || undefined);
+          await sendVideo(chatId, mediaUrls[0], text || undefined, inlineKeyboard ? { reply_markup: inlineKeyboard } : undefined);
         } else if (text) {
-          await sendMessage(chatId, text);
+          await sendMessage(chatId, text, inlineKeyboard ? { reply_markup: inlineKeyboard } : undefined);
         }
 
         sent++;
@@ -11422,12 +11440,24 @@ app.get(`${PREFIX}/admin/stats`, async (c) => {
     const newToday = users.filter((u) => u.createdAt?.startsWith(today)).length;
     const totalReferrals = users.reduce((s, u) => s + (u.referralCount || 0), 0);
 
+    // Top referrers
+    const topReferrers = users
+      .filter((u) => (u.referralCount || 0) > 0)
+      .sort((a, b) => (b.referralCount || 0) - (a.referralCount || 0))
+      .slice(0, 10)
+      .map((u) => ({
+        displayName: u.displayName || u.firstName || "Unknown",
+        telegramUsername: u.telegramUsername || null,
+        referralCount: u.referralCount || 0,
+      }));
+
     return c.json({
       totalUsers: users.length,
       activeSubscribers,
       expiredSubscribers: users.length - activeSubscribers,
       newToday,
       totalReferrals,
+      topReferrers,
     });
   } catch (err) {
     console.log("GET /admin/stats error:", err);

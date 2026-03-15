@@ -36,6 +36,9 @@ import { useTranslation } from './i18n';
 import { PageHeader } from './page-header';
 import { buildStartLink } from './bot-config';
 
+// Tezam.by SVG logo
+import tezamLogoSvg from '../../imports/❤️Logo_Tezam-1.svg';
+
 // Telegram SVG icon (inline)
 function TelegramIcon({ className, style }: { className?: string; style?: React.CSSProperties }) {
   return (
@@ -650,21 +653,38 @@ export function BonusesPage() {
 
             {/* ===== Developer Credit ===== */}
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              className="pt-2 pb-4"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, type: 'spring', stiffness: 200, damping: 20 }}
+              className="pt-3 pb-4"
             >
               <a
                 href="https://tezam.by"
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => hapticFeedback('light')}
-                className="w-full py-3 flex items-center justify-center gap-1.5 opacity-40 hover:opacity-60 transition-opacity"
+                className="block w-full rounded-2xl overflow-hidden transition-transform active:scale-[0.98]"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(86,109,214,0.10), rgba(86,109,214,0.04))',
+                  border: '1px solid rgba(86,109,214,0.18)',
+                }}
               >
-                <Heart className="w-3 h-3 text-muted-foreground" />
-                <span className="text-muted-foreground text-[0.6875rem]">{t('pn_developed_by')}</span>
-                <span className="text-foreground/60 text-[0.6875rem] font-medium">Tezam.by</span>
+                <div className="flex flex-col items-center gap-3 px-6 py-5">
+                  {/* Tezam SVG Logo */}
+                  <img
+                    src={tezamLogoSvg}
+                    alt="Tezam.by"
+                    className="h-10 w-auto"
+                  />
+                  <div className="text-center">
+                    <p className="text-foreground/70 text-[0.75rem] font-medium">
+                      {t('pn_developed_by')}
+                    </p>
+                    <p className="text-muted-foreground/40 text-[0.625rem] mt-0.5">
+                      tezam.by
+                    </p>
+                  </div>
+                </div>
               </a>
             </motion.div>
           </>

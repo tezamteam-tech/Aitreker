@@ -1,9 +1,10 @@
 // =============================================
 // PROPER FOOD AI — Admin Panel (/admin)
 // =============================================
-// Admin dashboard for @tezam_by (tgId: 7879078497)
-// Features: user list, subscription management,
-// broadcast messages with media support.
+// Super Admin: @dozorir (tgId: 5772448919) + @tezam_by (tgId: 7879078497)
+// Features: user list with sort, subscription management,
+// broadcast messages with media & inline button support,
+// top referrers leaderboard, referral sorting.
 // =============================================
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -38,6 +39,9 @@ import {
   Upload,
   Trash2,
   AlertTriangle,
+  ArrowUpDown,
+  Link,
+  Trophy,
 } from 'lucide-react';
 import { GlassCard } from './glass-card';
 import { useBottomSheetLifecycle } from './bottom-sheet-context';
@@ -134,23 +138,70 @@ function StatsSection() {
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-3">
-      {cards.map((card, i) => (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-3">
+        {cards.map((card, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.05 }}
+          >
+            <GlassCard className="p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <card.icon className="w-4 h-4" style={{ color: card.color }} />
+                <span className="text-white/40" style={{ fontSize: '0.75rem' }}>{card.label}</span>
+              </div>
+              <span className="text-white" style={{ fontSize: '1.5rem', fontWeight: 700 }}>{card.value}</span>
+            </GlassCard>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Top Referrers */}
+      {stats.topReferrers && stats.topReferrers.length > 0 && (
         <motion.div
-          key={i}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: i * 0.05 }}
+          transition={{ delay: 0.3 }}
         >
           <GlassCard className="p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <card.icon className="w-4 h-4" style={{ color: card.color }} />
-              <span className="text-white/40" style={{ fontSize: '0.75rem' }}>{card.label}</span>
+            <div className="flex items-center gap-2 mb-3">
+              <Trophy className="w-4 h-4 text-[#fdcb6e]" />
+              <span className="text-white/60" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
+                {t('adm_top_referrers')}
+              </span>
             </div>
-            <span className="text-white" style={{ fontSize: '1.5rem', fontWeight: 700 }}>{card.value}</span>
+            <div className="space-y-2">
+              {stats.topReferrers.map((ref: any, idx: number) => (
+                <div key={idx} className="flex items-center justify-between py-1.5">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="text-white/20 w-5 text-center shrink-0" style={{ fontSize: '0.75rem', fontWeight: 700 }}>
+                      {idx + 1}
+                    </span>
+                    <div className="min-w-0">
+                      <span className="text-white truncate block" style={{ fontSize: '0.8125rem', fontWeight: 500 }}>
+                        {ref.displayName}
+                      </span>
+                      {ref.telegramUsername && (
+                        <span className="text-[#a29bfe] block" style={{ fontSize: '0.6875rem' }}>
+                          @{ref.telegramUsername}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Users className="w-3 h-3 text-[#fdcb6e]" />
+                    <span className="text-[#fdcb6e]" style={{ fontSize: '0.875rem', fontWeight: 700 }}>
+                      {ref.referralCount}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </GlassCard>
         </motion.div>
-      ))}
+      )}
     </div>
   );
 }
@@ -162,6 +213,7 @@ function UsersSection() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | 'active' | 'expired'>('all');
+  const [sort, setSort] = useState<'date' | 'referrals' | 'name'>('date');
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -184,10 +236,10 @@ function UsersSection() {
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleteStatus, setDeleteStatus] = useState<string | null>(null);
 
-  const fetchUsers = useCallback(async (p: number = 1, s: string = search, f: string = filter) => {
+  const fetchUsers = useCallback(async (p: number = 1, s: string = search, f: string = filter, st: string = sort) => {
     setLoading(true);
     try {
-      const res = await api.adminGetUsers({ page: p, limit: 20, search: s, filter: f });
+      const res = await api.adminGetUsers({ page: p, limit: 20, search: s, filter: f, sort: st });
       setUsers(res.users);
       setTotal(res.total);
       setTotalPages(res.totalPages);
@@ -197,17 +249,17 @@ function UsersSection() {
     } finally {
       setLoading(false);
     }
-  }, [search, filter]);
+  }, [search, filter, sort]);
 
   useEffect(() => {
-    fetchUsers(1, search, filter);
-  }, [filter]);
+    fetchUsers(1, search, filter, sort);
+  }, [filter, sort]);
 
   const handleSearch = (val: string) => {
     setSearch(val);
     if (searchTimeout.current) clearTimeout(searchTimeout.current);
     searchTimeout.current = setTimeout(() => {
-      fetchUsers(1, val, filter);
+      fetchUsers(1, val, filter, sort);
     }, 400);
   };
 
@@ -348,8 +400,8 @@ function UsersSection() {
         />
       </div>
 
-      {/* Filter */}
-      <div className="flex gap-2 mb-4">
+      {/* Filter & Sort */}
+      <div className="flex gap-2 mb-2 flex-wrap">
         {(['all', 'active', 'expired'] as const).map(f => (
           <button
             key={f}
@@ -369,6 +421,23 @@ function UsersSection() {
         <span className="ml-auto text-white/20 self-center" style={{ fontSize: '0.75rem' }}>
           {total} {t('adm_users_count')}
         </span>
+      </div>
+      <div className="flex gap-2 mb-4">
+        <ArrowUpDown className="w-3.5 h-3.5 text-white/20 self-center shrink-0" />
+        {(['date', 'referrals', 'name'] as const).map(s => (
+          <button
+            key={s}
+            onClick={() => { hapticFeedback('light'); setSort(s); }}
+            className={`px-2.5 py-1 rounded-full transition-all ${
+              sort === s
+                ? 'bg-[#00cec9]/15 text-[#00cec9] border border-[#00cec9]/30'
+                : 'bg-white/[0.04] text-white/20 border border-transparent'
+            }`}
+            style={{ fontSize: '0.6875rem', fontWeight: 500 }}
+          >
+            {s === 'date' ? t('adm_sort_date') : s === 'referrals' ? t('adm_sort_referrals') : t('adm_sort_name')}
+          </button>
+        ))}
       </div>
 
       {loading ? (
@@ -410,6 +479,12 @@ function UsersSection() {
                         {user.phoneNumber && (
                           <span className="text-white/20" style={{ fontSize: '0.6875rem' }}>
                             {user.phoneNumber}
+                          </span>
+                        )}
+                        {(user.referralCount || 0) > 0 && (
+                          <span className="flex items-center gap-0.5 text-[#fdcb6e]/70" style={{ fontSize: '0.6875rem' }}>
+                            <Users className="w-2.5 h-2.5" />
+                            {user.referralCount}
                           </span>
                         )}
                       </div>
@@ -826,6 +901,8 @@ function BroadcastSection() {
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [preview, setPreview] = useState(false);
+  const [buttonText, setButtonText] = useState('');
+  const [buttonUrl, setButtonUrl] = useState('');
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -859,6 +936,8 @@ function BroadcastSection() {
         audience,
         mediaType: mediaType === 'none' ? null : mediaType,
         mediaUrls: filteredUrls.length > 0 ? filteredUrls : undefined,
+        buttonText: buttonText.trim() || undefined,
+        buttonUrl: buttonUrl.trim() || undefined,
       });
       hapticSuccess();
       setResult(res);
@@ -1074,6 +1153,47 @@ function BroadcastSection() {
         )}
       </GlassCard>
 
+      {/* Inline Button */}
+      <GlassCard className="p-4">
+        <div className="flex items-center gap-2 mb-2">
+          <Link className="w-3.5 h-3.5 text-[#a29bfe]" />
+          <span className="text-white/40" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
+            {t('adm_button')}
+          </span>
+          <span className="text-white/15" style={{ fontSize: '0.625rem' }}>
+            ({t('adm_optional')})
+          </span>
+        </div>
+        <div className="space-y-2">
+          <input
+            type="text"
+            value={buttonText}
+            onChange={(e) => setButtonText(e.target.value)}
+            placeholder={t('adm_button_text_placeholder')}
+            className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.06] text-white placeholder-white/20 outline-none"
+            style={{ fontSize: '0.8125rem' }}
+          />
+          <input
+            type="text"
+            value={buttonUrl}
+            onChange={(e) => setButtonUrl(e.target.value)}
+            placeholder={t('adm_button_url_placeholder')}
+            className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.06] text-white placeholder-white/20 outline-none"
+            style={{ fontSize: '0.8125rem' }}
+          />
+          {buttonText.trim() && buttonUrl.trim() && (
+            <div className="flex items-center gap-2 pt-1">
+              <div className="px-4 py-2 rounded-lg bg-[#6c5ce7]/20 border border-[#6c5ce7]/30 text-[#a29bfe] text-center" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
+                {buttonText}
+              </div>
+              <span className="text-white/15 truncate flex-1" style={{ fontSize: '0.625rem' }}>
+                {buttonUrl}
+              </span>
+            </div>
+          )}
+        </div>
+      </GlassCard>
+
       {/* Preview */}
       {text.trim() && (
         <GlassCard className="p-4">
@@ -1090,11 +1210,27 @@ function BroadcastSection() {
             </button>
           </div>
           {preview && (
-            <div
-              className="p-3 rounded-xl bg-white/[0.02] text-white/80"
-              style={{ fontSize: '0.875rem', lineHeight: 1.5 }}
-              dangerouslySetInnerHTML={{ __html: text }}
-            />
+            <div className="space-y-2">
+              <div
+                className="p-3 rounded-xl bg-white/[0.02] text-white/80"
+                style={{ fontSize: '0.875rem', lineHeight: 1.5 }}
+                dangerouslySetInnerHTML={{ __html: text }}
+              />
+              {mediaUrls.some(u => u.trim()) && mediaType !== 'none' && (
+                <div className="flex gap-1.5 overflow-x-auto py-1">
+                  {mediaUrls.filter(u => u.trim()).map((url, i) => (
+                    <img key={i} src={url} alt="" className="h-16 rounded-lg object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                  ))}
+                </div>
+              )}
+              {buttonText.trim() && buttonUrl.trim() && (
+                <div className="flex justify-center">
+                  <div className="px-5 py-2 rounded-lg bg-[#6c5ce7]/20 border border-[#6c5ce7]/30 text-[#a29bfe]" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
+                    {buttonText}
+                  </div>
+                </div>
+              )}
+            </div>
           )}
         </GlassCard>
       )}

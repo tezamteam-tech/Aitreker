@@ -36,6 +36,7 @@ const AdminPage = React.lazy(() => import('./components/admin').then(m => ({ def
 const WalletPage = React.lazy(() => import('./components/wallet').then(m => ({ default: m.WalletPage })));
 const UpgradePremiumPage = React.lazy(() => import('./components/upgrade-premium').then(m => ({ default: m.UpgradePremiumPage })));
 const WeeklyAnalyticsPage = React.lazy(() => import('./components/weekly-analytics').then(m => ({ default: m.WeeklyAnalyticsPage })));
+const NotificationSettingsPage = React.lazy(() => import('./components/notification-settings').then(m => ({ default: m.NotificationSettingsPage })));
 
 // ---- Suspense wrapper for lazy routes ----
 function LazyPage({ children }: { children: React.ReactNode }) {
@@ -107,6 +108,7 @@ export const router = createBrowserRouter([
       { path: 'meal-plan', Component: lazy(MealPlanPage) },
       { path: 'workout-plan', Component: lazy(WorkoutPlanPage) },
       { path: 'profile', Component: lazy(ProfileNutritionPage) },
+      { path: 'profile/notifications', Component: lazy(NotificationSettingsPage) },
       { path: 'referrals', Component: lazy(ReferralsPage) },
       { path: 'day/:dayNumber', Component: lazy(DayViewPage) },
       { path: 'challenges', Component: lazy(ChallengesListPage) },

@@ -28,6 +28,8 @@ import {
   Scale,
   BarChart3,
   Activity,
+  Gift,
+  Sparkles,
 } from 'lucide-react';
 import { GlassCard } from './glass-card';
 import { useAuth } from './auth-context';
@@ -580,6 +582,36 @@ export function HomeNutritionPage() {
           calorieTarget={nutritionData.caloriesGoal}
           onBurnUpdate={(total) => setBurnedToday(total)}
         />
+
+        {/* ===== Earn Bonuses Banner ===== */}
+        <motion.button
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          whileTap={{ scale: 0.97 }}
+          onClick={() => { hapticFeedback('medium'); navigate('/bonuses'); }}
+          className="w-full flex items-center gap-3.5 p-4 rounded-2xl relative overflow-hidden"
+          style={{
+            background: 'linear-gradient(135deg, rgba(108,92,231,0.12), rgba(0,206,201,0.08))',
+            border: '1px solid rgba(108,92,231,0.15)',
+          }}
+        >
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#6c5ce7]/20 to-[#00cec9]/20 flex items-center justify-center shrink-0">
+            <Gift className="w-5.5 h-5.5 text-[#a29bfe]" style={{ width: 22, height: 22 }} />
+          </div>
+          <div className="flex-1 text-left min-w-0">
+            <p className="text-foreground" style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+              {t('pn_social_tasks')}
+            </p>
+            <p className="text-muted-foreground/60" style={{ fontSize: '0.6875rem' }}>
+              {t('pn_social_tasks_desc')}
+            </p>
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <Sparkles className="w-3.5 h-3.5 text-[#00cec9]/50" />
+            <ChevronRight className="w-4 h-4 text-muted-foreground/30" />
+          </div>
+        </motion.button>
       </div>
 
       {/* Streak Milestone Share Modal */}
