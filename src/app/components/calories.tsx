@@ -701,19 +701,21 @@ function AddFoodSheet({
         className="fixed left-0 right-0 bottom-0 z-50 glass-sheet-bottom rounded-t-[1.5rem] max-h-[90vh] overflow-auto"
         style={{
           paddingBottom: 'calc(1.5rem + var(--safe-area-bottom, 0px))',
-          background: 'rgba(18,18,30,0.98)',
-          borderTop: '1px solid rgba(255,255,255,0.08)',
+          background: 'var(--glass-bg-panel)',
+          borderTop: '1px solid var(--glass-border)',
+          backdropFilter: 'blur(var(--glass-blur-panel))',
+          WebkitBackdropFilter: 'blur(var(--glass-blur-panel))',
         }}
       >
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 rounded-full bg-white/15" />
+          <div className="w-10 h-1 rounded-full bg-ui-handle" />
         </div>
 
         <div className="px-5 pt-2 pb-4">
           {/* Header */}
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-white" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
+            <h2 className="text-foreground" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
               {t('cal_manual_title')}
             </h2>
             <motion.button
@@ -914,19 +916,21 @@ function EditFoodSheet({
         className="fixed left-0 right-0 bottom-0 z-50 glass-sheet-bottom rounded-t-[1.5rem] max-h-[90vh] overflow-auto"
         style={{
           paddingBottom: 'calc(1.5rem + var(--safe-area-bottom, 0px))',
-          background: 'rgba(18,18,30,0.98)',
-          borderTop: '1px solid rgba(255,255,255,0.08)',
+          background: 'var(--glass-bg-panel)',
+          borderTop: '1px solid var(--glass-border)',
+          backdropFilter: 'blur(var(--glass-blur-panel))',
+          WebkitBackdropFilter: 'blur(var(--glass-blur-panel))',
         }}
       >
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 rounded-full bg-white/15" />
+          <div className="w-10 h-1 rounded-full bg-ui-handle" />
         </div>
 
         <div className="px-5 pt-2 pb-4">
           {/* Header */}
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-white" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
+            <h2 className="text-foreground" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
               {t('cal_edit_entry')}
             </h2>
             <motion.button

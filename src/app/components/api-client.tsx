@@ -1466,6 +1466,10 @@ export const api = {
     return request('POST', '/wallet/topup-stars', { amount });
   },
 
+  async topupStarsLink(amount: number): Promise<{ success: boolean; invoiceLink: string; amount: number }> {
+    return request('POST', '/wallet/topup-stars-link', { amount });
+  },
+
   async topupTon(amount: number): Promise<{ success: boolean; sentToChat: boolean; amount: number }> {
     return request('POST', '/wallet/topup-ton', { amount });
   },

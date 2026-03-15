@@ -244,7 +244,7 @@ export function ReferralsPage() {
                   </p>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.05] text-center">
+                  <div className="p-3 rounded-xl bg-[var(--glass-bg-card)] border border-[var(--glass-border-subtle)] text-center">
                     <p className="text-foreground" style={{ fontSize: '1.25rem', fontWeight: 800 }}>
                       {Math.round((subscribedCount / Math.max(totalInvited, 1)) * 100)}%
                     </p>
@@ -252,7 +252,7 @@ export function ReferralsPage() {
                       {t('ref_conversion_rate')}
                     </p>
                   </div>
-                  <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.05] text-center">
+                  <div className="p-3 rounded-xl bg-[var(--glass-bg-card)] border border-[var(--glass-border-subtle)] text-center">
                     <p className="text-foreground" style={{ fontSize: '1.25rem', fontWeight: 800 }}>
                       {10 - nextMilestoneProgress}
                     </p>
@@ -300,7 +300,7 @@ export function ReferralsPage() {
                 <motion.button
                   whileTap={{ scale: 0.97 }}
                   onClick={handleCopyLink}
-                  className="h-12 rounded-xl bg-white/[0.05] border border-white/[0.1] flex items-center justify-center gap-2 transition-all"
+                  className="h-12 rounded-xl bg-ui-button border border-[var(--glass-border)] flex items-center justify-center gap-2 transition-all"
                 >
                   <AnimatePresence mode="wait">
                     {copied ? (
@@ -609,7 +609,7 @@ function ReferralCard({ user, rank }: { user: InvitedUser; rank: number }) {
               </span>
             </div>
           ) : (
-            <div className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-white/[0.03]">
+            <div className="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-[var(--glass-bg-card)]">
               <CheckCircle2 className="w-3 h-3 text-muted-foreground/30" />
               <span className="text-muted-foreground/40" style={{ fontSize: '0.6875rem', fontWeight: 500 }}>
                 {t('ref_pending')}
@@ -668,7 +668,7 @@ function LeaderboardSection({ data, loading, currentUserId }: { data: Leaderboar
   if (loading) {
     return (
       <div className="space-y-2">
-        <p className="text-white/40 px-1" style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.05em' }}>
+        <p className="text-muted-foreground px-1" style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.05em' }}>
           {t('ref_top_referrers')}
         </p>
         <GlassCard className="!p-8 flex items-center justify-center">
@@ -731,7 +731,7 @@ function LeaderboardSection({ data, loading, currentUserId }: { data: Leaderboar
                   {entry.rank <= 3 ? (
                     <Trophy className="w-3.5 h-3.5" style={{ color: medal?.text || '#fff' }} />
                   ) : (
-                    <span className="text-white/40" style={{ fontSize: '0.6875rem', fontWeight: 700 }}>
+                    <span className="text-muted-foreground" style={{ fontSize: '0.6875rem', fontWeight: 700 }}>
                       {entry.rank}
                     </span>
                   )}
@@ -743,7 +743,7 @@ function LeaderboardSection({ data, loading, currentUserId }: { data: Leaderboar
                   style={{ backgroundColor: isMe ? 'rgba(108,92,231,0.25)' : 'rgba(255,255,255,0.06)' }}
                 >
                   <span
-                    className={isMe ? 'text-[#a29bfe]' : 'text-white/40'}
+                    className={isMe ? 'text-[#a29bfe]' : 'text-muted-foreground'}
                     style={{ fontSize: '0.6875rem', fontWeight: 700 }}
                   >
                     {initials}
@@ -788,8 +788,8 @@ function LeaderboardSection({ data, loading, currentUserId }: { data: Leaderboar
         {data.my_stats && data.my_rank && data.my_rank > 10 && (
           <div className="mt-3 pt-3 border-t border-[var(--glass-border-subtle)]">
             <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-[#6c5ce7]/10 border border-[#6c5ce7]/20">
-              <div className="w-8 h-8 rounded-lg bg-white/[0.04] flex items-center justify-center flex-shrink-0">
-                <span className="text-white/40" style={{ fontSize: '0.6875rem', fontWeight: 700 }}>
+              <div className="w-8 h-8 rounded-lg bg-ui-button flex items-center justify-center flex-shrink-0">
+                <span className="text-muted-foreground" style={{ fontSize: '0.6875rem', fontWeight: 700 }}>
                   {data.my_rank}
                 </span>
               </div>

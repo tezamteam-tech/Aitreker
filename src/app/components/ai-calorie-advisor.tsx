@@ -268,13 +268,15 @@ export function AiCalorieAdvisor({
         className="fixed left-0 right-0 bottom-0 z-50 rounded-t-[1.5rem] max-h-[92vh] overflow-auto"
         style={{
           paddingBottom: 'calc(1.5rem + var(--safe-area-bottom, 0px))',
-          background: 'rgba(18,18,30,0.98)',
-          borderTop: '1px solid rgba(255,255,255,0.08)',
+          background: 'var(--glass-bg-panel)',
+          borderTop: '1px solid var(--glass-border)',
+          backdropFilter: 'blur(var(--glass-blur-panel))',
+          WebkitBackdropFilter: 'blur(var(--glass-blur-panel))',
         }}
       >
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 rounded-full bg-white/15" />
+          <div className="w-10 h-1 rounded-full bg-ui-handle" />
         </div>
 
         <div className="px-5 pt-2 pb-4">
@@ -284,16 +286,16 @@ export function AiCalorieAdvisor({
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#6c5ce7]/20 to-[#a29bfe]/20 flex items-center justify-center">
                 <Sparkles className="w-4.5 h-4.5 text-[#a29bfe]" />
               </div>
-              <h2 className="text-white" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
+              <h2 className="text-foreground" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
                 {t('ai_advisor_title')}
               </h2>
             </div>
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={onClose}
-              className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center"
+              className="w-8 h-8 rounded-lg bg-ui-close flex items-center justify-center"
             >
-              <X className="w-4 h-4 text-white/50" />
+              <X className="w-4 h-4 text-ui-icon-secondary" />
             </motion.button>
           </div>
 
@@ -306,9 +308,9 @@ export function AiCalorieAdvisor({
                   <span className="text-[#ffd700]/80 text-xs font-medium">{t('ai_advisor_premium_unlimited')}</span>
                 </div>
               ) : (
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] w-fit">
-                  <Clock className="w-3.5 h-3.5 text-white/40" />
-                  <span className="text-white/50 text-xs">
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-ui-button border border-[var(--glass-border)] w-fit">
+                  <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="text-muted-foreground text-xs">
                     {t('ai_advisor_rate_limit', { used: usage.used_this_week, limit: usage.limit || 1 })}
                   </span>
                 </div>
@@ -329,9 +331,9 @@ export function AiCalorieAdvisor({
                 {/* Current metrics summary */}
                 <div
                   className="rounded-2xl p-4 space-y-2"
-                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+                  style={{ background: 'var(--glass-bg-card)', border: '1px solid var(--glass-border)' }}
                 >
-                  <p className="text-white/40 text-xs font-medium mb-2">{t('ai_advisor_your_metrics')}</p>
+                  <p className="text-muted-foreground text-xs font-medium mb-2">{t('ai_advisor_your_metrics')}</p>
                   <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
                     <MetricLine label={t('pn_gender')} value={profile.gender === 'male' ? t('pn_male') : t('pn_female')} />
                     <MetricLine label={t('pn_age')} value={`${profile.age}`} />
@@ -340,14 +342,14 @@ export function AiCalorieAdvisor({
                     <MetricLine label="BMI" value={bmi} />
                     <MetricLine label={t('pn_goal_label')} value={`${goalEmoji[profile.goal] || ''} ${t(`pn_goal_${profile.goal.replace('_weight', '').replace('_muscle', '')}` as any) || profile.goal}`} />
                   </div>
-                  <div className="pt-2 mt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div className="pt-2 mt-2" style={{ borderTop: '1px solid var(--glass-border-subtle)' }}>
                     <MetricLine label={t('ai_advisor_current_target')} value={`${currentTarget} ${t('cal_unit')}`} highlight />
                   </div>
 
                   {/* Current macro targets */}
                   {(currentMacros?.protein || currentMacros?.carbs || currentMacros?.fat) ? (
-                    <div className="pt-2 mt-1" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                      <p className="text-white/30 text-xs mb-1.5">{t('ai_advisor_current_macros')}</p>
+                    <div className="pt-2 mt-1" style={{ borderTop: '1px solid var(--glass-border-subtle)' }}>
+                      <p className="text-ui-tertiary text-xs mb-1.5">{t('ai_advisor_current_macros')}</p>
                       <div className="flex items-center gap-3">
                         <span className="text-xs text-[#6c5ce7]/80">P: {currentMacros.protein || '—'}g</span>
                         <span className="text-xs text-[#00cec9]/80">C: {currentMacros.carbs || '—'}g</span>
@@ -355,19 +357,19 @@ export function AiCalorieAdvisor({
                       </div>
                     </div>
                   ) : (
-                    <div className="pt-2 mt-1" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                      <p className="text-white/20 text-xs italic">{t('ai_advisor_no_macros')}</p>
+                    <div className="pt-2 mt-1" style={{ borderTop: '1px solid var(--glass-border-subtle)' }}>
+                      <p className="text-ui-tertiary text-xs italic">{t('ai_advisor_no_macros')}</p>
                     </div>
                   )}
                 </div>
 
                 {/* Body photo upload */}
                 <div>
-                  <p className="text-white/40 text-xs font-medium mb-2">{t('ai_advisor_photo_label')}</p>
-                  <p className="text-white/25 text-xs mb-3 leading-relaxed">{t('ai_advisor_photo_desc')}</p>
+                  <p className="text-muted-foreground text-xs font-medium mb-2">{t('ai_advisor_photo_label')}</p>
+                  <p className="text-ui-tertiary text-xs mb-3 leading-relaxed">{t('ai_advisor_photo_desc')}</p>
 
                   {photoPreview ? (
-                    <div className="relative rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <div className="relative rounded-2xl overflow-hidden" style={{ border: '1px solid var(--glass-border)' }}>
                       <img
                         src={photoPreview}
                         alt="Body"
@@ -394,7 +396,7 @@ export function AiCalorieAdvisor({
                         <Camera className="w-5 h-5 text-[#a29bfe]" />
                       </div>
                       <span className="text-[#a29bfe] text-sm font-medium">{t('ai_advisor_upload_photo')}</span>
-                      <span className="text-white/20 text-xs">{t('ai_advisor_photo_optional')}</span>
+                      <span className="text-ui-tertiary text-xs">{t('ai_advisor_photo_optional')}</span>
                     </motion.button>
                   )}
 
@@ -462,8 +464,8 @@ export function AiCalorieAdvisor({
                     <Sparkles className="w-6 h-6 text-[#a29bfe]" />
                   </div>
                 </div>
-                <p className="text-white/60 text-sm font-medium">{t('ai_advisor_analyzing')}</p>
-                <p className="text-white/25 text-xs">{t('ai_advisor_analyzing_desc')}</p>
+                <p className="text-muted-foreground text-sm font-medium">{t('ai_advisor_analyzing')}</p>
+                <p className="text-ui-tertiary text-xs">{t('ai_advisor_analyzing_desc')}</p>
               </motion.div>
             )}
 
@@ -482,11 +484,11 @@ export function AiCalorieAdvisor({
                   style={{ background: 'linear-gradient(135deg, rgba(108,92,231,0.12), rgba(0,206,201,0.08))', border: '1px solid rgba(108,92,231,0.2)' }}
                 >
                   <div className="absolute top-0 right-0 w-24 h-24 rounded-full bg-[#6c5ce7]/5 -translate-y-1/2 translate-x-1/2" />
-                  <p className="text-white/50 text-xs font-medium mb-1">{t('ai_advisor_recommended')}</p>
-                  <p className="text-white text-4xl font-bold mb-0.5">
+                  <p className="text-muted-foreground text-xs font-medium mb-1">{t('ai_advisor_recommended')}</p>
+                  <p className="text-foreground text-4xl font-bold mb-0.5">
                     {result.recommended_calories.toLocaleString()}
                   </p>
-                  <p className="text-white/40 text-sm">{t('cal_unit')} / {t('ai_advisor_per_day')}</p>
+                  <p className="text-muted-foreground text-sm">{t('cal_unit')} / {t('ai_advisor_per_day')}</p>
 
                   {/* Difference from current */}
                   {currentTarget > 0 && (
@@ -496,7 +498,7 @@ export function AiCalorieAdvisor({
                       ) : (
                         <Zap className="w-3.5 h-3.5 text-[#ffeaa7]" />
                       )}
-                      <span className="text-white/50 text-xs">
+                      <span className="text-muted-foreground text-xs">
                         {result.recommended_calories < currentTarget
                           ? `${(currentTarget - result.recommended_calories).toLocaleString()} ${t('ai_advisor_less_than_current')}`
                           : result.recommended_calories > currentTarget
@@ -516,13 +518,13 @@ export function AiCalorieAdvisor({
 
                 {/* BMR / TDEE row */}
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="rounded-xl p-3 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                    <p className="text-white/30 text-xs mb-0.5">BMR</p>
-                    <p className="text-white font-semibold text-sm">{result.bmr_estimate}</p>
+                  <div className="rounded-xl p-3 text-center" style={{ background: 'var(--glass-bg-card)', border: '1px solid var(--glass-border)' }}>
+                    <p className="text-ui-tertiary text-xs mb-0.5">BMR</p>
+                    <p className="text-foreground font-semibold text-sm">{result.bmr_estimate}</p>
                   </div>
-                  <div className="rounded-xl p-3 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                    <p className="text-white/30 text-xs mb-0.5">TDEE</p>
-                    <p className="text-white font-semibold text-sm">{result.tdee_estimate}</p>
+                  <div className="rounded-xl p-3 text-center" style={{ background: 'var(--glass-bg-card)', border: '1px solid var(--glass-border)' }}>
+                    <p className="text-ui-tertiary text-xs mb-0.5">TDEE</p>
+                    <p className="text-foreground font-semibold text-sm">{result.tdee_estimate}</p>
                   </div>
                 </div>
 
@@ -534,8 +536,8 @@ export function AiCalorieAdvisor({
                   >
                     <Target className="w-5 h-5 text-[#fd79a8] flex-shrink-0" />
                     <div>
-                      <p className="text-white/40 text-xs">{t('ai_advisor_body_fat')}</p>
-                      <p className="text-white text-sm font-medium">{result.body_fat_estimate}</p>
+                      <p className="text-muted-foreground text-xs">{t('ai_advisor_body_fat')}</p>
+                      <p className="text-foreground text-sm font-medium">{result.body_fat_estimate}</p>
                     </div>
                   </div>
                 )}
@@ -544,20 +546,20 @@ export function AiCalorieAdvisor({
                 {result.body_assessment && (
                   <div
                     className="rounded-xl p-4"
-                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+                    style={{ background: 'var(--glass-bg-card)', border: '1px solid var(--glass-border)' }}
                   >
-                    <p className="text-white/40 text-xs font-medium mb-1.5">{t('ai_advisor_assessment')}</p>
-                    <p className="text-white/70 text-sm leading-relaxed">{result.body_assessment}</p>
+                    <p className="text-muted-foreground text-xs font-medium mb-1.5">{t('ai_advisor_assessment')}</p>
+                    <p className="text-muted-foreground/80 text-sm leading-relaxed">{result.body_assessment}</p>
                   </div>
                 )}
 
                 {/* Recommendation reason */}
                 <div
                   className="rounded-xl p-4"
-                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+                  style={{ background: 'var(--glass-bg-card)', border: '1px solid var(--glass-border)' }}
                 >
-                  <p className="text-white/40 text-xs font-medium mb-1.5">{t('ai_advisor_reason')}</p>
-                  <p className="text-white/70 text-sm leading-relaxed">{result.recommendation_reason}</p>
+                  <p className="text-muted-foreground text-xs font-medium mb-1.5">{t('ai_advisor_reason')}</p>
+                  <p className="text-muted-foreground/80 text-sm leading-relaxed">{result.recommendation_reason}</p>
                 </div>
 
                 {/* Tips */}
@@ -566,12 +568,12 @@ export function AiCalorieAdvisor({
                     className="rounded-xl p-4"
                     style={{ background: 'rgba(0,206,201,0.04)', border: '1px solid rgba(0,206,201,0.12)' }}
                   >
-                    <p className="text-white/40 text-xs font-medium mb-2">{t('ai_advisor_tips')}</p>
+                    <p className="text-muted-foreground text-xs font-medium mb-2">{t('ai_advisor_tips')}</p>
                     <div className="space-y-2">
                       {result.tips.map((tip, i) => (
                         <div key={i} className="flex items-start gap-2">
                           <span className="text-[#00cec9] text-xs mt-0.5">{'\u2022'}</span>
-                          <p className="text-white/60 text-sm leading-relaxed">{tip}</p>
+                          <p className="text-muted-foreground/80 text-sm leading-relaxed">{tip}</p>
                         </div>
                       ))}
                     </div>
@@ -590,14 +592,14 @@ export function AiCalorieAdvisor({
                     {t('ai_advisor_apply_macros', { calories: result.recommended_calories })}
                   </span>
                 </motion.button>
-                <p className="text-white/20 text-xs text-center -mt-2">
+                <p className="text-ui-tertiary text-xs text-center -mt-2">
                   {t('ai_advisor_macros_saved')}
                 </p>
 
                 {/* Re-analyze */}
                 <button
                   onClick={() => { setState('idle'); setResult(null); }}
-                  className="w-full py-2 text-center text-white/30 text-xs"
+                  className="w-full py-2 text-center text-ui-tertiary text-xs"
                 >
                   {t('ai_advisor_retry')}
                 </button>
@@ -629,7 +631,7 @@ export function AiCalorieAdvisor({
 
                 <button
                   onClick={() => setState('idle')}
-                  className="w-full py-2 text-center text-white/30 text-xs"
+                  className="w-full py-2 text-center text-ui-tertiary text-xs"
                 >
                   {t('ai_advisor_try_again')}
                 </button>
@@ -648,7 +650,7 @@ export function AiCalorieAdvisor({
                 <div className="w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center">
                   <AlertTriangle className="w-7 h-7 text-red-400" />
                 </div>
-                <p className="text-white/60 text-sm">{t('ai_advisor_error')}</p>
+                <p className="text-muted-foreground/80 text-sm">{t('ai_advisor_error')}</p>
                 {errorMsg && (
                   <p className="text-red-400/60 text-xs px-4 py-2 rounded-xl bg-red-500/8 border border-red-500/15">
                     {errorMsg}
@@ -675,8 +677,8 @@ export function AiCalorieAdvisor({
 function MetricLine({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-white/30 text-xs">{label}</span>
-      <span className={`text-xs font-medium ${highlight ? 'text-[#a29bfe]' : 'text-white/70'}`}>{value}</span>
+      <span className="text-ui-tertiary text-xs">{label}</span>
+      <span className={`text-xs font-medium ${highlight ? 'text-[#a29bfe]' : 'text-muted-foreground'}`}>{value}</span>
     </div>
   );
 }
@@ -689,10 +691,10 @@ function MacroPill({ label, value, color }: { label: string; value: number; colo
     >
       <div className="flex items-center justify-center gap-1 mb-1">
         <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} />
-        <span className="text-white/40 text-xs">{label}</span>
+        <span className="text-muted-foreground text-xs">{label}</span>
       </div>
-      <p className="text-white font-bold text-base">
-        {value}<span className="text-white/30 text-xs font-normal ml-0.5">g</span>
+      <p className="text-foreground font-bold text-base">
+        {value}<span className="text-ui-tertiary text-xs font-normal ml-0.5">g</span>
       </p>
     </div>
   );
@@ -710,8 +712,8 @@ function RateLimitBlock({ t, onUpgrade }: { t: (k: string, p?: Record<string, st
       <div className="w-14 h-14 rounded-full bg-[#6c5ce7]/10 flex items-center justify-center">
         <Lock className="w-6 h-6 text-[#a29bfe]" />
       </div>
-      <p className="text-white/70 text-sm font-medium">{t('ai_advisor_rate_limit_reached')}</p>
-      <p className="text-white/35 text-xs leading-relaxed">{t('ai_advisor_upgrade_for_unlimited')}</p>
+      <p className="text-muted-foreground text-sm font-medium">{t('ai_advisor_rate_limit_reached')}</p>
+      <p className="text-ui-tertiary text-xs leading-relaxed">{t('ai_advisor_upgrade_for_unlimited')}</p>
       <motion.button
         whileTap={{ scale: 0.97 }}
         onClick={onUpgrade}
@@ -743,20 +745,20 @@ function HistorySection({
   return (
     <div
       className="rounded-2xl overflow-hidden"
-      style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}
+      style={{ background: 'var(--glass-bg-card)', border: '1px solid var(--glass-border)' }}
     >
       <button
         onClick={onToggle}
         className="w-full p-3.5 flex items-center justify-between"
       >
         <div className="flex items-center gap-2">
-          <Clock className="w-4 h-4 text-white/30" />
-          <span className="text-white/50 text-xs font-medium">{t('ai_advisor_history')}</span>
-          <span className="text-white/20 text-xs">({history.length})</span>
+          <Clock className="w-4 h-4 text-ui-tertiary" />
+          <span className="text-muted-foreground text-xs font-medium">{t('ai_advisor_history')}</span>
+          <span className="text-ui-tertiary text-xs">({history.length})</span>
         </div>
         {showHistory
-          ? <ChevronUp className="w-4 h-4 text-white/25" />
-          : <ChevronDown className="w-4 h-4 text-white/25" />
+          ? <ChevronUp className="w-4 h-4 text-ui-tertiary" />
+          : <ChevronDown className="w-4 h-4 text-ui-tertiary" />
         }
       </button>
 
@@ -769,26 +771,26 @@ function HistorySection({
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="px-3.5 pb-3 space-y-2" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+            <div className="px-3.5 pb-3 space-y-2" style={{ borderTop: '1px solid var(--glass-border-subtle)' }}>
               {history.slice(0, 10).map((entry, i) => (
                 <div
                   key={`${entry.created_at}-${i}`}
                   className="rounded-xl p-3 flex items-center justify-between gap-2"
-                  style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}
+                  style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 mb-1">
-                      <span className="text-white/70 text-sm font-semibold">
+                      <span className="text-muted-foreground text-sm font-semibold">
                         {entry.recommended_calories.toLocaleString()} {t('cal_unit')}
                       </span>
                       {entry.input?.had_photo && (
                         <ImageIcon className="w-3 h-3 text-[#a29bfe]/60" />
                       )}
                     </div>
-                    <p className="text-white/30 text-xs truncate">
+                    <p className="text-ui-tertiary text-xs truncate">
                       P:{entry.recommended_protein}g C:{entry.recommended_carbs}g F:{entry.recommended_fat}g
                     </p>
-                    <p className="text-white/20 text-[0.6rem] mt-0.5">{formatDate(entry.created_at)}</p>
+                    <p className="text-ui-tertiary/60 text-[0.6rem] mt-0.5">{formatDate(entry.created_at)}</p>
                   </div>
                   <motion.button
                     whileTap={{ scale: 0.9 }}

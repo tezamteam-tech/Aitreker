@@ -188,7 +188,7 @@ export function NutritionCoachPage() {
     const parts = content.split(/(\*\*[^*]+\*\*)/g);
     return parts.map((part, i) => {
       if (part.startsWith('**') && part.endsWith('**')) {
-        return <strong key={i} className="text-white/90 font-semibold">{part.slice(2, -2)}</strong>;
+        return <strong key={i} className="text-foreground/90 font-semibold">{part.slice(2, -2)}</strong>;
       }
       return <span key={i}>{part}</span>;
     });
@@ -213,10 +213,10 @@ export function NutritionCoachPage() {
                   <Salad className="w-4.5 h-4.5 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-white font-bold" style={{ fontSize: '1.125rem', lineHeight: 1.2 }}>
+                  <h1 className="text-foreground font-bold" style={{ fontSize: '1.125rem', lineHeight: 1.2 }}>
                     {t('nutri_coach_title')}
                   </h1>
-                  <p className="text-white/30" style={{ fontSize: '0.6875rem' }}>
+                  <p className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
                     {t('nutri_coach_subtitle')}
                   </p>
                 </div>
@@ -228,9 +228,9 @@ export function NutritionCoachPage() {
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={() => { hapticFeedback('light'); loadHistory(); setShowHistory(true); }}
-              className="w-9 h-9 rounded-xl bg-white/[0.06] flex items-center justify-center"
+              className="w-9 h-9 rounded-xl bg-ui-button flex items-center justify-center"
             >
-              <Clock className="w-4.5 h-4.5 text-white/40" />
+              <Clock className="w-4.5 h-4.5 text-muted-foreground" />
             </motion.button>
             <motion.button
               whileTap={{ scale: 0.9 }}
@@ -244,7 +244,7 @@ export function NutritionCoachPage() {
       </div>
 
       {/* Divider */}
-      <div className="h-px bg-white/[0.04] mx-5" />
+      <div className="h-px bg-[var(--glass-border-subtle)] mx-5" />
 
       {/* Messages area */}
       <div
@@ -263,10 +263,10 @@ export function NutritionCoachPage() {
             <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-[#00b894]/20 to-[#00cec9]/10 flex items-center justify-center mb-4 border border-[#00b894]/20">
               <Salad className="w-10 h-10 text-[#00b894]" />
             </div>
-            <p className="text-white/50 text-center max-w-xs mb-2" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
+            <p className="text-foreground/50 text-center max-w-xs mb-2" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
               {t('nutri_coach_welcome_title')}
             </p>
-            <p className="text-white/30 text-center max-w-xs mb-6" style={{ fontSize: '0.8125rem', lineHeight: 1.5 }}>
+            <p className="text-ui-tertiary text-center max-w-xs mb-6" style={{ fontSize: '0.8125rem', lineHeight: 1.5 }}>
               {t('nutri_coach_welcome')}
             </p>
 
@@ -291,7 +291,7 @@ export function NutritionCoachPage() {
                   >
                     <item.icon className="w-5 h-5" style={{ color: item.color }} />
                   </div>
-                  <span className="text-white/30" style={{ fontSize: '0.625rem' }}>{item.label}</span>
+                  <span className="text-ui-tertiary" style={{ fontSize: '0.625rem' }}>{item.label}</span>
                 </motion.div>
               ))}
             </div>
@@ -306,7 +306,7 @@ export function NutritionCoachPage() {
                   transition={{ delay: 0.2 + i * 0.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => handleSend(s)}
-                  className="px-3.5 py-2 rounded-xl bg-[#00b894]/[0.06] border border-[#00b894]/[0.12] text-white/50 hover:text-white/70 hover:bg-[#00b894]/[0.1] transition-all"
+                  className="px-3.5 py-2 rounded-xl bg-[#00b894]/[0.06] border border-[#00b894]/[0.12] text-muted-foreground hover:text-foreground hover:bg-[#00b894]/[0.1] transition-all"
                   style={{ fontSize: '0.8125rem' }}
                 >
                   {s}
@@ -328,12 +328,12 @@ export function NutritionCoachPage() {
             <div className={`w-8 h-8 rounded-lg shrink-0 flex items-center justify-center mt-0.5 ${
               msg.role === 'assistant'
                 ? 'bg-gradient-to-br from-[#00b894]/20 to-[#00cec9]/10'
-                : 'bg-white/[0.06]'
+                : 'bg-ui-button'
             }`}>
               {msg.role === 'assistant' ? (
                 <Salad className="w-4 h-4 text-[#00b894]" />
               ) : (
-                <User className="w-4 h-4 text-white/40" />
+                <User className="w-4 h-4 text-muted-foreground" />
               )}
             </div>
 
@@ -342,18 +342,18 @@ export function NutritionCoachPage() {
               className={`max-w-[80%] rounded-2xl px-4 py-3 ${
                 msg.role === 'user'
                   ? 'bg-[#00b894]/20 border border-[#00b894]/20'
-                  : 'bg-white/[0.04] border border-white/[0.06]'
+                  : 'bg-[var(--glass-bg-card)] border border-[var(--glass-border)]'
               }`}
             >
               <p
                 className={`whitespace-pre-wrap ${
-                  msg.role === 'user' ? 'text-white/90' : 'text-white/70'
+                  msg.role === 'user' ? 'text-foreground/90' : 'text-muted-foreground'
                 }`}
                 style={{ fontSize: '0.875rem', lineHeight: 1.6 }}
               >
                 {msg.role === 'assistant' ? formatMessage(msg.content) : msg.content}
               </p>
-              <p className="text-white/15 mt-1.5" style={{ fontSize: '0.625rem' }}>
+              <p className="text-ui-tertiary/50 mt-1.5" style={{ fontSize: '0.625rem' }}>
                 {new Date(msg.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </p>
             </div>
@@ -370,13 +370,13 @@ export function NutritionCoachPage() {
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#00b894]/20 to-[#00cec9]/10 flex items-center justify-center shrink-0">
               <Salad className="w-4 h-4 text-[#00b894]" />
             </div>
-            <div className="rounded-2xl px-4 py-3 bg-white/[0.04] border border-white/[0.06]">
+            <div className="rounded-2xl px-4 py-3 bg-[var(--glass-bg-card)] border border-[var(--glass-border)]">
               <div className="flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-[#00b894]/40 animate-bounce" style={{ animationDelay: '0ms' }} />
                 <span className="w-2 h-2 rounded-full bg-[#00b894]/40 animate-bounce" style={{ animationDelay: '150ms' }} />
                 <span className="w-2 h-2 rounded-full bg-[#00b894]/40 animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
-              <p className="text-white/20 mt-1" style={{ fontSize: '0.6875rem' }}>{t('nutri_coach_thinking')}</p>
+              <p className="text-ui-tertiary mt-1" style={{ fontSize: '0.6875rem' }}>{t('nutri_coach_thinking')}</p>
             </div>
           </motion.div>
         )}
@@ -391,7 +391,7 @@ export function NutritionCoachPage() {
 
       {/* Input area */}
       <div className="relative z-10 px-4 shrink-0" style={{ paddingBottom: 'max(1rem, calc(var(--safe-area-bottom, 0px) + 0.5rem))' }}>
-        <div className="flex items-end gap-2 bg-white/[0.04] border border-white/[0.08] rounded-2xl px-3 py-2">
+        <div className="flex items-end gap-2 bg-ui-button border border-[var(--glass-border)] rounded-2xl px-3 py-2">
           <VoiceInput
             onTranscript={(text) => {
               setInput((prev) => prev ? `${prev} ${text}` : text);
@@ -407,7 +407,7 @@ export function NutritionCoachPage() {
             onKeyDown={handleKeyDown}
             placeholder={t('nutri_coach_placeholder')}
             rows={1}
-            className="flex-1 bg-transparent text-white placeholder:text-white/20 outline-none resize-none py-1"
+            className="flex-1 bg-transparent text-foreground placeholder:text-ui-tertiary outline-none resize-none py-1"
             style={{ fontSize: '0.9375rem', lineHeight: 1.5, maxHeight: 120 }}
           />
 
@@ -418,7 +418,7 @@ export function NutritionCoachPage() {
             className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all ${
               input.trim() && !sending
                 ? 'bg-[#00b894] text-white'
-                : 'bg-white/[0.04] text-white/20'
+                : 'bg-ui-button text-ui-tertiary'
             }`}
           >
             {sending ? (
@@ -445,26 +445,26 @@ export function NutritionCoachPage() {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="absolute bottom-0 left-0 right-0 max-h-[70vh] rounded-t-3xl bg-liquid-glass-panel border-t border-white/[0.1] p-6 pb-10 overflow-y-auto"
+              className="absolute bottom-0 left-0 right-0 max-h-[70vh] rounded-t-3xl bg-liquid-glass-panel border-t border-[var(--glass-border)] p-6 pb-10 overflow-y-auto"
             >
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-white" style={{ fontSize: '1.25rem', fontWeight: 700 }}>{t('nutri_coach_history')}</h2>
+                <h2 className="text-foreground" style={{ fontSize: '1.25rem', fontWeight: 700 }}>{t('nutri_coach_history')}</h2>
                 <button
                   onClick={() => setShowHistory(false)}
-                  className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center"
+                  className="w-8 h-8 rounded-lg bg-ui-close flex items-center justify-center"
                 >
-                  <X className="w-4 h-4 text-white/40" />
+                  <X className="w-4 h-4 text-ui-icon-secondary" />
                 </button>
               </div>
 
               {loadingHistory ? (
                 <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-6 h-6 text-white/20 animate-spin" />
+                  <Loader2 className="w-6 h-6 text-ui-tertiary animate-spin" />
                 </div>
               ) : conversations.length === 0 ? (
                 <div className="text-center py-8">
-                  <MessageSquare className="w-8 h-8 text-white/10 mx-auto mb-2" />
-                  <p className="text-white/20" style={{ fontSize: '0.875rem' }}>{t('nutri_coach_no_history')}</p>
+                  <MessageSquare className="w-8 h-8 text-ui-tertiary mx-auto mb-2" />
+                  <p className="text-muted-foreground" style={{ fontSize: '0.875rem' }}>{t('nutri_coach_no_history')}</p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -475,22 +475,22 @@ export function NutritionCoachPage() {
                     >
                       <button
                         onClick={() => openConversation(conv.id)}
-                        className={`w-full text-left p-3.5 rounded-xl bg-white/[0.03] border transition-all ${
+                        className={`w-full text-left p-3.5 rounded-xl bg-[var(--glass-bg-card)] border transition-all ${
                           conversationId === conv.id
                             ? 'border-[#00b894]/30 bg-[#00b894]/5'
-                            : 'border-white/[0.05] hover:bg-white/[0.05]'
+                            : 'border-[var(--glass-border)] hover:bg-[var(--glass-bg-row)]'
                         }`}
                       >
                         <div className="flex items-center gap-2 mb-1">
                           <Salad className="w-3.5 h-3.5 text-[#00b894]/50" />
-                          <span className="text-white/20" style={{ fontSize: '0.6875rem' }}>
+                          <span className="text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>
                             {conv.messageCount} msgs
                           </span>
-                          <span className="text-white/15 ml-auto" style={{ fontSize: '0.625rem' }}>
+                          <span className="text-ui-tertiary/60 ml-auto" style={{ fontSize: '0.625rem' }}>
                             {new Date(conv.updatedAt).toLocaleDateString()}
                           </span>
                         </div>
-                        <p className="text-white/50 truncate" style={{ fontSize: '0.8125rem' }}>
+                        <p className="text-muted-foreground truncate" style={{ fontSize: '0.8125rem' }}>
                           {conv.lastMessage || '...'}
                         </p>
                       </button>
@@ -509,10 +509,10 @@ export function NutritionCoachPage() {
                         className={`absolute top-3 right-3 w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
                           deletingId === conv.id
                             ? 'bg-red-500/20 border border-red-500/30'
-                            : 'bg-white/[0.04] opacity-0 group-hover:opacity-100'
+                            : 'bg-ui-button opacity-0 group-hover:opacity-100'
                         }`}
                       >
-                        <Trash2 className={`w-3.5 h-3.5 ${deletingId === conv.id ? 'text-red-400' : 'text-white/30'}`} />
+                        <Trash2 className={`w-3.5 h-3.5 ${deletingId === conv.id ? 'text-red-400' : 'text-ui-tertiary'}`} />
                       </button>
                     </div>
                   ))}

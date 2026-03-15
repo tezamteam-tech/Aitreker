@@ -1298,7 +1298,7 @@ function ReflectionModal({
         className="w-full max-w-lg rounded-t-3xl bg-liquid-glass glass-sheet glass-sheet-bottom px-6 pb-10 pt-4"
       >
         {/* Handle */}
-        <div className="w-10 h-1 rounded-full bg-white/15 mx-auto mb-6" />
+        <div className="w-10 h-1 rounded-full bg-ui-handle mx-auto mb-6" />
 
         {/* XP earned badge */}
         <motion.div

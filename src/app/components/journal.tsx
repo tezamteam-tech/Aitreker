@@ -388,7 +388,7 @@ export function JournalPage() {
                     className="mb-3 overflow-hidden"
                   >
                     {audioUploading ? (
-                      <div className="flex items-center gap-2 py-2 px-3 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+                      <div className="flex items-center gap-2 py-2 px-3 rounded-xl bg-[var(--glass-bg-card)] border border-[var(--glass-border)]">
                         <Loader2 className="w-3.5 h-3.5 text-[#a29bfe] animate-spin" />
                         <span className="text-[#a29bfe]/70" style={{ fontSize: '0.75rem' }}>{t('audio_uploading')}</span>
                       </div>

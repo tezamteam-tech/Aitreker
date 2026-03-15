@@ -10871,6 +10871,40 @@ app.post(`${PREFIX}/wallet/topup-stars`, async (c) => {
   }
 });
 
+// ---- POST /wallet/topup-stars-link ----
+// Returns an invoice link for Telegram.WebApp.openInvoice() — instant in-app Stars top-up
+app.post(`${PREFIX}/wallet/topup-stars-link`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const { amount } = await c.req.json();
+    const starsAmount = parseInt(amount);
+    if (!starsAmount || starsAmount < 1 || starsAmount > 10000) {
+      return c.json({ message: "Invalid amount (1-10000)", code: "BAD_REQUEST", status: 400 }, 400);
+    }
+
+    const user = await kv.get(`become:user:${auth.userId}`);
+    const lang = user?.language === "ru" ? "ru" : "en";
+
+    const invoiceLink = await createInvoiceLink({
+      title: lang === "ru" ? `Пополнение — ${starsAmount} ⭐` : `Top Up — ${starsAmount} ⭐`,
+      description: lang === "ru"
+        ? `Пополнение баланса Proper Food на ${starsAmount} Stars`
+        : `Add ${starsAmount} Stars to your Proper Food wallet`,
+      payload: `topup_stars_${starsAmount}_${auth.userId}_${Date.now()}`,
+      currency: "XTR",
+      prices: [{ label: lang === "ru" ? "Пополнение" : "Top Up", amount: starsAmount }],
+    });
+
+    console.log(`[Payment] Created Stars topup invoice link for user ${auth.userId}, amount=${starsAmount}`);
+    return c.json({ success: true, invoiceLink, amount: starsAmount });
+  } catch (err) {
+    console.log("POST /wallet/topup-stars-link error:", err);
+    return c.json({ message: `Error creating topup invoice link: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
 // ---- POST /wallet/topup-ton ----
 // Sends a message to the user's chat with TON wallet address + instructions
 app.post(`${PREFIX}/wallet/topup-ton`, async (c) => {

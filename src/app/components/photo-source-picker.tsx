@@ -123,27 +123,29 @@ export function PhotoSourcePicker({
               className="fixed left-0 right-0 bottom-0 z-[101] rounded-t-[1.5rem]"
               style={{
                 paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 16px)',
-                background: 'rgba(18,18,30,0.98)',
-                borderTop: '1px solid rgba(255,255,255,0.08)',
+                background: 'var(--glass-bg-panel)',
+                borderTop: '1px solid var(--glass-border)',
+                backdropFilter: 'blur(var(--glass-blur-panel))',
+                WebkitBackdropFilter: 'blur(var(--glass-blur-panel))',
               }}
             >
               {/* Handle */}
               <div className="flex justify-center pt-3 pb-1">
-                <div className="w-10 h-1 rounded-full bg-white/15" />
+                <div className="w-10 h-1 rounded-full bg-ui-handle" />
               </div>
 
               <div className="px-5 pt-2 pb-4">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-white" style={{ fontSize: '1.0625rem', fontWeight: 700 }}>
+                  <h3 className="text-foreground" style={{ fontSize: '1.0625rem', fontWeight: 700 }}>
                     {t('photo_choose_source')}
                   </h3>
                   <motion.button
                     whileTap={{ scale: 0.9 }}
                     onClick={onClose}
-                    className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center"
+                    className="w-8 h-8 rounded-lg bg-ui-close flex items-center justify-center"
                   >
-                    <X className="w-4 h-4 text-white/50" />
+                    <X className="w-4 h-4 text-ui-icon-secondary" />
                   </motion.button>
                 </div>
 
@@ -153,16 +155,16 @@ export function PhotoSourcePicker({
                   <motion.button
                     whileTap={{ scale: 0.97 }}
                     onClick={handleCameraClick}
-                    className="w-full flex items-center gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06] text-left"
+                    className="w-full flex items-center gap-4 p-4 rounded-2xl bg-[var(--glass-bg-card)] border border-[var(--glass-border)] text-left"
                   >
                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#6c5ce7]/20 to-[#a29bfe]/20 flex items-center justify-center flex-shrink-0">
                       <Camera className="w-6 h-6 text-[#a29bfe]" />
                     </div>
                     <div>
-                      <p className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
+                      <p className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
                         {t('photo_take_camera')}
                       </p>
-                      <p className="text-white/30" style={{ fontSize: '0.75rem' }}>
+                      <p className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>
                         Live camera
                       </p>
                     </div>
@@ -172,16 +174,16 @@ export function PhotoSourcePicker({
                   <motion.button
                     whileTap={{ scale: 0.97 }}
                     onClick={handleGalleryClick}
-                    className="w-full flex items-center gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06] text-left"
+                    className="w-full flex items-center gap-4 p-4 rounded-2xl bg-[var(--glass-bg-card)] border border-[var(--glass-border)] text-left"
                   >
                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#00cec9]/20 to-[#74b9ff]/20 flex items-center justify-center flex-shrink-0">
                       <ImagePlus className="w-6 h-6 text-[#00cec9]" />
                     </div>
                     <div>
-                      <p className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
+                      <p className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
                         {t('photo_from_gallery')}
                       </p>
-                      <p className="text-white/30" style={{ fontSize: '0.75rem' }}>
+                      <p className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>
                         Upload from device
                       </p>
                     </div>
@@ -192,9 +194,9 @@ export function PhotoSourcePicker({
                 <motion.button
                   whileTap={{ scale: 0.97 }}
                   onClick={onClose}
-                  className="w-full mt-3 py-3.5 rounded-2xl bg-white/[0.04] text-center"
+                  className="w-full mt-3 py-3.5 rounded-2xl bg-ui-button text-center"
                 >
-                  <span className="text-white/40" style={{ fontSize: '0.9375rem', fontWeight: 500 }}>
+                  <span className="text-muted-foreground" style={{ fontSize: '0.9375rem', fontWeight: 500 }}>
                     {t('photo_cancel')}
                   </span>
                 </motion.button>

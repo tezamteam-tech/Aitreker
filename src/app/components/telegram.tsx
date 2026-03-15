@@ -611,6 +611,56 @@ export function openLink(url: string): void {
   }
 }
 
+// ---- Payments (Telegram Stars) ----
+
+/**
+ * Open a Telegram Stars payment invoice natively inside the Mini App.
+ * Uses WebApp.openInvoice() — shows native payment bottom sheet.
+ * Returns a Promise that resolves with the payment status.
+ *
+ * @param invoiceUrl - URL returned by Bot API createInvoiceLink (https://t.me/$...)
+ * @returns Payment status: 'paid' | 'cancelled' | 'failed' | 'pending'
+ */
+export function openInvoice(invoiceUrl: string): Promise<'paid' | 'cancelled' | 'failed' | 'pending'> {
+  return new Promise((resolve) => {
+    try {
+      const wa = getTelegramWebApp();
+      if (!wa) {
+        console.warn('[TG Payment] WebApp not available');
+        resolve('failed');
+        return;
+      }
+
+      if (typeof wa.openInvoice !== 'function') {
+        console.warn('[TG Payment] openInvoice not supported in this TG version');
+        resolve('failed');
+        return;
+      }
+
+      console.log('[TG Payment] Opening invoice:', invoiceUrl);
+      wa.openInvoice(invoiceUrl, (status: string) => {
+        console.log('[TG Payment] Invoice callback status:', status);
+        resolve((status as 'paid' | 'cancelled' | 'failed' | 'pending') || 'failed');
+      });
+    } catch (err) {
+      console.error('[TG Payment] openInvoice error:', err);
+      resolve('failed');
+    }
+  });
+}
+
+/**
+ * Check if openInvoice is available in the current Telegram client.
+ */
+export function isInvoiceSupported(): boolean {
+  try {
+    const wa = getTelegramWebApp();
+    return typeof wa?.openInvoice === 'function';
+  } catch {
+    return false;
+  }
+}
+
 // ---- Platform Detection ----
 
 /**

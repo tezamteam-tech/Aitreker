@@ -1143,7 +1143,7 @@ const translations: Record<string, Record<Lang, string>> = {
   wp_rest: { en: 'Rest', ru: 'Отдых' },
   wp_day_n: { en: 'Day {n}', ru: 'День {n}' },
   wp_premium_required: { en: 'Premium required for AI workout plans', ru: 'Для AI-плана тренировок нужен Premium' },
-  wp_error: { en: 'Failed to generate workout plan', ru: 'Не удалось сгенерировать план тренировок' },
+  wp_error: { en: 'Failed to generate workout plan', ru: 'Не удалось сгенерировать пл��н тренировок' },
 
   // ---- Layout / Splash ----
   splash_syncing: { en: 'Syncing...', ru: 'Синхронизация...' },
@@ -1986,6 +1986,8 @@ const translations: Record<string, Record<Lang, string>> = {
   wl_details_chat: { en: 'Details will be sent to bot chat', ru: 'Реквизиты придут в чат с ботом' },
   wl_sent_to_chat: { en: 'Sent to chat!', ru: 'Отправлено в чат!' },
   wl_topup_chat_hint: { en: 'Open the bot chat to pay. Your balance will update automatically after payment.', ru: 'Откройте чат с ботом для оплаты. После оплаты баланс обновится автоматически.' },
+  wl_topup_success: { en: 'Payment successful!', ru: 'Оплата прошла!' },
+  wl_topup_success_hint: { en: 'Stars have been added to your balance. It may take a few seconds to update.', ru: 'Stars зачислены на баланс. Обновление может занять несколько секунд.' },
   wl_subscription_chat_hint: { en: 'Open the bot chat to pay. Subscription will activate automatically.', ru: 'Откройте чат с ботом для оплаты. Подписка активируется автоматически.' },
   wl_go_to_chat: { en: 'Go to chat', ru: 'Перейти в чат' },
   wl_extend_subscription: { en: 'EXTEND SUBSCRIPTION', ru: 'ПРОДЛЕНИЕ ПОДПИСКИ' },
@@ -1999,6 +2001,8 @@ const translations: Record<string, Record<Lang, string>> = {
   wl_insufficient_balance: { en: 'Insufficient balance', ru: 'Недостаточно средств на балансе' },
   wl_from_balance: { en: 'From balance ({price} {unit})', ru: 'С баланса ({price} {unit})' },
   wl_invoice: { en: 'Invoice for {stars} ★', ru: 'Инвойс на {stars} ★' },
+  wl_pay_stars: { en: 'Pay {amount} ★', ru: 'Оплатить {amount} ★' },
+  wl_stars_native_hint: { en: 'Instant payment via Telegram Stars', ru: 'Моментальная оплата через Telegram Stars' },
   wl_top_up_ton: { en: 'Top up TON balance', ru: 'Пополнить TON-баланс' },
   wl_secure_payment: { en: 'Secure payment', ru: 'Безопасная оплата' },
   wl_premium_active: { en: 'Premium Active', ru: 'Premium активна' },
