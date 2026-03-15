@@ -129,7 +129,7 @@ export function PaywallOverlay({ daysLeft, expiresAt, onSubscriptionUpdated }: P
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 300, damping: 20, delay: 0.1 }}
-            className="w-20 h-20 mx-auto mb-5 rounded-3xl bg-gradient-to-br from-[#6c5ce7]/30 to-[#a29bfe]/10 flex items-center justify-center border border-white/[0.08]"
+            className="w-20 h-20 mx-auto mb-5 rounded-3xl bg-gradient-to-br from-[#6c5ce7]/30 to-[#a29bfe]/10 flex items-center justify-center" style={{ border: '1px solid var(--glass-border)' }}
           >
             <Crown className="w-10 h-10 text-[#a29bfe]" />
           </motion.div>
@@ -285,7 +285,7 @@ export function PaywallOverlay({ daysLeft, expiresAt, onSubscriptionUpdated }: P
                     ) : (
                       <Gem className="w-4 h-4 text-blue-400" />
                     )}
-                    <span className="text-white" style={{ fontSize: '1.25rem', fontWeight: 700 }}>
+                    <span className="text-foreground" style={{ fontSize: '1.25rem', fontWeight: 700 }}>
                       {price}
                     </span>
                   </div>
@@ -295,7 +295,7 @@ export function PaywallOverlay({ daysLeft, expiresAt, onSubscriptionUpdated }: P
                 <div className={`absolute top-1/2 -translate-y-1/2 left-4 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
                   isSelected
                     ? payMethod === 'stars' ? 'border-[#6c5ce7] bg-[#6c5ce7]' : 'border-blue-500 bg-blue-500'
-                    : 'border-white/20'
+                    : 'border-ui-input'
                 }`}>
                   {isSelected && <Check className="w-3 h-3 text-white" />}
                 </div>
@@ -311,7 +311,7 @@ export function PaywallOverlay({ daysLeft, expiresAt, onSubscriptionUpdated }: P
           transition={{ delay: 0.42 }}
           className="text-center mb-4"
         >
-          <span className="text-white/25" style={{ fontSize: '0.75rem' }}>
+          <span className="text-ui-tertiary" style={{ fontSize: '0.75rem' }}>
             {payMethod === 'stars'
               ? `≈ $${selectedPlanData.months === 1 ? '6' : selectedPlanData.months === 2 ? '10' : '15'}`
               : `${selectedPlanData.tonPrice} TON`
@@ -347,7 +347,7 @@ export function PaywallOverlay({ daysLeft, expiresAt, onSubscriptionUpdated }: P
               <span className="text-green-400" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
                 {t('pw_invoice_sent')}
               </span>
-              <p className="text-white/40 mt-1" style={{ fontSize: '0.75rem' }}>
+              <p className="text-muted-foreground mt-1" style={{ fontSize: '0.75rem' }}>
                 {t('pw_open_chat_desc')}
               </p>
               <button
@@ -427,7 +427,7 @@ export function PaywallOverlay({ daysLeft, expiresAt, onSubscriptionUpdated }: P
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.7 }}
-          className="mt-6 flex items-center justify-center gap-2 text-white/20"
+          className="mt-6 flex items-center justify-center gap-2 text-ui-tertiary"
           style={{ fontSize: '0.75rem' }}
         >
           <Shield className="w-3.5 h-3.5" />

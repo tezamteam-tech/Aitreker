@@ -183,7 +183,7 @@ export function UpgradePremiumPage() {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 300, damping: 20, delay: 0.1 }}
-            className="w-20 h-20 mx-auto mb-5 rounded-3xl bg-gradient-to-br from-[#6c5ce7]/30 to-[#a29bfe]/10 flex items-center justify-center border border-white/[0.08]"
+            className="w-20 h-20 mx-auto mb-5 rounded-3xl bg-gradient-to-br from-[#6c5ce7]/30 to-[#a29bfe]/10 flex items-center justify-center" style={{ border: '1px solid var(--glass-border)' }}
           >
             <Crown className="w-10 h-10 text-[#a29bfe]" />
           </motion.div>
@@ -192,7 +192,7 @@ export function UpgradePremiumPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-white mb-2"
+            className="text-foreground mb-2"
             style={{ fontSize: '1.5rem', fontWeight: 700 }}
           >
             {t('up_title')}
@@ -202,7 +202,7 @@ export function UpgradePremiumPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="text-white/50"
+            className="text-muted-foreground"
             style={{ fontSize: '0.9375rem' }}
           >
             {t('up_subtitle')}
@@ -218,7 +218,7 @@ export function UpgradePremiumPage() {
             className="mb-5"
           >
             <GlassCard className="!p-4">
-              <p className="text-white/40 mb-3" style={{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.05em' }}>
+              <p className="text-muted-foreground mb-3" style={{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.05em' }}>
                 {t('up_usage_title')}
               </p>
               <div className="space-y-2.5">
@@ -262,7 +262,7 @@ export function UpgradePremiumPage() {
           <GlassCard className="!p-5">
             <div className="flex items-center gap-2 mb-4">
               <Sparkles className="w-4 h-4 text-[#a29bfe]" />
-              <span className="text-white/70" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
+              <span className="text-foreground/70" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
                 {t('up_plan_comparison')}
               </span>
             </div>
@@ -271,7 +271,7 @@ export function UpgradePremiumPage() {
             <div className="grid grid-cols-3 gap-2 mb-3 px-1">
               <div />
               <div className="text-center">
-                <span className="text-white/30" style={{ fontSize: '0.625rem', fontWeight: 600 }}>FREE</span>
+                <span className="text-muted-foreground" style={{ fontSize: '0.625rem', fontWeight: 600 }}>FREE</span>
               </div>
               <div className="text-center">
                 <span className="text-[#a29bfe]" style={{ fontSize: '0.625rem', fontWeight: 700 }}>PREMIUM</span>
@@ -299,13 +299,13 @@ export function UpgradePremiumPage() {
               />
               <ComparisonRow
                 label={t('up_ai_coach_row')}
-                free={<X className="w-3.5 h-3.5 text-white/20" />}
+                free={<X className="w-3.5 h-3.5 text-ui-tertiary" />}
                 premium={<Check className="w-3.5 h-3.5 text-[#00cec9]" />}
                 premiumHighlight
               />
               <ComparisonRow
                 label={t('up_insights_row')}
-                free={<X className="w-3.5 h-3.5 text-white/20" />}
+                free={<X className="w-3.5 h-3.5 text-ui-tertiary" />}
                 premium={<Check className="w-3.5 h-3.5 text-[#00cec9]" />}
                 premiumHighlight
               />
@@ -337,7 +337,7 @@ export function UpgradePremiumPage() {
                 className={`w-full relative rounded-2xl p-4 pl-12 text-left transition-all duration-200 ${
                   isSelected
                     ? 'bg-[#6c5ce7]/20 border-2 border-[#6c5ce7]'
-                    : 'bg-white/[0.04] border-2 border-transparent'
+                    : 'bg-ui-button border-2 border-transparent'
                 }`}
               >
                 {p.popular && (
@@ -351,14 +351,14 @@ export function UpgradePremiumPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-white" style={{ fontSize: '1rem', fontWeight: 600 }}>{label}</span>
+                      <span className="text-foreground" style={{ fontSize: '1rem', fontWeight: 600 }}>{label}</span>
                       {p.save && (
                         <span className="px-2 py-0.5 rounded-full bg-green-500/20 text-green-400" style={{ fontSize: '0.6875rem', fontWeight: 600 }}>
                           -{p.save}%
                         </span>
                       )}
                     </div>
-                    <span className="text-white/40" style={{ fontSize: '0.8125rem' }}>
+                    <span className="text-foreground/40" style={{ fontSize: '0.8125rem' }}>
                       {p.months > 1
                         ? `~${perMonth} Stars/${t('up_per_month')}`
                         : `${p.stars} Stars`
@@ -368,14 +368,14 @@ export function UpgradePremiumPage() {
 
                   <div className="flex items-center gap-1.5">
                     <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                    <span className="text-white" style={{ fontSize: '1.25rem', fontWeight: 700 }}>
+                    <span className="text-foreground" style={{ fontSize: '1.25rem', fontWeight: 700 }}>
                       {p.stars}
                     </span>
                   </div>
                 </div>
 
                 <div className={`absolute top-1/2 -translate-y-1/2 left-4 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
-                  isSelected ? 'border-[#6c5ce7] bg-[#6c5ce7]' : 'border-white/20'
+                  isSelected ? 'border-[#6c5ce7] bg-[#6c5ce7]' : 'border-ui-input'
                 }`}>
                   {isSelected && <Check className="w-3 h-3 text-white" />}
                 </div>
@@ -391,7 +391,7 @@ export function UpgradePremiumPage() {
           transition={{ delay: 0.42 }}
           className="text-center mb-4"
         >
-          <span className="text-white/25" style={{ fontSize: '0.75rem' }}>
+          <span className="text-ui-tertiary" style={{ fontSize: '0.75rem' }}>
             {`\u2248 $${plan.months === 1 ? '6' : plan.months === 2 ? '10' : '15'} \u00B7 ${plan.days} ${t('shared_days_unit')}`}
           </span>
         </motion.div>
@@ -416,7 +416,7 @@ export function UpgradePremiumPage() {
               <p className="text-green-400 mb-1" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
                 {t('up_payment_success')}
               </p>
-              <p className="text-white/50" style={{ fontSize: '0.8125rem' }}>
+              <p className="text-muted-foreground" style={{ fontSize: '0.8125rem' }}>
                 {t('up_premium_activated', { n: plan.days })}
               </p>
             </motion.div>
@@ -432,7 +432,7 @@ export function UpgradePremiumPage() {
               <span className="text-green-400" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
                 {t('up_invoice_sent')}
               </span>
-              <p className="text-white/40 mt-1" style={{ fontSize: '0.75rem' }}>
+              <p className="text-muted-foreground mt-1" style={{ fontSize: '0.75rem' }}>
                 {t('up_open_chat')}
               </p>
               <button
@@ -505,7 +505,7 @@ export function UpgradePremiumPage() {
           <button
             onClick={handleRestore}
             disabled={restoring}
-            className="text-white/40 flex items-center justify-center gap-1.5 mx-auto hover:text-white/60 transition-colors disabled:opacity-50"
+            className="text-white/40 flex items-center justify-center gap-1.5 mx-auto hover:text-foreground/60 transition-colors disabled:opacity-50"
             style={{ fontSize: '0.8125rem' }}
           >
             {restoring ? (
@@ -523,7 +523,7 @@ export function UpgradePremiumPage() {
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className={`mt-2 ${restoreResult.restored ? 'text-green-400' : 'text-white/40'}`}
+                className={`mt-2 ${restoreResult.restored ? 'text-green-400' : 'text-muted-foreground'}`}
                 style={{ fontSize: '0.75rem' }}
               >
                 {restoreResult.message}
@@ -537,7 +537,7 @@ export function UpgradePremiumPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.7 }}
-          className="mt-6 flex items-center justify-center gap-2 text-white/20"
+          className="mt-6 flex items-center justify-center gap-2 text-ui-tertiary"
           style={{ fontSize: '0.75rem' }}
         >
           <Shield className="w-3.5 h-3.5" />
@@ -584,12 +584,12 @@ function UsageRow({
         <div className="flex items-center justify-between mb-1">
           <span className="text-white/70 truncate" style={{ fontSize: '0.75rem' }}>{label}</span>
           {locked ? (
-            <span className="text-white/25" style={{ fontSize: '0.6875rem' }}>
+            <span className="text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>
               <Crown className="w-3 h-3 text-amber-400 inline mr-0.5" />
               {lang === 'ru' ? 'Premium' : 'Premium'}
             </span>
           ) : limit !== null && limit > 0 ? (
-            <span className={atLimit ? 'text-red-400' : 'text-white/40'} style={{ fontSize: '0.6875rem', fontWeight: 600 }}>
+            <span className={atLimit ? 'text-red-400' : 'text-muted-foreground'} style={{ fontSize: '0.6875rem', fontWeight: 600 }}>
               {used}/{limit}
             </span>
           ) : (
@@ -599,7 +599,7 @@ function UsageRow({
           )}
         </div>
         {!locked && limit !== null && limit > 0 && (
-          <div className="relative h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+          <div className="relative h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--ui-progress-bg)' }}>
             <div
               className={`absolute inset-y-0 left-0 rounded-full transition-all duration-500 ${
                 atLimit ? 'bg-red-400' : 'bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe]'
@@ -625,18 +625,18 @@ function ComparisonRow({
   premiumHighlight?: boolean;
 }) {
   return (
-    <div className="grid grid-cols-3 gap-2 items-center py-2 px-1 border-b border-white/[0.04] last:border-0">
-      <span className="text-white/50 truncate" style={{ fontSize: '0.75rem' }}>{label}</span>
+    <div className="grid grid-cols-3 gap-2 items-center py-2 px-1 border-b last:border-0" style={{ borderColor: 'var(--glass-border-subtle)' }}>
+      <span className="text-muted-foreground truncate" style={{ fontSize: '0.75rem' }}>{label}</span>
       <div className="text-center">
         {typeof free === 'string' ? (
-          <span className="text-white/30" style={{ fontSize: '0.75rem' }}>{free}</span>
+          <span className="text-ui-tertiary" style={{ fontSize: '0.75rem' }}>{free}</span>
         ) : (
           <div className="flex items-center justify-center">{free}</div>
         )}
       </div>
       <div className="text-center">
         {typeof premium === 'string' ? (
-          <span className={premiumHighlight ? 'text-[#00cec9]' : 'text-white/70'} style={{ fontSize: '0.75rem', fontWeight: 600 }}>
+          <span className={premiumHighlight ? 'text-[#00cec9]' : 'text-foreground/70'} style={{ fontSize: '0.75rem', fontWeight: 600 }}>
             {premium}
           </span>
         ) : (
@@ -801,28 +801,28 @@ function PremiumDashboard() {
             </div>
 
             {!loadingStatus && (
-              <div className="grid grid-cols-3 divide-x divide-white/[0.06] px-2 py-3">
+              <div className="grid grid-cols-3 divide-x px-2 py-3" style={{ borderColor: 'var(--glass-border-subtle)' }}>
                 <div className="text-center px-2">
                   <p className={`${urgencyColor}`} style={{ fontSize: '1.25rem', fontWeight: 800 }}>
                     {subStatus?.isAdmin ? '∞' : daysLeft}
                   </p>
-                  <p className="text-white/30" style={{ fontSize: '0.625rem', fontWeight: 500 }}>
+                  <p className="text-muted-foreground" style={{ fontSize: '0.625rem', fontWeight: 500 }}>
                     {t('up_sub_days_left')}
                   </p>
                 </div>
                 <div className="text-center px-2">
-                  <p className="text-white/80" style={{ fontSize: '1.25rem', fontWeight: 800 }}>
+                  <p className="text-foreground/80" style={{ fontSize: '1.25rem', fontWeight: 800 }}>
                     {totalStars}
                   </p>
-                  <p className="text-white/30" style={{ fontSize: '0.625rem', fontWeight: 500 }}>
+                  <p className="text-muted-foreground" style={{ fontSize: '0.625rem', fontWeight: 500 }}>
                     Stars {t('up_sub_spent')}
                   </p>
                 </div>
                 <div className="text-center px-2">
-                  <p className="text-white/80" style={{ fontSize: '1.25rem', fontWeight: 800 }}>
+                  <p className="text-foreground/80" style={{ fontSize: '1.25rem', fontWeight: 800 }}>
                     {payments.length}
                   </p>
-                  <p className="text-white/30" style={{ fontSize: '0.625rem', fontWeight: 500 }}>
+                  <p className="text-muted-foreground" style={{ fontSize: '0.625rem', fontWeight: 500 }}>
                     {t('up_sub_payments_count')}
                   </p>
                 </div>
@@ -854,13 +854,13 @@ function PremiumDashboard() {
         >
           <div className="flex items-center justify-between mb-2.5 px-1">
             <div className="flex items-center gap-2">
-              <Receipt className="w-3.5 h-3.5 text-white/25" />
-              <span className="text-white/40" style={{ fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+              <Receipt className="w-3.5 h-3.5 text-ui-tertiary" />
+              <span className="text-muted-foreground" style={{ fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                 {t('up_sub_history')}
               </span>
             </div>
             {payments.length > 0 && (
-              <span className="text-white/20" style={{ fontSize: '0.6875rem' }}>
+              <span className="text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>
                 {t('up_sub_total_days', { n: totalDays })}
               </span>
             )}
@@ -868,20 +868,20 @@ function PremiumDashboard() {
 
           <GlassCard className="!p-0 overflow-hidden">
             {loadingPayments ? (
-              <div className="flex items-center justify-center py-8 gap-2 text-white/30">
+              <div className="flex items-center justify-center py-8 gap-2 text-muted-foreground">
                 <Loader2 className="w-4 h-4 animate-spin" />
                 <span style={{ fontSize: '0.8125rem' }}>{t('loading')}</span>
               </div>
             ) : payments.length === 0 ? (
               <div className="text-center py-8 px-4">
-                <CreditCard className="w-8 h-8 text-white/10 mx-auto mb-2" />
-                <p className="text-white/25" style={{ fontSize: '0.8125rem' }}>
+                <CreditCard className="w-8 h-8 text-ui-tertiary mx-auto mb-2" />
+                <p className="text-ui-tertiary" style={{ fontSize: '0.8125rem' }}>
                   {t('up_sub_no_payments')}
                 </p>
               </div>
             ) : (
               <>
-                <div className="divide-y divide-white/[0.04]">
+                <div className="divide-y" style={{ borderColor: 'var(--glass-border-subtle)' }}>
                   {visiblePayments.map((payment, idx) => {
                     const date = new Date(payment.createdAt);
                     const dateStr = date.toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', {
@@ -905,14 +905,14 @@ function PremiumDashboard() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="text-white/80 truncate" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
+                            <span className="text-foreground/80 truncate" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
                               {payment.amount} {currencyLabel}
                             </span>
                             <span className="px-1.5 py-0.5 rounded bg-[#6c5ce7]/15 text-[#a29bfe]" style={{ fontSize: '0.5625rem', fontWeight: 700 }}>
                               +{payment.daysAdded} {t('up_sub_days_short')}
                             </span>
                           </div>
-                          <p className="text-white/25" style={{ fontSize: '0.6875rem' }}>
+                          <p className="text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>
                             {dateStr} · {timeStr}
                           </p>
                         </div>
@@ -925,8 +925,8 @@ function PremiumDashboard() {
                 {payments.length > 5 && (
                   <button
                     onClick={() => { hapticFeedback('light'); setShowAllPayments(!showAllPayments); }}
-                    className="w-full py-2.5 flex items-center justify-center gap-1.5 text-white/30 border-t border-white/[0.04]"
-                    style={{ fontSize: '0.75rem', fontWeight: 500 }}
+                    className="w-full py-2.5 flex items-center justify-center gap-1.5 text-muted-foreground border-t"
+                    style={{ fontSize: '0.75rem', fontWeight: 500, borderColor: 'var(--glass-border-subtle)' }}
                   >
                     {showAllPayments ? (
                       <>
@@ -953,8 +953,8 @@ function PremiumDashboard() {
           transition={{ delay: 0.2 }}
         >
           <div className="flex items-center gap-2 mb-2.5 px-1">
-            <TrendingUp className="w-3.5 h-3.5 text-white/25" />
-            <span className="text-white/40" style={{ fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+            <TrendingUp className="w-3.5 h-3.5 text-ui-tertiary" />
+            <span className="text-muted-foreground" style={{ fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
               {t('up_sub_extend')}
             </span>
           </div>
@@ -976,7 +976,7 @@ function PremiumDashboard() {
                   className={`w-full relative rounded-2xl p-3.5 pl-11 text-left transition-all duration-200 ${
                     isSelected
                       ? 'bg-[#6c5ce7]/20 border-2 border-[#6c5ce7]'
-                      : 'bg-white/[0.04] border-2 border-transparent'
+                      : 'bg-ui-button border-2 border-transparent'
                   }`}
                 >
                   {p.popular && (
@@ -990,14 +990,14 @@ function PremiumDashboard() {
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>{label}</span>
+                        <span className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>{label}</span>
                         {p.save && (
                           <span className="px-1.5 py-0.5 rounded-full bg-green-500/20 text-green-400" style={{ fontSize: '0.625rem', fontWeight: 600 }}>
                             -{p.save}%
                           </span>
                         )}
                       </div>
-                      <span className="text-white/40" style={{ fontSize: '0.75rem' }}>
+                      <span className="text-foreground/40" style={{ fontSize: '0.75rem' }}>
                         {p.months > 1
                           ? `~${perMonth} Stars/${t('up_per_month')}`
                           : `${p.stars} Stars`
@@ -1006,7 +1006,7 @@ function PremiumDashboard() {
                     </div>
                     <div className="flex items-center gap-1.5">
                       <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
-                      <span className="text-white" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
+                      <span className="text-foreground" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
                         {p.stars}
                       </span>
                     </div>
@@ -1014,7 +1014,7 @@ function PremiumDashboard() {
 
                   <div
                     className={`absolute top-1/2 -translate-y-1/2 left-3.5 rounded-full border-2 flex items-center justify-center transition-all ${
-                      isSelected ? 'border-[#6c5ce7] bg-[#6c5ce7]' : 'border-white/20'
+                      isSelected ? 'border-[#6c5ce7] bg-[#6c5ce7]' : 'border-ui-input'
                     }`}
                     style={{ width: '18px', height: '18px' }}
                   >
@@ -1105,7 +1105,7 @@ function PremiumDashboard() {
           </div>
 
           {/* Security */}
-          <div className="mt-5 flex items-center justify-center gap-2 text-white/15" style={{ fontSize: '0.6875rem' }}>
+          <div className="mt-5 flex items-center justify-center gap-2 text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>
             <Shield className="w-3 h-3" />
             {t('up_secure')}
           </div>
