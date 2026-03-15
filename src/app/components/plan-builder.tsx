@@ -477,7 +477,7 @@ export function PlanBuilderPage() {
                     <div className="w-7 h-7 rounded-lg bg-[#6c5ce7]/15 flex items-center justify-center"><MessageCircle className="w-3.5 h-3.5 text-[#a29bfe]" /></div>
                     <p className="text-[#a29bfe]" style={{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.05em' }}>{t('pb_coach_intro')}</p>
                   </div>
-                  <p className="text-white/70" style={{ fontSize: '0.875rem', lineHeight: 1.6, fontStyle: 'italic' }}>&ldquo;{plan.coachIntro}&rdquo;</p>
+                  <p className="text-foreground/70" style={{ fontSize: '0.875rem', lineHeight: 1.6, fontStyle: 'italic' }}>&ldquo;{plan.coachIntro}&rdquo;</p>
                 </GlassCard>
               )}
 
@@ -541,13 +541,13 @@ export function PlanBuilderPage() {
                                     {day.doneReaction && (
                                       <div className="p-2.5 rounded-xl bg-emerald-500/[0.05] border border-emerald-500/10">
                                         <div className="flex items-center gap-1 mb-1"><ThumbsUp className="w-3 h-3 text-emerald-400/60" /><p className="text-emerald-400/60" style={{ fontSize: '0.6rem', fontWeight: 600 }}>{t('pb_if_done')}</p></div>
-                                        <p className="text-white/35" style={{ fontSize: '0.75rem', fontStyle: 'italic' }}>&ldquo;{day.doneReaction}&rdquo;</p>
+                                        <p className="text-muted-foreground" style={{ fontSize: '0.75rem', fontStyle: 'italic' }}>&ldquo;{day.doneReaction}&rdquo;</p>
                                       </div>
                                     )}
                                     {day.skipReaction && (
                                       <div className="p-2.5 rounded-xl bg-red-500/[0.05] border border-red-500/10">
                                         <div className="flex items-center gap-1 mb-1"><ThumbsDown className="w-3 h-3 text-red-400/60" /><p className="text-red-400/60" style={{ fontSize: '0.6rem', fontWeight: 600 }}>{t('pb_if_skip')}</p></div>
-                                        <p className="text-white/35" style={{ fontSize: '0.75rem', fontStyle: 'italic' }}>&ldquo;{day.skipReaction}&rdquo;</p>
+                                        <p className="text-muted-foreground" style={{ fontSize: '0.75rem', fontStyle: 'italic' }}>&ldquo;{day.skipReaction}&rdquo;</p>
                                       </div>
                                     )}
                                   </div>

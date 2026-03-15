@@ -369,7 +369,7 @@ export function GoalDetailPage() {
                 onChange={(e) => setTaskTitle(e.target.value)}
                 placeholder={t('task_title_placeholder')}
                 autoFocus
-                className="w-full h-12 rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 text-white placeholder:text-white/20 outline-none focus:border-[#00cec9]/40 transition-colors mb-3"
+                className="w-full h-12 rounded-xl bg-ui-button border border-[var(--glass-border)] px-4 text-foreground placeholder:text-ui-tertiary outline-none focus:border-[#00cec9]/40 transition-colors mb-3"
                 style={{ fontSize: '0.9375rem' }}
               />
 
@@ -506,7 +506,7 @@ function TaskRow({
             className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all shrink-0 ${
               deleteTaskId === task.id
                 ? 'bg-red-500/20 border border-red-500/30'
-                : 'bg-white/[0.02] opacity-0 group-hover:opacity-100'
+                : 'bg-ui-button opacity-0 group-hover:opacity-100'
             }`}
           >
             <Trash2 className={`w-3.5 h-3.5 ${deleteTaskId === task.id ? 'text-red-400' : 'text-ui-tertiary'}`} />

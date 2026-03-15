@@ -370,7 +370,7 @@ export function ProfilePage() {
               </div>
               {/* Progress bar */}
               {subscriptionActive && subscriptionDaysLeft > 0 && (
-                <div className="mt-3 h-1 rounded-full bg-white/[0.06] overflow-hidden">
+                <div className="mt-3 h-1 rounded-full overflow-hidden" style={{ background: 'var(--glass-border)' }}>
                   <div
                     className={`h-full rounded-full transition-all duration-500 ${
                       subscriptionDaysLeft <= 5 ? 'bg-amber-400' : 'bg-[#6c5ce7]'
@@ -413,10 +413,10 @@ export function ProfilePage() {
                 <Gem className="w-5 h-5 text-[#fd79a8]" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>{t('bonus_nav')}</p>
-                <p className="text-white/30 mt-0.5" style={{ fontSize: '0.75rem' }}>{t('bonus_nav_desc')}</p>
+                <p className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>{t('bonus_nav')}</p>
+                <p className="text-muted-foreground mt-0.5" style={{ fontSize: '0.75rem' }}>{t('bonus_nav_desc')}</p>
               </div>
-              <ChevronRight className="w-5 h-5 text-white/20 shrink-0" />
+              <ChevronRight className="w-5 h-5 text-ui-tertiary shrink-0" />
             </div>
           </GlassCard>
         </motion.div>
@@ -437,7 +437,7 @@ export function ProfilePage() {
               <Wallet className="w-6 h-6 text-yellow-400" />
             </div>
             <div className="flex-1">
-              <p className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>{t('my_wallet')}</p>
+              <p className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>{t('my_wallet')}</p>
               <div className="flex items-center gap-3 mt-1">
                 <span className="flex items-center gap-1 text-yellow-400" style={{ fontSize: '0.8125rem' }}>
                   <Star className="w-3.5 h-3.5" /> {wallet.starsBalance}
@@ -447,7 +447,7 @@ export function ProfilePage() {
                 </span>
               </div>
             </div>
-            <ChevronRight className="w-5 h-5 text-white/20" />
+            <ChevronRight className="w-5 h-5 text-ui-tertiary" />
           </GlassCard>
         </motion.div>
 
@@ -471,7 +471,7 @@ export function ProfilePage() {
             <AnimatePresence>
               {openPanel === 'language' && (
                 <ExpandablePanel>
-                  <p className="text-white/30 mb-3 px-1" style={{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.05em' }}>
+                  <p className="text-muted-foreground mb-3 px-1" style={{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.05em' }}>
                     {t('profile_select_language')}
                   </p>
                   <div className="grid grid-cols-2 gap-2">
@@ -484,12 +484,12 @@ export function ProfilePage() {
                           className={`h-14 rounded-xl border flex items-center justify-center gap-2.5 transition-all ${
                             isActive
                               ? 'bg-[#6c5ce7]/15 border-[#6c5ce7]/40 shadow-lg'
-                              : 'bg-white/[0.03] border-white/[0.06] active:bg-white/[0.06]'
+                              : 'bg-ui-button border-[var(--glass-border)]'
                           }`}
                           style={isActive ? { boxShadow: '0 4px 20px rgba(108,92,231,0.2)' } : {}}
                         >
                           <span style={{ fontSize: '1.25rem' }}>{lang.flag}</span>
-                          <span className={isActive ? 'text-white' : 'text-white/60'} style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+                          <span className={isActive ? 'text-foreground' : 'text-muted-foreground'} style={{ fontSize: '0.875rem', fontWeight: 600 }}>
                             {t(lang.labelKey)}
                           </span>
                           {isActive && (
@@ -505,7 +505,7 @@ export function ProfilePage() {
               )}
             </AnimatePresence>
 
-            <div className="h-px bg-white/[0.04] mx-2" />
+            <div className="h-px mx-2" style={{ background: 'var(--glass-border)' }} />
 
             {/* ---- Coaching Tone ---- */}
             <SettingRow
@@ -519,7 +519,7 @@ export function ProfilePage() {
             <AnimatePresence>
               {openPanel === 'tone' && (
                 <ExpandablePanel>
-                  <p className="text-white/30 mb-3 px-1" style={{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.05em' }}>
+                  <p className="text-muted-foreground mb-3 px-1" style={{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.05em' }}>
                     {t('profile_select_tone')}
                   </p>
                   <div className="space-y-2">
@@ -532,22 +532,22 @@ export function ProfilePage() {
                           className={`w-full text-left rounded-xl border p-3 flex items-center gap-3 transition-all ${
                             isActive
                               ? 'bg-[#6c5ce7]/12 border-[#6c5ce7]/30'
-                              : 'bg-white/[0.02] border-white/[0.05] active:bg-white/[0.04]'
+                              : 'bg-ui-button border-[var(--glass-border)]'
                           }`}
                         >
                           <div className={`w-9 h-9 rounded-lg ${tone.bgColor} flex items-center justify-center shrink-0`}>
                             <tone.icon className={`w-4.5 h-4.5 ${tone.color}`} style={{ width: 18, height: 18 }} />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className={isActive ? 'text-white' : 'text-white/70'} style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+                            <p className={isActive ? 'text-foreground' : 'text-foreground/70'} style={{ fontSize: '0.875rem', fontWeight: 600 }}>
                               {tone.emoji} {t(tone.labelKey)}
                             </p>
-                            <p className="text-white/30 truncate" style={{ fontSize: '0.6875rem' }}>
+                            <p className="text-muted-foreground truncate" style={{ fontSize: '0.6875rem' }}>
                               {t(tone.descKey)}
                             </p>
                           </div>
                           <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
-                            isActive ? 'border-[#6c5ce7] bg-[#6c5ce7]' : 'border-white/20'
+                            isActive ? 'border-[#6c5ce7] bg-[#6c5ce7]' : 'border-ui-input'
                           }`}>
                             {isActive && <Check className="w-3 h-3 text-white" />}
                           </div>
@@ -559,7 +559,7 @@ export function ProfilePage() {
               )}
             </AnimatePresence>
 
-            <div className="h-px bg-white/[0.04] mx-2" />
+            <div className="h-px mx-2" style={{ background: 'var(--glass-border)' }} />
 
             {/* ---- Goal ---- */}
             <SettingRow
@@ -577,7 +577,7 @@ export function ProfilePage() {
             <AnimatePresence>
               {openPanel === 'goal' && (
                 <ExpandablePanel>
-                  <p className="text-white/30 mb-3 px-1" style={{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.05em' }}>
+                  <p className="text-muted-foreground mb-3 px-1" style={{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.05em' }}>
                     {t('profile_select_goal')}
                   </p>
                   <div className="grid grid-cols-2 gap-2">
@@ -590,14 +590,14 @@ export function ProfilePage() {
                           className={`relative rounded-xl border p-3 text-left transition-all ${
                             isActive
                               ? 'bg-[#6c5ce7]/15 border-[#6c5ce7]/40'
-                              : 'bg-white/[0.02] border-white/[0.05] active:bg-white/[0.04]'
+                              : 'bg-ui-button border-[var(--glass-border)]'
                           }`}
                         >
                           <span className="block mb-1.5" style={{ fontSize: '1.5rem' }}>{goal.emoji}</span>
-                          <p className={isActive ? 'text-white' : 'text-white/70'} style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
+                          <p className={isActive ? 'text-foreground' : 'text-foreground/70'} style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
                             {t(goal.labelKey)}
                           </p>
-                          <p className="text-white/30 mt-0.5" style={{ fontSize: '0.625rem', lineHeight: 1.4 }}>
+                          <p className="text-muted-foreground mt-0.5" style={{ fontSize: '0.625rem', lineHeight: 1.4 }}>
                             {t(goal.descKey)}
                           </p>
                           {isActive && (
@@ -618,14 +618,14 @@ export function ProfilePage() {
                   <div className="mt-3">
                     <div className="flex items-center gap-2 mb-2">
                       <PenLine className="w-3.5 h-3.5 text-[#a29bfe]" />
-                      <p className="text-white/40" style={{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.04em' }}>
+                      <p className="text-muted-foreground" style={{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.04em' }}>
                         {t('goal_custom_label')}
                       </p>
                     </div>
                     <div className={`rounded-xl border p-2.5 transition-all ${
                       isCustomGoal
                         ? 'bg-[#6c5ce7]/10 border-[#6c5ce7]/30'
-                        : 'bg-white/[0.02] border-white/[0.06]'
+                        : 'bg-ui-button border-[var(--glass-border)]'
                     }`}>
                       <textarea
                         value={customGoalText}
@@ -633,7 +633,7 @@ export function ProfilePage() {
                         placeholder={t('goal_custom_placeholder')}
                         rows={2}
                         maxLength={200}
-                        className="w-full bg-transparent rounded-lg px-2 py-1.5 text-white placeholder-white/20 resize-none outline-none"
+                        className="w-full bg-transparent rounded-lg px-2 py-1.5 text-foreground resize-none outline-none"
                         style={{ fontSize: '0.8125rem', lineHeight: 1.5 }}
                       />
                       <div className="flex items-center justify-between mt-1.5">
@@ -652,7 +652,7 @@ export function ProfilePage() {
                           className={`h-8 px-3.5 rounded-lg flex items-center justify-center gap-1.5 transition-all ${
                             customGoalText.trim()
                               ? 'bg-[#6c5ce7]/20 border border-[#6c5ce7]/40 text-[#a29bfe]'
-                              : 'bg-white/[0.03] text-white/15'
+                              : 'bg-ui-button text-ui-tertiary'
                           }`}
                           style={{ fontSize: '0.75rem', fontWeight: 600 }}
                         >
@@ -666,7 +666,7 @@ export function ProfilePage() {
               )}
             </AnimatePresence>
 
-            <div className="h-px bg-white/[0.04] mx-2" />
+            <div className="h-px mx-2" style={{ background: 'var(--glass-border)' }} />
 
             {/* ---- Privacy ---- */}
             <SettingRow
@@ -718,12 +718,12 @@ export function ProfilePage() {
               )}
             </AnimatePresence>
 
-            <div className="h-px bg-white/[0.04] mx-2" />
+            <div className="h-px mx-2" style={{ background: 'var(--glass-border)' }} />
 
             {/* ---- Settings ---- */}
             <SettingRow
               icon={Settings}
-              color="text-white/60"
+              color="text-muted-foreground"
               label={t('profile_settings')}
               value=""
               isOpen={openPanel === 'settings'}
@@ -749,8 +749,8 @@ export function ProfilePage() {
                     {/* Reminder time picker */}
                     {user?.dailyReminderTime && (
                       <div className="flex items-center gap-3 px-2 py-2 ml-8">
-                        <Clock className="w-4 h-4 text-white/30" />
-                        <span className="text-white/40" style={{ fontSize: '0.75rem' }}>{t('settings_reminder_time')}</span>
+                        <Clock className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>{t('settings_reminder_time')}</span>
                         <input
                           type="time"
                           value={reminderTime}
@@ -759,8 +759,8 @@ export function ProfilePage() {
                             updateUser({ dailyReminderTime: e.target.value });
                             showToast(t('profile_saved'));
                           }}
-                          className="ml-auto bg-white/[0.04] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-white outline-none"
-                          style={{ fontSize: '0.8125rem', colorScheme: 'dark' }}
+                          className="ml-auto bg-ui-button border rounded-lg px-2.5 py-1.5 text-foreground outline-none"
+                          style={{ fontSize: '0.8125rem', borderColor: 'var(--glass-border)' }}
                         />
                       </div>
                     )}
@@ -797,7 +797,7 @@ export function ProfilePage() {
 
                     {/* Divider: Data section */}
                     <div className="pt-3 pb-1">
-                      <p className="text-white/20 px-1" style={{ fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.08em' }}>
+                      <p className="text-ui-tertiary px-1" style={{ fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.08em' }}>
                         {t('settings_data_section')}
                       </p>
                     </div>
@@ -958,7 +958,7 @@ export function ProfilePage() {
                           setExporting(false);
                         }
                       }}
-                      className={`w-full flex items-center gap-3 px-2 py-2.5 rounded-xl active:bg-white/[0.04] transition-colors ${exporting ? 'opacity-50' : ''}`}
+                      className={`w-full flex items-center gap-3 px-2 py-2.5 rounded-xl active:bg-ui-button-active transition-colors ${exporting ? 'opacity-50' : ''}`}
                     >
                       {exporting ? (
                         <Loader2 className="w-[18px] h-[18px] text-blue-400 animate-spin" />
@@ -966,12 +966,12 @@ export function ProfilePage() {
                         <Download className="w-[18px] h-[18px] text-blue-400" />
                       )}
                       <div className="flex-1 text-left min-w-0">
-                        <p className="text-white/70" style={{ fontSize: '0.8125rem', fontWeight: 500 }}>
+                        <p className="text-foreground/70" style={{ fontSize: '0.8125rem', fontWeight: 500 }}>
                           {exporting ? t('settings_export_loading') : t('settings_export_data')}
                         </p>
-                        <p className="text-white/25" style={{ fontSize: '0.625rem' }}>{t('settings_export_desc')}</p>
+                        <p className="text-ui-tertiary" style={{ fontSize: '0.625rem' }}>{t('settings_export_desc')}</p>
                       </div>
-                      {!exporting && <ChevronRight className="w-4 h-4 text-white/15" />}
+                      {!exporting && <ChevronRight className="w-4 h-4 text-ui-tertiary" />}
                     </button>
 
                     {/* Clear cache */}
@@ -989,19 +989,19 @@ export function ProfilePage() {
                         setPrivacySettings({ showInLeaderboard: true, publicStreak: true, aiJournalAccess: true, analytics: true });
                         showToast(t('settings_cleared'));
                       }}
-                      className="w-full flex items-center gap-3 px-2 py-2.5 rounded-xl active:bg-white/[0.04] transition-colors"
+                      className="w-full flex items-center gap-3 px-2 py-2.5 rounded-xl active:bg-ui-button-active transition-colors"
                     >
                       <Trash2 className="w-4.5 h-4.5 text-red-400/60" style={{ width: 18, height: 18 }} />
                       <div className="flex-1 text-left min-w-0">
-                        <p className="text-white/70" style={{ fontSize: '0.8125rem', fontWeight: 500 }}>{t('settings_clear_cache')}</p>
-                        <p className="text-white/25" style={{ fontSize: '0.625rem' }}>{t('settings_clear_desc')}</p>
+                        <p className="text-foreground/70" style={{ fontSize: '0.8125rem', fontWeight: 500 }}>{t('settings_clear_cache')}</p>
+                        <p className="text-ui-tertiary" style={{ fontSize: '0.625rem' }}>{t('settings_clear_desc')}</p>
                       </div>
                     </button>
 
                     {/* Version */}
                     <div className="flex items-center justify-between px-2 pt-2">
-                      <span className="text-white/15" style={{ fontSize: '0.6875rem' }}>{t('settings_version')}</span>
-                      <span className="text-white/15" style={{ fontSize: '0.6875rem' }}>1.0.0</span>
+                      <span className="text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>{t('settings_version')}</span>
+                      <span className="text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>1.0.0</span>
                     </div>
                   </div>
                 </ExpandablePanel>
@@ -1040,12 +1040,12 @@ export function ProfilePage() {
                   <Shield className="w-5 h-5 text-[#a29bfe]" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>Admin Panel</p>
-                  <p className="text-white/30 mt-0.5" style={{ fontSize: '0.75rem' }}>
+                  <p className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>Admin Panel</p>
+                  <p className="text-muted-foreground mt-0.5" style={{ fontSize: '0.75rem' }}>
                     {t('profile_language') === 'Язык' ? 'Управление пользователями и рассылки' : 'Manage users & broadcasts'}
                   </p>
                 </div>
-                <ChevronRight className="w-5 h-5 text-white/20 shrink-0" />
+                <ChevronRight className="w-5 h-5 text-ui-tertiary shrink-0" />
               </div>
             </GlassCard>
           </motion.div>
@@ -1072,7 +1072,7 @@ export function ProfilePage() {
         </motion.div>
 
         {/* Footer */}
-        <p className="text-center text-white/15 mt-8" style={{ fontSize: '0.6875rem' }}>
+        <p className="text-center text-ui-tertiary mt-8" style={{ fontSize: '0.6875rem' }}>
           Proper Food AI v1.0.0 · {BOT_MENTION}
         </p>
       </div>
@@ -1104,17 +1104,17 @@ function SettingRow({
       onClick={onToggle}
     >
       <Icon className={`w-5 h-5 ${color}`} />
-      <span className="text-white flex-1 text-left" style={{ fontSize: '0.9375rem' }}>{label}</span>
-      <span className="text-white/30" style={{ fontSize: '0.8125rem' }}>{value}</span>
+      <span className="text-foreground flex-1 text-left" style={{ fontSize: '0.9375rem' }}>{label}</span>
+      <span className="text-muted-foreground" style={{ fontSize: '0.8125rem' }}>{value}</span>
       {!disabled ? (
         <motion.div
           animate={{ rotate: isOpen ? 180 : 0 }}
           transition={{ duration: 0.2 }}
         >
-          <ChevronDown className="w-4 h-4 text-white/15" />
+          <ChevronDown className="w-4 h-4 text-ui-tertiary" />
         </motion.div>
       ) : (
-        <ChevronRight className="w-4 h-4 text-white/15" />
+        <ChevronRight className="w-4 h-4 text-ui-tertiary" />
       )}
     </button>
   );
@@ -1138,18 +1138,18 @@ function ToggleSettingRow({
 }) {
   return (
     <button
-      className="w-full flex items-center gap-3 px-2 py-2.5 rounded-xl active:bg-white/[0.04] transition-colors"
+      className="w-full flex items-center gap-3 px-2 py-2.5 rounded-xl active:bg-ui-button-active transition-colors"
       onClick={onToggle}
     >
       <Icon className={`${color}`} style={{ width: 18, height: 18 }} />
       <div className="flex-1 text-left min-w-0">
-        <p className="text-white/70" style={{ fontSize: '0.8125rem', fontWeight: 500 }}>{label}</p>
-        <p className="text-white/25" style={{ fontSize: '0.625rem' }}>{description}</p>
+        <p className="text-foreground/70" style={{ fontSize: '0.8125rem', fontWeight: 500 }}>{label}</p>
+        <p className="text-ui-tertiary" style={{ fontSize: '0.625rem' }}>{description}</p>
       </div>
       {/* iOS-style toggle switch */}
       <div
         className={`relative w-[42px] h-[26px] rounded-full shrink-0 transition-colors duration-200 ${
-          enabled ? 'bg-[#6c5ce7]' : 'bg-white/10'
+          enabled ? 'bg-[#6c5ce7]' : 'bg-switch-background'
         }`}
       >
         <motion.div

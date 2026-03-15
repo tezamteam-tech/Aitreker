@@ -542,6 +542,7 @@
 /* Backgrounds */
 .bg-ui-input { background-color: var(--ui-input-bg); }
 .bg-ui-button { background-color: var(--ui-button-bg); }
+.bg-ui-button-active { background-color: var(--ui-button-active); }
 .bg-ui-close { background-color: var(--ui-close-bg); }
 
 /* Borders */

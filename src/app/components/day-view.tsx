@@ -567,7 +567,7 @@ export function DayViewPage() {
             className="fixed top-12 left-1/2 -translate-x-1/2 z-[60] px-5 py-2.5 rounded-2xl bg-liquid-glass-toast border border-white/[0.1] shadow-2xl"
             style={{ boxShadow: '0 12px 40px rgba(0,0,0,0.5)' }}
           >
-            <p className="text-white" style={{ fontSize: '0.875rem', fontWeight: 500 }}>{toast}</p>
+            <p className="text-foreground" style={{ fontSize: '0.875rem', fontWeight: 500 }}>{toast}</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -694,7 +694,7 @@ export function DayViewPage() {
               onClick={() => setViewingPhoto(null)}
             >
               <button className="absolute top-12 right-5 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center" onClick={() => setViewingPhoto(null)}>
-                <X className="w-5 h-5 text-white" />
+                <X className="w-5 h-5 text-foreground" />
               </button>
               <img src={viewingPhoto} alt="Proof" className="max-w-full max-h-[80vh] rounded-2xl object-contain" />
             </motion.div>
@@ -743,13 +743,13 @@ export function DayViewPage() {
                       <div className="flex items-center gap-2 mb-0.5">
                         <span style={{ fontSize: '1.125rem' }}>{task.emoji}</span>
                         <p
-                          className={`text-white transition-all ${isChecked ? 'opacity-60' : ''} ${hasProof ? 'opacity-50' : ''}`}
+                          className={`text-foreground transition-all ${isChecked ? 'opacity-60' : ''} ${hasProof ? 'opacity-50' : ''}`}
                           style={{ fontSize: '0.9375rem', fontWeight: 500 }}
                         >
                           {task.title}
                         </p>
                       </div>
-                      <p className="text-white/35" style={{ fontSize: '0.8125rem', lineHeight: 1.5 }}>
+                      <p className="text-muted-foreground" style={{ fontSize: '0.8125rem', lineHeight: 1.5 }}>
                         {task.description}
                       </p>
 
@@ -762,7 +762,7 @@ export function DayViewPage() {
                           >
                             <img src={proofPhotos[task.id]} alt="" className="w-full h-full object-cover" />
                             <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                              <ImageIcon className="w-4 h-4 text-white/80" />
+                              <ImageIcon className="w-4 h-4 text-foreground/80" />
                             </div>
                           </button>
                           <div className="flex-1 min-w-0">
@@ -773,7 +773,7 @@ export function DayViewPage() {
                             {!isAlreadyDone && (
                               <button
                                 onClick={(e) => { e.stopPropagation(); triggerPhotoUpload(task.id); }}
-                                className="text-white/30 flex items-center gap-1"
+                                className="text-muted-foreground flex items-center gap-1"
                                 style={{ fontSize: '0.6875rem' }}
                               >
                                 <RefreshCw className="w-3 h-3" />
@@ -820,8 +820,8 @@ export function DayViewPage() {
                               type="time"
                               value={reminderInput}
                               onChange={(e) => setReminderInput(e.target.value)}
-                              className="w-[90px] h-6 px-1.5 rounded-md bg-white/[0.06] border border-[#6c5ce7]/40 text-white text-center"
-                              style={{ fontSize: '0.6875rem', colorScheme: 'dark' }}
+                              className="w-[90px] h-6 px-1.5 rounded-md bg-ui-button border border-[#6c5ce7]/40 text-foreground text-center"
+                              style={{ fontSize: '0.6875rem' }}
                               autoFocus
                             />
                             <button
@@ -847,9 +847,9 @@ export function DayViewPage() {
                             </button>
                             <button
                               onClick={(e) => { e.stopPropagation(); setEditingReminder(null); }}
-                              className="w-6 h-6 rounded-md bg-white/[0.04] flex items-center justify-center"
+                              className="w-6 h-6 rounded-md bg-ui-button flex items-center justify-center"
                             >
-                              <X className="w-3 h-3 text-white/40" />
+                              <X className="w-3 h-3 text-muted-foreground" />
                             </button>
                           </div>
                         ) : (
@@ -888,7 +888,7 @@ export function DayViewPage() {
               <h3 className="text-[#a29bfe]/60" style={{ fontSize: '0.8125rem', fontWeight: 600, letterSpacing: '0.05em' }}>
                 {t('sg_dayview_title')}
               </h3>
-              <span className="text-white/20" style={{ fontSize: '0.6875rem' }}>{t('sg_dayview_subtitle')}</span>
+              <span className="text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>{t('sg_dayview_subtitle')}</span>
             </div>
             <div className="space-y-2.5">
               {sgTasks.map((task, i) => {
@@ -930,7 +930,7 @@ export function DayViewPage() {
                             ) : null}
                           </motion.button>
                           <div className="flex-1 min-w-0">
-                            <p className={`truncate ${isDone ? 'line-through text-white/30' : 'text-white'}`}
+                            <p className={`truncate ${isDone ? 'line-through text-muted-foreground' : 'text-foreground'}`}
                               style={{ fontSize: '0.9375rem', fontWeight: 500 }}>
                               {task.title}
                             </p>
@@ -953,7 +953,7 @@ export function DayViewPage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.6 }}
-                className="text-center text-white/15 mt-2"
+                className="text-center text-ui-tertiary mt-2"
                 style={{ fontSize: '0.6875rem' }}
               >
                 {t('dv_swipe_hint')}
@@ -978,7 +978,7 @@ export function DayViewPage() {
               className={`w-full h-14 rounded-2xl flex items-center justify-center gap-2.5 transition-all duration-300 ${
                 allDone
                   ? 'bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe] text-white shadow-lg'
-                  : 'bg-white/[0.03] text-white/20 border border-white/[0.04]'
+                  : 'bg-ui-button text-ui-tertiary border border-[var(--glass-border)]'
               }`}
               style={{
                 fontSize: '1.0625rem',
@@ -1010,7 +1010,7 @@ export function DayViewPage() {
               whileTap={{ scale: 0.97 }}
               onClick={handleSkip}
               disabled={isSaving}
-              className="w-full h-12 rounded-xl bg-white/[0.03] border border-white/[0.05] text-white/40 flex items-center justify-center gap-2 active:bg-white/[0.06] transition-colors"
+              className="w-full h-12 rounded-xl bg-ui-button border border-[var(--glass-border)] text-muted-foreground flex items-center justify-center gap-2 active:bg-ui-button-active transition-colors"
               style={{ fontSize: '0.9375rem', fontWeight: 500 }}
             >
               <SkipForward className="w-4 h-4" />
@@ -1081,7 +1081,7 @@ export function DayViewPage() {
                       {t('coach_unavailable')}
                     </p>
                   </div>
-                  <p className="text-white/40" style={{ fontSize: '0.8125rem', lineHeight: 1.5 }}>
+                  <p className="text-muted-foreground" style={{ fontSize: '0.8125rem', lineHeight: 1.5 }}>
                     {coachError}
                   </p>
                   <button
@@ -1117,14 +1117,14 @@ export function DayViewPage() {
                         <p className="text-[#00cec9]" style={{ fontSize: '0.8125rem', fontWeight: 700 }}>
                           {t('ai_coach_title')}
                         </p>
-                        <p className="text-white/25" style={{ fontSize: '0.625rem', fontWeight: 500 }}>
+                        <p className="text-ui-tertiary" style={{ fontSize: '0.625rem', fontWeight: 500 }}>
                           {t('personalized_insight')}
                         </p>
                       </div>
                     </div>
 
                     {/* Short message */}
-                    <p className="text-white/75 mb-4" style={{ fontSize: '0.9375rem', lineHeight: 1.65 }}>
+                    <p className="text-foreground/75 mb-4" style={{ fontSize: '0.9375rem', lineHeight: 1.65 }}>
                       {coachResponse.shortMessage}
                     </p>
 
@@ -1133,7 +1133,7 @@ export function DayViewPage() {
                       <p className="text-[#a29bfe] mb-1" style={{ fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.06em' }}>
                         {t('next_step')}
                       </p>
-                      <p className="text-white/65" style={{ fontSize: '0.875rem', lineHeight: 1.55 }}>
+                      <p className="text-foreground/65" style={{ fontSize: '0.875rem', lineHeight: 1.55 }}>
                         {coachResponse.nextStep}
                       </p>
                     </div>
@@ -1144,7 +1144,7 @@ export function DayViewPage() {
                         <p className="text-amber-400/80 mb-1" style={{ fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.06em' }}>
                           {t('reframe')}
                         </p>
-                        <p className="text-white/55" style={{ fontSize: '0.8125rem', lineHeight: 1.55, fontStyle: 'italic' }}>
+                        <p className="text-muted-foreground" style={{ fontSize: '0.8125rem', lineHeight: 1.55, fontStyle: 'italic' }}>
                           {coachResponse.reframe}
                         </p>
                       </div>
@@ -1161,7 +1161,7 @@ export function DayViewPage() {
                         placeholder={t('coach_followup_placeholder')}
                         rows={2}
                         maxLength={500}
-                        className="w-full bg-white/[0.04] rounded-xl px-3.5 py-2.5 text-white placeholder-white/20 resize-none outline-none border border-white/[0.06] focus:border-[#00cec9]/30 transition-colors"
+                        className="w-full bg-ui-button rounded-xl px-3.5 py-2.5 text-foreground resize-none outline-none border border-[var(--glass-border)] focus:border-[#00cec9]/30 transition-colors"
                         style={{ fontSize: '0.875rem', lineHeight: 1.5 }}
                       />
                       <div className="flex items-center justify-between mt-2">
@@ -1176,7 +1176,7 @@ export function DayViewPage() {
                           className={`h-9 px-4 rounded-lg flex items-center justify-center gap-1.5 transition-all ${
                             followupText.trim()
                               ? 'bg-[#00cec9]/15 border border-[#00cec9]/30 text-[#00cec9]'
-                              : 'bg-white/[0.03] text-white/15'
+                              : 'bg-ui-button text-ui-tertiary'
                           }`}
                           style={{ fontSize: '0.8125rem', fontWeight: 600 }}
                         >
@@ -1207,19 +1207,19 @@ export function DayViewPage() {
                               {t('coach_followup_title')}
                             </p>
                           </div>
-                          <p className="text-white/70 mb-2.5" style={{ fontSize: '0.875rem', lineHeight: 1.6 }}>
+                          <p className="text-foreground/70 mb-2.5" style={{ fontSize: '0.875rem', lineHeight: 1.6 }}>
                             {followupResponse.shortMessage}
                           </p>
                           <div className="bg-[#6c5ce7]/8 border border-[#6c5ce7]/15 rounded-lg px-3 py-2.5">
                             <p className="text-[#a29bfe] mb-0.5" style={{ fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.06em' }}>
                               {t('next_step')}
                             </p>
-                            <p className="text-white/60" style={{ fontSize: '0.8125rem', lineHeight: 1.5 }}>
+                            <p className="text-muted-foreground" style={{ fontSize: '0.8125rem', lineHeight: 1.5 }}>
                               {followupResponse.nextStep}
                             </p>
                           </div>
                           {followupResponse.reframe && (
-                            <p className="text-white/40 mt-2" style={{ fontSize: '0.8125rem', lineHeight: 1.5, fontStyle: 'italic' }}>
+                            <p className="text-muted-foreground mt-2" style={{ fontSize: '0.8125rem', lineHeight: 1.5, fontStyle: 'italic' }}>
                               {followupResponse.reframe}
                             </p>
                           )}
@@ -1233,7 +1233,7 @@ export function DayViewPage() {
 
             <button
               onClick={() => navigate('/home')}
-              className="w-full h-12 rounded-xl bg-white/[0.04] text-white/50 flex items-center justify-center gap-2"
+              className="w-full h-12 rounded-xl bg-ui-button text-muted-foreground flex items-center justify-center gap-2"
               style={{ fontSize: '0.9375rem', fontWeight: 500 }}
             >
               <Home className="w-4 h-4" />
@@ -1318,16 +1318,16 @@ function ReflectionModal({
         </motion.div>
 
         {/* Title */}
-        <h3 className="text-white text-center mb-2" style={{ fontSize: '1.25rem', fontWeight: 700 }}>
+        <h3 className="text-foreground text-center mb-2" style={{ fontSize: '1.25rem', fontWeight: 700 }}>
           {status === 'done' ? t('day_done_title', { day: dayNum }) : t('skipping_day_title', { day: dayNum })}
         </h3>
-        <p className="text-white/40 text-center mb-6" style={{ fontSize: '0.8125rem' }}>
+        <p className="text-muted-foreground text-center mb-6" style={{ fontSize: '0.8125rem' }}>
           {status === 'skip' ? t('reflect_skip') : t('reflect_done')}
         </p>
 
         {/* Reflection question */}
         <GlassCard variant="elevated" padding="md" className="mb-4">
-          <p className="text-white/70 mb-3" style={{ fontSize: '0.875rem', fontWeight: 500, lineHeight: 1.5 }}>
+          <p className="text-foreground/70 mb-3" style={{ fontSize: '0.875rem', fontWeight: 500, lineHeight: 1.5 }}>
             {question}
           </p>
           <textarea
@@ -1335,7 +1335,7 @@ function ReflectionModal({
             onChange={(e) => setReflectionText(e.target.value)}
             placeholder={t('reflection_placeholder')}
             rows={3}
-            className="w-full bg-white/[0.04] rounded-xl px-3.5 py-3 text-white placeholder-white/20 resize-none outline-none border border-white/[0.06] focus:border-[#6c5ce7]/40 transition-colors"
+            className="w-full bg-ui-button rounded-xl px-3.5 py-3 text-foreground resize-none outline-none border border-[var(--glass-border)] focus:border-[#6c5ce7]/40 transition-colors"
             style={{ fontSize: '0.9375rem', lineHeight: 1.6 }}
           />
           <div className="flex items-center justify-end mt-1.5">
@@ -1355,7 +1355,7 @@ function ReflectionModal({
             className={`w-full h-13 rounded-xl flex items-center justify-center gap-2 transition-all ${
               reflectionText.trim()
                 ? 'bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe] text-white'
-                : 'bg-white/[0.04] text-white/20'
+                : 'bg-ui-button text-ui-tertiary'
             }`}
             style={{ fontSize: '0.9375rem', fontWeight: 600, height: '52px' }}
           >
@@ -1375,7 +1375,7 @@ function ReflectionModal({
 
           <button
             onClick={onSkip}
-            className="w-full h-11 text-white/30 flex items-center justify-center"
+            className="w-full h-11 text-muted-foreground flex items-center justify-center"
             style={{ fontSize: '0.875rem' }}
           >
             {t('skip_for_now')}
@@ -1442,9 +1442,9 @@ function CompletionOverlay({
         style={{ boxShadow: status === 'done' ? '0 12px 40px rgba(0,206,201,0.3)' : '0 12px 40px rgba(245,166,35,0.3)' }}
       >
         {status === 'done' ? (
-          <Sparkles className="w-12 h-12 text-white" />
+          <Sparkles className="w-12 h-12 text-foreground" />
         ) : (
-          <SkipForward className="w-12 h-12 text-white" />
+          <SkipForward className="w-12 h-12 text-foreground" />
         )}
       </motion.div>
 
@@ -1453,7 +1453,7 @@ function CompletionOverlay({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="text-white text-center mb-2"
+        className="text-foreground text-center mb-2"
         style={{ fontSize: '1.5rem', fontWeight: 700 }}
       >
         {status === 'done' ? t('day_complete_title', { day: dayNum }) : t('day_skipped_title', { day: dayNum })}
@@ -1463,7 +1463,7 @@ function CompletionOverlay({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.45 }}
-        className="text-white/45 text-center mb-8"
+        className="text-muted-foreground text-center mb-8"
         style={{ fontSize: '0.9375rem' }}
       >
         {status === 'done' ? t('momentum_msg') : t('rest_msg')}
@@ -1481,15 +1481,15 @@ function CompletionOverlay({
             <Star className="w-5 h-5 text-yellow-400" />
             <span className="text-yellow-400" style={{ fontSize: '1.375rem', fontWeight: 700 }}>+{xpEarned}</span>
           </div>
-          <p className="text-white/30" style={{ fontSize: '0.6875rem' }}>{t('xp_earned')}</p>
+          <p className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>{t('xp_earned')}</p>
         </div>
-        <div className="w-px h-10 bg-white/[0.06]" />
+        <div className="w-px h-10" style={{ background: 'var(--glass-border)' }} />
         <div className="text-center">
           <div className="flex items-center gap-1.5 mb-1">
             <Flame className="w-5 h-5 text-orange-400" />
-            <span className="text-white" style={{ fontSize: '1.375rem', fontWeight: 700 }}>{totalXp}</span>
+            <span className="text-foreground" style={{ fontSize: '1.375rem', fontWeight: 700 }}>{totalXp}</span>
           </div>
-          <p className="text-white/30" style={{ fontSize: '0.6875rem' }}>{t('total_xp')}</p>
+          <p className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>{t('total_xp')}</p>
         </div>
       </motion.div>
 
@@ -1548,7 +1548,7 @@ function CompletionOverlay({
                 {t('coach_unavailable')}
               </p>
             </div>
-            <p className="text-white/40" style={{ fontSize: '0.8125rem', lineHeight: 1.5 }}>
+            <p className="text-muted-foreground" style={{ fontSize: '0.8125rem', lineHeight: 1.5 }}>
               {coachError}
             </p>
             <button
@@ -1584,14 +1584,14 @@ function CompletionOverlay({
                   <p className="text-[#00cec9]" style={{ fontSize: '0.8125rem', fontWeight: 700 }}>
                     {t('ai_coach_title')}
                   </p>
-                  <p className="text-white/25" style={{ fontSize: '0.625rem', fontWeight: 500 }}>
+                  <p className="text-ui-tertiary" style={{ fontSize: '0.625rem', fontWeight: 500 }}>
                     {t('personalized_insight')}
                   </p>
                 </div>
               </div>
 
               {/* Short message */}
-              <p className="text-white/75 mb-4" style={{ fontSize: '0.9375rem', lineHeight: 1.65 }}>
+              <p className="text-foreground/75 mb-4" style={{ fontSize: '0.9375rem', lineHeight: 1.65 }}>
                 {coachResponse.shortMessage}
               </p>
 
@@ -1600,7 +1600,7 @@ function CompletionOverlay({
                 <p className="text-[#a29bfe] mb-1" style={{ fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.06em' }}>
                   {t('next_step')}
                 </p>
-                <p className="text-white/65" style={{ fontSize: '0.875rem', lineHeight: 1.55 }}>
+                <p className="text-foreground/65" style={{ fontSize: '0.875rem', lineHeight: 1.55 }}>
                   {coachResponse.nextStep}
                 </p>
               </div>
@@ -1611,7 +1611,7 @@ function CompletionOverlay({
                   <p className="text-amber-400/80 mb-1" style={{ fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.06em' }}>
                     {t('reframe')}
                   </p>
-                  <p className="text-white/55" style={{ fontSize: '0.8125rem', lineHeight: 1.55, fontStyle: 'italic' }}>
+                  <p className="text-muted-foreground" style={{ fontSize: '0.8125rem', lineHeight: 1.55, fontStyle: 'italic' }}>
                     {coachResponse.reframe}
                   </p>
                 </div>
@@ -1628,7 +1628,7 @@ function CompletionOverlay({
                   placeholder={t('coach_followup_placeholder')}
                   rows={2}
                   maxLength={500}
-                  className="w-full bg-white/[0.04] rounded-xl px-3.5 py-2.5 text-white placeholder-white/20 resize-none outline-none border border-white/[0.06] focus:border-[#00cec9]/30 transition-colors"
+                  className="w-full bg-ui-button rounded-xl px-3.5 py-2.5 text-foreground resize-none outline-none border border-[var(--glass-border)] focus:border-[#00cec9]/30 transition-colors"
                   style={{ fontSize: '0.875rem', lineHeight: 1.5 }}
                 />
                 <div className="flex items-center justify-between mt-2">
@@ -1643,7 +1643,7 @@ function CompletionOverlay({
                     className={`h-9 px-4 rounded-lg flex items-center justify-center gap-1.5 transition-all ${
                       followupText.trim()
                         ? 'bg-[#00cec9]/15 border border-[#00cec9]/30 text-[#00cec9]'
-                        : 'bg-white/[0.03] text-white/15'
+                        : 'bg-ui-button text-ui-tertiary'
                     }`}
                     style={{ fontSize: '0.8125rem', fontWeight: 600 }}
                   >
@@ -1674,19 +1674,19 @@ function CompletionOverlay({
                         {t('coach_followup_title')}
                       </p>
                     </div>
-                    <p className="text-white/70 mb-2.5" style={{ fontSize: '0.875rem', lineHeight: 1.6 }}>
+                    <p className="text-foreground/70 mb-2.5" style={{ fontSize: '0.875rem', lineHeight: 1.6 }}>
                       {followupResponse.shortMessage}
                     </p>
                     <div className="bg-[#6c5ce7]/8 border border-[#6c5ce7]/15 rounded-lg px-3 py-2.5">
                       <p className="text-[#a29bfe] mb-0.5" style={{ fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.06em' }}>
                         {t('next_step')}
                       </p>
-                      <p className="text-white/60" style={{ fontSize: '0.8125rem', lineHeight: 1.5 }}>
+                      <p className="text-muted-foreground" style={{ fontSize: '0.8125rem', lineHeight: 1.5 }}>
                         {followupResponse.nextStep}
                       </p>
                     </div>
                     {followupResponse.reframe && (
-                      <p className="text-white/40 mt-2" style={{ fontSize: '0.8125rem', lineHeight: 1.5, fontStyle: 'italic' }}>
+                      <p className="text-muted-foreground mt-2" style={{ fontSize: '0.8125rem', lineHeight: 1.5, fontStyle: 'italic' }}>
                         {followupResponse.reframe}
                       </p>
                     )}

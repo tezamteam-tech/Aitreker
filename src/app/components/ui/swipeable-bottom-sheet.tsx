@@ -123,8 +123,11 @@ export function SwipeableBottomSheet({
               maxHeight,
               zIndex: zIndex + 1,
               paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 16px)',
-              background: 'rgba(18,18,30,0.98)',
-              borderTop: '1px solid rgba(255,255,255,0.08)',
+              background: 'var(--glass-bg-panel)',
+              borderTop: '1px solid var(--glass-border)',
+              backdropFilter: 'blur(var(--glass-blur-panel))',
+              WebkitBackdropFilter: 'blur(var(--glass-blur-panel))',
+              boxShadow: 'var(--glass-shadow-sheet)',
             }}
             className="fixed left-0 right-0 bottom-0 rounded-t-[1.5rem] overflow-hidden flex flex-col"
           >

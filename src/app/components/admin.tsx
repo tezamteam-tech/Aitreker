@@ -58,11 +58,11 @@ export function AdminPage() {
   return (
     <div className="min-h-screen pb-24">
       {/* Header */}
-      <div className="sticky top-0 z-30 bg-liquid-glass-panel border-b border-white/[0.06]">
+      <div className="sticky top-0 z-30" style={{ background: 'var(--glass-bg-panel)', backdropFilter: 'blur(var(--glass-blur-panel))', borderBottom: '1px solid var(--glass-border-subtle)' }}>
         <div className="px-5 pb-3 flex items-center justify-center" style={{ paddingTop: '6px' }}>
           <div className="flex items-center gap-2">
             <Shield className="w-4 h-4 text-[#a29bfe]" />
-            <h1 className="text-white/90" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
+            <h1 className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
               {t('adm_title')}
             </h1>
           </div>
@@ -82,7 +82,7 @@ export function AdminPage() {
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all ${
                 activeTab === tab.id
                   ? 'bg-[#6c5ce7]/20 text-[#a29bfe] border border-[#6c5ce7]/30'
-                  : 'bg-white/[0.04] text-white/40 border border-transparent'
+                  : 'bg-ui-button text-muted-foreground border border-transparent'
               }`}
               style={{ fontSize: '0.8125rem', fontWeight: 500 }}
             >
@@ -148,9 +148,9 @@ function StatsSection() {
             <GlassCard className="p-4">
               <div className="flex items-center gap-2 mb-2">
                 <card.icon className="w-4 h-4" style={{ color: card.color }} />
-                <span className="text-white/40" style={{ fontSize: '0.75rem' }}>{card.label}</span>
+                <span className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>{card.label}</span>
               </div>
-              <span className="text-white" style={{ fontSize: '1.5rem', fontWeight: 700 }}>{card.value}</span>
+              <span className="text-foreground" style={{ fontSize: '1.5rem', fontWeight: 700 }}>{card.value}</span>
             </GlassCard>
           </motion.div>
         ))}
@@ -166,7 +166,7 @@ function StatsSection() {
           <GlassCard className="p-4">
             <div className="flex items-center gap-2 mb-3">
               <Trophy className="w-4 h-4 text-[#fdcb6e]" />
-              <span className="text-white/60" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
+              <span className="text-foreground/60" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
                 {t('adm_top_referrers')}
               </span>
             </div>
@@ -174,11 +174,11 @@ function StatsSection() {
               {stats.topReferrers.map((ref: any, idx: number) => (
                 <div key={idx} className="flex items-center justify-between py-1.5">
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <span className="text-white/20 w-5 text-center shrink-0" style={{ fontSize: '0.75rem', fontWeight: 700 }}>
+                    <span className="text-muted-foreground w-5 text-center shrink-0" style={{ fontSize: '0.75rem', fontWeight: 700 }}>
                       {idx + 1}
                     </span>
                     <div className="min-w-0">
-                      <span className="text-white truncate block" style={{ fontSize: '0.8125rem', fontWeight: 500 }}>
+                      <span className="text-foreground truncate block" style={{ fontSize: '0.8125rem', fontWeight: 500 }}>
                         {ref.displayName}
                       </span>
                       {ref.telegramUsername && (
@@ -344,14 +344,13 @@ function UsersSection() {
     <div>
       {/* Search */}
       <div className="relative mb-3">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <input
           type="text"
           value={search}
           onChange={(e) => handleSearch(e.target.value)}
           placeholder={t('adm_search_placeholder')}
-          className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.06] text-white placeholder-white/30 outline-none focus:border-[#6c5ce7]/30"
-          style={{ fontSize: '0.875rem' }}
+          className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-ui-button border text-foreground outline-none focus:border-[#6c5ce7]/30" style={{ fontSize: '0.875rem', borderColor: 'var(--glass-border)' }}
         />
       </div>
 
@@ -364,7 +363,7 @@ function UsersSection() {
             className={`px-3 py-1 rounded-full transition-all ${
               filter === f
                 ? 'bg-[#6c5ce7]/20 text-[#a29bfe] border border-[#6c5ce7]/30'
-                : 'bg-white/[0.04] text-white/30 border border-transparent'
+                : 'bg-ui-button text-muted-foreground border border-transparent'
             }`}
             style={{ fontSize: '0.75rem', fontWeight: 500 }}
           >
@@ -373,12 +372,12 @@ function UsersSection() {
               : t('adm_filter_expired')}
           </button>
         ))}
-        <span className="ml-auto text-white/20 self-center" style={{ fontSize: '0.75rem' }}>
+        <span className="ml-auto text-ui-tertiary self-center" style={{ fontSize: '0.75rem' }}>
           {total} {t('adm_users_count')}
         </span>
       </div>
       <div className="flex gap-2 mb-4">
-        <ArrowUpDown className="w-3.5 h-3.5 text-white/20 self-center shrink-0" />
+        <ArrowUpDown className="w-3.5 h-3.5 text-ui-tertiary self-center shrink-0" />
         {(['date', 'referrals', 'name'] as const).map(s => (
           <button
             key={s}
@@ -386,7 +385,7 @@ function UsersSection() {
             className={`px-2.5 py-1 rounded-full transition-all ${
               sort === s
                 ? 'bg-[#00cec9]/15 text-[#00cec9] border border-[#00cec9]/30'
-                : 'bg-white/[0.04] text-white/20 border border-transparent'
+                : 'bg-ui-button text-muted-foreground border border-transparent'
             }`}
             style={{ fontSize: '0.6875rem', fontWeight: 500 }}
           >
@@ -414,16 +413,16 @@ function UsersSection() {
                 <GlassCard className="p-3">
                   <div className="flex items-center gap-3">
                     {/* Avatar */}
-                    <div className="w-10 h-10 rounded-full bg-white/[0.08] flex items-center justify-center shrink-0 overflow-hidden">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 overflow-hidden" style={{ background: 'var(--glass-bg-row)' }}>
                       {user.photoUrl ? (
                         <img src={user.photoUrl} alt="" className="w-full h-full object-cover" />
                       ) : (
-                        <Users className="w-4 h-4 text-white/20" />
+                        <Users className="w-4 h-4 text-ui-tertiary" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-white truncate" style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+                        <span className="text-foreground truncate" style={{ fontSize: '0.875rem', fontWeight: 600 }}>
                           {user.displayName}
                         </span>
                         {user.isSubscriptionActive && (
@@ -436,15 +435,15 @@ function UsersSection() {
                         </span>
                       )}
                       <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                        <span className="text-white/20" style={{ fontSize: '0.6875rem' }}>
+                        <span className="text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>
                           ID: {user.telegramId}
                         </span>
                         {user.height && user.weight ? (
-                          <span className="text-white/30" style={{ fontSize: '0.6875rem' }}>
+                          <span className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
                             {user.height}{t('adm_cm')} · {user.weight}{t('adm_kg')}
                           </span>
                         ) : (
-                          <span className="text-white/15 italic" style={{ fontSize: '0.6875rem' }}>
+                          <span className="text-ui-tertiary italic" style={{ fontSize: '0.6875rem' }}>
                             {t('adm_no_body_data')}
                           </span>
                         )}
@@ -467,7 +466,7 @@ function UsersSection() {
                         </span>
                       )}
                       {user.subscriptionExpiresAt && (
-                        <div className="text-white/20" style={{ fontSize: '0.625rem' }}>
+                        <div className="text-ui-tertiary" style={{ fontSize: '0.625rem' }}>
                           {new Date(user.subscriptionExpiresAt).toLocaleDateString()}
                         </div>
                       )}
@@ -494,19 +493,19 @@ function UsersSection() {
           <button
             onClick={() => fetchUsers(page - 1, search, filter)}
             disabled={page <= 1}
-            className="w-8 h-8 rounded-full bg-white/[0.04] flex items-center justify-center disabled:opacity-30"
+            className="w-8 h-8 rounded-full bg-ui-button flex items-center justify-center disabled:opacity-30"
           >
-            <ChevronLeft className="w-4 h-4 text-white/60" />
+            <ChevronLeft className="w-4 h-4 text-muted-foreground" />
           </button>
-          <span className="text-white/40" style={{ fontSize: '0.8125rem' }}>
+          <span className="text-muted-foreground" style={{ fontSize: '0.8125rem' }}>
             {page} / {totalPages}
           </span>
           <button
             onClick={() => fetchUsers(page + 1, search, filter)}
             disabled={page >= totalPages}
-            className="w-8 h-8 rounded-full bg-white/[0.04] flex items-center justify-center disabled:opacity-30"
+            className="w-8 h-8 rounded-full bg-ui-button flex items-center justify-center disabled:opacity-30"
           >
-            <ChevronRight className="w-4 h-4 text-white/60" />
+            <ChevronRight className="w-4 h-4 text-muted-foreground" />
           </button>
         </div>
       )}
@@ -526,20 +525,20 @@ function UsersSection() {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 400 }}
-              className="w-full max-w-md bg-liquid-glass-panel border-t border-white/[0.1] rounded-t-3xl p-5 pb-8"
+              className="w-full max-w-md rounded-t-3xl p-5 pb-8" style={{ background: 'var(--glass-bg-panel)', borderTop: '1px solid var(--glass-border)', backdropFilter: 'blur(var(--glass-blur-panel))' }}
               onClick={e => e.stopPropagation()}
             >
               {/* Close button + avatar */}
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-full bg-white/[0.08] flex items-center justify-center shrink-0 overflow-hidden">
+                <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 overflow-hidden" style={{ background: 'var(--glass-bg-row)' }}>
                   {selectedUser.photoUrl ? (
                     <img src={selectedUser.photoUrl} alt="" className="w-full h-full object-cover" />
                   ) : (
-                    <Users className="w-5 h-5 text-white/20" />
+                    <Users className="w-5 h-5 text-ui-tertiary" />
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-white" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
+                  <h3 className="text-foreground" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
                     {selectedUser.displayName}
                   </h3>
                   {selectedUser.telegramUsername && (
@@ -548,7 +547,7 @@ function UsersSection() {
                     </span>
                   )}
                 </div>
-                <button onClick={() => setSelectedUser(null)} className="text-white/30">
+                <button onClick={() => setSelectedUser(null)} className="text-muted-foreground">
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -595,29 +594,29 @@ function UsersSection() {
               <div className="mb-3">
                 <div className="flex items-center gap-2 mb-2">
                   <Crown className="w-3.5 h-3.5 text-[#6c5ce7]" />
-                  <span className="text-white/40" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
+                  <span className="text-muted-foreground" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
                     {t('adm_section_sub')}
                   </span>
                 </div>
                 <div className="space-y-2">
                   {/* Grant Subscription */}
                   <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1 bg-white/[0.04] rounded-xl px-2 py-1.5">
-                      <button onClick={() => setGrantDays(Math.max(1, grantDays - 30))} className="text-white/40 p-1">
+                    <div className="flex items-center gap-1 bg-ui-button rounded-xl px-2 py-1.5">
+                      <button onClick={() => setGrantDays(Math.max(1, grantDays - 30))} className="text-muted-foreground p-1">
                         <Minus className="w-3.5 h-3.5" />
                       </button>
                       <input
                         type="number"
                         value={grantDays}
                         onChange={(e) => setGrantDays(Math.max(1, parseInt(e.target.value) || 1))}
-                        className="w-14 bg-transparent text-center text-white outline-none"
+                        className="w-14 bg-transparent text-center text-foreground outline-none"
                         style={{ fontSize: '0.875rem', fontWeight: 600 }}
                       />
-                      <button onClick={() => setGrantDays(grantDays + 30)} className="text-white/40 p-1">
+                      <button onClick={() => setGrantDays(grantDays + 30)} className="text-muted-foreground p-1">
                         <Plus className="w-3.5 h-3.5" />
                       </button>
                     </div>
-                    <span className="text-white/30 shrink-0" style={{ fontSize: '0.75rem' }}>
+                    <span className="text-muted-foreground shrink-0" style={{ fontSize: '0.75rem' }}>
                       {t('adm_days')}
                     </span>
                     <button
@@ -648,7 +647,7 @@ function UsersSection() {
               <div className="mb-3">
                 <div className="flex items-center gap-2 mb-2">
                   <Bell className="w-3.5 h-3.5 text-[#a29bfe]" />
-                  <span className="text-white/40" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
+                  <span className="text-muted-foreground" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
                     {t('adm_section_notif')}
                   </span>
                 </div>
@@ -668,13 +667,13 @@ function UsersSection() {
                             hapticFeedback('light');
                             setNotifText(prev => `${prev}<${btn.tag}></${btn.tag}>`);
                           }}
-                          className="w-7 h-7 rounded bg-white/[0.06] flex items-center justify-center text-white/50 hover:text-white/80 hover:bg-white/[0.1] transition-colors"
+                          className="w-7 h-7 rounded bg-ui-button flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-ui-button-active transition-colors"
                           title={btn.label}
                         >
                           <btn.icon className="w-3.5 h-3.5" />
                         </button>
                       ))}
-                      <div className="w-px h-5 bg-white/10 mx-0.5" />
+                      <div className="w-px h-5 mx-0.5" style={{ background: 'var(--glass-border)' }} />
                       {['😀','🔥','💪','🎯','⭐','🏆','❤️','✅','🚀','💰'].map(emoji => (
                         <button
                           key={emoji}
@@ -682,7 +681,7 @@ function UsersSection() {
                             hapticFeedback('light');
                             setNotifText(prev => prev + emoji);
                           }}
-                          className="w-7 h-7 rounded hover:bg-white/[0.06] flex items-center justify-center transition-colors"
+                          className="w-7 h-7 rounded hover:bg-ui-button flex items-center justify-center transition-colors"
                           style={{ fontSize: '0.875rem' }}
                         >
                           {emoji}
@@ -693,7 +692,7 @@ function UsersSection() {
                       value={notifText}
                       onChange={(e) => setNotifText(e.target.value)}
                       placeholder={t('adm_notif_placeholder_en')}
-                      className="w-full h-20 bg-white/[0.04] rounded-lg p-2.5 text-white placeholder-white/20 outline-none resize-none border border-white/[0.06] focus:border-[#6c5ce7]/30"
+                      className="w-full h-20 bg-ui-button rounded-lg p-2.5 text-foreground outline-none resize-none border focus:border-[#6c5ce7]/30" style={{ borderColor: 'var(--glass-border)' }}
                       style={{ fontSize: '0.8125rem' }}
                     />
                   </div>
@@ -721,7 +720,7 @@ function UsersSection() {
               <div className="mb-3">
                 <div className="flex items-center gap-2 mb-2">
                   <Trash2 className="w-3.5 h-3.5 text-[#e17055]" />
-                  <span className="text-white/40" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
+                  <span className="text-muted-foreground" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
                     {t('adm_section_delete')}
                   </span>
                 </div>
@@ -755,7 +754,7 @@ function UsersSection() {
                         </button>
                         <button
                           onClick={() => setDeleteConfirm(false)}
-                          className="py-1 px-2 rounded bg-white/[0.04] border border-white/[0.06] text-white/40 flex items-center justify-center gap-1.5"
+                          className="py-1 px-2 rounded bg-ui-button border text-muted-foreground flex items-center justify-center gap-1.5" style={{ borderColor: 'var(--glass-border)' }}
                           style={{ fontSize: '0.8125rem', fontWeight: 600 }}
                         >
                           {t('adm_cancel')}
@@ -784,8 +783,8 @@ function UsersSection() {
 function InfoRow({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
     <div className="flex items-center justify-between py-1">
-      <span className="text-white/30" style={{ fontSize: '0.8125rem' }}>{label}</span>
-      <span style={{ fontSize: '0.8125rem', fontWeight: 500, color: color || 'rgba(255,255,255,0.7)' }}>{value}</span>
+      <span className="text-muted-foreground" style={{ fontSize: '0.8125rem' }}>{label}</span>
+      <span className="text-foreground/70" style={{ fontSize: '0.8125rem', fontWeight: 500, ...(color ? { color } : {}) }}>{value}</span>
     </div>
   );
 }
@@ -873,7 +872,7 @@ function BroadcastSection() {
     <div className="space-y-4">
       {/* Audience Selector */}
       <GlassCard className="p-4">
-        <div className="text-white/40 mb-2" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
+        <div className="text-muted-foreground mb-2" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
           {t('adm_audience')}
         </div>
         <div className="flex gap-2 flex-wrap">
@@ -888,7 +887,7 @@ function BroadcastSection() {
               className={`flex items-center gap-1.5 px-3 py-2 rounded-xl transition-all ${
                 audience === a.id
                   ? 'bg-[#6c5ce7]/20 text-[#a29bfe] border border-[#6c5ce7]/30'
-                  : 'bg-white/[0.04] text-white/40 border border-transparent'
+                  : 'bg-ui-button text-muted-foreground border border-transparent'
               }`}
               style={{ fontSize: '0.8125rem' }}
             >
@@ -901,7 +900,7 @@ function BroadcastSection() {
 
       {/* Message Text with Rich Editor */}
       <GlassCard className="p-4">
-        <div className="text-white/40 mb-2" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
+        <div className="text-muted-foreground mb-2" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
           {t('adm_message_text')}
         </div>
         {/* Formatting Toolbar */}
@@ -917,7 +916,7 @@ function BroadcastSection() {
                 hapticFeedback('light');
                 setText(prev => `${prev}<${btn.tag}></${btn.tag}>`);
               }}
-              className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center text-white/50 hover:text-white/80 hover:bg-white/[0.1] transition-colors"
+              className="w-8 h-8 rounded-lg bg-ui-button flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-ui-button-active transition-colors"
               title={btn.label}
             >
               <btn.icon className="w-4 h-4" />
@@ -928,7 +927,7 @@ function BroadcastSection() {
               hapticFeedback('light');
               setText(prev => `${prev}<code></code>`);
             }}
-            className="h-8 px-2 rounded-lg bg-white/[0.06] flex items-center justify-center text-white/50 hover:text-white/80 hover:bg-white/[0.1] transition-colors"
+            className="h-8 px-2 rounded-lg bg-ui-button flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-ui-button-active transition-colors"
             style={{ fontSize: '0.6875rem', fontFamily: 'monospace' }}
           >
             {'</>'}
@@ -938,12 +937,12 @@ function BroadcastSection() {
               hapticFeedback('light');
               setText(prev => `${prev}<a href=""></a>`);
             }}
-            className="h-8 px-2 rounded-lg bg-white/[0.06] flex items-center justify-center text-white/50 hover:text-white/80 hover:bg-white/[0.1] transition-colors"
+            className="h-8 px-2 rounded-lg bg-ui-button flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-ui-button-active transition-colors"
             style={{ fontSize: '0.6875rem' }}
           >
             🔗
           </button>
-          <div className="w-px h-6 bg-white/10 mx-0.5" />
+          <div className="w-px h-6 mx-0.5" style={{ background: 'var(--glass-border)' }} />
           {['😀','🔥','💪','🎯','⭐','🏆','❤️','✅','🚀','💰','🎉','⚡'].map(emoji => (
             <button
               key={emoji}
@@ -951,7 +950,7 @@ function BroadcastSection() {
                 hapticFeedback('light');
                 setText(prev => prev + emoji);
               }}
-              className="w-8 h-8 rounded-lg hover:bg-white/[0.06] flex items-center justify-center transition-colors"
+              className="w-8 h-8 rounded-lg hover:bg-ui-button flex items-center justify-center transition-colors"
               style={{ fontSize: '0.9375rem' }}
             >
               {emoji}
@@ -962,14 +961,14 @@ function BroadcastSection() {
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder={t('adm_broadcast_placeholder')}
-          className="w-full h-32 bg-white/[0.04] rounded-xl p-3 text-white placeholder-white/20 outline-none resize-none border border-white/[0.06] focus:border-[#6c5ce7]/30"
-          style={{ fontSize: '0.875rem' }}
+          className="w-full h-32 bg-ui-button rounded-xl p-3 text-foreground outline-none resize-none border focus:border-[#6c5ce7]/30"
+          style={{ fontSize: '0.875rem', borderColor: 'var(--glass-border)' }}
         />
       </GlassCard>
 
       {/* Media */}
       <GlassCard className="p-4">
-        <div className="text-white/40 mb-2" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
+        <div className="text-muted-foreground mb-2" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
           {t('adm_media')}
         </div>
         <div className="flex gap-2 mb-3">
@@ -990,7 +989,7 @@ function BroadcastSection() {
               className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg transition-all ${
                 mediaType === m.id
                   ? 'bg-[#6c5ce7]/20 text-[#a29bfe] border border-[#6c5ce7]/30'
-                  : 'bg-white/[0.04] text-white/30 border border-transparent'
+                  : 'bg-ui-button text-muted-foreground border border-transparent'
               }`}
               style={{ fontSize: '0.75rem' }}
             >
@@ -1009,11 +1008,11 @@ function BroadcastSection() {
                   value={url}
                   onChange={(e) => updateMediaUrl(idx, e.target.value)}
                   placeholder={`URL ${mediaType === 'video' ? t('adm_url_video') : t('adm_url_photo')} ${idx + 1}`}
-                  className="flex-1 px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.06] text-white placeholder-white/20 outline-none"
-                  style={{ fontSize: '0.8125rem' }}
+                  className="flex-1 px-3 py-2 rounded-lg bg-ui-button border text-foreground outline-none"
+                  style={{ fontSize: '0.8125rem', borderColor: 'var(--glass-border)' }}
                 />
                 {mediaUrls.length > 1 && (
-                  <button onClick={() => removeMediaUrl(idx)} className="text-white/20 hover:text-red-400 p-1">
+                  <button onClick={() => removeMediaUrl(idx)} className="text-ui-tertiary hover:text-red-400 p-1">
                     <X className="w-4 h-4" />
                   </button>
                 )}
@@ -1056,10 +1055,10 @@ function BroadcastSection() {
       <GlassCard className="p-4">
         <div className="flex items-center gap-2 mb-2">
           <Link className="w-3.5 h-3.5 text-[#a29bfe]" />
-          <span className="text-white/40" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
+          <span className="text-muted-foreground" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
             {t('adm_button')}
           </span>
-          <span className="text-white/15" style={{ fontSize: '0.625rem' }}>
+          <span className="text-ui-tertiary" style={{ fontSize: '0.625rem' }}>
             ({t('adm_optional')})
           </span>
         </div>
@@ -1069,23 +1068,22 @@ function BroadcastSection() {
             value={buttonText}
             onChange={(e) => setButtonText(e.target.value)}
             placeholder={t('adm_button_text_placeholder')}
-            className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.06] text-white placeholder-white/20 outline-none"
-            style={{ fontSize: '0.8125rem' }}
+            className="w-full px-3 py-2.5 rounded-xl bg-ui-button border text-foreground outline-none" style={{ fontSize: '0.8125rem', borderColor: 'var(--glass-border)' }}
           />
           <input
             type="text"
             value={buttonUrl}
             onChange={(e) => setButtonUrl(e.target.value)}
             placeholder={t('adm_button_url_placeholder')}
-            className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.06] text-white placeholder-white/20 outline-none"
-            style={{ fontSize: '0.8125rem' }}
+            className="w-full px-3 py-2.5 rounded-xl bg-ui-button border text-foreground outline-none"
+            style={{ fontSize: '0.8125rem', borderColor: 'var(--glass-border)' }}
           />
           {buttonText.trim() && buttonUrl.trim() && (
             <div className="flex items-center gap-2 pt-1">
               <div className="px-4 py-2 rounded-lg bg-[#6c5ce7]/20 border border-[#6c5ce7]/30 text-[#a29bfe] text-center" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
                 {buttonText}
               </div>
-              <span className="text-white/15 truncate flex-1" style={{ fontSize: '0.625rem' }}>
+              <span className="text-ui-tertiary truncate flex-1" style={{ fontSize: '0.625rem' }}>
                 {buttonUrl}
               </span>
             </div>
@@ -1097,7 +1095,7 @@ function BroadcastSection() {
       {text.trim() && (
         <GlassCard className="p-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-white/40" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
+            <span className="text-muted-foreground" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
               {t('adm_preview')}
             </span>
             <button
@@ -1111,7 +1109,7 @@ function BroadcastSection() {
           {preview && (
             <div className="space-y-2">
               <div
-                className="p-3 rounded-xl bg-white/[0.02] text-white/80"
+                className="p-3 rounded-xl text-foreground/80" style={{ background: 'var(--glass-bg-row)' }}
                 style={{ fontSize: '0.875rem', lineHeight: 1.5 }}
                 dangerouslySetInnerHTML={{ __html: text }}
               />
@@ -1166,7 +1164,7 @@ function BroadcastSection() {
                     <Check className="w-4 h-4" />
                     {t('adm_broadcast_sent')}
                   </div>
-                  <div className="text-white/40" style={{ fontSize: '0.8125rem' }}>
+                  <div className="text-muted-foreground" style={{ fontSize: '0.8125rem' }}>
                     {t('adm_broadcast_result', { sent: result.sent, total: result.total, failed: result.failed })}
                   </div>
                 </div>
@@ -1303,10 +1301,10 @@ function SocialTasksSection() {
       {/* Header + Add */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-white/80" style={{ fontSize: '0.9375rem', fontWeight: 700 }}>
+          <p className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 700 }}>
             {t('adm_social_title')}
           </p>
-          <p className="text-white/30" style={{ fontSize: '0.6875rem' }}>
+          <p className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
             {t('adm_social_desc')}
           </p>
         </div>
@@ -1324,8 +1322,8 @@ function SocialTasksSection() {
       {/* Empty state */}
       {tasks.length === 0 && !showForm && (
         <GlassCard className="!p-8 text-center">
-          <Star className="w-8 h-8 text-white/10 mx-auto mb-3" />
-          <p className="text-white/30" style={{ fontSize: '0.875rem' }}>
+          <Star className="w-8 h-8 text-ui-tertiary mx-auto mb-3" />
+          <p className="text-muted-foreground" style={{ fontSize: '0.875rem' }}>
             {t('adm_social_empty')}
           </p>
         </GlassCard>
@@ -1342,7 +1340,7 @@ function SocialTasksSection() {
           <GlassCard className="!p-4">
             <div className="flex items-center gap-3">
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                task.is_active !== false ? 'bg-[#6c5ce7]/15' : 'bg-white/[0.04]'
+                task.is_active !== false ? 'bg-[#6c5ce7]/15' : 'bg-ui-button'
               }`}>
                 <span style={{ fontSize: '1.125rem' }}>
                   {task.platform === 'telegram' ? '\u2708\uFE0F' :
@@ -1354,7 +1352,7 @@ function SocialTasksSection() {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="text-white truncate" style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+                  <p className="text-foreground truncate" style={{ fontSize: '0.875rem', fontWeight: 600 }}>
                     {task.name}
                   </p>
                   {task.is_active === false && (
@@ -1363,7 +1361,7 @@ function SocialTasksSection() {
                     </span>
                   )}
                 </div>
-                <p className="text-white/25 truncate" style={{ fontSize: '0.6875rem' }}>
+                <p className="text-ui-tertiary truncate" style={{ fontSize: '0.6875rem' }}>
                   {task.platform} &middot; +{task.reward_days}d &middot; {task.url}
                 </p>
               </div>
@@ -1371,7 +1369,7 @@ function SocialTasksSection() {
                 <button
                   onClick={() => handleToggleActive(task)}
                   className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                    task.is_active !== false ? 'bg-green-500/10 text-green-400' : 'bg-white/[0.04] text-white/20'
+                    task.is_active !== false ? 'bg-green-500/10 text-green-400' : 'bg-ui-button text-ui-tertiary'
                   }`}
                 >
                   <Check className="w-3.5 h-3.5" />
@@ -1405,10 +1403,10 @@ function SocialTasksSection() {
           >
             <GlassCard className="!p-5 border border-[#6c5ce7]/20">
               <div className="flex items-center justify-between mb-4">
-                <p className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 700 }}>
+                <p className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 700 }}>
                   {editingTask ? t('adm_social_edit') : t('adm_social_new')}
                 </p>
-                <button onClick={resetForm} className="text-white/30">
+                <button onClick={resetForm} className="text-muted-foreground">
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -1416,7 +1414,7 @@ function SocialTasksSection() {
               <div className="space-y-3">
                 {/* Platform */}
                 <div>
-                  <label className="text-white/40 text-xs mb-1.5 block">{t('adm_social_platform')}</label>
+                  <label className="text-muted-foreground text-xs mb-1.5 block">{t('adm_social_platform')}</label>
                   <div className="flex flex-wrap gap-1.5">
                     {PLATFORMS.map(p => (
                       <button
@@ -1425,7 +1423,7 @@ function SocialTasksSection() {
                         className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                           formPlatform === p
                             ? 'bg-[#6c5ce7]/20 text-[#a29bfe] border border-[#6c5ce7]/30'
-                            : 'bg-white/[0.04] text-white/30 border border-transparent'
+                            : 'bg-ui-button text-muted-foreground border border-transparent'
                         }`}
                       >
                         {p}
@@ -1436,64 +1434,64 @@ function SocialTasksSection() {
 
                 {/* Name */}
                 <div>
-                  <label className="text-white/40 text-xs mb-1.5 block">{t('adm_social_name')}</label>
+                  <label className="text-muted-foreground text-xs mb-1.5 block">{t('adm_social_name')}</label>
                   <input
                     type="text"
                     value={formName}
                     onChange={(e) => setFormName(e.target.value)}
                     placeholder="Telegram Channel / Instagram"
-                    className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.06] text-white placeholder-white/20 outline-none text-sm"
+                    className="w-full px-3 py-2.5 rounded-xl bg-ui-button border text-foreground outline-none text-sm" style={{ borderColor: 'var(--glass-border)' }}
                   />
                 </div>
 
                 {/* URL */}
                 <div>
-                  <label className="text-white/40 text-xs mb-1.5 block">{t('adm_social_url')}</label>
+                  <label className="text-muted-foreground text-xs mb-1.5 block">{t('adm_social_url')}</label>
                   <input
                     type="text"
                     value={formUrl}
                     onChange={(e) => setFormUrl(e.target.value)}
                     placeholder="https://t.me/channel"
-                    className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.06] text-white placeholder-white/20 outline-none text-sm"
+                    className="w-full px-3 py-2.5 rounded-xl bg-ui-button border text-foreground outline-none text-sm" style={{ borderColor: 'var(--glass-border)' }}
                   />
                 </div>
 
                 {/* Image URL */}
                 <div>
-                  <label className="text-white/40 text-xs mb-1.5 block">{t('adm_social_image')}</label>
+                  <label className="text-muted-foreground text-xs mb-1.5 block">{t('adm_social_image')}</label>
                   <input
                     type="text"
                     value={formImageUrl}
                     onChange={(e) => setFormImageUrl(e.target.value)}
                     placeholder="https://example.com/icon.png"
-                    className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.06] text-white placeholder-white/20 outline-none text-sm"
+                    className="w-full px-3 py-2.5 rounded-xl bg-ui-button border text-foreground outline-none text-sm" style={{ borderColor: 'var(--glass-border)' }}
                   />
                 </div>
 
                 {/* Reward Days */}
                 <div>
-                  <label className="text-white/40 text-xs mb-1.5 block">{t('adm_social_reward')}</label>
+                  <label className="text-muted-foreground text-xs mb-1.5 block">{t('adm_social_reward')}</label>
                   <div className="flex items-center gap-2">
                     <input
                       type="number"
                       value={formRewardDays}
                       onChange={(e) => setFormRewardDays(e.target.value)}
-                      className="w-20 px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.06] text-white text-center outline-none text-sm font-semibold"
+                      className="w-20 px-3 py-2.5 rounded-xl bg-ui-button border text-foreground text-center outline-none text-sm font-semibold" style={{ borderColor: 'var(--glass-border)' }}
                     />
-                    <span className="text-white/30 text-sm">{t('adm_days')}</span>
+                    <span className="text-muted-foreground text-sm">{t('adm_days')}</span>
                   </div>
                 </div>
 
                 {/* Active Toggle */}
                 <div className="flex items-center justify-between py-1">
-                  <span className="text-white/60 text-sm">{t('adm_social_active')}</span>
+                  <span className="text-foreground/60 text-sm">{t('adm_social_active')}</span>
                   <button
                     onClick={() => { hapticFeedback('light'); setFormActive(!formActive); }}
                     className={`w-11 h-6 rounded-full transition-colors relative ${
-                      formActive ? 'bg-[#6c5ce7]' : 'bg-white/[0.1]'
+                      formActive ? 'bg-[#6c5ce7]' : 'bg-switch-background'
                     }`}
                   >
-                    <div className={`w-5 h-5 rounded-full bg-white absolute top-0.5 transition-all ${
+                    <div className={`w-5 h-5 rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.2)] absolute top-0.5 transition-all ${
                       formActive ? 'right-0.5' : 'left-0.5'
                     }`} />
                   </button>

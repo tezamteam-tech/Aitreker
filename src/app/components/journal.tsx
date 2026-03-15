@@ -487,7 +487,7 @@ export function JournalPage() {
                     {taskReminder ? (
                       <Bell className="w-4 h-4 text-[#e17055]" />
                     ) : (
-                      <BellOff className="w-4 h-4 text-white/25" />
+                      <BellOff className="w-4 h-4 text-ui-tertiary" />
                     )}
                     <div>
                       <p className="text-foreground" style={{ fontSize: '0.875rem', fontWeight: 600 }}>{t('task_reminder')}</p>

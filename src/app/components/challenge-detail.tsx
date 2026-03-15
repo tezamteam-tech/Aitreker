@@ -155,7 +155,7 @@ export function ChallengeDetailPage() {
   if (!challenge) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-6">
-        <p className="text-white/40 mb-4" style={{ fontSize: '1rem' }}>{t('chd_not_found')}</p>
+        <p className="text-muted-foreground mb-4" style={{ fontSize: '1rem' }}>{t('chd_not_found')}</p>
         <button
           onClick={() => navigate('/challenges')}
           className="text-[#a29bfe]"
@@ -192,9 +192,9 @@ export function ChallengeDetailPage() {
             initial={{ opacity: 0, y: -30 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -30 }}
-            className="fixed top-12 left-1/2 -translate-x-1/2 z-[60] px-5 py-2.5 rounded-2xl bg-liquid-glass-toast border border-white/[0.1] shadow-2xl"
+            className="fixed top-12 left-1/2 -translate-x-1/2 z-[60] px-5 py-2.5 rounded-2xl bg-liquid-glass-toast border border-[var(--glass-border)] shadow-2xl"
           >
-            <p className="text-white" style={{ fontSize: '0.875rem', fontWeight: 500 }}>{toast}</p>
+            <p className="text-foreground" style={{ fontSize: '0.875rem', fontWeight: 500 }}>{toast}</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -232,17 +232,17 @@ export function ChallengeDetailPage() {
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-1">
-                  <span className="flex items-center gap-1 text-white/50" style={{ fontSize: '0.8125rem' }}>
+                  <span className="flex items-center gap-1 text-muted-foreground" style={{ fontSize: '0.8125rem' }}>
                     <Users className="w-3.5 h-3.5" /> {t('chd_members', { count: challenge.memberCount })}
                   </span>
-                  <span className="flex items-center gap-1 text-white/50" style={{ fontSize: '0.8125rem' }}>
+                  <span className="flex items-center gap-1 text-muted-foreground" style={{ fontSize: '0.8125rem' }}>
                     <Clock className="w-3.5 h-3.5" /> {t('chd_days_left', { count: daysRemaining })}
                   </span>
                 </div>
                 {challenge.depositAmount > 0 && (
                   <div className="flex items-center gap-1">
                     {challenge.currency === 'stars' ? <Star className="w-3.5 h-3.5 text-yellow-400" /> : <Gem className="w-3.5 h-3.5 text-blue-400" />}
-                    <span className="text-white/60" style={{ fontSize: '0.8125rem' }}>
+                    <span className="text-muted-foreground" style={{ fontSize: '0.8125rem' }}>
                       {t('chd_per_person', { amount: challenge.depositAmount, currency: challenge.currency === 'stars' ? 'Stars' : 'TON' })}
                     </span>
                   </div>
@@ -251,8 +251,8 @@ export function ChallengeDetailPage() {
             </div>
             <div className="mb-3">
               <div className="flex items-center justify-between mb-1.5">
-                <span className="text-white/30" style={{ fontSize: '0.6875rem' }}>{t('chd_day_of', { current: daysPassed, total: challenge.durationDays })}</span>
-                <span className="text-white/30" style={{ fontSize: '0.6875rem' }}>{progressPercent}%</span>
+                <span className="text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>{t('chd_day_of', { current: daysPassed, total: challenge.durationDays })}</span>
+                <span className="text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>{progressPercent}%</span>
               </div>
               <div className="h-2 rounded-full bg-ui-progress overflow-hidden">
                 <motion.div initial={{ width: 0 }} animate={{ width: `${progressPercent}%` }} transition={{ duration: 0.8 }} className="h-full rounded-full bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe]" />
@@ -260,8 +260,8 @@ export function ChallengeDetailPage() {
             </div>
             {challenge.rulesText && (
               <div className="mt-3 pt-3" style={{ borderTop: '1px solid var(--glass-border-subtle)' }}>
-                <p className="text-white/25 mb-1" style={{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.05em' }}>{t('chd_rules')}</p>
-                <p className="text-white/45" style={{ fontSize: '0.8125rem', lineHeight: 1.5 }}>{challenge.rulesText}</p>
+                <p className="text-ui-tertiary mb-1" style={{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.05em' }}>{t('chd_rules')}</p>
+                <p className="text-muted-foreground" style={{ fontSize: '0.8125rem', lineHeight: 1.5 }}>{challenge.rulesText}</p>
               </div>
             )}
           </GlassCard>
@@ -284,7 +284,7 @@ export function ChallengeDetailPage() {
             <GlassCard variant="elevated" padding="md">
               <div className="flex items-center gap-2 mb-3">
                 <KeyRound className="w-4 h-4 text-amber-400" />
-                <p className="text-white/60" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{t('chd_enter_code_to_join')}</p>
+                <p className="text-muted-foreground" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{t('chd_enter_code_to_join')}</p>
               </div>
               <div className="flex items-center gap-2 mb-2">
                 <input value={joinCode} onChange={(e) => { setJoinCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8)); setCodeError(null); }}
@@ -307,17 +307,17 @@ export function ChallengeDetailPage() {
             <GlassCard variant="elevated" padding="md">
               <div className="flex items-center gap-2 mb-2">
                 <KeyRound className="w-4 h-4 text-amber-400" />
-                <p className="text-white/60" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{t('chd_invite_code')}</p>
+                <p className="text-muted-foreground" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{t('chd_invite_code')}</p>
               </div>
               <div className="flex items-center gap-2">
-                <div className="flex-1 bg-white/[0.06] rounded-xl px-4 py-3 text-center">
-                  <p className="text-white font-mono" style={{ fontSize: '1.375rem', fontWeight: 700, letterSpacing: '0.3em' }}>{challenge.inviteCode}</p>
+                <div className="flex-1 bg-ui-button rounded-xl px-4 py-3 text-center">
+                  <p className="text-foreground font-mono" style={{ fontSize: '1.375rem', fontWeight: 700, letterSpacing: '0.3em' }}>{challenge.inviteCode}</p>
                 </div>
-                <motion.button whileTap={{ scale: 0.93 }} onClick={handleCopyCode} className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-colors ${codeCopied ? 'bg-emerald-500/20' : 'bg-white/[0.06]'}`}>
-                  {codeCopied ? <Check className="w-5 h-5 text-emerald-400" /> : <Copy className="w-5 h-5 text-white/40" />}
+                <motion.button whileTap={{ scale: 0.93 }} onClick={handleCopyCode} className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-colors ${codeCopied ? 'bg-emerald-500/20' : 'bg-ui-button'}`}>
+                  {codeCopied ? <Check className="w-5 h-5 text-emerald-400" /> : <Copy className="w-5 h-5 text-muted-foreground" />}
                 </motion.button>
               </div>
-              <p className="text-white/25 text-center mt-2" style={{ fontSize: '0.75rem' }}>{t('chd_share_code_hint')}</p>
+              <p className="text-ui-tertiary text-center mt-2" style={{ fontSize: '0.75rem' }}>{t('chd_share_code_hint')}</p>
             </GlassCard>
           </motion.div>
         )}
@@ -328,14 +328,14 @@ export function ChallengeDetailPage() {
             <GlassCard variant="elevated" padding="md">
               <div className="flex items-center gap-2 mb-2">
                 <LinkIcon className="w-4 h-4 text-[#a29bfe]" />
-                <p className="text-white/60" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{t('chd_invite')}</p>
+                <p className="text-muted-foreground" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{t('chd_invite')}</p>
               </div>
               <div className="flex items-center gap-2">
-                <div className="flex-1 bg-white/[0.04] rounded-lg px-3 py-2.5 truncate">
-                  <p className="text-white/50 truncate" style={{ fontSize: '0.75rem' }}>{inviteLink}</p>
+                <div className="flex-1 bg-ui-button rounded-lg px-3 py-2.5 truncate">
+                  <p className="text-muted-foreground truncate" style={{ fontSize: '0.75rem' }}>{inviteLink}</p>
                 </div>
-                <motion.button whileTap={{ scale: 0.93 }} onClick={handleCopy} className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors ${copied ? 'bg-emerald-500/20' : 'bg-white/[0.06]'}`}>
-                  {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-white/40" />}
+                <motion.button whileTap={{ scale: 0.93 }} onClick={handleCopy} className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors ${copied ? 'bg-emerald-500/20' : 'bg-ui-button'}`}>
+                  {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-muted-foreground" />}
                 </motion.button>
               </div>
             </GlassCard>
@@ -345,7 +345,7 @@ export function ChallengeDetailPage() {
         {/* Animated Podium (top 3) */}
         {sortedMembers.length >= 2 && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.13 }} className="mb-6">
-            <h3 className="text-white/50 mb-4 px-1" style={{ fontSize: '0.8125rem', fontWeight: 600, letterSpacing: '0.05em' }}>
+            <h3 className="text-muted-foreground mb-4 px-1" style={{ fontSize: '0.8125rem', fontWeight: 600, letterSpacing: '0.05em' }}>
               {t('lb_title')}
             </h3>
             <div className="flex items-end justify-center gap-3 mb-4">
@@ -353,12 +353,12 @@ export function ChallengeDetailPage() {
               {sortedMembers[1] && (
                 <motion.div initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3, type: 'spring', stiffness: 200 }} className="flex flex-col items-center w-24">
                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-400/30 to-gray-500/20 border-2 border-gray-400/30 flex items-center justify-center mb-1.5">
-                    <span className="text-white/80" style={{ fontSize: '1rem', fontWeight: 700 }}>{sortedMembers[1].userName?.charAt(0) || '?'}</span>
+                    <span className="text-foreground/80" style={{ fontSize: '1rem', fontWeight: 700 }}>{sortedMembers[1].userName?.charAt(0) || '?'}</span>
                   </div>
-                  <p className="text-white/70 text-center truncate w-full" style={{ fontSize: '0.75rem', fontWeight: 600 }}>{sortedMembers[1].userName}</p>
+                  <p className="text-foreground/70 text-center truncate w-full" style={{ fontSize: '0.75rem', fontWeight: 600 }}>{sortedMembers[1].userName}</p>
                   <p className="text-gray-400" style={{ fontSize: '0.625rem', fontWeight: 700 }}>{t('lb_2nd')}</p>
                   <div className="w-full h-16 rounded-t-xl bg-gradient-to-t from-gray-500/10 to-gray-400/5 border border-gray-400/10 border-b-0 mt-1.5 flex flex-col items-center justify-center">
-                    <span className="text-white/50" style={{ fontSize: '0.75rem', fontWeight: 600 }}>{t('lb_days_done', { n: sortedMembers[1].doneDays || 0 })}</span>
+                    <span className="text-muted-foreground" style={{ fontSize: '0.75rem', fontWeight: 600 }}>{t('lb_days_done', { n: sortedMembers[1].doneDays || 0 })}</span>
                     {(sortedMembers[1].streak || 0) > 0 && <span className="flex items-center gap-0.5 text-orange-400" style={{ fontSize: '0.625rem' }}><Flame className="w-2.5 h-2.5" />{sortedMembers[1].streak}</span>}
                   </div>
                 </motion.div>
@@ -374,7 +374,7 @@ export function ChallengeDetailPage() {
                   <p className="text-yellow-400" style={{ fontSize: '0.6875rem', fontWeight: 700 }}>{t('lb_1st')}</p>
                   <div className="w-full h-24 rounded-t-xl bg-gradient-to-t from-yellow-500/10 to-yellow-400/5 border border-yellow-400/15 border-b-0 mt-1.5 flex flex-col items-center justify-center" style={{ boxShadow: '0 -4px 20px rgba(251,191,36,0.08)' }}>
                     <Trophy className="w-5 h-5 text-yellow-400 mb-1" />
-                    <span className="text-white/70" style={{ fontSize: '0.8125rem', fontWeight: 700 }}>{t('lb_days_done', { n: sortedMembers[0].doneDays || 0 })}</span>
+                    <span className="text-foreground/70" style={{ fontSize: '0.8125rem', fontWeight: 700 }}>{t('lb_days_done', { n: sortedMembers[0].doneDays || 0 })}</span>
                     {(sortedMembers[0].streak || 0) > 0 && <span className="flex items-center gap-0.5 text-orange-400 mt-0.5" style={{ fontSize: '0.6875rem' }}><Flame className="w-3 h-3" />{sortedMembers[0].streak} {t('lb_streak')}</span>}
                   </div>
                 </motion.div>
@@ -383,12 +383,12 @@ export function ChallengeDetailPage() {
               {sortedMembers[2] && (
                 <motion.div initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4, type: 'spring', stiffness: 200 }} className="flex flex-col items-center w-24">
                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-400/25 to-orange-500/15 border-2 border-orange-400/25 flex items-center justify-center mb-1.5">
-                    <span className="text-white/80" style={{ fontSize: '1rem', fontWeight: 700 }}>{sortedMembers[2].userName?.charAt(0) || '?'}</span>
+                    <span className="text-foreground/80" style={{ fontSize: '1rem', fontWeight: 700 }}>{sortedMembers[2].userName?.charAt(0) || '?'}</span>
                   </div>
-                  <p className="text-white/70 text-center truncate w-full" style={{ fontSize: '0.75rem', fontWeight: 600 }}>{sortedMembers[2].userName}</p>
+                  <p className="text-foreground/70 text-center truncate w-full" style={{ fontSize: '0.75rem', fontWeight: 600 }}>{sortedMembers[2].userName}</p>
                   <p className="text-orange-400" style={{ fontSize: '0.625rem', fontWeight: 700 }}>{t('lb_3rd')}</p>
                   <div className="w-full h-12 rounded-t-xl bg-gradient-to-t from-orange-500/8 to-orange-400/3 border border-orange-400/10 border-b-0 mt-1.5 flex flex-col items-center justify-center">
-                    <span className="text-white/50" style={{ fontSize: '0.75rem', fontWeight: 600 }}>{t('lb_days_done', { n: sortedMembers[2].doneDays || 0 })}</span>
+                    <span className="text-muted-foreground" style={{ fontSize: '0.75rem', fontWeight: 600 }}>{t('lb_days_done', { n: sortedMembers[2].doneDays || 0 })}</span>
                     {(sortedMembers[2].streak || 0) > 0 && <span className="flex items-center gap-0.5 text-orange-400" style={{ fontSize: '0.625rem' }}><Flame className="w-2.5 h-2.5" />{sortedMembers[2].streak}</span>}
                   </div>
                 </motion.div>
@@ -399,7 +399,7 @@ export function ChallengeDetailPage() {
 
         {/* Full member list */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }}>
-          <h3 className="text-white/50 mb-3 px-1" style={{ fontSize: '0.8125rem', fontWeight: 600, letterSpacing: '0.05em' }}>
+          <h3 className="text-muted-foreground mb-3 px-1" style={{ fontSize: '0.8125rem', fontWeight: 600, letterSpacing: '0.05em' }}>
             {t('chd_participants', { count: sortedMembers.length })}
           </h3>
           <div className="space-y-2">
@@ -409,7 +409,7 @@ export function ChallengeDetailPage() {
           </div>
           {sortedMembers.length === 0 && (
             <GlassCard padding="md" className="flex items-center justify-center">
-              <p className="text-white/25" style={{ fontSize: '0.875rem' }}>{t('chd_no_participants')}</p>
+              <p className="text-ui-tertiary" style={{ fontSize: '0.875rem' }}>{t('chd_no_participants')}</p>
             </GlassCard>
           )}
         </motion.div>
@@ -420,8 +420,8 @@ export function ChallengeDetailPage() {
             <GlassCard variant="accent" padding="md" className="flex items-center gap-3">
               <CheckCircle2 className="w-5 h-5 text-[#a29bfe] shrink-0" />
               <div>
-                <p className="text-white" style={{ fontSize: '0.875rem', fontWeight: 500 }}>{t('chd_you_in')}</p>
-                <p className="text-white/30" style={{ fontSize: '0.75rem' }}>
+                <p className="text-foreground" style={{ fontSize: '0.875rem', fontWeight: 500 }}>{t('chd_you_in')}</p>
+                <p className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>
                   {challenge.depositAmount > 0 ? t('chd_deposit_frozen') : t('chd_stay_committed')}
                   {' \u00B7 '}{t('chd_keep_completing')}
                 </p>
@@ -440,7 +440,7 @@ export function ChallengeDetailPage() {
                   <p className="text-emerald-400" style={{ fontSize: '0.875rem', fontWeight: 600 }}>
                     {t('chd_settled_banner')}
                   </p>
-                  <p className="text-white/30" style={{ fontSize: '0.75rem' }}>
+                  <p className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>
                     {t('chd_settled_desc')}
                   </p>
                 </div>
@@ -523,7 +523,7 @@ export function ChallengeDetailPage() {
                   <AlertTriangle className="w-6 h-6 text-red-400" />
                 </div>
                 <div>
-                  <h3 className="text-white" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
+                  <h3 className="text-foreground" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
                     {t('chd_leave_title')}
                   </h3>
                 </div>
@@ -531,7 +531,7 @@ export function ChallengeDetailPage() {
 
               {challenge.depositAmount > 0 ? (
                 <div className="mb-5">
-                  <p className="text-white/50 mb-3" style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
+                  <p className="text-muted-foreground mb-3" style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
                     {t('chd_leave_penalty_desc')}
                   </p>
                   <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/15">
@@ -542,7 +542,7 @@ export function ChallengeDetailPage() {
                   </div>
                 </div>
               ) : (
-                <p className="text-white/50 mb-5" style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
+                <p className="text-muted-foreground mb-5" style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
                   {t('chd_leave_confirm_desc')}
                 </p>
               )}
@@ -551,7 +551,7 @@ export function ChallengeDetailPage() {
                 <motion.button
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setShowLeaveConfirm(false)}
-                  className="flex-1 h-12 rounded-xl bg-white/[0.06] text-white/60"
+                  className="flex-1 h-12 rounded-xl bg-ui-button text-muted-foreground"
                   style={{ fontSize: '0.9375rem', fontWeight: 500 }}
                 >
                   {t('cancel')}
@@ -614,7 +614,7 @@ function MemberRow({
     : member.status === 'failed'
     ? { label: t('chd_member_failed'), color: 'text-red-400', bg: 'bg-red-500/15' }
     : member.status === 'left'
-    ? { label: t('chd_member_left'), color: 'text-white/40', bg: 'bg-white/[0.06]' }
+    ? { label: t('chd_member_left'), color: 'text-muted-foreground', bg: 'bg-ui-button' }
     : null;
 
   return (
@@ -629,27 +629,27 @@ function MemberRow({
       >
         {/* Rank */}
         <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-          rank === 1 ? 'bg-yellow-400/15' : rank === 2 ? 'bg-gray-400/10' : rank === 3 ? 'bg-orange-400/10' : 'bg-white/[0.04]'
+          rank === 1 ? 'bg-yellow-400/15' : rank === 2 ? 'bg-gray-400/10' : rank === 3 ? 'bg-orange-400/10' : 'bg-ui-button'
         }`}>
           {rank <= 3 ? (
             <Trophy className={`w-3.5 h-3.5 ${
               rank === 1 ? 'text-yellow-400' : rank === 2 ? 'text-gray-400' : 'text-orange-400'
             }`} />
           ) : (
-            <span className="text-white/30" style={{ fontSize: '0.75rem', fontWeight: 600 }}>#{rank}</span>
+            <span className="text-ui-tertiary" style={{ fontSize: '0.75rem', fontWeight: 600 }}>#{rank}</span>
           )}
         </div>
 
         {/* Avatar + Name */}
         <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#6c5ce7]/30 to-[#a29bfe]/30 flex items-center justify-center shrink-0">
-          <span className="text-white/70" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
+          <span className="text-foreground/70" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
             {member.userName?.charAt(0) || '?'}
           </span>
         </div>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <p className="text-white truncate" style={{ fontSize: '0.875rem', fontWeight: 500 }}>
+            <p className="text-foreground truncate" style={{ fontSize: '0.875rem', fontWeight: 500 }}>
               {member.userName}
             </p>
             {isCurrentUser && (
@@ -662,7 +662,7 @@ function MemberRow({
             )}
           </div>
           <div className="flex items-center gap-2 mt-0.5">
-            <span className="text-white/30" style={{ fontSize: '0.6875rem' }}>
+            <span className="text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>
               {t('chd_days_progress', { done: member.doneDays || 0, total: durationDays })}
             </span>
             {(member.streak || 0) > 0 && (
@@ -680,13 +680,13 @@ function MemberRow({
 
         {/* Today status or settlement icon */}
         {isSettled ? (
-          <div className={`w-8 h-8 rounded-lg ${settleBadge?.bg || 'bg-white/[0.04]'} flex items-center justify-center shrink-0`}>
+          <div className={`w-8 h-8 rounded-lg ${settleBadge?.bg || 'bg-ui-button'} flex items-center justify-center shrink-0`}>
             {member.status === 'completed' ? (
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />
             ) : member.status === 'failed' ? (
               <XCircle className="w-4 h-4 text-red-400" />
             ) : (
-              <LogOut className="w-4 h-4 text-white/30" />
+              <LogOut className="w-4 h-4 text-muted-foreground" />
             )}
           </div>
         ) : (
@@ -697,13 +697,13 @@ function MemberRow({
 
         {/* Progress mini bar */}
         <div className="w-10 shrink-0">
-          <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+          <div className="h-1.5 rounded-full bg-ui-progress overflow-hidden">
             <div
               className="h-full rounded-full bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe]"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
-          <p className="text-white/20 text-center mt-0.5" style={{ fontSize: '0.5625rem' }}>{progressPercent}%</p>
+          <p className="text-ui-tertiary text-center mt-0.5" style={{ fontSize: '0.5625rem' }}>{progressPercent}%</p>
         </div>
       </GlassCard>
     </motion.div>

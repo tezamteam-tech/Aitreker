@@ -373,7 +373,7 @@ export function OnboardingPage() {
                     onClick={() => { hapticSelection(); setTone(item.id); }}
                     className={`w-full text-left rounded-xl border px-4 py-3 flex items-center gap-3 transition-all duration-200 ${
                       isActive
-                        ? 'bg-white/[0.06] border-[#6c5ce7]/40'
+                        ? 'bg-[var(--ui-button-active)] border-[#6c5ce7]/40'
                         : 'bg-[var(--glass-bg-card)] border-[var(--glass-border-subtle)] active:bg-[var(--ui-button-active)]'
                     }`}
                   >

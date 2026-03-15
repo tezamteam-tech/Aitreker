@@ -505,7 +505,7 @@ export function UpgradePremiumPage() {
           <button
             onClick={handleRestore}
             disabled={restoring}
-            className="text-white/40 flex items-center justify-center gap-1.5 mx-auto hover:text-foreground/60 transition-colors disabled:opacity-50"
+            className="text-muted-foreground flex items-center justify-center gap-1.5 mx-auto hover:text-foreground/60 transition-colors disabled:opacity-50"
             style={{ fontSize: '0.8125rem' }}
           >
             {restoring ? (
@@ -582,7 +582,7 @@ function UsageRow({
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-1">
-          <span className="text-white/70 truncate" style={{ fontSize: '0.75rem' }}>{label}</span>
+          <span className="text-foreground/70 truncate" style={{ fontSize: '0.75rem' }}>{label}</span>
           {locked ? (
             <span className="text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>
               <Crown className="w-3 h-3 text-amber-400 inline mr-0.5" />
@@ -775,7 +775,7 @@ function PremiumDashboard() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-white" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
+                    <span className="text-foreground" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
                       Premium
                     </span>
                     <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400" style={{ fontSize: '0.625rem', fontWeight: 700 }}>
@@ -783,12 +783,12 @@ function PremiumDashboard() {
                     </span>
                   </div>
                   {loadingStatus ? (
-                    <div className="flex items-center gap-1.5 text-white/30">
+                    <div className="flex items-center gap-1.5 text-muted-foreground">
                       <Loader2 className="w-3 h-3 animate-spin" />
                       <span style={{ fontSize: '0.75rem' }}>{t('loading')}</span>
                     </div>
                   ) : (
-                    <p className="text-white/40" style={{ fontSize: '0.75rem' }}>
+                    <p className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>
                       {subStatus?.isAdmin
                         ? t('up_sub_admin')
                         : expiresFormatted

@@ -132,10 +132,10 @@ export function BotSetupSection() {
           <Bot className="w-5 h-5 text-blue-400" />
         </div>
         <div className="flex-1 text-left">
-          <p className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
+          <p className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
             {t('bot_title')}
           </p>
-          <p className="text-white/40" style={{ fontSize: '0.75rem' }}>
+          <p className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>
             {isWebhookActive ? t('bot_active') : t('bot_not_configured')}
           </p>
         </div>
@@ -150,9 +150,9 @@ export function BotSetupSection() {
             <div className="w-2.5 h-2.5 rounded-full bg-white/20" />
           )}
           {isExpanded ? (
-            <ChevronUp className="w-4 h-4 text-white/20" />
+            <ChevronUp className="w-4 h-4 text-ui-tertiary" />
           ) : (
-            <ChevronDown className="w-4 h-4 text-white/20" />
+            <ChevronDown className="w-4 h-4 text-ui-tertiary" />
           )}
         </div>
       </button>
@@ -170,21 +170,21 @@ export function BotSetupSection() {
             <div className="px-2 pb-3 space-y-3">
               {/* Status details */}
               {isLoading && !webhookInfo && (
-                <div className="flex items-center justify-center py-4 gap-2 text-white/40">
+                <div className="flex items-center justify-center py-4 gap-2 text-muted-foreground">
                   <Loader2 className="w-4 h-4 animate-spin" />
                   <span style={{ fontSize: '0.8125rem' }}>{t('bot_loading')}</span>
                 </div>
               )}
 
               {webhookInfo && (
-                <div className="rounded-xl bg-white/[0.03] p-3 space-y-2">
+                <div className="rounded-xl bg-[var(--glass-bg-row)] p-3 space-y-2">
                   {/* Webhook URL */}
                   <div className="flex items-start gap-2">
-                    <Webhook className="w-4 h-4 text-white/30 mt-0.5 flex-shrink-0" />
+                    <Webhook className="w-4 h-4 text-ui-tertiary mt-0.5 flex-shrink-0" />
                     <div className="min-w-0 flex-1">
-                      <p className="text-white/40" style={{ fontSize: '0.6875rem' }}>Webhook</p>
+                      <p className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>Webhook</p>
                       <p
-                        className="text-white/70 truncate"
+                        className="text-foreground/70 truncate"
                         style={{ fontSize: '0.75rem' }}
                         title={webhookInfo.url || 'Not set'}
                       >
@@ -194,17 +194,17 @@ export function BotSetupSection() {
                     {isWebhookActive ? (
                       <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
                     ) : (
-                      <XCircle className="w-4 h-4 text-white/20 flex-shrink-0" />
+                      <XCircle className="w-4 h-4 text-ui-tertiary flex-shrink-0" />
                     )}
                   </div>
 
                   {/* Mini App URL */}
                   <div className="flex items-start gap-2">
-                    <ExternalLink className="w-4 h-4 text-white/30 mt-0.5 flex-shrink-0" />
+                    <ExternalLink className="w-4 h-4 text-ui-tertiary mt-0.5 flex-shrink-0" />
                     <div className="min-w-0 flex-1">
-                      <p className="text-white/40" style={{ fontSize: '0.6875rem' }}>Mini App URL</p>
+                      <p className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>Mini App URL</p>
                       <p
-                        className="text-white/70 truncate"
+                        className="text-foreground/70 truncate"
                         style={{ fontSize: '0.75rem' }}
                         title={webhookInfo.miniAppUrl || 'Not set'}
                       >
@@ -292,9 +292,9 @@ export function BotSetupSection() {
                 <button
                   onClick={fetchStatus}
                   disabled={isLoading}
-                  className="w-10 h-10 rounded-xl bg-white/[0.06] flex items-center justify-center disabled:opacity-40"
+                  className="w-10 h-10 rounded-xl bg-ui-button flex items-center justify-center disabled:opacity-40"
                 >
-                  <RefreshCw className={`w-4 h-4 text-white/40 ${isLoading ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`w-4 h-4 text-muted-foreground ${isLoading ? 'animate-spin' : ''}`} />
                 </button>
 
                 {isWebhookActive && (
@@ -309,8 +309,8 @@ export function BotSetupSection() {
               </div>
 
               {/* Instructions */}
-              <div className="rounded-xl bg-white/[0.02] p-3">
-                <p className="text-white/30" style={{ fontSize: '0.6875rem', lineHeight: 1.5 }}>
+              <div className="rounded-xl bg-[var(--glass-bg-row)] p-3">
+                <p className="text-muted-foreground" style={{ fontSize: '0.6875rem', lineHeight: 1.5 }}>
                   {t('bot_info')}
                 </p>
               </div>

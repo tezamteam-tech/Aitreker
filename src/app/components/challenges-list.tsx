@@ -168,9 +168,9 @@ export function ChallengesListPage() {
             initial={{ opacity: 0, y: -30 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -30 }}
-            className="fixed top-12 left-1/2 -translate-x-1/2 z-[60] px-5 py-2.5 rounded-2xl bg-liquid-glass-toast border border-white/[0.1] shadow-2xl"
+            className="fixed top-12 left-1/2 -translate-x-1/2 z-[60] px-5 py-2.5 rounded-2xl bg-liquid-glass-toast border border-[var(--glass-border)] shadow-2xl"
           >
-            <p className="text-white" style={{ fontSize: '0.875rem', fontWeight: 500 }}>{joinToast}</p>
+            <p className="text-foreground" style={{ fontSize: '0.875rem', fontWeight: 500 }}>{joinToast}</p>
           </motion.div>
         )}
       </AnimatePresence>

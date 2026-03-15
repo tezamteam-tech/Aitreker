@@ -428,7 +428,7 @@ export function VoiceInput({
               ? 'bg-red-500/20 border border-red-500/40 text-red-400'
               : isProcessing
                 ? 'bg-[#6c5ce7]/10 border border-[#6c5ce7]/20 text-[#a29bfe]'
-                : 'bg-white/[0.06] border border-white/[0.08] text-white/40 active:bg-white/[0.1]'
+                : 'bg-ui-button border border-[var(--glass-border)] text-muted-foreground active:bg-ui-button-active'
           }`}
           aria-label={isRecording ? 'Stop recording' : 'Start recording'}
         >

@@ -278,22 +278,22 @@ export function VoiceNoteRecorder({
         >
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
-            <h2 className="text-white" style={{ fontSize: '1.25rem', fontWeight: 700 }}>
+            <h2 className="text-foreground" style={{ fontSize: '1.25rem', fontWeight: 700 }}>
               {t('voice_note_title')}
             </h2>
             <button
               onClick={handleClose}
               disabled={phase === 'processing'}
-              className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center disabled:opacity-30"
+              className="w-8 h-8 rounded-lg bg-ui-button flex items-center justify-center disabled:opacity-30"
             >
-              <X className="w-4 h-4 text-white/40" />
+              <X className="w-4 h-4 text-muted-foreground" />
             </button>
           </div>
 
           {/* Duration */}
           <div className="text-center mb-6">
             <p
-              className={`transition-colors ${phase === 'recording' ? 'text-[#a29bfe]' : 'text-white/20'}`}
+              className={`transition-colors ${phase === 'recording' ? 'text-[#a29bfe]' : 'text-ui-tertiary'}`}
               style={{
                 fontSize: '2.5rem',
                 fontWeight: 700,
@@ -303,7 +303,7 @@ export function VoiceNoteRecorder({
             >
               {formatDuration(duration)}
             </p>
-            <p className="text-white/20 mt-1" style={{ fontSize: '0.75rem' }}>
+            <p className="text-ui-tertiary mt-1" style={{ fontSize: '0.75rem' }}>
               {phase === 'idle' && t('voice_note_tap_to_record')}
               {phase === 'recording' && t('voice_note_recording')}
               {phase === 'processing' && t('voice_note_processing')}
@@ -392,13 +392,13 @@ export function VoiceNoteRecorder({
           {/* Max duration hint */}
           {phase === 'recording' && (
             <div className="text-center">
-              <div className="mx-auto w-48 h-1 rounded-full bg-white/[0.04] overflow-hidden">
+              <div className="mx-auto w-48 h-1 rounded-full bg-ui-progress overflow-hidden">
                 <motion.div
                   className="h-full rounded-full bg-[#a29bfe]/40"
                   style={{ width: `${(duration / maxDuration) * 100}%` }}
                 />
               </div>
-              <p className="text-white/10 mt-2" style={{ fontSize: '0.6875rem' }}>
+              <p className="text-ui-tertiary mt-2" style={{ fontSize: '0.6875rem' }}>
                 {t('voice_note_max', { max: Math.floor(maxDuration / 60) })}
               </p>
             </div>

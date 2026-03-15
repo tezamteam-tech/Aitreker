@@ -320,7 +320,7 @@ export function FocusTimerPage() {
             </svg>
 
             <div
-              className="absolute rounded-full bg-liquid-glass border border-white/[0.08] flex flex-col items-center justify-center"
+              className="absolute rounded-full bg-liquid-glass border border-[var(--glass-border)] flex flex-col items-center justify-center"
               style={{ width: 240, height: 240 }}
             >
               {isActive || phase === 'completed' ? (
@@ -373,7 +373,7 @@ export function FocusTimerPage() {
                       className={`h-14 rounded-2xl flex flex-col items-center justify-center transition-all duration-200 ${
                         isSelected
                           ? 'bg-[#6c5ce7]/20 border border-[#6c5ce7]/40'
-                          : 'bg-white/[0.04] border border-white/[0.06]'
+                          : 'bg-ui-button border border-[var(--glass-border)]'
                       }`}
                     >
                       <span className={isSelected ? 'text-foreground' : 'text-muted-foreground'} style={{ fontSize: '1.125rem', fontWeight: 600 }}>
@@ -392,7 +392,7 @@ export function FocusTimerPage() {
                   onChange={(e) => setTag(e.target.value)}
                   placeholder={t('focus_tag_placeholder')}
                   maxLength={60}
-                  className="w-full h-12 rounded-xl bg-ui-button border border-ui-button px-4 text-foreground placeholder:text-ui-tertiary outline-none focus:border-[#6c5ce7]/40 transition-colors"
+                  className="w-full h-12 rounded-xl bg-ui-button border border-[var(--glass-border)] px-4 text-foreground placeholder:text-ui-tertiary outline-none focus:border-[#6c5ce7]/40 transition-colors"
                   style={{ fontSize: '0.9375rem' }}
                 />
               </div>
@@ -430,13 +430,13 @@ export function FocusTimerPage() {
                 <motion.button
                   whileTap={{ scale: 0.95 }}
                   onClick={phase === 'paused' ? handleResume : handlePause}
-                  className="flex-1 h-14 rounded-2xl bg-white/[0.06] border border-white/[0.08] text-white flex items-center justify-center gap-2.5"
+                  className="flex-1 h-14 rounded-2xl bg-ui-button border border-[var(--glass-border)] text-foreground flex items-center justify-center gap-2.5"
                   style={{ fontSize: '1rem', fontWeight: 600 }}
                 >
                   {phase === 'paused' ? (
                     <><Play className="w-5 h-5 text-[#a29bfe]" />{t('focus_resume')}</>
                   ) : (
-                    <><Pause className="w-5 h-5 text-white/60" />{t('focus_pause')}</>
+                    <><Pause className="w-5 h-5 text-muted-foreground" />{t('focus_pause')}</>
                   )}
                 </motion.button>
                 <motion.button
@@ -459,7 +459,7 @@ export function FocusTimerPage() {
             transition={{ delay: 0.2 }}
             className="mt-8"
           >
-            <h3 className="text-white/40 mb-3 px-1" style={{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.08em' }}>
+            <h3 className="text-muted-foreground mb-3 px-1" style={{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.08em' }}>
               {t('focus_stats_title').toUpperCase()}
             </h3>
 
@@ -470,8 +470,8 @@ export function FocusTimerPage() {
                   <Flame className="w-4.5 h-4.5 text-orange-400" style={{ width: 18, height: 18 }} />
                 </div>
                 <div>
-                  <p className="text-white" style={{ fontSize: '1.125rem', fontWeight: 700 }}>{stats.streak}</p>
-                  <p className="text-white/30" style={{ fontSize: '0.625rem' }}>{t('focus_streak')}</p>
+                  <p className="text-foreground" style={{ fontSize: '1.125rem', fontWeight: 700 }}>{stats.streak}</p>
+                  <p className="text-ui-tertiary" style={{ fontSize: '0.625rem' }}>{t('focus_streak')}</p>
                 </div>
               </GlassCard>
               <GlassCard padding="sm" className="flex items-center gap-3">
@@ -479,8 +479,8 @@ export function FocusTimerPage() {
                   <Star className="w-4.5 h-4.5 text-yellow-400" style={{ width: 18, height: 18 }} />
                 </div>
                 <div>
-                  <p className="text-white" style={{ fontSize: '1.125rem', fontWeight: 700 }}>{stats.totalXpEarned}</p>
-                  <p className="text-white/30" style={{ fontSize: '0.625rem' }}>{t('focus_total_xp')}</p>
+                  <p className="text-foreground" style={{ fontSize: '1.125rem', fontWeight: 700 }}>{stats.totalXpEarned}</p>
+                  <p className="text-ui-tertiary" style={{ fontSize: '0.625rem' }}>{t('focus_total_xp')}</p>
                 </div>
               </GlassCard>
             </div>
@@ -489,15 +489,15 @@ export function FocusTimerPage() {
             <div className="grid grid-cols-2 gap-3">
               <GlassCard padding="md" className="text-center">
                 <p className="text-[#a29bfe]" style={{ fontSize: '0.6875rem', fontWeight: 600 }}>{t('focus_stats_7d')}</p>
-                <p className="text-white mt-1" style={{ fontSize: '1.5rem', fontWeight: 700 }}>{stats.last7days.minutes}</p>
-                <p className="text-white/30" style={{ fontSize: '0.6875rem' }}>{t('focus_total_min')}</p>
-                <p className="text-white/20 mt-0.5" style={{ fontSize: '0.625rem' }}>{stats.last7days.sessions} {t('focus_sessions')}</p>
+                <p className="text-foreground mt-1" style={{ fontSize: '1.5rem', fontWeight: 700 }}>{stats.last7days.minutes}</p>
+                <p className="text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>{t('focus_total_min')}</p>
+                <p className="text-ui-tertiary mt-0.5" style={{ fontSize: '0.625rem' }}>{stats.last7days.sessions} {t('focus_sessions')}</p>
               </GlassCard>
               <GlassCard padding="md" className="text-center">
                 <p className="text-[#00cec9]" style={{ fontSize: '0.6875rem', fontWeight: 600 }}>{t('focus_stats_30d')}</p>
-                <p className="text-white mt-1" style={{ fontSize: '1.5rem', fontWeight: 700 }}>{stats.last30days.minutes}</p>
-                <p className="text-white/30" style={{ fontSize: '0.6875rem' }}>{t('focus_total_min')}</p>
-                <p className="text-white/20 mt-0.5" style={{ fontSize: '0.625rem' }}>{stats.last30days.sessions} {t('focus_sessions')}</p>
+                <p className="text-foreground mt-1" style={{ fontSize: '1.5rem', fontWeight: 700 }}>{stats.last30days.minutes}</p>
+                <p className="text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>{t('focus_total_min')}</p>
+                <p className="text-ui-tertiary mt-0.5" style={{ fontSize: '0.625rem' }}>{stats.last30days.sessions} {t('focus_sessions')}</p>
               </GlassCard>
             </div>
           </motion.div>
@@ -543,7 +543,7 @@ export function FocusTimerPage() {
                 </motion.div>
               </div>
 
-              <h2 className="text-white text-center mb-1" style={{ fontSize: '1.375rem', fontWeight: 700 }}>
+              <h2 className="text-foreground text-center mb-1" style={{ fontSize: '1.375rem', fontWeight: 700 }}>
                 {wasCompleted ? t('focus_great_job') : t('focus_stopped')}
               </h2>
 
@@ -572,7 +572,7 @@ export function FocusTimerPage() {
                 </motion.div>
               )}
 
-              <p className="text-white/40 text-center mb-5" style={{ fontSize: '0.875rem' }}>
+              <p className="text-muted-foreground text-center mb-5" style={{ fontSize: '0.875rem' }}>
                 {selectedMinutes} {t('focus_minutes', { n: selectedMinutes })}
                 {tag && <> &middot; {tag}</>}
               </p>
@@ -583,7 +583,7 @@ export function FocusTimerPage() {
                 onChange={(e) => setResultText(e.target.value)}
                 placeholder={t('focus_result_placeholder')}
                 rows={3}
-                className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] p-4 text-white placeholder:text-white/20 outline-none focus:border-[#6c5ce7]/40 transition-colors resize-none mb-3"
+                className="w-full rounded-xl bg-ui-button border border-[var(--glass-border)] p-4 text-foreground placeholder:text-ui-tertiary outline-none focus:border-[#6c5ce7]/40 transition-colors resize-none mb-3"
                 style={{ fontSize: '0.9375rem' }}
               />
 
@@ -592,22 +592,22 @@ export function FocusTimerPage() {
                 {!photoPreview ? (
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-full h-12 rounded-xl bg-white/[0.04] border border-dashed border-white/[0.1] flex items-center justify-center gap-2.5 text-white/40 hover:bg-white/[0.06] transition-colors"
+                    className="w-full h-12 rounded-xl bg-ui-button border border-dashed border-[var(--glass-border)] flex items-center justify-center gap-2.5 text-muted-foreground hover:bg-ui-button-active transition-colors"
                     style={{ fontSize: '0.875rem' }}
                   >
                     <Camera className="w-4 h-4" />
                     {t('focus_attach_photo')}
                   </button>
                 ) : (
-                  <div className="relative rounded-xl overflow-hidden border border-white/[0.08]">
+                  <div className="relative rounded-xl overflow-hidden border border-[var(--glass-border)]">
                     <img src={photoPreview} alt="Focus proof" className="w-full h-32 object-cover" />
 
                     {/* Overlay status */}
                     <div className="absolute inset-0 flex items-center justify-center">
                       {photoUploading && (
                         <div className="bg-black/60 backdrop-blur-sm rounded-xl px-4 py-2 flex items-center gap-2">
-                          <Loader2 className="w-4 h-4 text-white/60 animate-spin" />
-                          <span className="text-white/60" style={{ fontSize: '0.8125rem' }}>{t('focus_photo_uploading')}</span>
+                          <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
+                          <span className="text-muted-foreground" style={{ fontSize: '0.8125rem' }}>{t('focus_photo_uploading')}</span>
                         </div>
                       )}
                       {photoUploaded && (
@@ -638,7 +638,7 @@ export function FocusTimerPage() {
               <div className="flex gap-3">
                 <button
                   onClick={handleCloseResult}
-                  className="flex-1 h-12 rounded-xl bg-white/[0.06] text-white/60"
+                  className="flex-1 h-12 rounded-xl bg-ui-button text-muted-foreground"
                   style={{ fontSize: '0.9375rem', fontWeight: 500 }}
                 >
                   {t('focus_skip_result')}

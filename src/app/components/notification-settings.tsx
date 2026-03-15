@@ -94,9 +94,7 @@ function ToggleRow({ icon: Icon, label, description, color, enabled, disabled, o
         }`}
       >
         <motion.div
-          className={`absolute top-0.5 w-5 h-5 rounded-full ${
-            enabled ? 'bg-[#a29bfe]' : 'bg-muted'
-          }`}
+          className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.2)]"
           animate={{ left: enabled ? '18px' : '2px' }}
           transition={{ type: 'spring', stiffness: 500, damping: 30 }}
         />

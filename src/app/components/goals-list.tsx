@@ -419,7 +419,7 @@ export function GoalsListPage() {
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.9, y: -8 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute top-full right-0 mt-2 w-56 rounded-2xl bg-liquid-glass-dropdown border border-white/[0.1] p-2 z-50"
+                  className="absolute top-full right-0 mt-2 w-56 rounded-2xl bg-liquid-glass-dropdown border border-[var(--glass-border)] p-2 z-50"
                   style={{ boxShadow: '0 16px 48px rgba(0,0,0,0.6)' }}
                 >
                   <button
@@ -499,9 +499,9 @@ export function GoalsListPage() {
                       </defs>
                     </svg>
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-white" style={{ fontSize: '1.125rem', fontWeight: 800 }}>
+                      <span className="text-foreground" style={{ fontSize: '1.125rem', fontWeight: 800 }}>
                         {overallPercent}
-                        <span className="text-white/30" style={{ fontSize: '0.625rem' }}>%</span>
+                        <span className="text-ui-tertiary" style={{ fontSize: '0.625rem' }}>%</span>
                       </span>
                     </div>
                   </div>
@@ -576,12 +576,12 @@ export function GoalsListPage() {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-white truncate" style={{ fontSize: '1rem', fontWeight: 700 }}>
+                      <p className="text-foreground truncate" style={{ fontSize: '1rem', fontWeight: 700 }}>
                         {safeStr(activeProgram.title)}
                       </p>
                       <div className="flex items-center gap-2 mt-0.5">
                         {!progComplete ? (
-                          <span className="text-white/40" style={{ fontSize: '0.75rem' }}>
+                          <span className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>
                             {t('goals_day_n', { n: programProgress.currentDay, total: programProgress.totalDays })}
                           </span>
                         ) : (
@@ -591,14 +591,14 @@ export function GoalsListPage() {
                         )}
                         {programProgress.doneDays > 0 && !progComplete && (
                           <>
-                            <span className="text-white/10">&middot;</span>
-                            <span className="text-white/25" style={{ fontSize: '0.75rem' }}>
+                            <span className="text-ui-tertiary">&middot;</span>
+                            <span className="text-ui-tertiary" style={{ fontSize: '0.75rem' }}>
                               {progPercent}%
                             </span>
                           </>
                         )}
                       </div>
-                      <div className="mt-2.5 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                      <div className="mt-2.5 h-1.5 rounded-full bg-ui-progress overflow-hidden">
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${progPercent}%` }}
@@ -611,7 +611,7 @@ export function GoalsListPage() {
                         />
                       </div>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-white/20 shrink-0 mt-1.5" />
+                    <ChevronRight className="w-4 h-4 text-ui-tertiary shrink-0 mt-1.5" />
                   </div>
                 </GlassCard>
               ) : (
@@ -627,10 +627,10 @@ export function GoalsListPage() {
                     <Rocket className="w-5 h-5 text-[#a29bfe]" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>{t('goals_create_path')}</p>
-                    <p className="text-white/30" style={{ fontSize: '0.75rem' }}>{t('goals_start_program')}</p>
+                    <p className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>{t('goals_create_path')}</p>
+                    <p className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>{t('goals_start_program')}</p>
                   </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-white/15 shrink-0" />
+                  <ChevronRight className="w-3.5 h-3.5 text-ui-tertiary shrink-0" />
                 </GlassCard>
               )}
             </motion.div>
@@ -684,16 +684,16 @@ export function GoalsListPage() {
                               {isDone ? (
                                 <CircleCheck className={`${compact ? 'w-3.5 h-3.5' : 'w-4 h-4'} text-emerald-400`} />
                               ) : (
-                                <div className={`${compact ? 'w-2.5 h-2.5' : 'w-3 h-3'} rounded-sm border border-white/20`} />
+                                <div className={`${compact ? 'w-2.5 h-2.5' : 'w-3 h-3'} rounded-sm border border-foreground/20`} />
                               )}
                             </motion.button>
                             <div className="flex-1 min-w-0">
-                              <p className={`truncate ${isDone ? 'line-through text-white/30' : 'text-white'}`}
+                              <p className={`truncate ${isDone ? 'line-through text-muted-foreground' : 'text-foreground'}`}
                                 style={{ fontSize: compact ? '0.8125rem' : '0.875rem', fontWeight: 500 }}>
                                 {task.title}
                               </p>
                               {!compact && task.description && (
-                                <p className="text-white/25 truncate mt-0.5" style={{ fontSize: '0.75rem' }}>
+                                <p className="text-ui-tertiary truncate mt-0.5" style={{ fontSize: '0.75rem' }}>
                                   {task.description}
                                 </p>
                               )}
@@ -705,22 +705,22 @@ export function GoalsListPage() {
                                 className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
                                   task.reminderEnabled
                                     ? 'bg-[#e17055]/15 border border-[#e17055]/25'
-                                    : 'bg-white/[0.04]'
+                                    : 'bg-ui-button'
                                 }`}
                               >
                                 {task.reminderEnabled ? (
                                   <Bell className="w-3.5 h-3.5 text-[#e17055]" />
                                 ) : (
-                                  <BellOff className="w-3.5 h-3.5 text-white/15" />
+                                  <BellOff className="w-3.5 h-3.5 text-ui-tertiary" />
                                 )}
                               </motion.button>
                             )}
                             <motion.button
                               whileTap={{ scale: 0.85 }}
                               onClick={(e) => { e.stopPropagation(); handleDeleteTask(task); }}
-                              className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 bg-white/[0.03] active:bg-red-500/15 transition-colors"
+                              className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 bg-ui-button active:bg-red-500/15 transition-colors"
                             >
-                              <Trash2 className="w-3.5 h-3.5 text-white/15 active:text-red-400" />
+                              <Trash2 className="w-3.5 h-3.5 text-ui-tertiary active:text-red-400" />
                             </motion.button>
                           </div>
                           {!compact && task.reminderEnabled && !isDone && task.reminderTime && (
@@ -760,10 +760,10 @@ export function GoalsListPage() {
                     <ListTodo className="w-4 h-4 text-[#e17055]/60" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-white/50" style={{ fontSize: '0.8125rem', fontWeight: 500 }}>{t('task_no_tasks')}</p>
-                    <p className="text-white/20" style={{ fontSize: '0.6875rem' }}>{t('task_from_note_hint')}</p>
+                    <p className="text-muted-foreground" style={{ fontSize: '0.8125rem', fontWeight: 500 }}>{t('task_no_tasks')}</p>
+                    <p className="text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>{t('task_from_note_hint')}</p>
                   </div>
-                  <Plus className="w-3.5 h-3.5 text-white/15 shrink-0" />
+                  <Plus className="w-3.5 h-3.5 text-ui-tertiary shrink-0" />
                 </GlassCard>
               )}
             </motion.div>
@@ -822,7 +822,7 @@ export function GoalsListPage() {
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-0.5">
-                                <p className="text-white truncate flex-1" style={{ fontSize: compact ? '0.875rem' : '0.9375rem', fontWeight: 600 }}>
+                                <p className="text-foreground truncate flex-1" style={{ fontSize: compact ? '0.875rem' : '0.9375rem', fontWeight: 600 }}>
                                   {sg.title}
                                 </p>
                                 {hasDue && (
@@ -831,13 +831,13 @@ export function GoalsListPage() {
                                   </span>
                                 )}
                               </div>
-                              <div className="flex items-center gap-2 text-white/30" style={{ fontSize: '0.75rem' }}>
+                              <div className="flex items-center gap-2 text-ui-tertiary" style={{ fontSize: '0.75rem' }}>
                                 <span>{t('sg_progress_label', { done: sg.totalCompleted, total: sg.taskCount })}</span>
-                                {!compact && <span className="text-white/10">&middot;</span>}
+                                {!compact && <span className="text-ui-tertiary">&middot;</span>}
                                 {!compact && <span>{t('sg_week_n', { n: weeksElapsed, total: sg.timelineWeeks })}</span>}
                               </div>
                               {!compact && sg.taskCount > 0 && (
-                                <div className="mt-2 h-1.5 rounded-full bg-white/[0.04] overflow-hidden">
+                                <div className="mt-2 h-1.5 rounded-full bg-ui-progress overflow-hidden">
                                   <motion.div
                                     initial={{ width: 0 }}
                                     animate={{ width: `${pct}%` }}
@@ -847,12 +847,12 @@ export function GoalsListPage() {
                                 </div>
                               )}
                             </div>
-                            <ChevronRight className="w-4 h-4 text-white/15 shrink-0 mt-1.5" />
+                            <ChevronRight className="w-4 h-4 text-ui-tertiary shrink-0 mt-1.5" />
                           </div>
 
                           {/* Inline due tasks — swipe-to-complete */}
                           {dueTasks.length > 0 && (
-                            <div className="mt-3 pt-2.5 border-t border-white/[0.04]" onClick={(e) => e.stopPropagation()}>
+                            <div className="mt-3 pt-2.5 border-t border-[var(--glass-border-subtle)]" onClick={(e) => e.stopPropagation()}>
                               <p className="text-[#e17055]/70 mb-2" style={{ fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.06em' }}>
                                 {t('sg_due_tasks_today').toUpperCase()}
                               </p>
@@ -892,11 +892,11 @@ export function GoalsListPage() {
                                             <Check className="w-3 h-3 text-[#a29bfe]/40" />
                                           )}
                                         </motion.button>
-                                        <p className={`flex-1 min-w-0 truncate ${isDone ? 'text-white/25 line-through' : 'text-white/60'}`}
+                                        <p className={`flex-1 min-w-0 truncate ${isDone ? 'text-ui-tertiary line-through' : 'text-muted-foreground'}`}
                                           style={{ fontSize: '0.8125rem' }}>
                                           {task.title}
                                         </p>
-                                        <span className="text-white/15 shrink-0 pr-1" style={{ fontSize: '0.5625rem' }}>
+                                        <span className="text-ui-tertiary shrink-0 pr-1" style={{ fontSize: '0.5625rem' }}>
                                           {task.frequency === 'weekly' ? t('sg_weekly') : t('sg_monthly')}
                                         </span>
                                         <XpBurst show={sgXpBurstId === task.id} amount={sgXpAmount} />
@@ -905,7 +905,7 @@ export function GoalsListPage() {
                                   );
                                 })}
                                 {dueTasks.length > 3 && (
-                                  <p className="text-white/20 pl-8" style={{ fontSize: '0.6875rem' }}>
+                                  <p className="text-ui-tertiary pl-8" style={{ fontSize: '0.6875rem' }}>
                                     +{dueTasks.length - 3} more...
                                   </p>
                                 )}
@@ -930,10 +930,10 @@ export function GoalsListPage() {
                     <Sparkles className="w-4 h-4 text-[#a29bfe]" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-white" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{t('sg_title')}</p>
-                    <p className="text-white/30" style={{ fontSize: '0.6875rem' }}>{t('sg_empty_desc')}</p>
+                    <p className="text-foreground" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{t('sg_title')}</p>
+                    <p className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>{t('sg_empty_desc')}</p>
                   </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-white/15 shrink-0" />
+                  <ChevronRight className="w-3.5 h-3.5 text-ui-tertiary shrink-0" />
                 </GlassCard>
               )}
             </motion.div>
@@ -975,8 +975,8 @@ export function GoalsListPage() {
                       onClick={() => { hapticFeedback('light'); setStatusFilter(f); }}
                       className={`shrink-0 px-3 py-1 rounded-full transition-all ${
                         isActive
-                          ? 'bg-[#00cec9]/20 border border-[#00cec9]/40 text-white'
-                          : 'bg-white/[0.04] border border-white/[0.06] text-white/40'
+                          ? 'bg-[#00cec9]/20 border border-[#00cec9]/40 text-foreground'
+                          : 'bg-ui-button border border-[var(--glass-border)] text-muted-foreground'
                       }`}
                       style={{ fontSize: '0.75rem', fontWeight: isActive ? 600 : 400 }}
                     >
@@ -1022,25 +1022,25 @@ export function GoalsListPage() {
                               </div>
 
                               <div className="flex-1 min-w-0">
-                                <p className={`truncate ${goal.status === 'done' ? 'line-through text-white/40' : 'text-white'}`}
+                                <p className={`truncate ${goal.status === 'done' ? 'line-through text-muted-foreground' : 'text-foreground'}`}
                                   style={{ fontSize: compact ? '0.875rem' : '0.9375rem', fontWeight: 600 }}>
                                   {goal.title}
                                 </p>
                                 <div className="flex items-center gap-2 mt-0.5">
                                   {goal.taskCount > 0 && (
-                                    <span className="text-white/30" style={{ fontSize: '0.75rem' }}>
+                                    <span className="text-ui-tertiary" style={{ fontSize: '0.75rem' }}>
                                       {t('goal_tasks_count', { done: goal.tasksDone, total: goal.taskCount })}
                                     </span>
                                   )}
                                   {!compact && goal.targetDate && (
-                                    <span className="flex items-center gap-1 text-white/20" style={{ fontSize: '0.6875rem' }}>
+                                    <span className="flex items-center gap-1 text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>
                                       <Calendar className="w-3 h-3" />
                                       {new Date(goal.targetDate).toLocaleDateString(t('locale_code'))}
                                     </span>
                                   )}
                                 </div>
                                 {!compact && goal.taskCount > 0 && (
-                                  <div className="mt-1.5 h-1 rounded-full bg-white/[0.04] overflow-hidden">
+                                  <div className="mt-1.5 h-1 rounded-full bg-ui-progress overflow-hidden">
                                     <div
                                       className={`h-full rounded-full transition-all duration-500 ${
                                         goal.status === 'done' ? 'bg-emerald-400/60' : 'bg-[#00cec9]/50'
@@ -1051,7 +1051,7 @@ export function GoalsListPage() {
                                 )}
                               </div>
 
-                              <ChevronRight className="w-4 h-4 text-white/15 shrink-0" />
+                              <ChevronRight className="w-4 h-4 text-ui-tertiary shrink-0" />
                             </GlassCard>
                           </motion.div>
                         );
@@ -1059,8 +1059,8 @@ export function GoalsListPage() {
                     </div>
                   ) : (
                     <div className="text-center py-8">
-                      <Target className="w-8 h-8 text-white/10 mx-auto mb-2" />
-                      <p className="text-white/25" style={{ fontSize: '0.8125rem' }}>{t('goals_empty')}</p>
+                      <Target className="w-8 h-8 text-ui-tertiary mx-auto mb-2" />
+                      <p className="text-ui-tertiary" style={{ fontSize: '0.8125rem' }}>{t('goals_empty')}</p>
                       <motion.button
                         whileTap={{ scale: 0.97 }}
                         onClick={() => { hapticFeedback('light'); setShowCreate(true); }}
@@ -1116,24 +1116,24 @@ export function GoalsListPage() {
                           <CheckCircle2 className="w-4 h-4 text-emerald-400/60" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-white/60 truncate" style={{ fontSize: '0.8125rem', fontWeight: 500 }}>
+                          <p className="text-muted-foreground truncate" style={{ fontSize: '0.8125rem', fontWeight: 500 }}>
                             {safeStr(prog.title)}
                           </p>
                           <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-white/20" style={{ fontSize: '0.6875rem' }}>
+                            <span className="text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>
                               {t('goals_program_days', { n: prog.durationDays || '?' })}
                             </span>
                             {prog.createdAt && (
                               <>
-                                <span className="text-white/10">&middot;</span>
-                                <span className="text-white/15" style={{ fontSize: '0.6875rem' }}>
+                                <span className="text-ui-tertiary">&middot;</span>
+                                <span className="text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>
                                   {formatDate(prog.createdAt)}
                                 </span>
                               </>
                             )}
                           </div>
                         </div>
-                        <ChevronRight className="w-3.5 h-3.5 text-white/10 shrink-0" />
+                        <ChevronRight className="w-3.5 h-3.5 text-ui-tertiary shrink-0" />
                       </GlassCard>
                     </motion.div>
                   ))}
@@ -1163,9 +1163,9 @@ export function GoalsListPage() {
               className="w-full max-w-lg rounded-t-3xl bg-liquid-glass glass-sheet glass-sheet-bottom p-6 pb-10"
             >
               <div className="flex items-center justify-between mb-5">
-                <h2 className="text-white" style={{ fontSize: '1.25rem', fontWeight: 700 }}>{t('goals_create')}</h2>
-                <button onClick={() => setShowCreate(false)} className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center">
-                  <X className="w-4 h-4 text-white/40" />
+                <h2 className="text-foreground" style={{ fontSize: '1.25rem', fontWeight: 700 }}>{t('goals_create')}</h2>
+                <button onClick={() => setShowCreate(false)} className="w-8 h-8 rounded-lg bg-ui-button flex items-center justify-center">
+                  <X className="w-4 h-4 text-muted-foreground" />
                 </button>
               </div>
 
@@ -1175,7 +1175,7 @@ export function GoalsListPage() {
                 onChange={(e) => setNewTitle(e.target.value)}
                 placeholder={t('goal_title_placeholder')}
                 autoFocus
-                className="w-full h-12 rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 text-white placeholder:text-white/20 outline-none focus:border-[#00cec9]/40 transition-colors mb-3"
+                className="w-full h-12 rounded-xl bg-ui-button border border-[var(--glass-border)] px-4 text-foreground placeholder:text-ui-tertiary outline-none focus:border-[#00cec9]/40 transition-colors mb-3"
                 style={{ fontSize: '0.9375rem' }}
               />
 
@@ -1184,17 +1184,17 @@ export function GoalsListPage() {
                 onChange={(e) => setNewDesc(e.target.value)}
                 placeholder={t('goal_desc_placeholder')}
                 rows={3}
-                className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] p-4 text-white placeholder:text-white/20 outline-none focus:border-[#00cec9]/40 transition-colors resize-none mb-3"
+                className="w-full rounded-xl bg-ui-button border border-[var(--glass-border)] p-4 text-foreground placeholder:text-ui-tertiary outline-none focus:border-[#00cec9]/40 transition-colors resize-none mb-3"
                 style={{ fontSize: '0.875rem', lineHeight: 1.5 }}
               />
 
               <div className="flex items-center gap-3 mb-5">
-                <Calendar className="w-4 h-4 text-white/30 shrink-0" />
+                <Calendar className="w-4 h-4 text-muted-foreground shrink-0" />
                 <input
                   type="date"
                   value={newDate}
                   onChange={(e) => setNewDate(e.target.value)}
-                  className="flex-1 h-10 rounded-xl bg-white/[0.04] border border-white/[0.06] px-3 text-white/60 outline-none focus:border-[#00cec9]/40 transition-colors"
+                  className="flex-1 h-10 rounded-xl bg-ui-button border border-[var(--glass-border)] px-3 text-muted-foreground outline-none focus:border-[#00cec9]/40 transition-colors"
                   style={{ fontSize: '0.8125rem', colorScheme: 'dark' }}
                 />
               </div>
@@ -1232,9 +1232,9 @@ export function GoalsListPage() {
               className="w-full max-w-lg rounded-t-3xl bg-liquid-glass glass-sheet glass-sheet-bottom p-6 pb-10 max-h-[90vh] overflow-y-auto"
             >
               <div className="flex items-center justify-between mb-5">
-                <h2 className="text-white" style={{ fontSize: '1.25rem', fontWeight: 700 }}>{t('task_create_title')}</h2>
-                <button onClick={() => setShowCreateTask(false)} className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center">
-                  <X className="w-4 h-4 text-white/40" />
+                <h2 className="text-foreground" style={{ fontSize: '1.25rem', fontWeight: 700 }}>{t('task_create_title')}</h2>
+                <button onClick={() => setShowCreateTask(false)} className="w-8 h-8 rounded-lg bg-ui-button flex items-center justify-center">
+                  <X className="w-4 h-4 text-muted-foreground" />
                 </button>
               </div>
 
@@ -1244,7 +1244,7 @@ export function GoalsListPage() {
                 onChange={(e) => setNewTaskTitle(e.target.value)}
                 placeholder={t('task_title_placeholder')}
                 autoFocus
-                className="w-full h-12 rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 text-white placeholder:text-white/20 outline-none focus:border-[#e17055]/40 transition-colors mb-3"
+                className="w-full h-12 rounded-xl bg-ui-button border border-[var(--glass-border)] px-4 text-foreground placeholder:text-ui-tertiary outline-none focus:border-[#e17055]/40 transition-colors mb-3"
                 style={{ fontSize: '0.9375rem' }}
               />
 
@@ -1253,19 +1253,19 @@ export function GoalsListPage() {
                 onChange={(e) => setNewTaskDesc(e.target.value)}
                 placeholder={t('task_desc_placeholder')}
                 rows={2}
-                className="w-full rounded-xl bg-white/[0.04] border border-white/[0.06] p-4 text-white placeholder:text-white/20 outline-none focus:border-[#e17055]/40 transition-colors resize-none mb-4"
+                className="w-full rounded-xl bg-ui-button border border-[var(--glass-border)] p-4 text-foreground placeholder:text-ui-tertiary outline-none focus:border-[#e17055]/40 transition-colors resize-none mb-4"
                 style={{ fontSize: '0.875rem', lineHeight: 1.5 }}
               />
 
               {/* Reminder section */}
-              <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-4 mb-5">
+              <div className="rounded-xl bg-[var(--glass-bg-row)] border border-[var(--glass-border)] p-4 mb-5">
                 {/* Toggle */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <Bell className={newTaskReminder ? 'text-[#e17055]' : 'text-white/25'} style={{ width: 18, height: 18 }} />
+                    <Bell className={newTaskReminder ? 'text-[#e17055]' : 'text-ui-tertiary'} style={{ width: 18, height: 18 }} />
                     <div>
-                      <p className="text-white" style={{ fontSize: '0.875rem', fontWeight: 600 }}>{t('task_reminder')}</p>
-                      <p className="text-white/30" style={{ fontSize: '0.6875rem' }}>
+                      <p className="text-foreground" style={{ fontSize: '0.875rem', fontWeight: 600 }}>{t('task_reminder')}</p>
+                      <p className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
                         {newTaskReminder ? t('task_reminder_on') : t('task_reminder_off')}
                       </p>
                     </div>
@@ -1280,7 +1280,7 @@ export function GoalsListPage() {
                       }
                     }}
                     className={`w-12 h-7 rounded-full transition-colors flex items-center px-0.5 ${
-                      newTaskReminder ? 'bg-[#e17055]' : 'bg-white/[0.08]'
+                      newTaskReminder ? 'bg-[#e17055]' : 'bg-ui-button'
                     }`}
                   >
                     <motion.div
@@ -1299,11 +1299,11 @@ export function GoalsListPage() {
                       exit={{ height: 0, opacity: 0 }}
                       className="overflow-hidden"
                     >
-                      <div className="pt-4 mt-3 border-t border-white/[0.05] space-y-3">
+                      <div className="pt-4 mt-3 border-t border-[var(--glass-border)] space-y-3">
                         {/* Time picker */}
                         <div className="flex items-center gap-3">
                           <Clock className="w-4 h-4 text-[#e17055]/60 shrink-0" />
-                          <p className="text-white/50 flex-1" style={{ fontSize: '0.8125rem' }}>{t('task_reminder_time')}</p>
+                          <p className="text-muted-foreground flex-1" style={{ fontSize: '0.8125rem' }}>{t('task_reminder_time')}</p>
                           <input
                             type="time"
                             value={newTaskReminderTime}
@@ -1313,7 +1313,7 @@ export function GoalsListPage() {
                                 setNewTaskStartDate(computeDefaultStartDate(e.target.value));
                               }
                             }}
-                            className="h-9 px-3 rounded-lg bg-white/[0.04] border border-white/[0.08] text-white outline-none focus:border-[#e17055]/40"
+                            className="h-9 px-3 rounded-lg bg-ui-button border border-[var(--glass-border)] text-foreground outline-none focus:border-[#e17055]/40"
                             style={{ fontSize: '0.875rem', colorScheme: 'dark' }}
                           />
                         </div>
@@ -1321,20 +1321,20 @@ export function GoalsListPage() {
                         {/* Start date */}
                         <div className="flex items-center gap-3">
                           <Calendar className="w-4 h-4 text-[#e17055]/60 shrink-0" />
-                          <p className="text-white/50 flex-1" style={{ fontSize: '0.8125rem' }}>{t('task_start_date')}</p>
+                          <p className="text-muted-foreground flex-1" style={{ fontSize: '0.8125rem' }}>{t('task_start_date')}</p>
                           <input
                             type="date"
                             value={newTaskStartDate || computeDefaultStartDate(newTaskReminderTime)}
                             onChange={(e) => setNewTaskStartDate(e.target.value)}
                             min={new Date().toISOString().slice(0, 10)}
-                            className="h-9 px-3 rounded-lg bg-white/[0.04] border border-white/[0.08] text-white/60 outline-none focus:border-[#e17055]/40"
+                            className="h-9 px-3 rounded-lg bg-ui-button border border-[var(--glass-border)] text-muted-foreground outline-none focus:border-[#e17055]/40"
                             style={{ fontSize: '0.8125rem', colorScheme: 'dark' }}
                           />
                         </div>
 
                         {/* Frequency pills */}
                         <div>
-                          <p className="text-white/30 mb-2" style={{ fontSize: '0.6875rem', fontWeight: 600 }}>{t('task_reminder_freq')}</p>
+                          <p className="text-muted-foreground mb-2" style={{ fontSize: '0.6875rem', fontWeight: 600 }}>{t('task_reminder_freq')}</p>
                           <div className="flex gap-2">
                             {(['daily', 'weekdays', 'once'] as const).map(f => (
                               <button
@@ -1342,8 +1342,8 @@ export function GoalsListPage() {
                                 onClick={() => { hapticFeedback('light'); setNewTaskFrequency(f); }}
                                 className={`px-3.5 py-1.5 rounded-full transition-all ${
                                   newTaskFrequency === f
-                                    ? 'bg-[#e17055]/20 border border-[#e17055]/40 text-white'
-                                    : 'bg-white/[0.04] border border-white/[0.06] text-white/40'
+                                    ? 'bg-[#e17055]/20 border border-[#e17055]/40 text-foreground'
+                                    : 'bg-ui-button border border-[var(--glass-border)] text-muted-foreground'
                                 }`}
                                 style={{ fontSize: '0.75rem', fontWeight: newTaskFrequency === f ? 600 : 400 }}
                               >

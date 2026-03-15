@@ -150,15 +150,15 @@ export function AudioPlayer({ src, className = '' }: AudioPlayerProps) {
   // Error fallback
   if (error) {
     return (
-      <div className={`flex items-center gap-2 py-1.5 px-3 rounded-lg bg-white/[0.03] border border-white/[0.05] ${className}`}>
-        <Volume2 className="w-3.5 h-3.5 text-white/15" />
-        <span className="text-white/20" style={{ fontSize: '0.75rem' }}>Audio unavailable</span>
+      <div className={`flex items-center gap-2 py-1.5 px-3 rounded-lg bg-[var(--glass-bg-row)] border ${className}`} style={{ borderColor: 'var(--glass-border-subtle)' }}>
+        <Volume2 className="w-3.5 h-3.5 text-ui-tertiary" />
+        <span className="text-ui-tertiary" style={{ fontSize: '0.75rem' }}>Audio unavailable</span>
       </div>
     );
   }
 
   return (
-    <div className={`flex items-center gap-2.5 py-2 px-3 rounded-xl bg-white/[0.03] border border-white/[0.05] ${className}`}>
+    <div className={`flex items-center gap-2.5 py-2 px-3 rounded-xl bg-[var(--glass-bg-row)] border ${className}`} style={{ borderColor: 'var(--glass-border-subtle)' }}>
       {/* Play / Pause */}
       <motion.button
         type="button"
@@ -167,13 +167,13 @@ export function AudioPlayer({ src, className = '' }: AudioPlayerProps) {
         className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all ${
           isPlaying
             ? 'bg-[#a29bfe]/20 border border-[#a29bfe]/30'
-            : 'bg-white/[0.06] border border-white/[0.08]'
+            : 'bg-ui-button border border-[var(--glass-border)]'
         }`}
       >
         {isPlaying ? (
           <Pause className="w-3.5 h-3.5 text-[#a29bfe]" />
         ) : (
-          <Play className="w-3.5 h-3.5 text-white/50 ml-0.5" />
+          <Play className="w-3.5 h-3.5 text-muted-foreground ml-0.5" />
         )}
       </motion.button>
 
@@ -216,7 +216,7 @@ export function AudioPlayer({ src, className = '' }: AudioPlayerProps) {
 
       {/* Time */}
       <span
-        className="text-white/30 shrink-0"
+        className="text-ui-tertiary shrink-0"
         style={{
           fontSize: '0.6875rem',
           fontWeight: 600,
