@@ -404,60 +404,15 @@ export function MealPlanPage() {
               exit={{ opacity: 0, y: -16 }}
               className="space-y-4"
             >
-              {/* Profile + Body combined */}
+              {/* Profile + Body — collapsible combined card */}
               {profile && (
-                <GlassCard className="!p-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#6c5ce7]/20 to-[#a29bfe]/20 flex items-center justify-center">
-                      <Target className="w-4.5 h-4.5 text-[#a29bfe]" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-foreground" style={{ fontSize: '0.875rem', fontWeight: 600 }}>
-                        {t('shared_your_profile')}
-                      </p>
-                      <p className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
-                        {t('shared_ai_plan_based')}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* All profile + body metrics in one compact grid */}
-                  <div className="grid grid-cols-3 gap-1.5 mb-3">
-                    <MiniPill label={t('shared_goal_label')} value={GOAL_LABELS[profile.goal]?.[lang as 'en' | 'ru'] || profile.goal} color="#6c5ce7" />
-                    <MiniPill label={t('shared_calories_label')} value={`${profile.daily_calorie_target}`} color="#fd79a8" />
-                    <MiniPill label={t('shared_gender_label')} value={profile.gender === 'male' ? t('obn_male') : t('obn_female')} color="#00cec9" />
-                    <MiniPill label={t('shared_activity_label')} value={
-                      profile.activity_level === 'low' ? t('obn_activity_low') :
-                      profile.activity_level === 'medium' ? t('obn_activity_medium') :
-                      profile.activity_level === 'high' ? t('obn_activity_high') :
-                      t('obn_activity_athlete')
-                    } color="#ffeaa7" />
-                    {profile.age ? <MiniPill label={t('wp_age_label')} value={`${profile.age}`} color="#a29bfe" /> : null}
-                    {profile.height ? <MiniPill label={t('wp_height_label')} value={`${profile.height}cm`} color="#74b9ff" /> : null}
-                    {profile.weight ? <MiniPill label={t('wp_weight_label')} value={`${profile.weight}kg`} color="#fab1a0" /> : null}
-                  </div>
-
-                  {/* Body photo — compact */}
-                  {bodyPhoto ? (
-                    <div className="flex items-center gap-3 p-2.5 rounded-xl bg-[#00cec9]/8 border border-[#00cec9]/20">
-                      <div className="w-11 h-11 rounded-lg overflow-hidden flex-shrink-0">
-                        <img src={bodyPhoto} alt="Body" className="w-full h-full object-cover" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[#00cec9]" style={{ fontSize: '0.75rem', fontWeight: 600 }}>{t('mp_photo_added')}</p>
-                        <p className="text-white/30 truncate" style={{ fontSize: '0.625rem' }}>{t('mp_photo_hint')}</p>
-                      </div>
-                      <motion.button whileTap={{ scale: 0.9 }} onClick={() => { hapticFeedback('light'); setBodyPhoto(null); }} className="px-2 py-1 rounded-lg bg-white/[0.06]">
-                        <span className="text-white/40" style={{ fontSize: '0.625rem' }}>{t('mp_remove_photo')}</span>
-                      </motion.button>
-                    </div>
-                  ) : (
-                    <motion.button whileTap={{ scale: 0.97 }} onClick={() => { hapticFeedback('light'); setShowPhotoPicker(true); }} className="w-full p-2.5 rounded-xl border-2 border-dashed border-white/10 flex items-center justify-center gap-2 bg-white/[0.01]">
-                      <Camera className="w-3.5 h-3.5 text-[#fd79a8]" />
-                      <span className="text-white/50" style={{ fontSize: '0.75rem', fontWeight: 500 }}>{t('mp_add_photo')}</span>
-                    </motion.button>
-                  )}
-                </GlassCard>
+                <CollapsibleProfileCardMP
+                  profile={profile}
+                  lang={lang}
+                  bodyPhoto={bodyPhoto}
+                  onRemovePhoto={() => { hapticFeedback('light'); setBodyPhoto(null); }}
+                  onAddPhoto={() => { hapticFeedback('light'); setShowPhotoPicker(true); }}
+                />
               )}
 
               {/* No profile warning */}
@@ -855,6 +810,114 @@ export function MealPlanPage() {
 // ============================================================
 // SUB-COMPONENTS
 // ============================================================
+
+// ---- Collapsible Profile + Body Card ----
+function CollapsibleProfileCardMP({
+  profile,
+  lang,
+  bodyPhoto,
+  onRemovePhoto,
+  onAddPhoto,
+}: {
+  profile: UserProfile;
+  lang: string;
+  bodyPhoto: string | null;
+  onRemovePhoto: () => void;
+  onAddPhoto: () => void;
+}) {
+  const { t } = useTranslation();
+  const [expanded, setExpanded] = useState(false);
+
+  const genderShort = profile.gender === 'male' ? (lang === 'ru' ? 'М' : 'M') : (lang === 'ru' ? 'Ж' : 'F');
+  const goalLabel = GOAL_LABELS[profile.goal]?.[lang as 'en' | 'ru'] || profile.goal;
+  const activityLabel =
+    profile.activity_level === 'low' ? t('obn_activity_low') :
+    profile.activity_level === 'medium' ? t('obn_activity_medium') :
+    profile.activity_level === 'high' ? t('obn_activity_high') :
+    t('obn_activity_athlete');
+
+  const summaryParts = [goalLabel, `${profile.daily_calorie_target} kcal`];
+  if (profile.age) summaryParts.push(`${profile.age}/${genderShort}`);
+  if (profile.weight) summaryParts.push(`${profile.weight}kg`);
+  const summaryText = summaryParts.join(' · ');
+
+  return (
+    <GlassCard className="!p-0 overflow-hidden">
+      <button
+        onClick={() => {
+          hapticFeedback('light');
+          setExpanded((p) => !p);
+        }}
+        className="w-full flex items-center gap-3 p-4"
+      >
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#6c5ce7]/20 to-[#a29bfe]/20 flex items-center justify-center flex-shrink-0">
+          <Target className="w-4 h-4 text-[#a29bfe]" />
+        </div>
+        <div className="flex-1 text-left min-w-0">
+          <p className="text-foreground" style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+            {t('shared_your_profile')}
+          </p>
+          {!expanded && (
+            <p className="text-muted-foreground truncate" style={{ fontSize: '0.6875rem' }}>
+              {summaryText}
+            </p>
+          )}
+          {expanded && (
+            <p className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
+              {t('shared_ai_plan_based')}
+            </p>
+          )}
+        </div>
+        <motion.div animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
+          <ChevronDown className="w-4 h-4 text-white/25 flex-shrink-0" />
+        </motion.div>
+      </button>
+
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="overflow-hidden"
+          >
+            <div className="px-4 pb-4 space-y-3">
+              <div className="grid grid-cols-3 gap-1.5">
+                <MiniPill label={t('shared_goal_label')} value={goalLabel} color="#6c5ce7" />
+                <MiniPill label={t('shared_calories_label')} value={`${profile.daily_calorie_target}`} color="#fd79a8" />
+                <MiniPill label={t('shared_activity_label')} value={activityLabel} color="#ffeaa7" />
+                {profile.age ? <MiniPill label={t('wp_age_label')} value={`${profile.age}/${genderShort}`} color="#a29bfe" /> : null}
+                {profile.height ? <MiniPill label={t('wp_height_label')} value={`${profile.height}cm`} color="#74b9ff" /> : null}
+                {profile.weight ? <MiniPill label={t('wp_weight_label')} value={`${profile.weight}kg`} color="#fab1a0" /> : null}
+              </div>
+
+              {bodyPhoto ? (
+                <div className="flex items-center gap-3 p-2.5 rounded-xl bg-[#00cec9]/8 border border-[#00cec9]/20">
+                  <div className="w-11 h-11 rounded-lg overflow-hidden flex-shrink-0">
+                    <img src={bodyPhoto} alt="Body" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[#00cec9]" style={{ fontSize: '0.75rem', fontWeight: 600 }}>{t('mp_photo_added')}</p>
+                    <p className="text-white/30 truncate" style={{ fontSize: '0.625rem' }}>{t('mp_photo_hint')}</p>
+                  </div>
+                  <motion.button whileTap={{ scale: 0.9 }} onClick={(e) => { e.stopPropagation(); onRemovePhoto(); }} className="px-2 py-1 rounded-lg bg-white/[0.06]">
+                    <span className="text-white/40" style={{ fontSize: '0.625rem' }}>{t('mp_remove_photo')}</span>
+                  </motion.button>
+                </div>
+              ) : (
+                <motion.button whileTap={{ scale: 0.97 }} onClick={(e) => { e.stopPropagation(); onAddPhoto(); }} className="w-full p-2.5 rounded-xl border-2 border-dashed border-white/10 flex items-center justify-center gap-2 bg-white/[0.01]">
+                  <Camera className="w-3.5 h-3.5 text-[#fd79a8]" />
+                  <span className="text-white/50" style={{ fontSize: '0.75rem', fontWeight: 500 }}>{t('mp_add_photo')}</span>
+                </motion.button>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </GlassCard>
+  );
+}
 
 // ---- Compact profile/body mini pill ----
 function MiniPill({ label, value, color }: { label: string; value: string; color: string }) {

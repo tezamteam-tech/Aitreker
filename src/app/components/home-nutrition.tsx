@@ -359,23 +359,25 @@ export function HomeNutritionPage() {
         )}
 
         {/* Daily Calorie Overview */}
-        <GlassCard className="p-5">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <p className="text-muted-foreground text-sm mb-1">{t('hn_todays_calories')}</p>
-              <h2 className="text-3xl text-foreground font-semibold">
+        <GlassCard className="px-4 py-4">
+          {/* Header: title + big number + percent badge */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl text-foreground font-bold tracking-tight">
                 {nutritionData.caloriesConsumed}
-                <span className="text-lg text-muted-foreground ml-1">/ {nutritionData.caloriesGoal}</span>
-              </h2>
+              </span>
+              <span className="text-sm text-muted-foreground font-medium">
+                / {nutritionData.caloriesGoal} {t('hn_cal_unit')}
+              </span>
             </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#6c5ce7]/10 border border-[#6c5ce7]/20">
-              <Flame className="w-4 h-4 text-[#fd79a8]" />
-              <span className="text-sm text-foreground/80">{percentConsumed}%</span>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#6c5ce7]/10">
+              <Flame className="w-3.5 h-3.5 text-[#fd79a8]" />
+              <span className="text-xs font-semibold text-foreground/70">{percentConsumed}%</span>
             </div>
           </div>
 
           {/* Progress Bar */}
-          <div className="relative h-3 rounded-full overflow-hidden mb-4" style={{ background: 'var(--glass-bg-row)' }}>
+          <div className="relative h-2 rounded-full overflow-hidden mb-3" style={{ background: 'var(--glass-bg-row)' }}>
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${Math.min(percentConsumed, 100)}%` }}
@@ -388,46 +390,32 @@ export function HomeNutritionPage() {
             />
           </div>
 
-          {/* Calorie Stats Grid */}
-          <div className="grid grid-cols-3 gap-3 mb-4">
-            <div className="text-center p-2.5 rounded-xl" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
-              <div className="flex items-center justify-center gap-1 mb-1">
-                <Target className="w-3.5 h-3.5 text-[#6c5ce7]" />
-                <span className="text-xs text-muted-foreground">{t('hn_target')}</span>
-              </div>
-              <p className="text-foreground" style={{ fontSize: '1.125rem', fontWeight: 600 }}>
-                {nutritionData.caloriesGoal}
-              </p>
-              <p className="text-muted-foreground/50 text-xs mt-0.5">{t('hn_cal_unit')}</p>
+          {/* Stats grid 2 rows */}
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2 mb-3">
+            <div className="flex items-center gap-1.5">
+              <Target className="w-3.5 h-3.5 text-[#6c5ce7] flex-shrink-0" />
+              <span className="text-xs text-muted-foreground">{t('hn_target')}</span>
+              <span className="text-sm font-semibold text-foreground ml-auto tabular-nums">{nutritionData.caloriesGoal}</span>
             </div>
-            <div className="text-center p-2.5 rounded-xl" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
-              <div className="flex items-center justify-center gap-1 mb-1">
-                <Flame className="w-3.5 h-3.5 text-[#fd79a8]" />
-                <span className="text-xs text-muted-foreground">{t('hn_consumed')}</span>
-              </div>
-              <p className="text-foreground" style={{ fontSize: '1.125rem', fontWeight: 600 }}>
-                {nutritionData.caloriesConsumed}
-              </p>
-              <p className="text-muted-foreground/50 text-xs mt-0.5">{t('hn_cal_unit')}</p>
+            <div className="flex items-center gap-1.5">
+              <Flame className="w-3.5 h-3.5 text-[#fd79a8] flex-shrink-0" />
+              <span className="text-xs text-muted-foreground">{t('hn_consumed')}</span>
+              <span className="text-sm font-semibold text-foreground ml-auto tabular-nums">{nutritionData.caloriesConsumed}</span>
             </div>
-            <div className="text-center p-2.5 rounded-xl" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
-              <div className="flex items-center justify-center gap-1 mb-1">
-                <TrendingUp className="w-3.5 h-3.5 text-[#00cec9]" />
-                <span className="text-xs text-muted-foreground">{t('hn_remaining')}</span>
-              </div>
-              <p className={`${caloriesRemaining >= 0 ? 'text-[#00cec9]' : 'text-[#ff6b6b]'}`} style={{ fontSize: '1.125rem', fontWeight: 600 }}>
-                {caloriesRemaining >= 0 ? caloriesRemaining : 0}
-              </p>
-              <p className="text-muted-foreground/50 text-xs mt-0.5">{t('hn_cal_unit')}</p>
+            <div className="flex items-center gap-1.5 col-span-2">
+              <TrendingUp className="w-3.5 h-3.5 text-[#00cec9] flex-shrink-0" />
+              <span className="text-xs text-muted-foreground">{t('hn_remaining')}</span>
+              <span className={`text-sm font-semibold ml-auto tabular-nums ${caloriesRemaining >= 0 ? 'text-[#00cec9]' : 'text-[#ff6b6b]'}`}>
+                {caloriesRemaining >= 0 ? caloriesRemaining : 0} {t('hn_cal_unit')}
+              </span>
             </div>
           </div>
 
-          {/* Potential Weight Change Indicator */}
+          {/* Weight forecast — compact inline */}
           {(() => {
             const totalExpenditure = (maintenanceCalories || bmr || 0) + burnedToday;
             if (totalExpenditure <= 0) return null;
             const deficit = totalExpenditure - nutritionData.caloriesConsumed;
-            // 7700 kcal ≈ 1 kg of body fat
             const weightChangeG = Math.round((deficit / 7700) * 1000);
             const isLoss = weightChangeG > 0;
             const absGrams = Math.abs(weightChangeG);
@@ -437,65 +425,49 @@ export function HomeNutritionPage() {
 
             return (
               <motion.div
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2, duration: 0.4 }}
-                className="mt-3 p-3 rounded-xl"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2, duration: 0.3 }}
+                className="flex items-center justify-between py-2.5 px-3 rounded-xl mb-3"
                 style={{
                   background: isLoss
-                    ? 'linear-gradient(135deg, rgba(0,206,201,0.06), rgba(108,92,231,0.04))'
-                    : 'linear-gradient(135deg, rgba(255,107,107,0.06), rgba(238,90,36,0.04))',
-                  border: `1px solid ${isLoss ? 'rgba(0,206,201,0.15)' : 'rgba(255,107,107,0.15)'}`,
+                    ? 'linear-gradient(135deg, rgba(0,206,201,0.06), rgba(108,92,231,0.03))'
+                    : 'linear-gradient(135deg, rgba(255,107,107,0.06), rgba(238,90,36,0.03))',
+                  border: `1px solid ${isLoss ? 'rgba(0,206,201,0.12)' : 'rgba(255,107,107,0.12)'}`,
                 }}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
-                      isLoss ? 'bg-[#00cec9]/15' : 'bg-[#ff6b6b]/15'
-                    }`}>
-                      {isLoss
-                        ? <TrendingDown className="w-4 h-4 text-[#00cec9]" />
-                        : <TrendingUp className="w-4 h-4 text-[#ff6b6b]" />
-                      }
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">{t('hn_wc_title')}</p>
-                      <div className="flex items-baseline gap-1 mt-0.5">
-                        <span className={`text-lg font-bold ${isLoss ? 'text-[#00cec9]' : 'text-[#ff6b6b]'}`}>
-                          {isLoss ? '-' : '+'}{displayValue}
-                        </span>
-                        <span className="text-xs text-muted-foreground">{displayUnit}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[0.625rem] text-muted-foreground/50">{t('hn_wc_deficit')}</p>
-                    <p className={`text-sm font-semibold ${isLoss ? 'text-[#00cec9]/80' : 'text-[#ff6b6b]/80'}`}>
-                      {isLoss ? '-' : '+'}{Math.abs(deficit)} {t('hn_cal_unit')}
-                    </p>
-                  </div>
+                <div className="flex items-center gap-2">
+                  {isLoss
+                    ? <TrendingDown className="w-4 h-4 text-[#00cec9]" />
+                    : <TrendingUp className="w-4 h-4 text-[#ff6b6b]" />
+                  }
+                  <span className="text-xs text-muted-foreground">{t('hn_wc_title')}</span>
                 </div>
-                <p className="text-[0.5625rem] text-muted-foreground/40 mt-2 leading-relaxed">
-                  {t('hn_wc_disclaimer')}
-                </p>
+                <div className="flex items-baseline gap-2">
+                  <span className={`text-sm font-bold ${isLoss ? 'text-[#00cec9]' : 'text-[#ff6b6b]'}`}>
+                    {isLoss ? '−' : '+'}{displayValue} {displayUnit}
+                  </span>
+                  <span className="text-[0.625rem] text-muted-foreground/50">
+                    ({isLoss ? '−' : '+'}{Math.abs(deficit)} {t('hn_cal_unit')})
+                  </span>
+                </div>
               </motion.div>
             );
           })()}
 
-          {/* Macros */}
-          <div className="grid grid-cols-3 gap-3 mt-4 pt-4" style={{ borderTop: '1px solid var(--glass-border-subtle)' }}>
-            <div className="text-center">
-              <p className="text-xs text-muted-foreground mb-1">{t('hn_protein')}</p>
-              <p className="text-sm text-foreground font-medium">{nutritionData.protein}{t('unit_g')}</p>
-            </div>
-            <div className="text-center">
-              <p className="text-xs text-muted-foreground mb-1">{t('hn_carbs')}</p>
-              <p className="text-sm text-foreground font-medium">{nutritionData.carbs}{t('unit_g')}</p>
-            </div>
-            <div className="text-center">
-              <p className="text-xs text-muted-foreground mb-1">{t('hn_fats')}</p>
-              <p className="text-sm text-foreground font-medium">{nutritionData.fats}{t('unit_g')}</p>
-            </div>
+          {/* Macros row */}
+          <div className="grid grid-cols-3 gap-2 pt-3" style={{ borderTop: '1px solid var(--glass-border-subtle)' }}>
+            {[
+              { label: t('hn_protein'), value: nutritionData.protein, color: '#6c5ce7' },
+              { label: t('hn_carbs'), value: nutritionData.carbs, color: '#fdcb6e' },
+              { label: t('hn_fats'), value: nutritionData.fats, color: '#fd79a8' },
+            ].map((macro) => (
+              <div key={macro.label} className="flex items-center justify-center gap-1">
+                <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: macro.color }} />
+                <span className="text-[0.6875rem] text-muted-foreground">{macro.label}</span>
+                <span className="text-[0.8125rem] font-semibold text-foreground">{macro.value}{t('unit_g')}</span>
+              </div>
+            ))}
           </div>
         </GlassCard>
 

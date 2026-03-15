@@ -717,6 +717,21 @@ export const api = {
     return request('POST', '/weight-log/check-reminder');
   },
 
+  // ---- Body Measurements Tracking ----
+
+  async logMeasurements(data: { neck_cm: number; chest_cm: number; waist_cm: number; hips_cm: number; note?: string }): Promise<{ success: boolean; entry: any }> {
+    return request('POST', '/measurements-log', data);
+  },
+
+  async getMeasurementsHistory(limit?: number): Promise<{ entries: Array<{ id: string; neck_cm: number; chest_cm: number; waist_cm: number; hips_cm: number; body_fat_percent: number | null; note: string | null; date: string; created_at: string }>; count: number }> {
+    const q = limit ? `?limit=${limit}` : '';
+    return request('GET', `/measurements-log/history${q}`);
+  },
+
+  async deleteMeasurementEntry(entryId: string): Promise<{ success: boolean }> {
+    return request('DELETE', `/measurements-log/${entryId}`);
+  },
+
   // ---- Journal Insights ----
 
   async generateJournalInsights(period?: string): Promise<{ insights: string }> {
@@ -738,6 +753,10 @@ export const api = {
     target_protein?: number;
     target_carbs?: number;
     target_fat?: number;
+    neck_cm?: number;
+    chest_cm?: number;
+    waist_cm?: number;
+    hips_cm?: number;
   }): Promise<{ success: boolean }> {
     return request('POST', '/user-profile', profile);
   },
@@ -755,6 +774,10 @@ export const api = {
     target_protein?: number;
     target_carbs?: number;
     target_fat?: number;
+    neck_cm?: number;
+    chest_cm?: number;
+    waist_cm?: number;
+    hips_cm?: number;
     created_at: string;
   } | null> {
     try {
@@ -817,6 +840,18 @@ export const api = {
     };
   }> {
     return request('GET', '/nutrition/ai-analysis-history');
+  },
+
+  /** AI estimates calories & macros from food name text (no image) */
+  async estimateFood(foodName: string): Promise<{
+    food_name: string;
+    estimated_calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    portion: string;
+  }> {
+    return request('POST', '/food/estimate', { food_name: foodName, language: getUserLang() });
   },
 
   /** Send food photo to AI for recognition (Edge Function → OpenAI Vision) */

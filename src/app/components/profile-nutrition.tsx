@@ -55,6 +55,11 @@ interface ProfileData {
   target_protein?: number;
   target_carbs?: number;
   target_fat?: number;
+  // Body measurements
+  neck_cm?: number;
+  chest_cm?: number;
+  waist_cm?: number;
+  hips_cm?: number;
 }
 
 const GOAL_LABELS: Record<Goal, string> = {
@@ -76,6 +81,23 @@ const ACTIVITY_LABELS: Record<ActivityLevel, string> = {
   athlete: 'pn_activity_athlete',
 };
 
+// Body fat category helper
+function getBodyFatCategory(bf: number, gender: string): { key: string; color: string; bg: string } {
+  if (gender === 'male') {
+    if (bf < 6) return { key: 'pn_bf_essential', color: '#e17055', bg: 'rgba(225,112,85,0.15)' };
+    if (bf < 14) return { key: 'pn_bf_athletic', color: '#00cec9', bg: 'rgba(0,206,201,0.15)' };
+    if (bf < 18) return { key: 'pn_bf_fitness', color: '#6c5ce7', bg: 'rgba(108,92,231,0.15)' };
+    if (bf < 25) return { key: 'pn_bf_acceptable', color: '#fdcb6e', bg: 'rgba(253,203,110,0.15)' };
+    return { key: 'pn_bf_obese', color: '#d63031', bg: 'rgba(214,48,49,0.15)' };
+  } else {
+    if (bf < 14) return { key: 'pn_bf_essential', color: '#e17055', bg: 'rgba(225,112,85,0.15)' };
+    if (bf < 21) return { key: 'pn_bf_athletic', color: '#00cec9', bg: 'rgba(0,206,201,0.15)' };
+    if (bf < 25) return { key: 'pn_bf_fitness', color: '#6c5ce7', bg: 'rgba(108,92,231,0.15)' };
+    if (bf < 32) return { key: 'pn_bf_acceptable', color: '#fdcb6e', bg: 'rgba(253,203,110,0.15)' };
+    return { key: 'pn_bf_obese', color: '#d63031', bg: 'rgba(214,48,49,0.15)' };
+  }
+}
+
 export function ProfileNutritionPage() {
   const { user, logout, subscriptionActive, subscriptionDaysLeft } = useAuth();
   const navigate = useNavigate();
@@ -86,7 +108,7 @@ export function ProfileNutritionPage() {
   const [saving, setSaving] = useState(false);
 
   // Bottom sheet state
-  const [sheetType, setSheetType] = useState<'metrics' | 'goal' | 'calories' | null>(null);
+  const [sheetType, setSheetType] = useState<'metrics' | 'goal' | 'calories' | 'measurements' | null>(null);
   const [editWeight, setEditWeight] = useState('');
   const [editHeight, setEditHeight] = useState('');
   const [editAge, setEditAge] = useState('');
@@ -95,6 +117,12 @@ export function ProfileNutritionPage() {
   const [editActivity, setEditActivity] = useState<ActivityLevel>('medium');
   const [editCalories, setEditCalories] = useState('');
   const [showAiAdvisor, setShowAiAdvisor] = useState(false);
+
+  // Body measurements edit state
+  const [editNeck, setEditNeck] = useState('');
+  const [editChest, setEditChest] = useState('');
+  const [editWaist, setEditWaist] = useState('');
+  const [editHips, setEditHips] = useState('');
 
   // Collapsible sections
   const [expandedSection, setExpandedSection] = useState<string | null>('body');
@@ -133,6 +161,29 @@ export function ProfileNutritionPage() {
   const isPremium = subscriptionActive;
   const bmi = profile ? (profile.weight / ((profile.height / 100) ** 2)).toFixed(1) : '\u2014';
 
+  // Body fat % calculation (U.S. Navy Method)
+  const bodyFatPercent = React.useMemo(() => {
+    if (!profile || !profile.waist_cm || !profile.neck_cm || !profile.height) return null;
+    const { gender, height, waist_cm, neck_cm, hips_cm } = profile;
+    try {
+      if (gender === 'male') {
+        // Men: 86.010 × log10(waist - neck) - 70.041 × log10(height) + 36.76
+        if (waist_cm <= neck_cm) return null;
+        const bf = 86.010 * Math.log10(waist_cm - neck_cm) - 70.041 * Math.log10(height) + 36.76;
+        return bf > 0 && bf < 60 ? bf.toFixed(1) : null;
+      } else {
+        // Women: 163.205 × log10(waist + hip - neck) - 97.684 × log10(height) - 78.387
+        if (!hips_cm) return null;
+        const sum = waist_cm + hips_cm - neck_cm;
+        if (sum <= 0) return null;
+        const bf = 163.205 * Math.log10(sum) - 97.684 * Math.log10(height) - 78.387;
+        return bf > 0 && bf < 60 ? bf.toFixed(1) : null;
+      }
+    } catch {
+      return null;
+    }
+  }, [profile]);
+
   // ---- Open bottom sheets ----
   const openMetricsSheet = () => {
     if (!profile) return;
@@ -157,6 +208,16 @@ export function ProfileNutritionPage() {
     hapticFeedback('light');
     setEditCalories(String(profile.daily_calorie_target || 2000));
     setSheetType('calories');
+  };
+
+  const openMeasurementsSheet = () => {
+    if (!profile) return;
+    hapticFeedback('light');
+    setEditNeck(String(profile.neck_cm || ''));
+    setEditChest(String(profile.chest_cm || ''));
+    setEditWaist(String(profile.waist_cm || ''));
+    setEditHips(String(profile.hips_cm || ''));
+    setSheetType('measurements');
   };
 
   const closeSheet = () => setSheetType(null);
@@ -195,6 +256,10 @@ export function ProfileNutritionPage() {
         target_protein: merged.target_protein,
         target_carbs: merged.target_carbs,
         target_fat: merged.target_fat,
+        neck_cm: merged.neck_cm,
+        chest_cm: merged.chest_cm,
+        waist_cm: merged.waist_cm,
+        hips_cm: merged.hips_cm,
       });
 
       setProfile({
@@ -233,6 +298,16 @@ export function ProfileNutritionPage() {
     const cal = Number(editCalories);
     if (cal > 500 && cal < 10000) {
       saveProfile({ daily_calorie_target: cal });
+    }
+  };
+
+  const saveMeasurements = () => {
+    const neck = Number(editNeck);
+    const chest = Number(editChest);
+    const waist = Number(editWaist);
+    const hips = Number(editHips);
+    if (neck > 0 && chest > 0 && waist > 0 && hips > 0) {
+      saveProfile({ neck_cm: neck, chest_cm: chest, waist_cm: waist, hips_cm: hips });
     }
   };
 
@@ -299,7 +374,7 @@ export function ProfileNutritionPage() {
 
           {/* Quick stats row */}
           {!loading && profile && (
-            <div className="grid grid-cols-3 gap-2 mt-4 pt-3" style={{ borderTop: '1px solid var(--glass-border-subtle)' }}>
+            <div className={`grid ${bodyFatPercent ? 'grid-cols-4' : 'grid-cols-3'} gap-2 mt-4 pt-3`} style={{ borderTop: '1px solid var(--glass-border-subtle)' }}>
               <div className="text-center">
                 <p className="text-lg text-foreground font-semibold">{profile.weight}<span className="text-xs text-muted-foreground ml-0.5">{t('unit_kg')}</span></p>
                 <p className="text-[0.625rem] text-muted-foreground">{t('pn_weight')}</p>
@@ -312,6 +387,20 @@ export function ProfileNutritionPage() {
                 <p className="text-lg text-foreground font-semibold">{bmi}</p>
                 <p className="text-[0.625rem] text-muted-foreground">{t('pn_bmi')}</p>
               </div>
+              {bodyFatPercent && (
+                <div className="text-center">
+                  <p className="text-lg text-foreground font-semibold">{bodyFatPercent}<span className="text-xs text-muted-foreground ml-0.5">%</span></p>
+                  <p className="text-[0.625rem] text-muted-foreground">{t('pn_body_fat')}</p>
+                  {(() => {
+                    const cat = getBodyFatCategory(Number(bodyFatPercent), profile!.gender);
+                    return (
+                      <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded-full text-[0.5rem] font-semibold" style={{ background: cat.bg, color: cat.color }}>
+                        {t(cat.key)}
+                      </span>
+                    );
+                  })()}
+                </div>
+              )}
             </div>
           )}
         </GlassCard>
@@ -363,9 +452,12 @@ export function ProfileNutritionPage() {
                         <Scale className="w-4.5 h-4.5 text-[#6c5ce7]" />
                         <div className="text-left">
                           <p className="text-foreground text-sm font-medium">{t('pn_body_metrics')}</p>
-                          <p className="text-muted-foreground text-xs">
-                            {profile.weight}{t('unit_kg')} \u00B7 {profile.height}{t('unit_cm')} \u00B7 {profile.age} {t('pn_age').toLowerCase()} \u00B7 {profile.gender === 'male' ? t('pn_male') : t('pn_female')}
-                          </p>
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
+                            <span className="text-muted-foreground text-xs">{t('pn_weight')}: <span className="text-foreground/70 font-medium">{profile.weight}{t('unit_kg')}</span></span>
+                            <span className="text-muted-foreground text-xs">{t('pn_height')}: <span className="text-foreground/70 font-medium">{profile.height}{t('unit_cm')}</span></span>
+                            <span className="text-muted-foreground text-xs">{t('pn_age')}: <span className="text-foreground/70 font-medium">{profile.age}</span></span>
+                            <span className="text-muted-foreground text-xs">{profile.gender === 'male' ? t('pn_male') : t('pn_female')}</span>
+                          </div>
                         </div>
                       </div>
                       <Edit2 className="w-4 h-4 text-muted-foreground/50" />
@@ -381,9 +473,10 @@ export function ProfileNutritionPage() {
                         <Target className="w-4.5 h-4.5 text-[#fd79a8]" />
                         <div className="text-left">
                           <p className="text-foreground text-sm font-medium">{t('pn_current_goal')}</p>
-                          <p className="text-muted-foreground text-xs">
-                            {GOAL_ICONS[profile.goal]} {t(GOAL_LABELS[profile.goal])} \u00B7 {t(ACTIVITY_LABELS[profile.activity_level])}
-                          </p>
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
+                            <span className="text-muted-foreground text-xs">{GOAL_ICONS[profile.goal]} {t(GOAL_LABELS[profile.goal])}</span>
+                            <span className="text-muted-foreground text-xs">{t(ACTIVITY_LABELS[profile.activity_level])}</span>
+                          </div>
                         </div>
                       </div>
                       <Edit2 className="w-4 h-4 text-muted-foreground/50" />
@@ -399,13 +492,51 @@ export function ProfileNutritionPage() {
                         <Flame className="w-4.5 h-4.5 text-[#e17055]" />
                         <div className="text-left">
                           <p className="text-foreground text-sm font-medium">{t('pn_daily_calorie_goal')}</p>
-                          <p className="text-muted-foreground text-xs">
-                            {profile.daily_calorie_target || '\u2014'} {t('pn_kcal_day')}
-                            {profile.target_protein ? ` \u00B7 \u0411:${profile.target_protein} \u0423:${profile.target_carbs || '?'} \u0416:${profile.target_fat || '?'}` : ''}
-                          </p>
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
+                            <span className="text-muted-foreground text-xs">{profile.daily_calorie_target || '\u2014'} {t('pn_kcal_day')}</span>
+                            {profile.target_protein ? (
+                              <>
+                                <span className="px-1.5 py-0.5 rounded-full bg-[#6c5ce7]/10 text-[#a29bfe]" style={{ fontSize: '0.625rem', fontWeight: 600 }}>P {profile.target_protein}g</span>
+                                <span className="px-1.5 py-0.5 rounded-full bg-[#fdcb6e]/10 text-[#fdcb6e]" style={{ fontSize: '0.625rem', fontWeight: 600 }}>C {profile.target_carbs || '?'}g</span>
+                                <span className="px-1.5 py-0.5 rounded-full bg-[#e17055]/10 text-[#e17055]" style={{ fontSize: '0.625rem', fontWeight: 600 }}>F {profile.target_fat || '?'}g</span>
+                              </>
+                            ) : null}
+                          </div>
                         </div>
                       </div>
                       <Edit2 className="w-4 h-4 text-muted-foreground/50" />
+                    </button>
+
+                    {/* Body Measurements Row */}
+                    <button
+                      onClick={() => { hapticFeedback('light'); navigate('/measurements'); }}
+                      className="w-full p-3.5 rounded-xl flex items-center justify-between"
+                      style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Ruler className="w-4.5 h-4.5 text-[#6c5ce7]" />
+                        <div className="text-left">
+                          <p className="text-foreground text-sm font-medium">{t('pn_body_measurements')}</p>
+                          {profile.waist_cm ? (
+                            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
+                              <span className="text-muted-foreground text-xs">{t('pn_neck')}: <span className="text-foreground/70 font-medium">{profile.neck_cm}{t('unit_cm')}</span></span>
+                              <span className="text-muted-foreground text-xs">{t('pn_waist')}: <span className="text-foreground/70 font-medium">{profile.waist_cm}{t('unit_cm')}</span></span>
+                              <span className="text-muted-foreground text-xs">{t('pn_hips')}: <span className="text-foreground/70 font-medium">{profile.hips_cm}{t('unit_cm')}</span></span>
+                              {bodyFatPercent && (() => {
+                                const cat = getBodyFatCategory(Number(bodyFatPercent), profile.gender);
+                                return (
+                                  <span className="px-1.5 py-0.5 rounded-full text-[0.5625rem] font-semibold" style={{ background: cat.bg, color: cat.color }}>
+                                    BF {bodyFatPercent}% · {t(cat.key)}
+                                  </span>
+                                );
+                              })()}
+                            </div>
+                          ) : (
+                            <p className="text-muted-foreground/60 text-xs mt-0.5">{t('pn_add_measurements')}</p>
+                          )}
+                        </div>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground/50" />
                     </button>
 
                     {/* AI Advisor CTA */}
@@ -770,6 +901,67 @@ export function ProfileNutritionPage() {
 
           <button
             onClick={saveCalories}
+            disabled={saving}
+            className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe] text-white font-semibold text-sm flex items-center justify-center gap-2"
+          >
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+            {t('pn_save')}
+          </button>
+        </div>
+      </SwipeableBottomSheet>
+
+      {/* Body Measurements Bottom Sheet */}
+      <SwipeableBottomSheet
+        open={sheetType === 'measurements'}
+        onClose={closeSheet}
+        title={t('pn_edit_measurements')}
+      >
+        <div className="space-y-4 mt-3">
+          <p className="text-xs text-muted-foreground text-center px-2">
+            {t('pn_measurements_hint')}
+          </p>
+
+          {bodyFatPercent && (
+            <div className="rounded-xl py-3 px-4 flex items-center justify-between" style={{ background: 'rgba(108,92,231,0.08)', border: '1px solid rgba(108,92,231,0.15)' }}>
+              <div className="flex items-center gap-2">
+                <span className="text-[0.625rem] text-muted-foreground">{t('pn_body_fat')}</span>
+                <span className="text-[0.5625rem] text-muted-foreground/60">({t('pn_body_fat_navy')})</span>
+              </div>
+              <span className="text-foreground font-bold text-lg">{bodyFatPercent}<span className="text-xs text-muted-foreground ml-0.5">%</span></span>
+            </div>
+          )}
+
+          <SheetInput
+            icon={<Ruler className="w-4 h-4 text-[#74b9ff]" />}
+            label={t('pn_neck')}
+            unit={t('unit_cm')}
+            value={editNeck}
+            onChange={setEditNeck}
+          />
+          <SheetInput
+            icon={<Ruler className="w-4 h-4 text-[#00cec9]" />}
+            label={t('pn_chest')}
+            unit={t('unit_cm')}
+            value={editChest}
+            onChange={setEditChest}
+          />
+          <SheetInput
+            icon={<Ruler className="w-4 h-4 text-[#e17055]" />}
+            label={t('pn_waist')}
+            unit={t('unit_cm')}
+            value={editWaist}
+            onChange={setEditWaist}
+          />
+          <SheetInput
+            icon={<Ruler className="w-4 h-4 text-[#fd79a8]" />}
+            label={t('pn_hips')}
+            unit={t('unit_cm')}
+            value={editHips}
+            onChange={setEditHips}
+          />
+
+          <button
+            onClick={saveMeasurements}
             disabled={saving}
             className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe] text-white font-semibold text-sm flex items-center justify-center gap-2"
           >

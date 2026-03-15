@@ -30,6 +30,8 @@ import {
   Clock,
   Target,
   TrendingUp,
+  Sparkles,
+  Loader2,
 } from 'lucide-react';
 import { GlassCard } from './glass-card';
 import { useAuth } from './auth-context';
@@ -626,6 +628,9 @@ function AddFoodSheet({
     if (h < 18) return 'snack';
     return 'dinner';
   });
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiMessage, setAiMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [aiPortion, setAiPortion] = useState('');
 
   const nameRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -633,6 +638,33 @@ function AddFoodSheet({
   }, []);
 
   const isValid = name.trim().length > 0 && Number(calories) > 0;
+
+  const handleAiEstimate = async () => {
+    if (!name.trim() || aiLoading) return;
+    hapticFeedback('medium');
+    setAiLoading(true);
+    setAiMessage(null);
+    setAiPortion('');
+    try {
+      const result = await api.estimateFood(name.trim());
+      setCalories(String(result.estimated_calories));
+      setProtein(String(result.protein));
+      setCarbs(String(result.carbs));
+      setFats(String(result.fat));
+      if (result.portion) setAiPortion(result.portion);
+      if (result.food_name && result.food_name !== name.trim()) {
+        setName(result.food_name);
+      }
+      setAiMessage({ text: t('cal_ai_filled'), type: 'success' });
+      hapticSuccess();
+    } catch (err) {
+      console.error('[AI Estimate] Error:', err);
+      setAiMessage({ text: t('cal_ai_error'), type: 'error' });
+      hapticError();
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   const handleSubmit = () => {
     if (!isValid) return;
@@ -725,13 +757,54 @@ function AddFoodSheet({
 
           {/* Fields */}
           <div className="space-y-3">
-            <SheetInput
-              ref={nameRef}
-              label={t('cal_food_name')}
-              placeholder={t('cal_food_name_placeholder')}
-              value={name}
-              onChange={setName}
-            />
+            {/* Food name + AI estimate button */}
+            <div>
+              <div className="flex items-end gap-2">
+                <div className="flex-1">
+                  <SheetInput
+                    ref={nameRef}
+                    label={t('cal_food_name')}
+                    placeholder={t('cal_food_name_placeholder')}
+                    value={name}
+                    onChange={(v) => { setName(v); setAiMessage(null); setAiPortion(''); }}
+                  />
+                </div>
+                <motion.button
+                  whileTap={{ scale: 0.93 }}
+                  onClick={handleAiEstimate}
+                  disabled={!name.trim() || aiLoading}
+                  className="flex items-center gap-1.5 px-3.5 h-[2.75rem] rounded-xl bg-gradient-to-r from-[#6c5ce7]/20 to-[#a29bfe]/15 border border-[#6c5ce7]/25 disabled:opacity-30 flex-shrink-0"
+                >
+                  {aiLoading ? (
+                    <Loader2 className="w-4 h-4 text-[#a29bfe] animate-spin" />
+                  ) : (
+                    <Sparkles className="w-4 h-4 text-[#a29bfe]" />
+                  )}
+                  <span className="text-[#a29bfe] whitespace-nowrap" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
+                    {aiLoading ? t('cal_ai_estimating') : t('cal_ai_estimate')}
+                  </span>
+                </motion.button>
+              </div>
+
+              {/* AI feedback messages */}
+              <AnimatePresence>
+                {aiMessage && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <p className={`text-xs mt-2 ${aiMessage.type === 'success' ? 'text-[#00cec9]' : 'text-[#ff6b6b]'}`}>
+                      {aiMessage.type === 'success' ? '✓ ' : '⚠ '}{aiMessage.text}
+                      {aiPortion && aiMessage.type === 'success' && (
+                        <span className="text-white/40 ml-1">({t('cal_ai_portion')}: {aiPortion})</span>
+                      )}
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
             <SheetInput
               label={t('cal_calories')}

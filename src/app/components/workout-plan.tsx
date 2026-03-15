@@ -41,7 +41,6 @@ import {
   Utensils,
   Scale,
   Ruler,
-  User,
   Lightbulb,
   MessageSquare,
 } from 'lucide-react';
@@ -500,45 +499,15 @@ export function WorkoutPlanPage() {
                 </div>
               </div>
 
-              {/* Profile summary */}
+              {/* Profile + Body — collapsible combined card */}
               {profile && (
-                <GlassCard className="!p-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#6c5ce7]/20 to-[#a29bfe]/20 flex items-center justify-center">
-                      <Target className="w-5 h-5 text-[#a29bfe]" />
-                    </div>
-                    <div>
-                      <p className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
-                        {t('shared_your_profile')}
-                      </p>
-                      <p className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>
-                        {t('shared_ai_tailor')}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    <InfoPill
-                      label={t('shared_goal_label')}
-                      value={GOAL_LABELS[profile.goal]?.[lang as 'en' | 'ru'] || profile.goal}
-                      color="#6c5ce7"
-                    />
-                    <InfoPill
-                      label={t('shared_gender_label')}
-                      value={profile.gender === 'male' ? t('wp_gender_m') : t('wp_gender_f')}
-                      color="#00cec9"
-                    />
-                    <InfoPill
-                      label={t('shared_activity_label')}
-                      value={
-                        profile.activity_level === 'low' ? t('obn_activity_low') :
-                        profile.activity_level === 'medium' ? t('obn_activity_medium') :
-                        profile.activity_level === 'high' ? t('obn_activity_high') :
-                        t('obn_activity_athlete')
-                      }
-                      color="#ffeaa7"
-                    />
-                  </div>
-                </GlassCard>
+                <CollapsibleProfileCard
+                  profile={profile}
+                  lang={lang}
+                  bodyPhoto={bodyPhoto}
+                  onRemovePhoto={() => { hapticFeedback('light'); setBodyPhoto(null); }}
+                  onAddPhoto={() => { hapticFeedback('light'); setShowPhotoPicker(true); }}
+                />
               )}
 
               {!profile && (
@@ -555,170 +524,12 @@ export function WorkoutPlanPage() {
                 </GlassCard>
               )}
 
-              {/* Plan length */}
-              <div>
-                <p className="text-muted-foreground mb-3 px-1" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
-                  {t('wp_plan_length')}
-                </p>
-                <div className="space-y-3">
-                  {PLAN_OPTIONS.map((opt) => (
-                    <motion.button
-                      key={opt.length}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => { hapticFeedback('light'); setSelectedLength(opt.length); }}
-                      className={`w-full p-4 rounded-2xl flex items-center gap-4 transition-all ${
-                        selectedLength === opt.length
-                          ? 'bg-[#6c5ce7]/10 border-2 border-[#6c5ce7]/30'
-                          : 'bg-white/[0.03] border-2 border-white/[0.06]'
-                      }`}
-                    >
-                      <div
-                        className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
-                        style={{ backgroundColor: `${opt.color}15` }}
-                      >
-                        <span className="text-white" style={{ fontSize: '1.25rem', fontWeight: 800 }}>{opt.length}</span>
-                      </div>
-                      <div className="text-left flex-1">
-                        <p className="text-white" style={{ fontSize: '1rem', fontWeight: 600 }}>
-                          {t(opt.labelKey)}
-                        </p>
-                        <p className="text-white/40" style={{ fontSize: '0.8125rem' }}>
-                          {t(opt.descKey)}
-                        </p>
-                      </div>
-                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
-                        selectedLength === opt.length ? 'border-[#6c5ce7] bg-[#6c5ce7]' : 'border-white/20'
-                      }`}>
-                        {selectedLength === opt.length && (
-                          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="w-2 h-2 rounded-full bg-white" />
-                        )}
-                      </div>
-                    </motion.button>
-                  ))}
-                </div>
-              </div>
-
-              {/* ---- YOUR BODY section ---- */}
-              {profile && (profile.age || profile.height || profile.weight) && (
-                <GlassCard className="!p-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#fd79a8]/20 to-[#e17055]/20 flex items-center justify-center">
-                      <User className="w-5 h-5 text-[#fd79a8]" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
-                        {t('wp_your_body')}
-                      </p>
-                      <p className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
-                        {t('wp_body_desc')}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-4 gap-2 mb-3">
-                    {profile.age ? (
-                      <div className="rounded-xl bg-white/[0.03] border border-white/[0.05] p-2 text-center">
-                        <p className="text-white/35" style={{ fontSize: '0.5625rem' }}>{t('wp_age_label')}</p>
-                        <p className="text-white" style={{ fontSize: '0.875rem', fontWeight: 700 }}>{profile.age}</p>
-                      </div>
-                    ) : null}
-                    {profile.height ? (
-                      <div className="rounded-xl bg-white/[0.03] border border-white/[0.05] p-2 text-center">
-                        <p className="text-white/35" style={{ fontSize: '0.5625rem' }}>{t('wp_height_label')}</p>
-                        <p className="text-white" style={{ fontSize: '0.875rem', fontWeight: 700 }}>{profile.height}<span className="text-white/30 text-[0.5rem]">cm</span></p>
-                      </div>
-                    ) : null}
-                    {profile.weight ? (
-                      <div className="rounded-xl bg-white/[0.03] border border-white/[0.05] p-2 text-center">
-                        <p className="text-white/35" style={{ fontSize: '0.5625rem' }}>{t('wp_weight_label')}</p>
-                        <p className="text-white" style={{ fontSize: '0.875rem', fontWeight: 700 }}>{profile.weight}<span className="text-white/30 text-[0.5rem]">kg</span></p>
-                      </div>
-                    ) : null}
-                    {profile.height && profile.weight ? (
-                      <div className="rounded-xl bg-white/[0.03] border border-white/[0.05] p-2 text-center">
-                        <p className="text-white/35" style={{ fontSize: '0.5625rem' }}>{t('wp_bmi_label')}</p>
-                        <p className="text-white" style={{ fontSize: '0.875rem', fontWeight: 700 }}>
-                          {(profile.weight / ((profile.height / 100) ** 2)).toFixed(1)}
-                        </p>
-                      </div>
-                    ) : null}
-                  </div>
-                  {bodyPhoto ? (
-                    <div className="flex items-center gap-3 p-3 rounded-xl bg-[#00cec9]/8 border border-[#00cec9]/20">
-                      <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0">
-                        <img src={bodyPhoto} alt="Body" className="w-full h-full object-cover" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-[#00cec9]" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{t('wp_photo_added')}</p>
-                        <p className="text-white/30" style={{ fontSize: '0.6875rem' }}>{t('wp_photo_hint')}</p>
-                      </div>
-                      <motion.button whileTap={{ scale: 0.9 }} onClick={() => { hapticFeedback('light'); setBodyPhoto(null); }} className="px-2.5 py-1 rounded-lg bg-white/[0.06]">
-                        <span className="text-white/40" style={{ fontSize: '0.6875rem' }}>{t('wp_remove_photo')}</span>
-                      </motion.button>
-                    </div>
-                  ) : (
-                    <motion.button whileTap={{ scale: 0.97 }} onClick={() => { hapticFeedback('light'); setShowPhotoPicker(true); }} className="w-full p-3 rounded-xl border-2 border-dashed border-white/10 flex items-center justify-center gap-2 bg-white/[0.01]">
-                      <Camera className="w-4 h-4 text-[#fd79a8]" />
-                      <span className="text-white/50" style={{ fontSize: '0.8125rem', fontWeight: 500 }}>{t('wp_add_photo')}</span>
-                    </motion.button>
-                  )}
-                </GlassCard>
-              )}
-
-              {/* ---- NUTRITION LINK section ---- */}
+              {/* ---- NUTRITION LINK — collapsible, collapsed by default ---- */}
               {profile && (profile.daily_calorie_target || nutritionCtx.hasMealPlan || nutritionCtx.caloriesConsumed > 0) && (
-                <GlassCard className="!p-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#00cec9]/20 to-[#74b9ff]/20 flex items-center justify-center">
-                      <Utensils className="w-5 h-5 text-[#00cec9]" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>{t('wp_nutrition_link')}</p>
-                      <p className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>{t('wp_nutrition_link_desc')}</p>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    {profile.daily_calorie_target ? (
-                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.05]">
-                        <span className="text-white/40" style={{ fontSize: '0.75rem' }}>{t('wp_cal_target')}</span>
-                        <span className="text-[#00cec9]" style={{ fontSize: '0.875rem', fontWeight: 700 }}>
-                          {profile.daily_calorie_target} <span style={{ fontSize: '0.6875rem', fontWeight: 400 }}>kcal</span>
-                        </span>
-                      </div>
-                    ) : null}
-                    {nutritionCtx.caloriesConsumed > 0 && profile.daily_calorie_target ? (
-                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.05]">
-                        <span className="text-white/40" style={{ fontSize: '0.75rem' }}>{t('wp_cal_consumed')}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-white" style={{ fontSize: '0.875rem', fontWeight: 700 }}>{nutritionCtx.caloriesConsumed}</span>
-                          {(() => {
-                            const diff = nutritionCtx.caloriesConsumed - (profile.daily_calorie_target || 0);
-                            if (Math.abs(diff) < 50) return null;
-                            const isOver = diff > 0;
-                            return (
-                              <span className="px-1.5 py-0.5 rounded-full" style={{ fontSize: '0.5625rem', fontWeight: 600, backgroundColor: isOver ? '#e1705515' : '#00cec915', color: isOver ? '#e17055' : '#00cec9' }}>
-                                {isOver ? '+' : ''}{diff} {isOver ? t('wp_cal_surplus') : t('wp_cal_deficit')}
-                              </span>
-                            );
-                          })()}
-                        </div>
-                      </div>
-                    ) : null}
-                    {(profile.target_protein || profile.target_carbs || profile.target_fat) ? (
-                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.05]">
-                        <span className="text-white/40" style={{ fontSize: '0.75rem' }}>{t('wp_macros_label')}</span>
-                        <div className="flex items-center gap-2">
-                          {profile.target_protein ? <span className="px-1.5 py-0.5 rounded-full bg-[#6c5ce7]/15 text-[#a29bfe]" style={{ fontSize: '0.5625rem', fontWeight: 600 }}>P {profile.target_protein}g</span> : null}
-                          {profile.target_carbs ? <span className="px-1.5 py-0.5 rounded-full bg-[#fdcb6e]/15 text-[#fdcb6e]" style={{ fontSize: '0.5625rem', fontWeight: 600 }}>C {profile.target_carbs}g</span> : null}
-                          {profile.target_fat ? <span className="px-1.5 py-0.5 rounded-full bg-[#e17055]/15 text-[#e17055]" style={{ fontSize: '0.5625rem', fontWeight: 600 }}>F {profile.target_fat}g</span> : null}
-                        </div>
-                      </div>
-                    ) : null}
-                    <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.05]">
-                      <span className="text-white/40" style={{ fontSize: '0.75rem' }}>{nutritionCtx.hasMealPlan ? t('wp_meal_plan_active') : t('wp_no_meal_plan')}</span>
-                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: nutritionCtx.hasMealPlan ? '#00cec9' : '#ffffff15' }} />
-                    </div>
-                  </div>
-                </GlassCard>
+                <CollapsibleNutritionCard
+                  profile={profile}
+                  nutritionCtx={nutritionCtx}
+                />
               )}
 
               {/* ---- USER WISHES section ---- */}
@@ -774,6 +585,54 @@ export function WorkoutPlanPage() {
                   )}
                 </div>
               )}
+
+              {/* Plan length — 3 compact squares */}
+              <div>
+                <p className="text-muted-foreground mb-2 px-1" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
+                  {t('wp_plan_length')}
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  {PLAN_OPTIONS.map((opt) => {
+                    const isSelected = selectedLength === opt.length;
+                    return (
+                      <motion.button
+                        key={opt.length}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => { hapticFeedback('light'); setSelectedLength(opt.length); }}
+                        className={`relative p-3 rounded-2xl flex flex-col items-center gap-1.5 transition-all ${
+                          isSelected
+                            ? 'bg-[#6c5ce7]/12 border-2 border-[#6c5ce7]/35'
+                            : 'bg-white/[0.03] border-2 border-white/[0.06]'
+                        }`}
+                      >
+                        <div
+                          className="w-11 h-11 rounded-xl flex items-center justify-center"
+                          style={{ backgroundColor: `${opt.color}15` }}
+                        >
+                          <span className="text-foreground" style={{ fontSize: '1.25rem', fontWeight: 800 }}>
+                            {opt.length}
+                          </span>
+                        </div>
+                        <p className="text-foreground leading-tight text-center" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
+                          {t(opt.labelKey)}
+                        </p>
+                        <p className="text-muted-foreground leading-tight text-center" style={{ fontSize: '0.5625rem' }}>
+                          {t(opt.descKey)}
+                        </p>
+                        {isSelected && (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-[#6c5ce7] flex items-center justify-center"
+                          >
+                            <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                          </motion.div>
+                        )}
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              </div>
 
               {/* Generate */}
               <motion.button
@@ -1256,7 +1115,7 @@ function LocationCard({
     <motion.button
       whileTap={{ scale: 0.97 }}
       onClick={onSelect}
-      className={`p-4 rounded-2xl text-left transition-all ${
+      className={`relative p-4 rounded-2xl text-left transition-all ${
         selected
           ? 'border-2 border-[#6c5ce7]/40 bg-[#6c5ce7]/8'
           : 'border-2 border-white/[0.06] bg-white/[0.02]'
@@ -1280,6 +1139,221 @@ function LocationCard({
         </motion.div>
       )}
     </motion.button>
+  );
+}
+
+// ---- Collapsible Profile + Body Card ----
+function CollapsibleProfileCard({
+  profile,
+  lang,
+  bodyPhoto,
+  onRemovePhoto,
+  onAddPhoto,
+}: {
+  profile: UserProfile;
+  lang: string;
+  bodyPhoto: string | null;
+  onRemovePhoto: () => void;
+  onAddPhoto: () => void;
+}) {
+  const { t } = useTranslation();
+  const [expanded, setExpanded] = useState(false);
+
+  const genderShort = profile.gender === 'male' ? (lang === 'ru' ? 'М' : 'M') : (lang === 'ru' ? 'Ж' : 'F');
+  const goalLabel = GOAL_LABELS[profile.goal]?.[lang as 'en' | 'ru'] || profile.goal;
+  const activityLabel =
+    profile.activity_level === 'low' ? t('obn_activity_low') :
+    profile.activity_level === 'medium' ? t('obn_activity_medium') :
+    profile.activity_level === 'high' ? t('obn_activity_high') :
+    t('obn_activity_athlete');
+
+  // Compact summary line for collapsed state
+  const summaryParts = [goalLabel];
+  if (profile.age) summaryParts.push(`${profile.age}/${genderShort}`);
+  if (profile.weight) summaryParts.push(`${profile.weight}kg`);
+  if (profile.height) summaryParts.push(`${profile.height}cm`);
+  const summaryText = summaryParts.join(' · ');
+
+  return (
+    <GlassCard className="!p-0 overflow-hidden">
+      {/* Header — tappable to toggle */}
+      <button
+        onClick={() => {
+          hapticFeedback('light');
+          setExpanded((p) => !p);
+        }}
+        className="w-full flex items-center gap-3 p-4"
+      >
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#6c5ce7]/20 to-[#a29bfe]/20 flex items-center justify-center flex-shrink-0">
+          <Target className="w-4 h-4 text-[#a29bfe]" />
+        </div>
+        <div className="flex-1 text-left min-w-0">
+          <p className="text-foreground" style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+            {t('shared_your_profile')}
+          </p>
+          {!expanded && (
+            <p className="text-muted-foreground truncate" style={{ fontSize: '0.6875rem' }}>
+              {summaryText}
+            </p>
+          )}
+          {expanded && (
+            <p className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
+              {t('shared_ai_tailor')}
+            </p>
+          )}
+        </div>
+        <motion.div animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
+          <ChevronDown className="w-4 h-4 text-white/25 flex-shrink-0" />
+        </motion.div>
+      </button>
+
+      {/* Expandable content */}
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="overflow-hidden"
+          >
+            <div className="px-4 pb-4 space-y-3">
+              {/* Profile + body metrics grid */}
+              <div className="grid grid-cols-3 gap-1.5">
+                <InfoPill label={t('shared_goal_label')} value={goalLabel} color="#6c5ce7" />
+                <InfoPill label={t('shared_calories_label')} value={`${profile.daily_calorie_target || '—'}`} color="#fd79a8" />
+                <InfoPill label={t('shared_activity_label')} value={activityLabel} color="#ffeaa7" />
+                {profile.age ? <InfoPill label={t('wp_age_label')} value={`${profile.age}/${genderShort}`} color="#a29bfe" /> : null}
+                {profile.height ? <InfoPill label={t('wp_height_label')} value={`${profile.height}cm`} color="#74b9ff" /> : null}
+                {profile.weight ? <InfoPill label={t('wp_weight_label')} value={`${profile.weight}kg`} color="#fab1a0" /> : null}
+              </div>
+
+              {/* Body photo */}
+              {bodyPhoto ? (
+                <div className="flex items-center gap-3 p-2.5 rounded-xl bg-[#00cec9]/8 border border-[#00cec9]/20">
+                  <div className="w-11 h-11 rounded-lg overflow-hidden flex-shrink-0">
+                    <img src={bodyPhoto} alt="Body" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[#00cec9]" style={{ fontSize: '0.75rem', fontWeight: 600 }}>{t('wp_photo_added')}</p>
+                    <p className="text-white/30 truncate" style={{ fontSize: '0.625rem' }}>{t('wp_photo_hint')}</p>
+                  </div>
+                  <motion.button whileTap={{ scale: 0.9 }} onClick={(e) => { e.stopPropagation(); onRemovePhoto(); }} className="px-2 py-1 rounded-lg bg-white/[0.06]">
+                    <span className="text-white/40" style={{ fontSize: '0.625rem' }}>{t('wp_remove_photo')}</span>
+                  </motion.button>
+                </div>
+              ) : (
+                <motion.button whileTap={{ scale: 0.97 }} onClick={(e) => { e.stopPropagation(); onAddPhoto(); }} className="w-full p-2.5 rounded-xl border-2 border-dashed border-white/10 flex items-center justify-center gap-2 bg-white/[0.01]">
+                  <Camera className="w-3.5 h-3.5 text-[#fd79a8]" />
+                  <span className="text-white/50" style={{ fontSize: '0.75rem', fontWeight: 500 }}>{t('wp_add_photo')}</span>
+                </motion.button>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </GlassCard>
+  );
+}
+
+// ---- Collapsible Nutrition Link Card ----
+function CollapsibleNutritionCard({
+  profile,
+  nutritionCtx,
+}: {
+  profile: UserProfile;
+  nutritionCtx: NutritionContext;
+}) {
+  const { t } = useTranslation();
+  const [expanded, setExpanded] = useState(false);
+
+  // Build summary text for collapsed state
+  const summaryParts: string[] = [];
+  if (profile.daily_calorie_target) summaryParts.push(`${profile.daily_calorie_target} kcal`);
+  if (nutritionCtx.caloriesConsumed > 0) summaryParts.push(`${t('wp_cal_consumed')}: ${nutritionCtx.caloriesConsumed}`);
+  if (nutritionCtx.hasMealPlan) summaryParts.push(t('wp_meal_plan_active'));
+  const summaryText = summaryParts.join(' · ') || t('wp_nutrition_link_desc');
+
+  return (
+    <GlassCard className="!p-0 overflow-hidden">
+      <button
+        onClick={() => {
+          hapticFeedback('light');
+          setExpanded((p) => !p);
+        }}
+        className="w-full flex items-center gap-3 p-4"
+      >
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#00cec9]/20 to-[#74b9ff]/20 flex items-center justify-center flex-shrink-0">
+          <Utensils className="w-4 h-4 text-[#00cec9]" />
+        </div>
+        <div className="flex-1 text-left min-w-0">
+          <p className="text-foreground" style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+            {t('wp_nutrition_link')}
+          </p>
+          <p className="text-muted-foreground truncate" style={{ fontSize: '0.6875rem' }}>
+            {expanded ? t('wp_nutrition_link_desc') : summaryText}
+          </p>
+        </div>
+        <motion.div animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
+          <ChevronDown className="w-4 h-4 text-white/25 flex-shrink-0" />
+        </motion.div>
+      </button>
+
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="overflow-hidden"
+          >
+            <div className="px-4 pb-4 space-y-2">
+              {profile.daily_calorie_target ? (
+                <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+                  <span className="text-white/40" style={{ fontSize: '0.75rem' }}>{t('wp_cal_target')}</span>
+                  <span className="text-[#00cec9]" style={{ fontSize: '0.875rem', fontWeight: 700 }}>
+                    {profile.daily_calorie_target} <span style={{ fontSize: '0.6875rem', fontWeight: 400 }}>kcal</span>
+                  </span>
+                </div>
+              ) : null}
+              {nutritionCtx.caloriesConsumed > 0 && profile.daily_calorie_target ? (
+                <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+                  <span className="text-white/40" style={{ fontSize: '0.75rem' }}>{t('wp_cal_consumed')}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-white" style={{ fontSize: '0.875rem', fontWeight: 700 }}>{nutritionCtx.caloriesConsumed}</span>
+                    {(() => {
+                      const diff = nutritionCtx.caloriesConsumed - (profile.daily_calorie_target || 0);
+                      if (Math.abs(diff) < 50) return null;
+                      const isOver = diff > 0;
+                      return (
+                        <span className="px-1.5 py-0.5 rounded-full" style={{ fontSize: '0.5625rem', fontWeight: 600, backgroundColor: isOver ? '#e1705515' : '#00cec915', color: isOver ? '#e17055' : '#00cec9' }}>
+                          {isOver ? '+' : ''}{diff} {isOver ? t('wp_cal_surplus') : t('wp_cal_deficit')}
+                        </span>
+                      );
+                    })()}
+                  </div>
+                </div>
+              ) : null}
+              {(profile.target_protein || profile.target_carbs || profile.target_fat) ? (
+                <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+                  <span className="text-white/40" style={{ fontSize: '0.75rem' }}>{t('wp_macros_label')}</span>
+                  <div className="flex items-center gap-2">
+                    {profile.target_protein ? <span className="px-1.5 py-0.5 rounded-full bg-[#6c5ce7]/15 text-[#a29bfe]" style={{ fontSize: '0.5625rem', fontWeight: 600 }}>P {profile.target_protein}g</span> : null}
+                    {profile.target_carbs ? <span className="px-1.5 py-0.5 rounded-full bg-[#fdcb6e]/15 text-[#fdcb6e]" style={{ fontSize: '0.5625rem', fontWeight: 600 }}>C {profile.target_carbs}g</span> : null}
+                    {profile.target_fat ? <span className="px-1.5 py-0.5 rounded-full bg-[#e17055]/15 text-[#e17055]" style={{ fontSize: '0.5625rem', fontWeight: 600 }}>F {profile.target_fat}g</span> : null}
+                  </div>
+                </div>
+              ) : null}
+              <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+                <span className="text-white/40" style={{ fontSize: '0.75rem' }}>{nutritionCtx.hasMealPlan ? t('wp_meal_plan_active') : t('wp_no_meal_plan')}</span>
+                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: nutritionCtx.hasMealPlan ? '#00cec9' : '#ffffff15' }} />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </GlassCard>
   );
 }
 

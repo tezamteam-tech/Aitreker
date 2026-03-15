@@ -4,6 +4,7 @@
 // Production entry point for Vercel deployment.
 // Telegram SDK is loaded natively by the TG client.
 // Debug mode: only via explicit URL parameter.
+// v2 — cache bust
 // =============================================
 
 // ── FOUC Prevention ──────────────────────────────────────

@@ -9007,6 +9007,83 @@ app.get(`${PREFIX}/subscription/usage`, async (c) => {
   }
 });
 
+// ---- POST /food/estimate ----
+// AI estimates calories & macros from food name text (no image needed)
+app.post(`${PREFIX}/food/estimate`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const { food_name, language } = await c.req.json();
+    if (!food_name || typeof food_name !== "string" || food_name.trim().length === 0) {
+      return c.json({ message: "food_name is required", code: "INVALID_INPUT", status: 400 }, 400);
+    }
+
+    const lang = language === "ru" ? "ru" : "en";
+    const apiKey = Deno.env.get("OPENAI_API_KEY");
+    if (!apiKey) {
+      return c.json({ message: "OPENAI_API_KEY not set", code: "CONFIG_ERROR", status: 500 }, 500);
+    }
+
+    const systemPrompt = lang === "ru"
+      ? `Ты — эксперт-нутрициолог. Пользователь описывает еду или напиток текстом. Оцени калории и макронутриенты для стандартной порции. Верни ТОЛЬКО JSON:
+{"food_name": "<уточнённое название на русском>", "estimated_calories": <число>, "protein": <граммы>, "carbs": <граммы>, "fat": <граммы>, "portion": "<описание порции>"}
+Не добавляй никакого текста вне JSON.`
+      : `You are a nutrition expert. The user describes a food or drink by name. Estimate calories and macros for a standard serving. Return ONLY JSON:
+{"food_name": "<refined name>", "estimated_calories": <number>, "protein": <grams>, "carbs": <grams>, "fat": <grams>, "portion": "<portion description>"}
+Do not include any text outside the JSON.`;
+
+    const userPrompt = food_name.trim();
+
+    console.log(`[Food Estimate] User ${auth.userId} estimating: "${userPrompt}" (lang=${lang})`);
+
+    const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+        max_tokens: 200,
+        temperature: 0.3,
+      }),
+    });
+
+    if (!openaiRes.ok) {
+      const errText = await openaiRes.text();
+      console.log(`[Food Estimate] OpenAI error ${openaiRes.status}: ${errText}`);
+      return c.json({ message: `AI error: ${openaiRes.status}`, code: "AI_ERROR", status: 502 }, 502);
+    }
+
+    const data = await openaiRes.json();
+    const raw = data.choices?.[0]?.message?.content?.trim() || "";
+    console.log(`[Food Estimate] Raw AI response: ${raw}`);
+
+    // Extract JSON from response (handle markdown code blocks)
+    let jsonStr = raw;
+    const codeBlockMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (codeBlockMatch) jsonStr = codeBlockMatch[1].trim();
+
+    const parsed = JSON.parse(jsonStr);
+    return c.json({
+      food_name: parsed.food_name || userPrompt,
+      estimated_calories: Math.round(Number(parsed.estimated_calories) || 0),
+      protein: Math.round(Number(parsed.protein) || 0),
+      carbs: Math.round(Number(parsed.carbs) || 0),
+      fat: Math.round(Number(parsed.fat) || 0),
+      portion: parsed.portion || "",
+    });
+  } catch (err) {
+    console.log(`[Food Estimate] Error: ${err}`);
+    return c.json({ message: `Error estimating food: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
 // ---- POST /food/scan ----
 app.post(`${PREFIX}/food/scan`, async (c) => {
   try {
@@ -9130,6 +9207,33 @@ app.post(`${PREFIX}/nutrition/ai-body-analysis`, async (c) => {
     const activityText = activityLabels[activityLevel]?.[lang] || activityLevel || "not specified";
     const bmi = (weight / ((height / 100) ** 2)).toFixed(1);
 
+    // Include body measurements if available from profile
+    const userProfile = await kv.get(`become:user_profile:${auth.telegramId}`);
+    let measurementsText = "";
+    if (userProfile?.waist_cm && userProfile?.neck_cm) {
+      const neckCm = Number(userProfile.neck_cm);
+      const chestCm = Number(userProfile.chest_cm);
+      const waistCm = Number(userProfile.waist_cm);
+      const hipsCm = Number(userProfile.hips_cm);
+      let bfCalc: number | null = null;
+      try {
+        if (gender === "male" && waistCm > neckCm) {
+          bfCalc = Math.round((86.010 * Math.log10(waistCm - neckCm) - 70.041 * Math.log10(height) + 36.76) * 10) / 10;
+        } else if (gender === "female" && hipsCm && (waistCm + hipsCm - neckCm) > 0) {
+          bfCalc = Math.round((163.205 * Math.log10(waistCm + hipsCm - neckCm) - 97.684 * Math.log10(height) - 78.387) * 10) / 10;
+        }
+        if (bfCalc !== null && (bfCalc < 0 || bfCalc > 60)) bfCalc = null;
+      } catch (_) {}
+
+      if (lang === "ru") {
+        measurementsText = `, Обхваты тела — шея: ${neckCm}см, грудь: ${chestCm}см, талия: ${waistCm}см, бёдра: ${hipsCm}см`;
+        if (bfCalc) measurementsText += `, Расчётный % жира (Navy Method): ${bfCalc}%`;
+      } else {
+        measurementsText = `, Body circumferences — neck: ${neckCm}cm, chest: ${chestCm}cm, waist: ${waistCm}cm, hips: ${hipsCm}cm`;
+        if (bfCalc) measurementsText += `, Calculated body fat (Navy Method): ${bfCalc}%`;
+      }
+    }
+
     const photoInstruction = imageBase64
       ? (lang === "ru"
         ? "Клиент предоставил фото для оценки композиции тела. Исп��льзуй его для уточнения рекомендаций по калориям и макронутриентам. Оцени примерный процент жира и мышечную массу."
@@ -9143,8 +9247,8 @@ app.post(`${PREFIX}/nutrition/ai-body-analysis`, async (c) => {
 Respond ONLY in JSON format: {"recommended_calories":number,"recommended_protein":number,"recommended_carbs":number,"recommended_fat":number,"bmr_estimate":number,"tdee_estimate":number,"body_fat_estimate":"percentage or null","body_assessment":"brief assessment 2-3 sentences","recommendation_reason":"detailed rationale 3-5 sentences","tips":["tip1","tip2","tip3"]}`;
 
     const userMetrics = lang === "ru"
-      ? `Пол: ${gender === "male" ? "мужской" : "женский"}, Возраст: ${age}, Рост: ${height}см, Вес: ${weight}кг, ИМТ: ${bmi}, Активность: ${activityText}, Цель: ${goalText}`
-      : `Gender: ${gender}, Age: ${age}, Height: ${height}cm, Weight: ${weight}kg, BMI: ${bmi}, Activity: ${activityText}, Goal: ${goalText}`;
+      ? `Пол: ${gender === "male" ? "мужской" : "женский"}, Возраст: ${age}, Рост: ${height}см, Вес: ${weight}кг, ИМТ: ${bmi}, Активность: ${activityText}, Цель: ${goalText}${measurementsText}`
+      : `Gender: ${gender}, Age: ${age}, Height: ${height}cm, Weight: ${weight}kg, BMI: ${bmi}, Activity: ${activityText}, Goal: ${goalText}${measurementsText}`;
 
     const messages: any[] = [{ role: "system", content: systemPrompt }];
     if (imageBase64) {
@@ -11635,7 +11739,7 @@ app.post(`${PREFIX}/user-profile`, async (c) => {
     }
 
     const body = await c.req.json();
-    const { gender, age, height, weight, activity_level, goal, daily_calorie_target, bmr, daily_maintenance_calories, target_protein, target_carbs, target_fat } = body;
+    const { gender, age, height, weight, activity_level, goal, daily_calorie_target, bmr, daily_maintenance_calories, target_protein, target_carbs, target_fat, neck_cm, chest_cm, waist_cm, hips_cm } = body;
 
     // Validate required fields
     if (!gender || !age || !height || !weight || !activity_level || !goal) {
@@ -11662,6 +11766,10 @@ app.post(`${PREFIX}/user-profile`, async (c) => {
       target_protein: target_protein != null ? Number(target_protein) : (existing?.target_protein || null),
       target_carbs: target_carbs != null ? Number(target_carbs) : (existing?.target_carbs || null),
       target_fat: target_fat != null ? Number(target_fat) : (existing?.target_fat || null),
+      neck_cm: neck_cm != null ? Number(neck_cm) : (existing?.neck_cm || null),
+      chest_cm: chest_cm != null ? Number(chest_cm) : (existing?.chest_cm || null),
+      waist_cm: waist_cm != null ? Number(waist_cm) : (existing?.waist_cm || null),
+      hips_cm: hips_cm != null ? Number(hips_cm) : (existing?.hips_cm || null),
       created_at: existing?.created_at || new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
@@ -11914,6 +12022,150 @@ app.post(`${PREFIX}/weight-log/check-reminder`, async (c) => {
     return c.json({ sent: true, daysSinceLast });
   } catch (err) {
     console.log("POST /weight-log/check-reminder error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// =============================================
+// BODY MEASUREMENTS TRACKING
+// =============================================
+
+// ---- POST /measurements-log ----
+app.post(`${PREFIX}/measurements-log`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const body = await c.req.json();
+    const { neck_cm, chest_cm, waist_cm, hips_cm, note } = body;
+
+    if (!neck_cm || !chest_cm || !waist_cm || !hips_cm) {
+      return c.json({ message: "All measurements required (neck, chest, waist, hips)", code: "VALIDATION_ERROR", status: 400 }, 400);
+    }
+
+    const profile = await kv.get(`become:user_profile:${auth.telegramId}`);
+    let body_fat_percent: number | null = null;
+    if (profile) {
+      const height = Number(profile.height);
+      const gender = profile.gender;
+      const neck = Number(neck_cm);
+      const waist = Number(waist_cm);
+      const hips = Number(hips_cm);
+      try {
+        if (gender === "male" && waist > neck) {
+          body_fat_percent = Math.round((86.010 * Math.log10(waist - neck) - 70.041 * Math.log10(height) + 36.76) * 10) / 10;
+        } else if (gender === "female" && (waist + hips - neck) > 0) {
+          body_fat_percent = Math.round((163.205 * Math.log10(waist + hips - neck) - 97.684 * Math.log10(height) - 78.387) * 10) / 10;
+        }
+        if (body_fat_percent !== null && (body_fat_percent < 0 || body_fat_percent > 60)) body_fat_percent = null;
+      } catch (_) {}
+    }
+
+    const now = new Date();
+    const dateStr = now.toISOString().slice(0, 10);
+    const entryId = generateId("ms");
+
+    const entry = {
+      id: entryId,
+      userId: auth.userId,
+      neck_cm: Number(neck_cm),
+      chest_cm: Number(chest_cm),
+      waist_cm: Number(waist_cm),
+      hips_cm: Number(hips_cm),
+      body_fat_percent,
+      note: note || null,
+      date: dateStr,
+      created_at: now.toISOString(),
+    };
+
+    await kv.set(`become:measurements:${auth.userId}:${entryId}`, entry);
+
+    const dateIndexKey = `become:measurements_idx:${auth.userId}`;
+    const dateIndex: Array<{ date: string; entryId: string }> = (await kv.get(dateIndexKey)) || [];
+
+    const existingIdx = dateIndex.findIndex((d: any) => d.date === dateStr);
+    if (existingIdx >= 0) {
+      const oldEntryId = dateIndex[existingIdx].entryId;
+      await kv.del(`become:measurements:${auth.userId}:${oldEntryId}`);
+      dateIndex[existingIdx] = { date: dateStr, entryId };
+    } else {
+      dateIndex.unshift({ date: dateStr, entryId });
+    }
+
+    if (dateIndex.length > 365) {
+      const removed = dateIndex.splice(365);
+      for (const r of removed) {
+        kv.del(`become:measurements:${auth.userId}:${r.entryId}`).catch(() => {});
+      }
+    }
+
+    await kv.set(dateIndexKey, dateIndex);
+
+    try {
+      if (profile) {
+        profile.neck_cm = Number(neck_cm);
+        profile.chest_cm = Number(chest_cm);
+        profile.waist_cm = Number(waist_cm);
+        profile.hips_cm = Number(hips_cm);
+        profile.updated_at = now.toISOString();
+        await kv.set(`become:user_profile:${auth.telegramId}`, profile);
+      }
+    } catch (e) {
+      console.log("[MeasLog] Profile update error (non-critical):", e);
+    }
+
+    console.log(`[MeasLog] Saved entry ${entryId} for user ${auth.userId}: neck=${neck_cm} chest=${chest_cm} waist=${waist_cm} hips=${hips_cm} bf=${body_fat_percent}`);
+    return c.json({ success: true, entry });
+  } catch (err) {
+    console.log("POST /measurements-log error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- GET /measurements-log/history ----
+app.get(`${PREFIX}/measurements-log/history`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const limitParam = c.req.query("limit");
+    const limit = Math.min(Number(limitParam) || 90, 365);
+
+    const dateIndexKey = `become:measurements_idx:${auth.userId}`;
+    const dateIndex: Array<{ date: string; entryId: string }> = (await kv.get(dateIndexKey)) || [];
+
+    if (dateIndex.length === 0) {
+      return c.json({ entries: [], count: 0 });
+    }
+
+    const sliced = dateIndex.slice(0, limit);
+    const keys = sliced.map((d: any) => `become:measurements:${auth.userId}:${d.entryId}`);
+    const entries = (await kv.mget(keys)).filter((e: any) => e && e.id);
+
+    return c.json({ entries, count: entries.length });
+  } catch (err) {
+    console.log("GET /measurements-log/history error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- DELETE /measurements-log/:entryId ----
+app.delete(`${PREFIX}/measurements-log/:entryId`, async (c) => {
+  try {
+    const auth = await resolveUser(c);
+    if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    const entryId = c.req.param("entryId");
+    await kv.del(`become:measurements:${auth.userId}:${entryId}`);
+
+    const dateIndexKey = `become:measurements_idx:${auth.userId}`;
+    const dateIndex: Array<{ date: string; entryId: string }> = (await kv.get(dateIndexKey)) || [];
+    const filtered = dateIndex.filter((d: any) => d.entryId !== entryId);
+    await kv.set(dateIndexKey, filtered);
+
+    return c.json({ success: true });
+  } catch (err) {
+    console.log("DELETE /measurements-log/:entryId error:", err);
     return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
   }
 });

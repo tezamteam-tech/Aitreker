@@ -26,6 +26,7 @@ const JournalInsightsPage = React.lazy(() => import('./components/journal-insigh
 const CoachChatPage = React.lazy(() => import('./components/coach-chat').then(m => ({ default: m.CoachChatPage })));
 const NutritionCoachPage = React.lazy(() => import('./components/nutrition-coach').then(m => ({ default: m.NutritionCoachPage })));
 const WeightTrackingPage = React.lazy(() => import('./components/weight-tracking').then(m => ({ default: m.WeightTrackingPage })));
+const MeasurementsTrackingPage = React.lazy(() => import('./components/measurements-tracking').then(m => ({ default: m.MeasurementsTrackingPage })));
 const GoalsListPage = React.lazy(() => import('./components/goals-list').then(m => ({ default: m.GoalsListPage })));
 const GoalDetailPage = React.lazy(() => import('./components/goal-detail').then(m => ({ default: m.GoalDetailPage })));
 const StrategicGoalCreatePage = React.lazy(() => import('./components/strategic-goal-create').then(m => ({ default: m.StrategicGoalCreatePage })));
@@ -119,6 +120,7 @@ export const router = createBrowserRouter([
       { path: 'coach', Component: lazy(CoachChatPage) },
       { path: 'nutrition-coach', Component: lazy(NutritionCoachPage) },
       { path: 'weight', Component: lazy(WeightTrackingPage) },
+      { path: 'measurements', Component: lazy(MeasurementsTrackingPage) },
       { path: 'analytics', Component: lazy(WeeklyAnalyticsPage) },
       { path: 'goals', Component: lazy(GoalsListPage) },
       { path: 'goals/:id', Component: lazy(GoalDetailPage) },
