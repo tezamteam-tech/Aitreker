@@ -1338,8 +1338,8 @@ function CollapsibleNutritionCard({
                 </div>
               ) : null}
               {(profile.target_protein || profile.target_carbs || profile.target_fat) ? (
-                <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.05]">
-                  <span className="text-white/40" style={{ fontSize: '0.75rem' }}>{t('wp_macros_label')}</span>
+                <div className="flex items-center justify-between p-2.5 rounded-xl" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
+                  <span className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>{t('wp_macros_label')}</span>
                   <div className="flex items-center gap-2">
                     {profile.target_protein ? <span className="px-1.5 py-0.5 rounded-full bg-[#6c5ce7]/15 text-[#a29bfe]" style={{ fontSize: '0.5625rem', fontWeight: 600 }}>P {profile.target_protein}g</span> : null}
                     {profile.target_carbs ? <span className="px-1.5 py-0.5 rounded-full bg-[#fdcb6e]/15 text-[#fdcb6e]" style={{ fontSize: '0.5625rem', fontWeight: 600 }}>C {profile.target_carbs}g</span> : null}
@@ -1347,9 +1347,9 @@ function CollapsibleNutritionCard({
                   </div>
                 </div>
               ) : null}
-              <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.05]">
-                <span className="text-white/40" style={{ fontSize: '0.75rem' }}>{nutritionCtx.hasMealPlan ? t('wp_meal_plan_active') : t('wp_no_meal_plan')}</span>
-                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: nutritionCtx.hasMealPlan ? '#00cec9' : '#ffffff15' }} />
+              <div className="flex items-center justify-between p-2.5 rounded-xl" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
+                <span className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>{nutritionCtx.hasMealPlan ? t('wp_meal_plan_active') : t('wp_no_meal_plan')}</span>
+                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: nutritionCtx.hasMealPlan ? '#00cec9' : 'var(--ui-progress-bg)' }} />
               </div>
             </div>
           </motion.div>
@@ -1362,9 +1362,9 @@ function CollapsibleNutritionCard({
 // ---- Info Pill ----
 function InfoPill({ label, value, color }: { label: string; value: string; color: string }) {
   return (
-    <div className="rounded-xl bg-white/[0.03] border border-white/[0.05] p-2.5 text-center">
-      <p className="text-white/35 mb-0.5" style={{ fontSize: '0.5625rem', fontWeight: 500 }}>{label}</p>
-      <p className="text-white truncate" style={{ fontSize: '0.75rem', fontWeight: 600, color }}>{value}</p>
+    <div className="rounded-xl p-2.5 text-center" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
+      <p className="text-muted-foreground mb-0.5" style={{ fontSize: '0.5625rem', fontWeight: 500 }}>{label}</p>
+      <p className="truncate" style={{ fontSize: '0.75rem', fontWeight: 600, color }}>{value}</p>
     </div>
   );
 }
@@ -1426,16 +1426,16 @@ function WeeklySchedule({
           whileTap={{ scale: 0.9 }}
           onClick={() => goWeek(-1)}
           disabled={currentWeek === 0}
-          className="w-8 h-8 rounded-lg bg-white/[0.05] flex items-center justify-center disabled:opacity-20"
+          className="w-8 h-8 rounded-lg flex items-center justify-center disabled:opacity-20" style={{ background: 'var(--ui-button-bg)' }}
         >
-          <ChevronLeft className="w-4 h-4 text-white/60" />
+          <ChevronLeft className="w-4 h-4 text-ui-icon-secondary" />
         </motion.button>
 
         <div className="flex items-center gap-2">
           <Calendar className="w-4 h-4 text-[#a29bfe]" />
-          <span className="text-white" style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+          <span className="text-foreground" style={{ fontSize: '0.875rem', fontWeight: 600 }}>
             {t('wp_week_label')} {currentWeek + 1}
-            <span className="text-white/30 ml-1.5" style={{ fontWeight: 400 }}>
+            <span className="text-muted-foreground ml-1.5" style={{ fontWeight: 400 }}>
               / {totalWeeks}
             </span>
           </span>
@@ -1445,9 +1445,9 @@ function WeeklySchedule({
           whileTap={{ scale: 0.9 }}
           onClick={() => goWeek(1)}
           disabled={currentWeek >= totalWeeks - 1}
-          className="w-8 h-8 rounded-lg bg-white/[0.05] flex items-center justify-center disabled:opacity-20"
+          className="w-8 h-8 rounded-lg flex items-center justify-center disabled:opacity-20" style={{ background: 'var(--ui-button-bg)' }}
         >
-          <ChevronRight className="w-4 h-4 text-white/60" />
+          <ChevronRight className="w-4 h-4 text-ui-icon-secondary" />
         </motion.button>
       </div>
 
@@ -1471,18 +1471,18 @@ function WeeklySchedule({
               className={`py-2 rounded-xl text-center transition-all relative ${
                 isSelected
                   ? 'bg-gradient-to-b from-[#6c5ce7] to-[#5b4fd6] shadow-lg'
-                  : 'bg-white/[0.03] border border-white/[0.06]'
+                  : ''
               }`}
-              style={isSelected ? { boxShadow: '0 4px 16px rgba(108,92,231,0.35)' } : {}}
+              style={isSelected ? { boxShadow: '0 4px 16px rgba(108,92,231,0.35)' } : { background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}
             >
               <p
-                className={isSelected ? 'text-white/60' : 'text-white/30'}
+                className={isSelected ? 'text-white/60' : 'text-muted-foreground'}
                 style={{ fontSize: '0.5625rem', fontWeight: 500 }}
               >
                 {weekDay}
               </p>
               <p
-                className={isSelected ? 'text-white' : 'text-white/70'}
+                className={isSelected ? 'text-white' : 'text-foreground/70'}
                 style={{ fontSize: '0.9375rem', fontWeight: isSelected ? 700 : 500 }}
               >
                 {day}
@@ -1512,11 +1512,11 @@ function WeeklySchedule({
             <div
               key={i}
               className="h-1 rounded-full flex-1 transition-all"
-              style={{ backgroundColor: i === currentWeek ? '#6c5ce7' : 'rgba(255,255,255,0.06)' }}
+              style={{ backgroundColor: i === currentWeek ? '#6c5ce7' : 'var(--ui-progress-bg)' }}
             />
           ))}
           {totalWeeks > 15 && (
-            <span className="text-white/20 ml-1" style={{ fontSize: '0.5rem' }}>+{totalWeeks - 15}</span>
+            <span className="text-ui-tertiary ml-1" style={{ fontSize: '0.5rem' }}>+{totalWeeks - 15}</span>
           )}
         </div>
       )}
@@ -1570,13 +1570,14 @@ function ExerciseCard({
             className={`flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
               isCompleted
                 ? 'bg-[#00cec9]/15 border-2 border-[#00cec9]'
-                : 'bg-white/[0.04] border-2 border-white/10'
+                : 'border-2'
             }`}
+            style={!isCompleted ? { background: 'var(--ui-input-bg)', borderColor: 'var(--glass-border)' } : undefined}
           >
             {isCompleted ? (
               <CheckCircle2 className="w-5 h-5 text-[#00cec9]" />
             ) : (
-              <span className="text-white/30" style={{ fontSize: '0.75rem', fontWeight: 700 }}>{index + 1}</span>
+              <span className="text-muted-foreground" style={{ fontSize: '0.75rem', fontWeight: 700 }}>{index + 1}</span>
             )}
           </motion.button>
 
@@ -1585,17 +1586,17 @@ function ExerciseCard({
             onClick={() => { hapticFeedback('light'); setExpanded(!expanded); }}
             className="flex-1 text-left min-w-0"
           >
-            <p className={`truncate ${isCompleted ? 'text-white/40 line-through' : 'text-white'}`} style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
+            <p className={`truncate ${isCompleted ? 'text-muted-foreground line-through' : 'text-foreground'}`} style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
               {exercise.exercise_name}
             </p>
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-white/30" style={{ fontSize: '0.75rem' }}>
+              <span className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>
                 {exercise.sets} × {formatReps()}
               </span>
               {formatRest() && (
                 <>
-                  <span className="text-white/15">·</span>
-                  <span className="flex items-center gap-0.5 text-white/25" style={{ fontSize: '0.6875rem' }}>
+                  <span className="text-ui-tertiary">·</span>
+                  <span className="flex items-center gap-0.5 text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>
                     <Timer className="w-2.5 h-2.5" />
                     {formatRest()} {t('wp_rest')}
                   </span>
@@ -1606,14 +1607,14 @@ function ExerciseCard({
 
           {/* Muscle group badge */}
           <span
-            className="text-white/25 flex-shrink-0 px-2 py-1 rounded-lg bg-white/[0.03]"
-            style={{ fontSize: '0.5625rem', fontWeight: 500 }}
+            className="text-ui-tertiary flex-shrink-0 px-2 py-1 rounded-lg"
+            style={{ fontSize: '0.5625rem', fontWeight: 500, background: 'var(--glass-bg-row)' }}
           >
             {exercise.muscle_group}
           </span>
 
           <motion.div animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
-            <ChevronDown className="w-4 h-4 text-white/20" />
+            <ChevronDown className="w-4 h-4 text-ui-icon-tertiary" />
           </motion.div>
         </div>
 
@@ -1628,24 +1629,24 @@ function ExerciseCard({
               className="overflow-hidden"
             >
               <div className="px-4 pb-4 pt-0">
-                <div className="grid grid-cols-3 gap-2 p-3 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+                <div className="grid grid-cols-3 gap-2 p-3 rounded-xl" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
                   <div className="text-center">
-                    <p className="text-white/30" style={{ fontSize: '0.5625rem' }}>{t('wp_sets')}</p>
-                    <p className="text-white" style={{ fontSize: '1.125rem', fontWeight: 700 }}>{exercise.sets}</p>
+                    <p className="text-muted-foreground" style={{ fontSize: '0.5625rem' }}>{t('wp_sets')}</p>
+                    <p className="text-foreground" style={{ fontSize: '1.125rem', fontWeight: 700 }}>{exercise.sets}</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-white/30" style={{ fontSize: '0.5625rem' }}>
+                    <p className="text-muted-foreground" style={{ fontSize: '0.5625rem' }}>
                       {exercise.duration_seconds ? t('wp_duration') : t('wp_reps')}
                     </p>
-                    <p className="text-white" style={{ fontSize: '1.125rem', fontWeight: 700 }}>{formatReps()}</p>
+                    <p className="text-foreground" style={{ fontSize: '1.125rem', fontWeight: 700 }}>{formatReps()}</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-white/30" style={{ fontSize: '0.5625rem' }}>{t('wp_rest_label')}</p>
-                    <p className="text-white" style={{ fontSize: '1.125rem', fontWeight: 700 }}>{formatRest() || '—'}</p>
+                    <p className="text-muted-foreground" style={{ fontSize: '0.5625rem' }}>{t('wp_rest_label')}</p>
+                    <p className="text-foreground" style={{ fontSize: '1.125rem', fontWeight: 700 }}>{formatRest() || '—'}</p>
                   </div>
                 </div>
                 {exercise.notes && (
-                  <p className="text-white/30 mt-2 px-1" style={{ fontSize: '0.75rem', lineHeight: 1.5 }}>
+                  <p className="text-muted-foreground mt-2 px-1" style={{ fontSize: '0.75rem', lineHeight: 1.5 }}>
                     {exercise.notes}
                   </p>
                 )}
@@ -1697,16 +1698,16 @@ function GeneratingAnimation({
         </div>
       </div>
 
-      <p className="text-white mb-2" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
+      <p className="text-foreground mb-2" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
         {t('wp_building_title')}
       </p>
-      <p className="text-white/30 mb-3" style={{ fontSize: '0.875rem' }}>
+      <p className="text-muted-foreground mb-3" style={{ fontSize: '0.875rem' }}>
         {t('wp_building_desc_days', { n: planLength })} · {location === 'home'
           ? t('wp_home_workouts')
           : t('wp_gym_workouts')}
       </p>
       {planLength > 14 && (
-        <p className="text-white/20 mb-6 max-w-[260px] mx-auto" style={{ fontSize: '0.6875rem', lineHeight: 1.4 }}>
+        <p className="text-ui-tertiary mb-6 max-w-[260px] mx-auto" style={{ fontSize: '0.6875rem', lineHeight: 1.4 }}>
           {t('wp_gen_long_hint')}
         </p>
       )}
@@ -1732,7 +1733,7 @@ function GeneratingAnimation({
             key={i}
             className="w-2 h-2 rounded-full"
             animate={{
-              backgroundColor: i <= messageIndex ? '#6c5ce7' : 'rgba(255,255,255,0.08)',
+              backgroundColor: i <= messageIndex ? '#6c5ce7' : 'var(--ui-progress-bg)',
               scale: i === messageIndex ? 1.3 : 1,
             }}
             transition={{ duration: 0.3 }}
@@ -1761,7 +1762,7 @@ function HistorySheet({
   return (
     <SwipeableBottomSheet open={true} onClose={onClose} title={t('wp_my_plans')} maxHeight="70vh">
       {plans.length === 0 && (
-        <p className="text-white/30 text-center py-8" style={{ fontSize: '0.875rem' }}>
+        <p className="text-muted-foreground text-center py-8" style={{ fontSize: '0.875rem' }}>
           {t('wp_no_plans')}
         </p>
       )}
@@ -1770,12 +1771,12 @@ function HistorySheet({
         {plans.map((plan) => (
           <div
             key={plan.id}
-            className="flex items-center gap-3 p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06]"
+            className="flex items-center gap-3 p-3.5 rounded-xl" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}
           >
             <WorkoutTypeIcon type="strength" />
             <button onClick={() => onSelect(plan)} className="flex-1 text-left">
               <div className="flex items-center gap-2">
-                <p className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
+                <p className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
                   {plan.plan_length} {t('wp_days_count')}
                 </p>
                 <span
@@ -1789,7 +1790,7 @@ function HistorySheet({
                   {plan.workout_type === 'home' ? t('wp_home_short') : t('wp_gym_short')}
                 </span>
               </div>
-              <p className="text-white/30" style={{ fontSize: '0.75rem' }}>
+              <p className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>
                 {new Date(plan.created_at).toLocaleDateString(t('locale_code'), {
                   day: 'numeric',
                   month: 'short',
@@ -1808,9 +1809,9 @@ function HistorySheet({
             <motion.button
               whileTap={{ scale: 0.85 }}
               onClick={() => onDelete(plan.id)}
-              className="w-9 h-9 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center"
+              className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: 'var(--ui-button-bg)', border: '1px solid var(--ui-button-border)' }}
             >
-              <Trash2 className="w-4 h-4 text-white/30" />
+              <Trash2 className="w-4 h-4 text-ui-icon-secondary" />
             </motion.button>
           </div>
         ))}

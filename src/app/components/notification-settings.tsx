@@ -565,7 +565,7 @@ export function NotificationSettingsPage() {
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
                     isEnabled
                       ? 'bg-gradient-to-br from-amber-500/20 to-amber-600/10'
-                      : 'bg-white/[0.04]'
+                      : 'bg-[var(--ui-input-bg)]'
                   }`}>
                     {isEnabled ? (
                       <Bell className="w-6 h-6 text-amber-400" />
