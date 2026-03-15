@@ -44,7 +44,7 @@ function WeighInDayPicker({ value, onChange, t, disabled }: {
           className={`flex-1 py-1.5 rounded-lg text-center transition-all ${
             idx === value
               ? 'bg-cyan-500/25 text-cyan-300 border border-cyan-500/30'
-              : 'bg-white/[0.04] text-white/30 border border-transparent'
+              : 'bg-ui-button text-ui-text-tertiary border border-transparent'
           }`}
           style={{ fontSize: '0.6875rem', fontWeight: idx === value ? 600 : 400 }}
         >
@@ -77,25 +77,25 @@ function ToggleRow({ icon: Icon, label, description, color, enabled, disabled, o
       disabled={disabled}
       className="w-full flex items-center gap-3 py-2.5 px-1 disabled:opacity-40"
     >
-      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${enabled ? 'bg-white/[0.08]' : 'bg-white/[0.03]'}`}>
-        <Icon className={`w-4 h-4 ${enabled ? color : 'text-white/20'}`} />
+      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${enabled ? 'bg-ui-button border border-ui-button' : 'bg-glass-row'}`}>
+        <Icon className={`w-4 h-4 ${enabled ? color : 'text-ui-icon-tertiary'}`} />
       </div>
       <div className="flex-1 text-left">
-        <p className={`${enabled ? 'text-white/90' : 'text-white/40'}`} style={{ fontSize: '0.8125rem', fontWeight: 500 }}>
+        <p className={`${enabled ? 'text-foreground' : 'text-ui-text-secondary'}`} style={{ fontSize: '0.8125rem', fontWeight: 500 }}>
           {label}
         </p>
-        <p className="text-white/30" style={{ fontSize: '0.6875rem' }}>
+        <p className="text-ui-text-tertiary" style={{ fontSize: '0.6875rem' }}>
           {description}
         </p>
       </div>
       <div
         className={`w-10 h-6 rounded-full relative transition-colors duration-200 ${
-          enabled ? 'bg-[#6c5ce7]/60' : 'bg-white/10'
+          enabled ? 'bg-[#6c5ce7]/60' : 'bg-switch-background'
         }`}
       >
         <motion.div
           className={`absolute top-0.5 w-5 h-5 rounded-full ${
-            enabled ? 'bg-[#a29bfe]' : 'bg-white/30'
+            enabled ? 'bg-[#a29bfe]' : 'bg-muted'
           }`}
           animate={{ left: enabled ? '18px' : '2px' }}
           transition={{ type: 'spring', stiffness: 500, damping: 30 }}

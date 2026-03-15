@@ -131,7 +131,7 @@ export function SwipeableBottomSheet({
             {/* Drag Handle */}
             {showHandle && (
               <div className="flex justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing flex-shrink-0">
-                <div className="w-10 h-1 rounded-full bg-white/15" />
+                <div className="w-10 h-1 rounded-full bg-ui-handle" />
               </div>
             )}
 
@@ -139,7 +139,7 @@ export function SwipeableBottomSheet({
             {(title || showCloseButton) && (
               <div className="px-5 pb-2 flex items-center justify-between flex-shrink-0">
                 {title ? (
-                  <h3 className="text-white" style={{ fontSize: '1.0625rem', fontWeight: 700 }}>
+                  <h3 className="text-foreground" style={{ fontSize: '1.0625rem', fontWeight: 700 }}>
                     {title}
                   </h3>
                 ) : (
@@ -154,9 +154,9 @@ export function SwipeableBottomSheet({
                         onClose();
                       }
                     }}
-                    className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center"
+                    className="w-8 h-8 rounded-lg bg-ui-close flex items-center justify-center"
                   >
-                    <X className="w-4 h-4 text-white/50" />
+                    <X className="w-4 h-4 text-ui-icon-secondary" />
                   </motion.button>
                 )}
               </div>
