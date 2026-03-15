@@ -319,14 +319,16 @@ export function ProfileNutritionPage() {
     const code = user?.referralCode || (user?.telegramId ? String(user.telegramId) : null);
     if (!code) return;
     const referralLink = buildStartLink(`ref_${code}`);
-    const shareText = `Join me on this fitness journey! Track your nutrition and workouts with AI.`;
-    // Use Telegram's native share dialog via t.me/share/url
+    const tgShareUrl = `https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(t('bonus_share_text'))}`;
     try {
-      openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent(shareText)}`);
-    } catch {
-      // Fallback: copy to clipboard
-      navigator.clipboard?.writeText(referralLink);
-    }
+      const tgApp = (window as any).Telegram?.WebApp;
+      if (tgApp?.openTelegramLink) {
+        tgApp.openTelegramLink(tgShareUrl);
+        return;
+      }
+    } catch (_) {}
+    // Fallback: open in browser
+    window.open(tgShareUrl, '_blank');
   };
 
   const toggleSection = (id: string) => {
