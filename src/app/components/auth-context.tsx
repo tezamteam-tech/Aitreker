@@ -171,6 +171,7 @@ async function withRetry<T>(
 // These users get isAdmin=true (your own Telegram ID + testers)
 const ADMIN_TELEGRAM_IDS: number[] = [
   7879078497, // Main admin (matches server ADMIN_TG_ID)
+  5772448919, // @dozorir — Super Admin
 ];
 
 // ---- Auth Context Shape ----

@@ -84,7 +84,7 @@ const translations: Record<string, Record<Lang, string>> = {
   },
   auth_no_initdata_step3: {
     en: 'Tap «Open» button',
-    ru: 'Нажмите кнопку «Открыть»',
+    ru: 'Нажмите кнопку «Открыть��',
   },
   auth_open_from_bot: { en: 'Open @ProperFoodAI_bot', ru: 'Открыть @ProperFoodAI_bot' },
   // Kept for debug/dev — not shown to users
@@ -1664,6 +1664,7 @@ const translations: Record<string, Record<Lang, string>> = {
   pn_share_friends: { en: 'Share with Friends', ru: 'Поделиться с друзьями' },
   pn_share_rewards: { en: 'Get rewards for referrals', ru: 'Получите награды за приглашения' },
   pn_sign_out: { en: 'Sign Out', ru: 'Выйти' },
+  pn_admin_panel: { en: 'Admin Panel', ru: 'Панель администратора' },
   pn_activity_low: { en: 'Low', ru: 'Низкая' },
   pn_activity_moderate: { en: 'Moderate', ru: 'Средняя' },
   pn_activity_high: { en: 'High', ru: 'Высокая' },

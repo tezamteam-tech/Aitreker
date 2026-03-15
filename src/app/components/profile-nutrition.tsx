@@ -27,6 +27,7 @@ import {
   Flame,
   Sparkles,
   Heart,
+  Shield,
 } from 'lucide-react';
 import { GlassCard } from './glass-card';
 import { useAuth } from './auth-context';
@@ -100,7 +101,7 @@ function getBodyFatCategory(bf: number, gender: string): { key: string; color: s
 }
 
 export function ProfileNutritionPage() {
-  const { user, logout, subscriptionActive, subscriptionDaysLeft } = useAuth();
+  const { user, logout, subscriptionActive, subscriptionDaysLeft, isAdmin } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
 
@@ -630,6 +631,23 @@ export function ProfileNutritionPage() {
               <ChevronRight className="w-5 h-5 text-white/60" />
             </div>
           </motion.button>
+        )}
+
+        {/* ======== Admin Panel (admins only) ======== */}
+        {isAdmin && (
+          <button
+            onClick={() => { hapticFeedback('light'); navigate('/admin'); }}
+            className="w-full p-3.5 rounded-[18px] flex items-center gap-3"
+            style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border)' }}
+          >
+            <div className="w-9 h-9 rounded-[14px] bg-[#6c5ce7]/15 flex items-center justify-center shrink-0">
+              <Shield className="w-[18px] h-[18px] text-[#a29bfe]" />
+            </div>
+            <div className="flex-1 text-left">
+              <span className="text-foreground/90 text-sm font-medium">{t('pn_admin_panel')}</span>
+            </div>
+            <ChevronRight className="w-4 h-4 text-muted-foreground/40" />
+          </button>
         )}
 
         {/* ======== Notifications ======== */}
