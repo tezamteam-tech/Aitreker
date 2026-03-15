@@ -616,3 +616,35 @@ const translations: Record<string, Record<Lang, string>> = {
   day_sat: { en: "Sat", ru: "Сб" },
   day_sun: { en: "Sun", ru: "Вс" },
 };
+
+// ---- Translation helper ----
+
+/**
+ * Translate a key to the given language with optional parameter interpolation.
+ * Falls back to English, then to the raw key.
+ */
+export function t(key: string, lang: Lang, params?: Record<string, string | number>): string {
+  const entry = translations[key];
+  if (!entry) return key;
+  let text = entry[lang] ?? entry.en ?? key;
+  if (params) {
+    for (const [k, v] of Object.entries(params)) {
+      text = text.replace(new RegExp(`\\{${k}\\}`, "g"), String(v));
+    }
+  }
+  return text;
+}
+
+/**
+ * Look up the user's preferred language from KV store.
+ * Falls back to "en" if not found.
+ */
+export async function getUserLang(userId: string, kv: { get: (key: string) => Promise<any> }): Promise<Lang> {
+  try {
+    const user = await kv.get(`become:user:${userId}`);
+    if (user?.language) return detectLang(user.language);
+    return "en";
+  } catch {
+    return "en";
+  }
+}
