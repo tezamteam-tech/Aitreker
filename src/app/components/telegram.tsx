@@ -21,6 +21,7 @@ import {
   hapticFeedback as sdkHapticFeedback,
   viewport as sdkViewport,
   isTMA,
+  invoice as sdkInvoice,
 } from '@tma.js/sdk-react';
 import { isSdkInitialized } from '../init';
 
@@ -615,50 +616,77 @@ export function openLink(url: string): void {
 
 /**
  * Open a Telegram Stars payment invoice natively inside the Mini App.
- * Uses WebApp.openInvoice() — shows native payment bottom sheet.
- * Returns a Promise that resolves with the payment status.
+ *
+ * Strategy (3-tier):
+ *   1. @tma.js/sdk `invoice.openUrl()` — uses the SDK's postEvent bridge
+ *   2. window.Telegram.WebApp.openInvoice() — native WebApp fallback
+ *   3. Returns 'failed' if neither works (caller should send to chat)
  *
  * @param invoiceUrl - URL returned by Bot API createInvoiceLink (https://t.me/$...)
  * @returns Payment status: 'paid' | 'cancelled' | 'failed' | 'pending'
  */
-export function openInvoice(invoiceUrl: string): Promise<'paid' | 'cancelled' | 'failed' | 'pending'> {
-  return new Promise((resolve) => {
+export async function openInvoice(invoiceUrl: string): Promise<'paid' | 'cancelled' | 'failed' | 'pending'> {
+  console.log('[TG Payment] openInvoice called with URL:', invoiceUrl);
+
+  // ---- Strategy 1: @tma.js/sdk invoice singleton ----
+  if (isSdkInitialized()) {
     try {
-      const wa = getTelegramWebApp();
-      if (!wa) {
-        console.warn('[TG Payment] WebApp not available');
-        resolve('failed');
-        return;
-      }
+      // Check if the invoice feature is supported in current TG version
+      const supported = sdkInvoice.isSupported();
+      console.log('[TG Payment] SDK invoice.isSupported():', supported);
 
-      if (typeof wa.openInvoice !== 'function') {
-        console.warn('[TG Payment] openInvoice not supported in this TG version');
-        resolve('failed');
-        return;
+      if (supported) {
+        console.log('[TG Payment] Using @tma.js/sdk invoice.openUrl()');
+        const status = await sdkInvoice.openUrl(invoiceUrl);
+        console.log('[TG Payment] SDK invoice.openUrl() returned:', status);
+        // SDK returns status string: 'paid' | 'cancelled' | 'failed' | 'pending'
+        return (status as 'paid' | 'cancelled' | 'failed' | 'pending') || 'failed';
       }
-
-      console.log('[TG Payment] Opening invoice:', invoiceUrl);
-      wa.openInvoice(invoiceUrl, (status: string) => {
-        console.log('[TG Payment] Invoice callback status:', status);
-        resolve((status as 'paid' | 'cancelled' | 'failed' | 'pending') || 'failed');
-      });
-    } catch (err) {
-      console.error('[TG Payment] openInvoice error:', err);
-      resolve('failed');
+    } catch (sdkErr) {
+      console.warn('[TG Payment] SDK invoice.openUrl() failed, trying WebApp fallback:', sdkErr);
     }
-  });
+  }
+
+  // ---- Strategy 2: window.Telegram.WebApp.openInvoice() ----
+  try {
+    const wa = getTelegramWebApp();
+    if (wa && typeof wa.openInvoice === 'function') {
+      console.log('[TG Payment] Using window.Telegram.WebApp.openInvoice()');
+      return new Promise<'paid' | 'cancelled' | 'failed' | 'pending'>((resolve) => {
+        wa.openInvoice(invoiceUrl, (status: string) => {
+          console.log('[TG Payment] WebApp.openInvoice callback status:', status);
+          resolve((status as 'paid' | 'cancelled' | 'failed' | 'pending') || 'failed');
+        });
+      });
+    } else {
+      console.warn('[TG Payment] WebApp.openInvoice not available. wa exists:', !!wa, 'openInvoice type:', typeof wa?.openInvoice);
+    }
+  } catch (waErr) {
+    console.error('[TG Payment] WebApp.openInvoice error:', waErr);
+  }
+
+  // ---- Strategy 3: Not available ----
+  console.warn('[TG Payment] No invoice method available — returning failed');
+  return 'failed';
 }
 
 /**
- * Check if openInvoice is available in the current Telegram client.
+ * Check if native invoice opening is available in the current Telegram client.
+ * Checks both @tma.js/sdk and window.Telegram.WebApp.
  */
 export function isInvoiceSupported(): boolean {
+  // 1. SDK check
+  if (isSdkInitialized()) {
+    try {
+      if (sdkInvoice.isSupported()) return true;
+    } catch {}
+  }
+  // 2. WebApp fallback check
   try {
     const wa = getTelegramWebApp();
-    return typeof wa?.openInvoice === 'function';
-  } catch {
-    return false;
-  }
+    if (typeof wa?.openInvoice === 'function') return true;
+  } catch {}
+  return false;
 }
 
 // ---- Platform Detection ----

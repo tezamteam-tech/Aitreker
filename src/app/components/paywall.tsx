@@ -55,15 +55,42 @@ export function PaywallOverlay({ daysLeft, expiresAt, onSubscriptionUpdated }: P
     setPaymentStatus(null);
 
     try {
-      const res = await api.createInvoice(selectedPlan);
-      console.log('[Paywall] Invoice sent to chat:', res);
+      // 1. Get invoice link from backend
+      const res = await api.createInvoiceLink(selectedPlan);
+      console.log('[Paywall] Invoice link created:', res);
 
-      if (res.success && res.sentToChat) {
+      if (!res.success || !res.invoiceLink) {
+        throw new Error('Failed to create invoice link');
+      }
+
+      // 2. Always try native openInvoice first (3-tier: SDK → WebApp → failed)
+      const { openInvoice } = await import('./telegram');
+      const status = await openInvoice(res.invoiceLink);
+      console.log('[Paywall] openInvoice status:', status);
+
+      if (status === 'paid') {
         hapticSuccess();
-        setPaymentStatus('pending');
-        // Invoice was sent to bot chat — user needs to open it there
+        setPaymentStatus('success');
+        // Activate subscription as safety net
+        try {
+          await api.activateSubscription(selectedPlan, res.stars);
+        } catch {}
+        onSubscriptionUpdated?.();
+        setTimeout(() => window.location.reload(), 1500);
+      } else if (status === 'cancelled') {
+        setPaymentStatus(null);
+      } else if (status === 'failed') {
+        // Fallback: send invoice to chat
+        console.log('[Paywall] openInvoice returned failed, falling back to chat');
+        const fallbackRes = await api.createInvoice(selectedPlan);
+        if (fallbackRes.success && fallbackRes.sentToChat) {
+          hapticSuccess();
+          setPaymentStatus('pending');
+        } else {
+          setPaymentStatus('failed');
+        }
       } else {
-        setPaymentStatus('failed');
+        setPaymentStatus('error');
       }
     } catch (err: any) {
       console.error('[Paywall] Payment error:', err);

@@ -90,45 +90,44 @@ export function UpgradePremiumPage() {
     setPaymentStatus('idle');
 
     try {
-      // Try in-app invoice flow first (openInvoice)
-      const tgWebApp = (window as any).Telegram?.WebApp;
-      if (tgWebApp?.openInvoice) {
-        const res = await api.createInvoiceLink(selectedPlan);
-        console.log('[Upgrade] Invoice link created:', res);
+      // 1. Get invoice link from backend
+      const res = await api.createInvoiceLink(selectedPlan);
+      console.log('[Upgrade] Invoice link created:', res);
 
-        if (res.success && res.invoiceLink) {
-          // Open native Telegram payment sheet
-          tgWebApp.openInvoice(res.invoiceLink, async (status: string) => {
-            console.log('[Upgrade] openInvoice callback status:', status);
-            if (status === 'paid') {
-              hapticSuccess();
-              setPaymentStatus('success');
-              // Activate subscription on backend (safety net, webhook may have already done it)
-              try {
-                await api.activateSubscription(selectedPlan, res.stars);
-              } catch (activateErr) {
-                console.warn('[Upgrade] activateSubscription fallback error:', activateErr);
-              }
-              // Reload auth state after short delay
-              setTimeout(() => window.location.reload(), 1500);
-            } else if (status === 'cancelled') {
-              setPaymentStatus('idle');
-            } else {
-              setPaymentStatus('error');
-            }
-            setLoading(false);
-          });
-          return; // Don't setLoading(false) here — callback handles it
-        }
+      if (!res.success || !res.invoiceLink) {
+        throw new Error('Failed to create invoice link');
       }
 
-      // Fallback: send invoice to chat (for clients without openInvoice support)
-      const res = await api.createInvoice(selectedPlan);
-      console.log('[Upgrade] Invoice sent to chat:', res);
+      // 2. Always try native openInvoice first (3-tier: SDK → WebApp → failed)
+      const { openInvoice } = await import('./telegram');
+      const status = await openInvoice(res.invoiceLink);
+      console.log('[Upgrade] openInvoice status:', status);
 
-      if (res.success && res.sentToChat) {
+      if (status === 'paid') {
         hapticSuccess();
-        setPaymentStatus('pending');
+        setPaymentStatus('success');
+        // Activate subscription on backend (safety net, webhook may have already done it)
+        try {
+          await api.activateSubscription(selectedPlan, res.stars);
+        } catch (activateErr) {
+          console.warn('[Upgrade] activateSubscription fallback error:', activateErr);
+        }
+        // Reload auth state after short delay
+        setTimeout(() => window.location.reload(), 1500);
+      } else if (status === 'cancelled') {
+        setPaymentStatus('idle');
+      } else if (status === 'failed') {
+        // Fallback: send invoice to chat (for clients without openInvoice support)
+        console.log('[Upgrade] openInvoice returned failed, falling back to chat');
+        const fallbackRes = await api.createInvoice(selectedPlan);
+        console.log('[Upgrade] Invoice sent to chat:', fallbackRes);
+
+        if (fallbackRes.success && fallbackRes.sentToChat) {
+          hapticSuccess();
+          setPaymentStatus('pending');
+        } else {
+          setPaymentStatus('error');
+        }
       } else {
         setPaymentStatus('error');
       }
@@ -712,36 +711,42 @@ function PremiumDashboard() {
     setPaymentResult('idle');
 
     try {
-      const tgWebApp = (window as any).Telegram?.WebApp;
-      if (tgWebApp?.openInvoice) {
-        const res = await api.createInvoiceLink(selectedPlan);
-        if (res.success && res.invoiceLink) {
-          tgWebApp.openInvoice(res.invoiceLink, async (status: string) => {
-            if (status === 'paid') {
-              hapticSuccess();
-              setPaymentResult('success');
-              try { await api.activateSubscription(selectedPlan, res.stars); } catch {}
-              await refreshSubscription();
-              const [newStatus, newPayments] = await Promise.all([
-                api.getSubscriptionStatus(),
-                api.getPaymentHistory(),
-              ]);
-              setSubStatus(newStatus);
-              setPayments(newPayments.payments || []);
-            } else if (status === 'cancelled') {
-              setPaymentResult('idle');
-            } else {
-              setPaymentResult('error');
-            }
-            setPurchasing(false);
-          });
-          return;
-        }
+      // 1. Get invoice link from backend
+      const res = await api.createInvoiceLink(selectedPlan);
+      console.log('[PremiumDash] Invoice link created:', res);
+
+      if (!res.success || !res.invoiceLink) {
+        throw new Error('Failed to create invoice link');
       }
-      const res = await api.createInvoice(selectedPlan);
-      if (res.success && res.sentToChat) {
+
+      // 2. Always try native openInvoice first (3-tier: SDK → WebApp → failed)
+      const { openInvoice } = await import('./telegram');
+      const status = await openInvoice(res.invoiceLink);
+      console.log('[PremiumDash] openInvoice status:', status);
+
+      if (status === 'paid') {
         hapticSuccess();
-        setPaymentResult('pending');
+        setPaymentResult('success');
+        try { await api.activateSubscription(selectedPlan, res.stars); } catch {}
+        await refreshSubscription();
+        const [newStatus, newPayments] = await Promise.all([
+          api.getSubscriptionStatus(),
+          api.getPaymentHistory(),
+        ]);
+        setSubStatus(newStatus);
+        setPayments(newPayments.payments || []);
+      } else if (status === 'cancelled') {
+        setPaymentResult('idle');
+      } else if (status === 'failed') {
+        // Fallback: send invoice to chat
+        console.log('[PremiumDash] openInvoice returned failed, falling back to chat');
+        const fallbackRes = await api.createInvoice(selectedPlan);
+        if (fallbackRes.success && fallbackRes.sentToChat) {
+          hapticSuccess();
+          setPaymentResult('pending');
+        } else {
+          setPaymentResult('error');
+        }
       } else {
         setPaymentResult('error');
       }

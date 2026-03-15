@@ -204,34 +204,39 @@ export function WalletPage() {
         throw new Error('Failed to create invoice link');
       }
 
-      // 2. Try native openInvoice — opens Telegram payment bottom sheet
-      if (isInvoiceSupported()) {
-        const status = await openInvoice(res.invoiceLink);
-        console.log('[Wallet] openInvoice status:', status);
+      // 2. Always try native openInvoice first (3-tier: SDK → WebApp → failed)
+      const status = await openInvoice(res.invoiceLink);
+      console.log('[Wallet] openInvoice status:', status);
 
-        if (status === 'paid') {
-          hapticSuccess();
-          setTopupStatus('paid');
-          // Refresh wallet after short delay (webhook credits balance)
-          setTimeout(() => refreshWallet(), 1500);
-        } else if (status === 'cancelled') {
-          // User cancelled — just reset
-          setTopupStatus(null);
-        } else {
+      if (status === 'paid') {
+        hapticSuccess();
+        setTopupStatus('paid');
+        // Refresh wallet after short delay (webhook credits balance)
+        setTimeout(() => refreshWallet(), 1500);
+      } else if (status === 'cancelled') {
+        // User cancelled — just reset
+        setTopupStatus(null);
+      } else if (status === 'failed') {
+        // 3. Fallback: openInvoice not available → send invoice to bot chat
+        console.log('[Wallet] openInvoice returned failed, falling back to chat invoice');
+        try {
+          const fallbackRes = await api.topupStars(amount);
+          if (fallbackRes.success) {
+            hapticSuccess();
+            setTopupStatus('sent');
+          } else {
+            hapticError();
+            setTopupStatus('failed');
+          }
+        } catch (fallbackErr) {
+          console.error('[Wallet] Chat fallback also failed:', fallbackErr);
           hapticError();
           setTopupStatus('failed');
         }
       } else {
-        // 3. Fallback: send invoice to bot chat (older TG clients)
-        console.log('[Wallet] openInvoice not supported, falling back to chat invoice');
-        const fallbackRes = await api.topupStars(amount);
-        if (fallbackRes.success) {
-          hapticSuccess();
-          setTopupStatus('sent');
-        } else {
-          hapticError();
-          setTopupStatus('failed');
-        }
+        // pending or unknown
+        hapticError();
+        setTopupStatus('failed');
       }
     } catch (err) {
       console.error('[Wallet] Stars top-up error:', err);
@@ -286,40 +291,44 @@ export function WalletPage() {
         throw new Error('Failed to create subscription invoice link');
       }
 
-      // 2. Try native openInvoice
-      if (isInvoiceSupported()) {
-        const status = await openInvoice(res.invoiceLink);
-        console.log('[Wallet] subscription openInvoice status:', status);
+      // 2. Always try native openInvoice first (3-tier: SDK → WebApp → failed)
+      const status = await openInvoice(res.invoiceLink);
+      console.log('[Wallet] subscription openInvoice status:', status);
 
-        if (status === 'paid') {
-          hapticSuccess();
-          setSubStatus('paid');
-          // Activate subscription as safety net (webhook may have already done it)
-          try {
-            await api.activateSubscription(selectedPlan, res.stars);
-          } catch (activateErr) {
-            console.warn('[Wallet] activateSubscription fallback error:', activateErr);
+      if (status === 'paid') {
+        hapticSuccess();
+        setSubStatus('paid');
+        // Activate subscription as safety net (webhook may have already done it)
+        try {
+          await api.activateSubscription(selectedPlan, res.stars);
+        } catch (activateErr) {
+          console.warn('[Wallet] activateSubscription fallback error:', activateErr);
+        }
+        // Refresh auth
+        await refreshSubscription();
+        setTimeout(() => refreshWallet(), 1000);
+      } else if (status === 'cancelled') {
+        setSubStatus(null);
+      } else if (status === 'failed') {
+        // 3. Fallback: openInvoice not available → send invoice to bot chat
+        console.log('[Wallet] subscription openInvoice returned failed, falling back to chat');
+        try {
+          const fallbackRes = await api.createInvoice(selectedPlan);
+          if (fallbackRes.success) {
+            hapticSuccess();
+            setSubStatus('sent');
+          } else {
+            hapticError();
+            setSubStatus('failed');
           }
-          // Refresh auth
-          await refreshSubscription();
-          setTimeout(() => refreshWallet(), 1000);
-        } else if (status === 'cancelled') {
-          setSubStatus(null);
-        } else {
+        } catch (fallbackErr) {
+          console.error('[Wallet] Subscription chat fallback also failed:', fallbackErr);
           hapticError();
           setSubStatus('failed');
         }
       } else {
-        // 3. Fallback: send invoice to chat
-        console.log('[Wallet] openInvoice not supported, falling back to chat invoice');
-        const fallbackRes = await api.createInvoice(selectedPlan);
-        if (fallbackRes.success) {
-          hapticSuccess();
-          setSubStatus('sent');
-        } else {
-          hapticError();
-          setSubStatus('failed');
-        }
+        hapticError();
+        setSubStatus('failed');
       }
     } catch (err) {
       console.error('[Wallet] Direct Stars purchase error:', err);
