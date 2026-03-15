@@ -289,7 +289,7 @@ export function ReferralsPage() {
               </div>
 
               {/* Referral link */}
-              <div className="p-3 rounded-xl bg-ui-button" style={{ border: '1px solid var(--glass-border)' }}>
+              <div className="p-3 rounded-xl bg-ui-button border border-[var(--glass-border)]" style={{ border: '1px solid var(--glass-border)' }}>
                 <p className="text-ui-icon-primary break-all font-mono" style={{ fontSize: '0.75rem', lineHeight: 1.6 }}>
                   {referralLink || t('ref_loading')}
                 </p>
@@ -388,7 +388,7 @@ export function ReferralsPage() {
               </div>
 
               {/* Milestone progress */}
-              <div className="mt-4 p-3 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+              <div className="mt-4 p-3 rounded-xl bg-[var(--glass-bg-card)] border border-[var(--glass-border-subtle)]">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-ui-secondary" style={{ fontSize: '0.6875rem' }}>
                     {t('ref_next_milestone')}
@@ -715,7 +715,7 @@ function LeaderboardSection({ data, loading, currentUserId }: { data: Leaderboar
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: entry.rank * 0.03 }}
                 className={`flex items-center gap-2.5 p-2.5 rounded-xl transition-all ${
-                  isMe ? 'bg-[#6c5ce7]/10 border border-[#6c5ce7]/20' : 'bg-white/[0.02]'
+                  isMe ? 'bg-[#6c5ce7]/10 border border-[#6c5ce7]/20' : 'bg-[var(--glass-bg-row)]'
                 }`}
               >
                 {/* Rank */}
@@ -752,7 +752,7 @@ function LeaderboardSection({ data, loading, currentUserId }: { data: Leaderboar
 
                 {/* Name & Stats */}
                 <div className="flex-1 min-w-0">
-                  <p className={`truncate ${isMe ? 'text-[#a29bfe]' : 'text-white/80'}`} style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
+                  <p className={`truncate ${isMe ? 'text-[#a29bfe]' : 'text-foreground/80'}`} style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
                     {entry.first_name}
                     {isMe && (
                       <span className="text-[#a29bfe]/50 ml-1" style={{ fontSize: '0.625rem' }}>
@@ -760,7 +760,7 @@ function LeaderboardSection({ data, loading, currentUserId }: { data: Leaderboar
                       </span>
                     )}
                   </p>
-                  <p className="text-white/25" style={{ fontSize: '0.625rem' }}>
+                  <p className="text-ui-tertiary" style={{ fontSize: '0.625rem' }}>
                     {entry.referral_count} {t('ref_friends_count')}
                     {entry.bonus_days_earned > 0 && ` · +${entry.bonus_days_earned}d`}
                   </p>
@@ -769,7 +769,7 @@ function LeaderboardSection({ data, loading, currentUserId }: { data: Leaderboar
                 {/* Score */}
                 <div className="flex-shrink-0 text-right">
                   <p
-                    className={entry.rank <= 3 ? '' : 'text-white/50'}
+                    className={entry.rank <= 3 ? '' : 'text-muted-foreground'}
                     style={{
                       fontSize: '0.875rem',
                       fontWeight: 800,
@@ -786,7 +786,7 @@ function LeaderboardSection({ data, loading, currentUserId }: { data: Leaderboar
 
         {/* My rank if not in top 10 */}
         {data.my_stats && data.my_rank && data.my_rank > 10 && (
-          <div className="mt-3 pt-3 border-t border-white/[0.05]">
+          <div className="mt-3 pt-3 border-t border-[var(--glass-border-subtle)]">
             <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-[#6c5ce7]/10 border border-[#6c5ce7]/20">
               <div className="w-8 h-8 rounded-lg bg-white/[0.04] flex items-center justify-center flex-shrink-0">
                 <span className="text-white/40" style={{ fontSize: '0.6875rem', fontWeight: 700 }}>
@@ -805,11 +805,11 @@ function LeaderboardSection({ data, loading, currentUserId }: { data: Leaderboar
                     ({t('ref_you')})
                   </span>
                 </p>
-                <p className="text-white/25" style={{ fontSize: '0.625rem' }}>
+                <p className="text-ui-tertiary" style={{ fontSize: '0.625rem' }}>
                   {data.my_stats.referral_count} {t('ref_friends_count')}
                 </p>
               </div>
-              <p className="text-white/50 flex-shrink-0" style={{ fontSize: '0.875rem', fontWeight: 800 }}>
+              <p className="text-muted-foreground flex-shrink-0" style={{ fontSize: '0.875rem', fontWeight: 800 }}>
                 {data.my_stats.referral_count}
               </p>
             </div>

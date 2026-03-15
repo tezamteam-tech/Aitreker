@@ -719,9 +719,9 @@ function AddFoodSheet({
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={onClose}
-              className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center"
+              className="w-8 h-8 rounded-lg bg-ui-button flex items-center justify-center"
             >
-              <X className="w-4 h-4 text-white/50" />
+              <X className="w-4 h-4 text-muted-foreground" />
             </motion.button>
           </div>
 
@@ -737,15 +737,15 @@ function AddFoodSheet({
                   className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl whitespace-nowrap transition-all ${
                     active
                       ? 'bg-[#6c5ce7]/15 border border-[#6c5ce7]/30'
-                      : 'bg-white/[0.03] border border-white/[0.06]'
+                      : 'bg-[var(--glass-bg-card)] border border-[var(--glass-border)]'
                   }`}
                 >
                   <cfg.icon
                     className="w-3.5 h-3.5"
-                    style={{ color: active ? cfg.color : 'rgba(255,255,255,0.3)' }}
+                    style={{ color: active ? cfg.color : 'var(--color-muted-foreground)' }}
                   />
                   <span
-                    className={active ? 'text-white' : 'text-white/40'}
+                    className={active ? 'text-foreground' : 'text-muted-foreground'}
                     style={{ fontSize: '0.8125rem', fontWeight: 500 }}
                   >
                     {t(cfg.key)}
@@ -798,7 +798,7 @@ function AddFoodSheet({
                     <p className={`text-xs mt-2 ${aiMessage.type === 'success' ? 'text-[#00cec9]' : 'text-[#ff6b6b]'}`}>
                       {aiMessage.type === 'success' ? '✓ ' : '⚠ '}{aiMessage.text}
                       {aiPortion && aiMessage.type === 'success' && (
-                        <span className="text-white/40 ml-1">({t('cal_ai_portion')}: {aiPortion})</span>
+                        <span className="text-muted-foreground ml-1">({t('cal_ai_portion')}: {aiPortion})</span>
                       )}
                     </p>
                   </motion.div>
@@ -932,9 +932,9 @@ function EditFoodSheet({
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={onClose}
-              className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center"
+              className="w-8 h-8 rounded-lg bg-ui-button flex items-center justify-center"
             >
-              <X className="w-4 h-4 text-white/50" />
+              <X className="w-4 h-4 text-muted-foreground" />
             </motion.button>
           </div>
 
@@ -1014,7 +1014,7 @@ const SheetInput = React.forwardRef<
   return (
     <div>
       <label
-        className="block text-white/40 mb-1.5"
+        className="block text-muted-foreground mb-1.5"
         style={{ fontSize: '0.75rem', fontWeight: 500 }}
       >
         {label}
@@ -1028,12 +1028,12 @@ const SheetInput = React.forwardRef<
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="w-full h-11 rounded-xl bg-white/[0.04] border border-white/[0.08] px-3.5 text-white placeholder:text-white/20 focus:border-[#6c5ce7]/40 focus:outline-none transition-colors"
+          className="w-full h-11 rounded-xl bg-ui-button border border-[var(--glass-border)] px-3.5 text-foreground placeholder:text-ui-tertiary focus:border-[#6c5ce7]/40 focus:outline-none transition-colors"
           style={{ fontSize: '0.9375rem' }}
         />
         {suffix && (
           <span
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/25 pointer-events-none"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-ui-tertiary pointer-events-none"
             style={{ fontSize: '0.8125rem' }}
           >
             {suffix}

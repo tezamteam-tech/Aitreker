@@ -313,10 +313,10 @@ export function WalletPage() {
         return {
           label: txType,
           sign: '' as const,
-          iconBg: 'bg-white/10',
-          iconColor: 'text-white/40',
+          iconBg: 'bg-foreground/10',
+          iconColor: 'text-muted-foreground',
           icon: <Receipt className="w-4 h-4" />,
-          amountColor: 'text-white/40',
+          amountColor: 'text-muted-foreground',
         };
     }
   };
@@ -344,7 +344,7 @@ export function WalletPage() {
       <p className="text-green-400" style={{ fontSize: '0.9375rem', fontWeight: 700 }}>
         {t('wl_sent_to_chat')}
       </p>
-      <p className="text-white/40 mt-1.5" style={{ fontSize: '0.75rem' }}>
+      <p className="text-muted-foreground mt-1.5" style={{ fontSize: '0.75rem' }}>
         {type === 'topup'
           ? (t('wl_topup_chat_hint'))
           : (t('wl_subscription_chat_hint'))}
@@ -393,7 +393,7 @@ export function WalletPage() {
             <div className="absolute -top-4 -right-4 w-16 h-16 rounded-full bg-yellow-400/10 blur-[20px] pointer-events-none" />
             <div className="flex items-center gap-2 mb-1.5">
               <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-              <span className="text-white/40" style={{ fontSize: '0.6875rem', fontWeight: 600 }}>Stars</span>
+              <span className="text-muted-foreground" style={{ fontSize: '0.6875rem', fontWeight: 600 }}>Stars</span>
             </div>
             <AnimatedCounter
               value={wallet.starsBalance}
@@ -419,7 +419,7 @@ export function WalletPage() {
             <div className="absolute -top-4 -right-4 w-16 h-16 rounded-full bg-blue-400/10 blur-[20px] pointer-events-none" />
             <div className="flex items-center gap-2 mb-1.5">
               <Gem className="w-4 h-4 text-blue-400" />
-              <span className="text-white/40" style={{ fontSize: '0.6875rem', fontWeight: 600 }}>TON</span>
+              <span className="text-muted-foreground" style={{ fontSize: '0.6875rem', fontWeight: 600 }}>TON</span>
             </div>
             <AnimatedCounter
               value={wallet.tonBalance}
@@ -544,7 +544,7 @@ export function WalletPage() {
                               ? topupCurrency === 'stars'
                                 ? 'bg-yellow-400/15 border border-yellow-400/30 text-yellow-400'
                                 : 'bg-blue-400/15 border border-blue-400/30 text-blue-400'
-                              : 'bg-white/[0.04] border border-transparent text-white/50'
+                              : 'bg-ui-button border border-transparent text-muted-foreground'
                           }`}
                           style={{ fontSize: '0.875rem', fontWeight: 600 }}
                         >
@@ -602,7 +602,7 @@ export function WalletPage() {
                       )}
                     </button>
 
-                    <div className="mt-3 flex items-center justify-center gap-1.5 text-white/15" style={{ fontSize: '0.6875rem' }}>
+                    <div className="mt-3 flex items-center justify-center gap-1.5 text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>
                       <MessageCircle className="w-3 h-3" />
                       {topupCurrency === 'stars'
                         ? (t('wl_invoice_chat'))
@@ -660,7 +660,7 @@ export function WalletPage() {
                             className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all ${
                               isSelected
                                 ? 'bg-[#6c5ce7]/15 border border-[#6c5ce7]/30'
-                                : 'bg-white/[0.03] border border-transparent'
+                                : 'bg-[var(--glass-bg-card)] border border-transparent'
                             }`}
                           >
                             <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
@@ -680,7 +680,7 @@ export function WalletPage() {
                               <div className="text-white/70" style={{ fontSize: '0.8125rem', fontWeight: 700 }}>
                                 {plan.stars} ★
                               </div>
-                              <div className="text-white/30" style={{ fontSize: '0.625rem' }}>
+                              <div className="text-ui-tertiary" style={{ fontSize: '0.625rem' }}>
                                 {plan.tonPrice} TON
                               </div>
                             </div>
@@ -690,7 +690,7 @@ export function WalletPage() {
                     </div>
 
                     {/* Payment method */}
-                    <p className="text-white/30 mb-2" style={{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.04em' }}>
+                    <p className="text-ui-tertiary mb-2" style={{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.04em' }}>
                       {t('wl_payment_method')}
                     </p>
 
@@ -711,7 +711,7 @@ export function WalletPage() {
                         <Star className="w-4 h-4 text-yellow-400 fill-yellow-400 shrink-0" />
                         <div className="flex-1 text-left">
                           <span className="text-white" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>Stars</span>
-                          <span className={`ml-2 ${canAffordStars ? 'text-green-400' : 'text-white/25'}`} style={{ fontSize: '0.6875rem' }}>
+                          <span className={`ml-2 ${canAffordStars ? 'text-green-400' : 'text-ui-tertiary'}`} style={{ fontSize: '0.6875rem' }}>
                             ({wallet.starsBalance} ★)
                           </span>
                         </div>
@@ -738,7 +738,7 @@ export function WalletPage() {
                         <Gem className="w-4 h-4 text-blue-400 shrink-0" />
                         <div className="flex-1 text-left">
                           <span className="text-white" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>TON</span>
-                          <span className={`ml-2 ${canAffordTon ? 'text-green-400' : 'text-white/25'}`} style={{ fontSize: '0.6875rem' }}>
+                          <span className={`ml-2 ${canAffordTon ? 'text-green-400' : 'text-ui-tertiary'}`} style={{ fontSize: '0.6875rem' }}>
                             ({wallet.tonBalance} TON)
                           </span>
                         </div>
@@ -826,7 +826,7 @@ export function WalletPage() {
                           ) : (
                             <button
                               onClick={() => { setActiveTab('topup'); setTopupCurrency('ton'); setPurchaseStatus(null); }}
-                              className="w-full py-3.5 rounded-xl text-white/60 font-semibold flex items-center justify-center gap-2 bg-white/[0.06]"
+                              className="w-full py-3.5 rounded-xl text-muted-foreground font-semibold flex items-center justify-center gap-2 bg-ui-button"
                               style={{ fontSize: '0.9375rem' }}
                             >
                               <Plus className="w-4 h-4" />
@@ -835,7 +835,7 @@ export function WalletPage() {
                           )}
 
                           {!canAfford && payMethod === 'stars' && (
-                            <p className="text-center text-white/20 mt-2" style={{ fontSize: '0.6875rem' }}>
+                            <p className="text-center text-ui-tertiary mt-2" style={{ fontSize: '0.6875rem' }}>
                               {t('wl_invoice_chat')}
                             </p>
                           )}
@@ -843,7 +843,7 @@ export function WalletPage() {
                       );
                     })()}
 
-                    <div className="mt-3 flex items-center justify-center gap-1.5 text-white/15" style={{ fontSize: '0.6875rem' }}>
+                    <div className="mt-3 flex items-center justify-center gap-1.5 text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>
                       <Shield className="w-3 h-3" />
                       {t('wl_secure_payment')}
                     </div>
@@ -878,7 +878,7 @@ export function WalletPage() {
                       ? (t('wl_premium_active'))
                       : (t('wl_free_plan'))}
                   </p>
-                  <p className={`mt-0.5 ${subscriptionActive ? 'text-white/30' : 'text-amber-400/70'}`} style={{ fontSize: '0.75rem' }}>
+                  <p className={`mt-0.5 ${subscriptionActive ? 'text-ui-tertiary' : 'text-amber-400/70'}`} style={{ fontSize: '0.75rem' }}>
                     {subscriptionActive
                       ? (t('wl_days_left', { days: subscriptionDaysLeft }))
                       : (t('wl_upgrade_ai'))}
@@ -889,12 +889,12 @@ export function WalletPage() {
                     <span className={`font-bold ${subscriptionDaysLeft <= 5 ? 'text-amber-400' : 'text-[#a29bfe]'}`} style={{ fontSize: '1.5rem', fontWeight: 700 }}>
                       {subscriptionDaysLeft}
                     </span>
-                    <p className="text-white/20" style={{ fontSize: '0.625rem' }}>{t('wl_days')}</p>
+                    <p className="text-ui-tertiary" style={{ fontSize: '0.625rem' }}>{t('wl_days')}</p>
                   </div>
                 )}
               </div>
               {subscriptionActive && subscriptionDaysLeft > 0 && (
-                <div className="h-1 rounded-full bg-white/[0.06] overflow-hidden mt-3">
+                <div className="h-1 rounded-full bg-ui-progress overflow-hidden mt-3">
                   <div
                     className={`h-full rounded-full transition-all duration-500 ${subscriptionDaysLeft <= 5 ? 'bg-amber-400' : 'bg-[#6c5ce7]'}`}
                     style={{ width: `${Math.min(100, (subscriptionDaysLeft / 30) * 100)}%` }}
@@ -926,11 +926,11 @@ export function WalletPage() {
                   <p className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
                     {t('wl_free_days')}
                   </p>
-                  <p className="text-white/30 mt-0.5" style={{ fontSize: '0.75rem' }}>
+                  <p className="text-ui-tertiary mt-0.5" style={{ fontSize: '0.75rem' }}>
                     {t('wl_bonuses_referrals')}
                   </p>
                 </div>
-                <ChevronRight className="w-5 h-5 text-white/20 shrink-0" />
+                <ChevronRight className="w-5 h-5 text-ui-tertiary shrink-0" />
               </div>
             </GlassCard>
           </motion.div>
@@ -944,8 +944,8 @@ export function WalletPage() {
         >
           <div className="flex items-center justify-between mb-3 px-1">
             <div className="flex items-center gap-2">
-              <Receipt className="w-4 h-4 text-white/30" />
-              <span className="text-white/40" style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.05em' }}>
+              <Receipt className="w-4 h-4 text-ui-tertiary" />
+              <span className="text-muted-foreground" style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.05em' }}>
                 {t('wl_transaction_history')}
               </span>
             </div>
@@ -960,8 +960,8 @@ export function WalletPage() {
                   onClick={() => { hapticFeedback('light'); setHistoryFilter(f); }}
                   className={`px-3 py-1.5 rounded-full transition-all ${
                     historyFilter === f
-                      ? 'bg-white/15 text-white'
-                      : 'bg-white/5 text-white/35'
+                      ? 'bg-foreground/15 text-foreground'
+                      : 'bg-foreground/5 text-muted-foreground'
                   }`}
                   style={{ fontSize: '0.6875rem', fontWeight: 600 }}
                 >
@@ -973,7 +973,7 @@ export function WalletPage() {
 
           {loadingPayments ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-5 h-5 text-white/20 animate-spin" />
+              <Loader2 className="w-5 h-5 text-ui-tertiary animate-spin" />
             </div>
           ) : (() => {
             // Build combined list
@@ -1010,7 +1010,7 @@ export function WalletPage() {
                   iconBg: isTopup ? 'bg-blue-500/15' : 'bg-emerald-500/15',
                   iconColor: isTopup ? 'text-blue-400' : 'text-emerald-400',
                   icon: isTopup ? <ArrowDownToLine className="w-4 h-4" /> : <Crown className="w-4 h-4" />,
-                  amountColor: isTopup ? 'text-blue-400' : 'text-white/60',
+                  amountColor: isTopup ? 'text-blue-400' : 'text-muted-foreground',
                 });
               }
             }
@@ -1045,11 +1045,11 @@ export function WalletPage() {
             if (items.length === 0) {
               return (
                 <GlassCard padding="md" className="text-center">
-                  <Receipt className="w-8 h-8 text-white/10 mx-auto mb-3" />
-                  <p className="text-white/30" style={{ fontSize: '0.875rem' }}>
+                  <Receipt className="w-8 h-8 text-foreground/10 mx-auto mb-3" />
+                  <p className="text-ui-tertiary" style={{ fontSize: '0.875rem' }}>
                     {t('tx_no_transactions')}
                   </p>
-                  <p className="text-white/15 mt-1" style={{ fontSize: '0.75rem' }}>
+                  <p className="text-ui-tertiary mt-1" style={{ fontSize: '0.75rem' }}>
                     {t('tx_no_transactions_hint')}
                   </p>
                 </GlassCard>
@@ -1069,11 +1069,11 @@ export function WalletPage() {
                           {item.label}
                         </p>
                         {item.subtitle ? (
-                          <p className="text-white/20 truncate mt-0.5" style={{ fontSize: '0.6875rem' }}>
+                          <p className="text-ui-tertiary truncate mt-0.5" style={{ fontSize: '0.6875rem' }}>
                             {item.subtitle}
                           </p>
                         ) : null}
-                        <p className="text-white/25 mt-0.5" style={{ fontSize: '0.6875rem' }}>
+                        <p className="text-ui-tertiary mt-0.5" style={{ fontSize: '0.6875rem' }}>
                           {formatDate(item.createdAt)}
                         </p>
                       </div>

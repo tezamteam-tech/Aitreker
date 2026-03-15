@@ -267,7 +267,7 @@ export function ScanFoodPage() {
                   <motion.div
                     animate={{ scale: [1, 1.05, 1] }}
                     transition={{ duration: 2, repeat: Infinity }}
-                    className="w-32 h-32 rounded-[2rem] bg-white/[0.04] border-2 border-dashed border-white/[0.12] flex items-center justify-center mb-6"
+                    className="w-32 h-32 rounded-[2rem] bg-ui-button border-2 border-dashed border-[var(--glass-border)] flex items-center justify-center mb-6"
                   >
                     <Camera className="w-12 h-12 text-ui-icon-tertiary" />
                   </motion.div>
@@ -301,10 +301,10 @@ export function ScanFoodPage() {
                     <motion.button
                       whileTap={{ scale: 0.97 }}
                       onClick={openGallery}
-                      className="w-full h-14 rounded-2xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center gap-2.5"
+                      className="w-full h-14 rounded-2xl bg-ui-button border border-[var(--glass-border)] flex items-center justify-center gap-2.5"
                     >
-                      <ImageIcon className="w-5 h-5 text-white/60" />
-                      <span className="text-white/70" style={{ fontSize: '1.0625rem', fontWeight: 600 }}>
+                      <ImageIcon className="w-5 h-5 text-muted-foreground" />
+                      <span className="text-foreground/70" style={{ fontSize: '1.0625rem', fontWeight: 600 }}>
                         {t('scan_choose_gallery')}
                       </span>
                     </motion.button>
@@ -312,7 +312,7 @@ export function ScanFoodPage() {
                 </div>
               ) : (
                 <div className="flex flex-col">
-                  <div className="relative rounded-2xl overflow-hidden border border-white/[0.08] mb-4 flex-shrink-0">
+                  <div className="relative rounded-2xl overflow-hidden border border-[var(--glass-border)] mb-4 flex-shrink-0">
                     <img
                       src={imageData}
                       alt="Captured food"
@@ -343,10 +343,10 @@ export function ScanFoodPage() {
                     <motion.button
                       whileTap={{ scale: 0.97 }}
                       onClick={resetCapture}
-                      className="w-full h-12 rounded-2xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center gap-2"
+                      className="w-full h-12 rounded-2xl bg-ui-button border border-[var(--glass-border)] flex items-center justify-center gap-2"
                     >
-                      <RotateCcw className="w-4 h-4 text-white/50" />
-                      <span className="text-white/60" style={{ fontSize: '0.9375rem', fontWeight: 500 }}>
+                      <RotateCcw className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-muted-foreground" style={{ fontSize: '0.9375rem', fontWeight: 500 }}>
                         {t('scan_retake')}
                       </span>
                     </motion.button>
@@ -366,7 +366,7 @@ export function ScanFoodPage() {
               className="flex-1 flex flex-col items-center justify-center"
             >
               {imageData && (
-                <div className="w-28 h-28 rounded-2xl overflow-hidden border border-white/[0.08] mb-6 shadow-lg">
+                <div className="w-28 h-28 rounded-2xl overflow-hidden border border-[var(--glass-border)] mb-6 shadow-lg">
                   <img src={imageData} alt="Analyzing" className="w-full h-full object-cover" />
                 </div>
               )}
@@ -375,12 +375,12 @@ export function ScanFoodPage() {
                 <motion.div
                   animate={{ rotate: 360 }}
                   transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
-                  className="absolute inset-0 rounded-full border-2 border-white/[0.06] border-t-[#6c5ce7]"
+                  className="absolute inset-0 rounded-full border-2 border-[var(--glass-border-subtle)] border-t-[#6c5ce7]"
                 />
                 <motion.div
                   animate={{ rotate: -360 }}
                   transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-                  className="absolute inset-2 rounded-full border-2 border-white/[0.04] border-b-[#a29bfe]"
+                  className="absolute inset-2 rounded-full border-2 border-[var(--glass-border-subtle)] border-b-[#a29bfe]"
                 />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <Sparkles className="w-5 h-5 text-[#a29bfe]" />
@@ -390,7 +390,7 @@ export function ScanFoodPage() {
               <h2 className="text-white mb-2" style={{ fontSize: '1.25rem', fontWeight: 700 }}>
                 {t('scan_analyzing')}
               </h2>
-              <p className="text-white/40 text-center max-w-[240px]" style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
+              <p className="text-muted-foreground text-center max-w-[240px]" style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
                 {t('scan_analyzing_desc')}
               </p>
 
@@ -417,7 +417,7 @@ export function ScanFoodPage() {
               className="flex-1 flex flex-col"
             >
               {/* Food image + name */}
-              <div className="relative rounded-2xl overflow-hidden border border-white/[0.08] mb-4 flex-shrink-0">
+              <div className="relative rounded-2xl overflow-hidden border border-[var(--glass-border)] mb-4 flex-shrink-0">
                 {imageData && (
                   <img src={imageData} alt={result.food_name} className="w-full aspect-[16/10] object-cover" />
                 )}
@@ -429,7 +429,7 @@ export function ScanFoodPage() {
                     </p>
                     <div className="flex items-center gap-1.5">
                       <Sparkles className="w-3.5 h-3.5 text-[#a29bfe]" />
-                      <span className="text-white/50" style={{ fontSize: '0.75rem' }}>
+                      <span className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>
                         {t('scan_ai_recognized')}
                       </span>
                     </div>
@@ -448,7 +448,7 @@ export function ScanFoodPage() {
                       <p className="text-white" style={{ fontSize: '2rem', fontWeight: 700, lineHeight: 1 }}>
                         {result.estimated_calories}
                       </p>
-                      <p className="text-white/40" style={{ fontSize: '0.8125rem' }}>
+                      <p className="text-muted-foreground" style={{ fontSize: '0.8125rem' }}>
                         {t('scan_calories_unit')}
                       </p>
                     </div>
@@ -464,7 +464,7 @@ export function ScanFoodPage() {
 
               {/* Meal type selector */}
               <div className="mb-4">
-                <p className="text-white/40 mb-2" style={{ fontSize: '0.8125rem', fontWeight: 500 }}>
+                <p className="text-muted-foreground mb-2" style={{ fontSize: '0.8125rem', fontWeight: 500 }}>
                   {t('scan_meal_type')}
                 </p>
                 <div className="relative">
@@ -474,18 +474,18 @@ export function ScanFoodPage() {
                       hapticFeedback('light');
                       setShowMealPicker(!showMealPicker);
                     }}
-                    className="w-full h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] px-4 flex items-center justify-between"
+                    className="w-full h-12 rounded-xl bg-ui-button border border-[var(--glass-border)] px-4 flex items-center justify-between"
                   >
                     <div className="flex items-center gap-2.5">
                       <span style={{ fontSize: '1.125rem' }}>
                         {MEAL_EMOJIS[selectedMeal]}
                       </span>
-                      <span className="text-white" style={{ fontSize: '0.9375rem', fontWeight: 500 }}>
+                      <span className="text-foreground" style={{ fontSize: '0.9375rem', fontWeight: 500 }}>
                         {t(MEAL_KEYS[selectedMeal])}
                       </span>
                     </div>
                     <ChevronDown
-                      className={`w-4 h-4 text-white/40 transition-transform ${showMealPicker ? 'rotate-180' : ''}`}
+                      className={`w-4 h-4 text-muted-foreground transition-transform ${showMealPicker ? 'rotate-180' : ''}`}
                     />
                   </motion.button>
 
@@ -495,7 +495,7 @@ export function ScanFoodPage() {
                         initial={{ opacity: 0, y: -5, scaleY: 0.95 }}
                         animate={{ opacity: 1, y: 0, scaleY: 1 }}
                         exit={{ opacity: 0, y: -5, scaleY: 0.95 }}
-                        className="absolute top-full mt-1 left-0 right-0 z-20 rounded-xl bg-[#1a1a2e] border border-white/[0.1] overflow-hidden shadow-xl"
+                        className="absolute top-full mt-1 left-0 right-0 z-20 rounded-xl bg-[var(--glass-bg-dropdown)] border border-[var(--glass-border)] overflow-hidden shadow-xl"
                         style={{ transformOrigin: 'top' }}
                       >
                         {MEAL_IDS.map((opt) => (
@@ -509,12 +509,12 @@ export function ScanFoodPage() {
                             className={`w-full px-4 py-3 flex items-center gap-2.5 transition-colors ${
                               selectedMeal === opt
                                 ? 'bg-[#6c5ce7]/15'
-                                : 'hover:bg-white/[0.04] active:bg-white/[0.06]'
+                                : 'hover:bg-[var(--ui-button-active)] active:bg-[var(--ui-button-active)]'
                             }`}
                           >
                             <span style={{ fontSize: '1rem' }}>{MEAL_EMOJIS[opt]}</span>
                             <span
-                              className={selectedMeal === opt ? 'text-white' : 'text-white/60'}
+                              className={selectedMeal === opt ? 'text-foreground' : 'text-muted-foreground'}
                               style={{ fontSize: '0.9375rem', fontWeight: 500 }}
                             >
                               {t(MEAL_KEYS[opt])}
@@ -584,10 +584,10 @@ export function ScanFoodPage() {
                   <motion.button
                     whileTap={{ scale: 0.97 }}
                     onClick={resetCapture}
-                    className="w-full h-12 rounded-2xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center gap-2"
+                    className="w-full h-12 rounded-2xl bg-ui-button border border-[var(--glass-border)] flex items-center justify-center gap-2"
                   >
-                    <RotateCcw className="w-4 h-4 text-white/50" />
-                    <span className="text-white/60" style={{ fontSize: '0.9375rem', fontWeight: 500 }}>
+                    <RotateCcw className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-muted-foreground" style={{ fontSize: '0.9375rem', fontWeight: 500 }}>
                       {t('scan_another')}
                     </span>
                   </motion.button>
@@ -610,7 +610,7 @@ export function ScanFoodPage() {
                   <motion.div
                     initial={{ scale: 0.8 }}
                     animate={{ scale: 1 }}
-                    className="w-20 h-20 rounded-3xl bg-gradient-to-br from-[#6c5ce7]/20 to-[#a29bfe]/10 flex items-center justify-center mb-5 border border-white/[0.08]"
+                    className="w-20 h-20 rounded-3xl bg-gradient-to-br from-[#6c5ce7]/20 to-[#a29bfe]/10 flex items-center justify-center mb-5 border border-[var(--glass-border)]"
                   >
                     <Crown className="w-9 h-9 text-[#a29bfe]" />
                   </motion.div>
@@ -618,10 +618,10 @@ export function ScanFoodPage() {
                   <h2 className="text-white mb-2 text-center" style={{ fontSize: '1.25rem', fontWeight: 700 }}>
                     {t('scan_limit_title')}
                   </h2>
-                  <p className="text-white/40 text-center max-w-[280px] mb-2" style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
+                  <p className="text-muted-foreground text-center max-w-[280px] mb-2" style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
                     {t('scan_limit_desc', { used: scansUsed, limit: scansLimit })}
                   </p>
-                  <p className="text-white/30 text-center max-w-[280px] mb-8" style={{ fontSize: '0.8125rem', lineHeight: 1.5 }}>
+                  <p className="text-ui-tertiary text-center max-w-[280px] mb-8" style={{ fontSize: '0.8125rem', lineHeight: 1.5 }}>
                     {t('scan_limit_upgrade')}
                   </p>
 
@@ -641,9 +641,9 @@ export function ScanFoodPage() {
                     <motion.button
                       whileTap={{ scale: 0.97 }}
                       onClick={goBack}
-                      className="w-full h-12 rounded-2xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center"
+                      className="w-full h-12 rounded-2xl bg-ui-button border border-[var(--glass-border)] flex items-center justify-center"
                     >
-                      <span className="text-white/60" style={{ fontSize: '0.9375rem', fontWeight: 500 }}>
+                      <span className="text-muted-foreground" style={{ fontSize: '0.9375rem', fontWeight: 500 }}>
                         {t('back')}
                       </span>
                     </motion.button>
@@ -662,7 +662,7 @@ export function ScanFoodPage() {
                   <h2 className="text-white mb-2 text-center" style={{ fontSize: '1.25rem', fontWeight: 700 }}>
                     {t('scan_error_title')}
                   </h2>
-                  <p className="text-white/40 text-center max-w-[280px] mb-8" style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
+                  <p className="text-muted-foreground text-center max-w-[280px] mb-8" style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
                     {errorMessage || t('scan_error_hint')}
                   </p>
 
@@ -681,9 +681,9 @@ export function ScanFoodPage() {
                     <motion.button
                       whileTap={{ scale: 0.97 }}
                       onClick={goBack}
-                      className="w-full h-12 rounded-2xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center"
+                      className="w-full h-12 rounded-2xl bg-ui-button border border-[var(--glass-border)] flex items-center justify-center"
                     >
-                      <span className="text-white/60" style={{ fontSize: '0.9375rem', fontWeight: 500 }}>
+                      <span className="text-muted-foreground" style={{ fontSize: '0.9375rem', fontWeight: 500 }}>
                         {t('back')}
                       </span>
                     </motion.button>
@@ -716,7 +716,7 @@ function MacroCard({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.1 }}
-      className="text-center p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]"
+      className="text-center p-3 rounded-xl bg-[var(--glass-bg-card)] border border-[var(--glass-border)]"
     >
       <div
         className="w-8 h-8 rounded-lg mx-auto mb-2 flex items-center justify-center"
@@ -726,11 +726,11 @@ function MacroCard({
       </div>
       <p className="text-white" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
         {value}
-        <span className="text-white/40 ml-0.5" style={{ fontSize: '0.75rem', fontWeight: 500 }}>
+        <span className="text-muted-foreground ml-0.5" style={{ fontSize: '0.75rem', fontWeight: 500 }}>
           {unit}
         </span>
       </p>
-      <p className="text-white/40 mt-0.5" style={{ fontSize: '0.6875rem' }}>
+      <p className="text-muted-foreground mt-0.5" style={{ fontSize: '0.6875rem' }}>
         {label}
       </p>
     </motion.div>

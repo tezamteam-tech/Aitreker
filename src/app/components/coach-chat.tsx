@@ -287,7 +287,7 @@ export function CoachChatPage() {
             <div className={`w-8 h-8 rounded-lg shrink-0 flex items-center justify-center mt-0.5 ${
               msg.role === 'assistant'
                 ? 'bg-[#6c5ce7]/15'
-                : 'bg-white/[0.06]'
+                : 'bg-ui-button'
             }`}>
               {msg.role === 'assistant' ? (
                 <Bot className="w-4 h-4 text-[#a29bfe]" />
@@ -377,7 +377,7 @@ export function CoachChatPage() {
             className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-all ${
               input.trim() && !sending
                 ? 'bg-[#6c5ce7] text-white'
-                : 'bg-white/[0.04] text-white/20'
+                : 'bg-ui-button text-ui-tertiary'
             }`}
           >
             {sending ? (
@@ -404,26 +404,26 @@ export function CoachChatPage() {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="absolute bottom-0 left-0 right-0 max-h-[70vh] rounded-t-3xl bg-liquid-glass-panel border-t border-white/[0.1] p-6 pb-10 overflow-y-auto"
+              className="absolute bottom-0 left-0 right-0 max-h-[70vh] rounded-t-3xl bg-liquid-glass-panel border-t border-[var(--glass-border)] p-6 pb-10 overflow-y-auto"
             >
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-foreground" style={{ fontSize: '1.25rem', fontWeight: 700 }}>{t('coach_chat_history')}</h2>
                 <button
                   onClick={() => setShowHistory(false)}
-                  className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center"
+                  className="w-8 h-8 rounded-lg bg-ui-button flex items-center justify-center"
                 >
-                  <X className="w-4 h-4 text-white/40" />
+                  <X className="w-4 h-4 text-muted-foreground" />
                 </button>
               </div>
 
               {loadingHistory ? (
                 <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-6 h-6 text-white/20 animate-spin" />
+                  <Loader2 className="w-6 h-6 text-ui-tertiary animate-spin" />
                 </div>
               ) : conversations.length === 0 ? (
                 <div className="text-center py-8">
-                  <MessageSquare className="w-8 h-8 text-white/10 mx-auto mb-2" />
-                  <p className="text-white/20" style={{ fontSize: '0.875rem' }}>{t('coach_chat_no_history')}</p>
+                  <MessageSquare className="w-8 h-8 text-foreground/10 mx-auto mb-2" />
+                  <p className="text-ui-tertiary" style={{ fontSize: '0.875rem' }}>{t('coach_chat_no_history')}</p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -434,22 +434,22 @@ export function CoachChatPage() {
                     >
                       <button
                         onClick={() => openConversation(conv.id)}
-                        className={`w-full text-left p-3.5 rounded-xl bg-white/[0.03] border transition-all ${
+                        className={`w-full text-left p-3.5 rounded-xl bg-[var(--glass-bg-card)] border transition-all ${
                           conversationId === conv.id
                             ? 'border-[#6c5ce7]/30 bg-[#6c5ce7]/5'
-                            : 'border-white/[0.05] hover:bg-white/[0.05]'
+                            : 'border-[var(--glass-border-subtle)] hover:bg-[var(--ui-button-active)]'
                         }`}
                       >
                         <div className="flex items-center gap-2 mb-1">
                           <MessageSquare className="w-3.5 h-3.5 text-[#a29bfe]/50" />
-                          <span className="text-white/20" style={{ fontSize: '0.6875rem' }}>
+                          <span className="text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>
                             {conv.messageCount} msgs
                           </span>
-                          <span className="text-white/15 ml-auto" style={{ fontSize: '0.625rem' }}>
+                          <span className="text-ui-tertiary ml-auto" style={{ fontSize: '0.625rem' }}>
                             {new Date(conv.updatedAt).toLocaleDateString()}
                           </span>
                         </div>
-                        <p className="text-white/50 truncate" style={{ fontSize: '0.8125rem' }}>
+                        <p className="text-muted-foreground truncate" style={{ fontSize: '0.8125rem' }}>
                           {conv.lastMessage || '...'}
                         </p>
                       </button>
@@ -468,10 +468,10 @@ export function CoachChatPage() {
                         className={`absolute top-3 right-3 w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
                           deletingId === conv.id
                             ? 'bg-red-500/20 border border-red-500/30'
-                            : 'bg-white/[0.04] opacity-0 group-hover:opacity-100'
+                            : 'bg-ui-button opacity-0 group-hover:opacity-100'
                         }`}
                       >
-                        <Trash2 className={`w-3.5 h-3.5 ${deletingId === conv.id ? 'text-red-400' : 'text-white/30'}`} />
+                        <Trash2 className={`w-3.5 h-3.5 ${deletingId === conv.id ? 'text-red-400' : 'text-ui-tertiary'}`} />
                       </button>
                     </div>
                   ))}

@@ -612,7 +612,7 @@ export function ProfileNutritionPage() {
               <p className="text-white/70 text-xs">{t('pn_share_rewards')}</p>
             </div>
           </div>
-          <ChevronRight className="w-5 h-5 text-white/80" />
+          <ChevronRight className="w-5 h-5 text-foreground/60" />
         </motion.button>
 
         {/* ======== Premium Upgrade / Status ======== */}
@@ -625,7 +625,7 @@ export function ProfileNutritionPage() {
             className="w-full p-4 rounded-[20px] bg-gradient-to-br from-[#6c5ce7] to-[#a29bfe] relative overflow-hidden"
             style={{ boxShadow: '0 8px 32px rgba(108,92,231,0.3)' }}
           >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/[0.06] rounded-full -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-foreground/[0.06] rounded-full -translate-y-1/2 translate-x-1/2" />
             <div className="relative flex items-center gap-3">
               <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center flex-shrink-0">
                 <Crown className="w-6 h-6 text-white" />
@@ -634,7 +634,7 @@ export function ProfileNutritionPage() {
                 <p className="text-white font-semibold text-sm mb-0.5">{t('pn_upgrade_premium')}</p>
                 <p className="text-white/70 text-xs">{t('pn_upgrade_desc')}</p>
               </div>
-              <ChevronRight className="w-5 h-5 text-white/60" />
+              <ChevronRight className="w-5 h-5 text-foreground/60" />
             </div>
           </motion.button>
         )}
@@ -788,7 +788,7 @@ export function ProfileNutritionPage() {
                   className={`py-2.5 rounded-xl text-sm font-medium transition-all ${
                     editGender === g
                       ? 'bg-[#6c5ce7]/15 border border-[#6c5ce7]/30 text-foreground'
-                      : 'bg-white/[0.03] border border-white/[0.06] text-muted-foreground'
+                      : 'bg-[var(--glass-bg-card)] border border-[var(--glass-border)] text-muted-foreground'
                   }`}
                 >
                   {g === 'male' ? t('pn_male') : t('pn_female')}
@@ -848,7 +848,7 @@ export function ProfileNutritionPage() {
                   className={`w-full px-4 py-3.5 rounded-xl flex items-center gap-3 transition-all ${
                     editGoal === g
                       ? 'bg-[#6c5ce7]/15 border border-[#6c5ce7]/30'
-                      : 'bg-white/[0.03] border border-white/[0.06]'
+                      : 'bg-[var(--glass-bg-card)] border border-[var(--glass-border)]'
                   }`}
                 >
                   <span style={{ fontSize: '1.25rem' }}>{GOAL_ICONS[g]}</span>
@@ -872,7 +872,7 @@ export function ProfileNutritionPage() {
                   className={`px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
                     editActivity === a
                       ? 'bg-[#00cec9]/15 border border-[#00cec9]/30 text-foreground'
-                      : 'bg-white/[0.03] border border-white/[0.06] text-muted-foreground'
+                      : 'bg-[var(--glass-bg-card)] border border-[var(--glass-border)] text-muted-foreground'
                   }`}
                 >
                   {t(ACTIVITY_LABELS[a])}
@@ -905,7 +905,7 @@ export function ProfileNutritionPage() {
               inputMode="numeric"
               value={editCalories}
               onChange={(e) => setEditCalories(e.target.value)}
-              className="w-full bg-white/[0.06] border border-white/[0.1] rounded-2xl px-4 py-4 text-foreground text-3xl font-bold text-center outline-none focus:border-[#6c5ce7]/50"
+              className="w-full bg-ui-button border border-[var(--glass-border)] rounded-2xl px-4 py-4 text-foreground text-3xl font-bold text-center outline-none focus:border-[#6c5ce7]/50"
             />
             <span className="text-muted-foreground text-sm">{t('pn_kcal_day')}</span>
           </div>
@@ -1074,7 +1074,7 @@ function SheetInput({
           inputMode="numeric"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="flex-1 bg-white/[0.06] border border-white/[0.1] rounded-xl px-3 py-2.5 text-foreground text-base font-medium text-right outline-none focus:border-[#6c5ce7]/50"
+          className="flex-1 bg-ui-button border border-[var(--glass-border)] rounded-xl px-3 py-2.5 text-foreground text-base font-medium text-right outline-none focus:border-[#6c5ce7]/50"
         />
         {unit && <span className="text-sm text-muted-foreground w-8">{unit}</span>}
       </div>
