@@ -459,7 +459,7 @@ export function ScanFoodPage() {
                 </div>
               </div>
 
-              <h2 className="text-white mb-2" style={{ fontSize: '1.25rem', fontWeight: 700 }}>
+              <h2 className="text-foreground mb-2" style={{ fontSize: '1.25rem', fontWeight: 700 }}>
                 {t('scan_analyzing')}
               </h2>
               <p className="text-muted-foreground text-center max-w-[240px]" style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
@@ -517,7 +517,7 @@ export function ScanFoodPage() {
                       <Flame className="w-7 h-7 text-[#fd79a8]" />
                     </div>
                     <div>
-                      <p className="text-white" style={{ fontSize: '2rem', fontWeight: 700, lineHeight: 1 }}>
+                      <p className="text-foreground" style={{ fontSize: '2rem', fontWeight: 700, lineHeight: 1 }}>
                         {result.estimated_calories}
                       </p>
                       <p className="text-muted-foreground" style={{ fontSize: '0.8125rem' }}>
@@ -687,7 +687,7 @@ export function ScanFoodPage() {
                     <Crown className="w-9 h-9 text-[#a29bfe]" />
                   </motion.div>
 
-                  <h2 className="text-white mb-2 text-center" style={{ fontSize: '1.25rem', fontWeight: 700 }}>
+                  <h2 className="text-foreground mb-2 text-center" style={{ fontSize: '1.25rem', fontWeight: 700 }}>
                     {t('scan_limit_title')}
                   </h2>
                   <p className="text-muted-foreground text-center max-w-[280px] mb-2" style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
@@ -731,7 +731,7 @@ export function ScanFoodPage() {
                     <AlertCircle className="w-9 h-9 text-[#ff6b6b]" />
                   </motion.div>
 
-                  <h2 className="text-white mb-2 text-center" style={{ fontSize: '1.25rem', fontWeight: 700 }}>
+                  <h2 className="text-foreground mb-2 text-center" style={{ fontSize: '1.25rem', fontWeight: 700 }}>
                     {t('scan_error_title')}
                   </h2>
                   <p className="text-muted-foreground text-center max-w-[280px] mb-8" style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
@@ -796,7 +796,7 @@ function MacroCard({
       >
         <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }} />
       </div>
-      <p className="text-white" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
+      <p className="text-foreground" style={{ fontSize: '1.125rem', fontWeight: 700 }}>
         {value}
         <span className="text-muted-foreground ml-0.5" style={{ fontSize: '0.75rem', fontWeight: 500 }}>
           {unit}

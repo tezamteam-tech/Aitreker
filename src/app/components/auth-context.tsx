@@ -262,6 +262,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [retryAttempt, setRetryAttempt] = useState(0);
   const [isCachedSession, setIsCachedSession] = useState(false);
   const loginAttempted = useRef(false);
+  const hasInstantUserRef = useRef(false);
 
   const isAuthenticated = !!user;
 
@@ -325,10 +326,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // ---- Login flow ----
   const login = useCallback(async () => {
-    setIsLoading(true);
+    // If we already have a user from cache/fast-path, don't block UI with loading state.
+    // Background auth will silently update data. Only show loading if no user available.
+    const hasInstant = hasInstantUserRef.current;
+    if (!hasInstant) {
+      setIsLoading(true);
+    }
     setAuthError(null);
     setNoInitDataWarning(false);
-    setAuthPhase('connecting');
+    setAuthPhase(hasInstant ? 'restoring' : 'connecting');
     setRetryAttempt(0);
 
     try {
@@ -517,6 +523,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsCachedSession(true);
       setUserLang(tgLangCode || cached.language || 'en');
       hasInstantUser = true;
+      // Immediately stop showing loading — UI is ready with cached data
+      setIsLoading(false);
+      hasInstantUserRef.current = true;
       // Restore cached subscription status
       const cachedSub = getCachedSub();
       if (cachedSub) {
@@ -538,6 +547,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsCachedSession(true); // treat as cached — not server-verified yet
         setUserLang(fastUser.language || 'en');
         hasInstantUser = true;
+        // Immediately stop showing loading — UI is ready with fast-path data
+        setIsLoading(false);
+        hasInstantUserRef.current = true;
       }
     }
 

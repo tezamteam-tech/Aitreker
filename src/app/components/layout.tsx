@@ -257,7 +257,8 @@ function AuthGate({ children }: { children: ReactNode }) {
   }, [isAuthenticated, user, location.pathname, navigate]);
 
   // ---- Loading state: splash screen ----
-  if (isLoading) {
+  // Only show splash if loading AND not yet authenticated (no cached/fast-path user)
+  if (isLoading && !isAuthenticated) {
     const phaseText =
       authPhase === 'restoring'
         ? t('splash_restoring')
