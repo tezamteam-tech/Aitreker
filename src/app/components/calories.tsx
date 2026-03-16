@@ -40,6 +40,8 @@ import { hapticFeedback, hapticSuccess, hapticError } from './telegram';
 import { useTranslation } from './i18n';
 import { PageHeader } from './page-header';
 import { useBottomSheetLifecycle } from './bottom-sheet-context';
+import { useFreemium } from './use-freemium';
+import { toast } from 'sonner';
 
 // ---- Types ----
 interface FoodEntry {
@@ -616,6 +618,7 @@ function AddFoodSheet({
   onClose: () => void;
 }) {
   const { t } = useTranslation();
+  const { usage, hasAccess, canUse, limitLabel, refresh: refreshUsage } = useFreemium();
   const [name, setName] = useState('');
   const [calories, setCalories] = useState('');
   const [protein, setProtein] = useState('');
@@ -641,6 +644,15 @@ function AddFoodSheet({
 
   const handleAiEstimate = async () => {
     if (!name.trim() || aiLoading) return;
+    // Check limit before attempting
+    if (!hasAccess && !canUse(usage.foodEstimates)) {
+      setAiMessage({ text: t('freemium_limit_reached'), type: 'error' });
+      toast.error(t('freemium_limit_reached'), {
+        description: t('freemium_upgrade_for_more'),
+      });
+      hapticError();
+      return;
+    }
     hapticFeedback('medium');
     setAiLoading(true);
     setAiMessage(null);
@@ -657,10 +669,16 @@ function AddFoodSheet({
       }
       setAiMessage({ text: t('cal_ai_filled'), type: 'success' });
       hapticSuccess();
-    } catch (err) {
+      refreshUsage();
+    } catch (err: any) {
       console.error('[AI Estimate] Error:', err);
-      setAiMessage({ text: t('cal_ai_error'), type: 'error' });
+      if (err?.code === 'LIMIT_REACHED' || err?.status === 429 || (err?.message && err.message.includes('limit'))) {
+        setAiMessage({ text: t('freemium_limit_reached'), type: 'error' });
+      } else {
+        setAiMessage({ text: t('cal_ai_error'), type: 'error' });
+      }
       hapticError();
+      refreshUsage();
     } finally {
       setAiLoading(false);
     }
@@ -783,7 +801,10 @@ function AddFoodSheet({
                     <Sparkles className="w-4 h-4 text-[#a29bfe]" />
                   )}
                   <span className="text-[#a29bfe] whitespace-nowrap" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
-                    {aiLoading ? t('cal_ai_estimating') : t('cal_ai_estimate')}
+                    {aiLoading ? t('cal_ai_estimating') : !hasAccess && usage.foodEstimates.limit !== null
+                      ? `${t('cal_ai_estimate')} ${limitLabel(usage.foodEstimates)}`
+                      : t('cal_ai_estimate')
+                    }
                   </span>
                 </motion.button>
               </div>

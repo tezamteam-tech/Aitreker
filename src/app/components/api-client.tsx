@@ -1358,6 +1358,9 @@ export const api = {
     isActive: boolean;
     expiresAt: string | null;
     daysLeft: number;
+    isTrial: boolean;
+    trialDaysLeft: number;
+    trialExpired: boolean;
     isAdmin: boolean;
   }> {
     return request('GET', '/subscription/status');
@@ -1367,8 +1370,12 @@ export const api = {
   async getUsage(): Promise<{
     is_premium: boolean;
     scans: { used: number; limit: number | null; remaining: number | null };
+    food_estimates: { used: number; limit: number | null; remaining: number | null };
     meal_plans: { used: number; limit: number | null; remaining: number | null };
-    workout_plans: { advanced: boolean };
+    workout_plans: { used: number; limit: number | null; remaining: number | null; advanced: boolean };
+    ai_analysis: { used: number; limit: number | null; remaining: number | null };
+    coach_messages: { used: number; limit: number | null; remaining: number | null };
+    activity_logs: { used: number; limit: number | null; remaining: number | null };
   }> {
     return request('GET', '/subscription/usage');
   },

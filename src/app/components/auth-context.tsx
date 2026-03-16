@@ -80,16 +80,24 @@ function clearCachedUser(): void {
   } catch {}
 }
 
-function getCachedSub(): { active: boolean; daysLeft: number } | null {
+interface CachedSubData {
+  active: boolean;
+  daysLeft: number;
+  isTrial: boolean;
+  trialDaysLeft: number;
+  trialExpired: boolean;
+}
+
+function getCachedSub(): CachedSubData | null {
   try {
     const raw = localStorage.getItem(SUB_CACHE_KEY);
     return raw ? JSON.parse(raw) : null;
   } catch { return null; }
 }
 
-function setCachedSub(active: boolean, daysLeft: number): void {
+function setCachedSub(data: CachedSubData): void {
   try {
-    localStorage.setItem(SUB_CACHE_KEY, JSON.stringify({ active, daysLeft }));
+    localStorage.setItem(SUB_CACHE_KEY, JSON.stringify(data));
   } catch {}
 }
 
@@ -187,6 +195,9 @@ interface AuthContextValue {
   isDevMode: boolean;
   subscriptionActive: boolean;
   subscriptionDaysLeft: number;
+  isTrial: boolean;
+  trialDaysLeft: number;
+  trialExpired: boolean;
   authPhase: AuthPhase;
   retryAttempt: number;
   isCachedSession: boolean;
@@ -210,6 +221,9 @@ const AUTH_DEFAULT: AuthContextValue = {
   isDevMode: false,
   subscriptionActive: false,
   subscriptionDaysLeft: 0,
+  isTrial: false,
+  trialDaysLeft: 0,
+  trialExpired: false,
   authPhase: 'connecting',
   retryAttempt: 0,
   isCachedSession: false,
@@ -241,6 +255,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [noInitDataWarning, setNoInitDataWarning] = useState(false);
   const [subscriptionActive, setSubscriptionActive] = useState(false);
   const [subscriptionDaysLeft, setSubscriptionDaysLeft] = useState(0);
+  const [isTrial, setIsTrial] = useState(false);
+  const [trialDaysLeft, setTrialDaysLeft] = useState(0);
+  const [trialExpired, setTrialExpired] = useState(false);
   const [authPhase, setAuthPhase] = useState<AuthPhase>('restoring');
   const [retryAttempt, setRetryAttempt] = useState(0);
   const [isCachedSession, setIsCachedSession] = useState(false);
@@ -259,10 +276,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshSubscription = useCallback(async () => {
     try {
       const status = await api.getSubscriptionStatus();
-      setSubscriptionActive(status.isActive || status.isAdmin);
+      const active = status.isActive || status.isAdmin;
+      setSubscriptionActive(active);
       setSubscriptionDaysLeft(status.daysLeft);
+      setIsTrial(status.isTrial || false);
+      setTrialDaysLeft(status.trialDaysLeft || 0);
+      setTrialExpired(status.trialExpired || false);
       // Cache subscription status
-      setCachedSub(status.isActive || status.isAdmin, status.daysLeft);
+      setCachedSub({
+        active,
+        daysLeft: status.daysLeft,
+        isTrial: status.isTrial || false,
+        trialDaysLeft: status.trialDaysLeft || 0,
+        trialExpired: status.trialExpired || false,
+      });
       
       // Fire-and-forget: if subscription is expiring within 3 days, trigger server-side
       // Telegram notification (deduped daily on the server)
@@ -433,6 +460,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsCachedSession(false);
     setSubscriptionActive(false);
     setSubscriptionDaysLeft(0);
+    setIsTrial(false);
+    setTrialDaysLeft(0);
+    setTrialExpired(false);
     localStorage.removeItem('become_onboarded');
     localStorage.removeItem('proper_onboarded');
   }, []);
@@ -483,6 +513,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (cachedSub) {
         setSubscriptionActive(cachedSub.active);
         setSubscriptionDaysLeft(cachedSub.daysLeft);
+        setIsTrial(cachedSub.isTrial || false);
+        setTrialDaysLeft(cachedSub.trialDaysLeft || 0);
+        setTrialExpired(cachedSub.trialExpired || false);
       }
     }
 
@@ -527,6 +560,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isDevMode,
     subscriptionActive,
     subscriptionDaysLeft,
+    isTrial,
+    trialDaysLeft,
+    trialExpired,
     authPhase,
     retryAttempt,
     isCachedSession,

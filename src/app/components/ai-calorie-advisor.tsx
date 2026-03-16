@@ -424,7 +424,7 @@ export function AiCalorieAdvisor({
                     </span>
                   </motion.button>
                 ) : (
-                  <RateLimitBlock t={t} onUpgrade={() => { onClose(); navigate('/upgrade'); }} />
+                  <RateLimitBlock t={t} onUpgrade={() => { onClose(); navigate('/upgrade?plan=60'); }} />
                 )}
 
                 {/* History section */}
@@ -615,7 +615,7 @@ export function AiCalorieAdvisor({
                 exit={{ opacity: 0 }}
                 className="space-y-4 py-6"
               >
-                <RateLimitBlock t={t} onUpgrade={() => { onClose(); navigate('/upgrade'); }} />
+                <RateLimitBlock t={t} onUpgrade={() => { onClose(); navigate('/upgrade?plan=60'); }} />
 
                 {/* Still show history so user can apply previous results */}
                 {history.length > 0 && (

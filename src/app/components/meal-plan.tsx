@@ -594,7 +594,7 @@ export function MealPlanPage() {
                     </p>
                     <motion.button
                       whileTap={{ scale: 0.97 }}
-                      onClick={() => { hapticFeedback('medium'); navigate('/upgrade'); }}
+                      onClick={() => { hapticFeedback('medium'); navigate('/upgrade?plan=60'); }}
                       className="px-8 h-14 rounded-2xl bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe] inline-flex items-center gap-2.5 mb-3"
                       style={{ boxShadow: '0 8px 32px rgba(108,92,231,0.3)' }}
                     >

@@ -709,6 +709,7 @@ const translations: Record<string, Record<Lang, string>> = {
   coach_chat_suggest_3: { en: 'I need help making a decision', ru: '\u041F\u043E\u043C\u043E\u0433\u0438 \u043F\u0440\u0438\u043D\u044F\u0442\u044C \u0440\u0435\u0448\u0435\u043D\u0438\u0435' },
   coach_chat_suggest_4: { en: "I'm feeling overwhelmed", ru: '\u042F \u0447\u0443\u0432\u0441\u0442\u0432\u0443\u044E \u043F\u0435\u0440\u0435\u0433\u0440\u0443\u0437\u043A\u0443' },
   coach_chat_error: { en: 'Failed to send message. Try again.', ru: '\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u043E\u0442\u043F\u0440\u0430\u0432\u0438\u0442\u044C. \u041F\u043E\u043F\u0440\u043E\u0431\u0443\u0439 \u0435\u0449\u0451.' },
+  coach_chat_messages_today: { en: 'messages today', ru: '\u0441\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0439 \u0441\u0435\u0433\u043E\u0434\u043D\u044F' },
   coach_chat_delete: { en: 'Delete chat?', ru: '\u0423\u0434\u0430\u043B\u0438\u0442\u044C \u0447\u0430\u0442?' },
   coach_chat_no_history: { en: 'No previous chats', ru: '\u041D\u0435\u0442 \u043F\u0440\u0435\u0434\u044B\u0434\u0443\u0449\u0438\u0445 \u0447\u0430\u0442\u043E\u0432' },
 
@@ -984,6 +985,20 @@ const translations: Record<string, Record<Lang, string>> = {
   premium_free_plan: { en: 'Free Plan', ru: '\u0411\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u044B\u0439 \u043F\u043B\u0430\u043D' },
   premium_free_plan_desc: { en: 'Upgrade to unlock AI features', ru: '\u041F\u043E\u0434\u043A\u043B\u044E\u0447\u0438 Premium \u0434\u043B\u044F AI-\u0444\u0443\u043D\u043A\u0446\u0438\u0439' },
 
+  // ---- Trial & Freemium ----
+  trial_banner_title: { en: 'Free trial \u2014 {n} day(s) left', ru: '\u041F\u0440\u043E\u0431\u043D\u044B\u0439 \u043F\u0435\u0440\u0438\u043E\u0434 \u2014 {n} \u0434\u043D. \u043E\u0441\u0442\u0430\u043B\u043E\u0441\u044C' },
+  trial_banner_desc: { en: 'Unlock unlimited access \u2014 upgrade now', ru: '\u0420\u0430\u0437\u0431\u043B\u043E\u043A\u0438\u0440\u0443\u0439\u0442\u0435 \u0431\u0435\u0437\u043B\u0438\u043C\u0438\u0442\u043D\u044B\u0439 \u0434\u043E\u0441\u0442\u0443\u043F \u2014 \u043E\u0431\u043D\u043E\u0432\u0438\u0442\u0435 \u0441\u0435\u0439\u0447\u0430\u0441' },
+  trial_expired_banner_title: { en: 'Trial period ended', ru: '\u041F\u0440\u043E\u0431\u043D\u044B\u0439 \u043F\u0435\u0440\u0438\u043E\u0434 \u0437\u0430\u0432\u0435\u0440\u0448\u0451\u043D' },
+  trial_expired_banner_desc: { en: 'Subscribe to continue using all features without limits', ru: '\u041F\u043E\u0434\u043F\u0438\u0448\u0438\u0442\u0435\u0441\u044C, \u0447\u0442\u043E\u0431\u044B \u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0438\u0442\u044C \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u043D\u0438\u0435 \u0432\u0441\u0435\u0445 \u0444\u0443\u043D\u043A\u0446\u0438\u0439 \u0431\u0435\u0437 \u043E\u0433\u0440\u0430\u043D\u0438\u0447\u0435\u043D\u0438\u0439' },
+  trial_gate_title: { en: 'Your trial has ended', ru: '\u041F\u0440\u043E\u0431\u043D\u044B\u0439 \u043F\u0435\u0440\u0438\u043E\u0434 \u0437\u0430\u0432\u0435\u0440\u0448\u0451\u043D' },
+  trial_gate_desc: { en: 'Subscribe to Premium to continue using {feature}', ru: '\u041F\u043E\u0434\u043F\u0438\u0448\u0438\u0442\u0435\u0441\u044C \u043D\u0430 Premium, \u0447\u0442\u043E\u0431\u044B \u043F\u0440\u043E\u0434\u043E\u043B\u0436\u0438\u0442\u044C \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u043D\u0438\u0435 {feature}' },
+  trial_active_gate_title: { en: 'Trial active \u2014 {n} day(s) left', ru: '\u041F\u0440\u043E\u0431\u043D\u044B\u0439 \u043F\u0435\u0440\u0438\u043E\u0434 \u2014 {n} \u0434\u043D. \u043E\u0441\u0442\u0430\u043B\u043E\u0441\u044C' },
+  trial_active_gate_desc: { en: 'You have limited daily uses. Upgrade for unlimited access.', ru: '\u0423 \u0432\u0430\u0441 \u043E\u0433\u0440\u0430\u043D\u0438\u0447\u0435\u043D\u043D\u043E\u0435 \u043A\u043E\u043B-\u0432\u043E \u0438\u0441\u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u043D\u0438\u0439 \u0432 \u0434\u0435\u043D\u044C. \u041E\u0431\u043D\u043E\u0432\u0438\u0442\u0435 \u0434\u043B\u044F \u0431\u0435\u0437\u043B\u0438\u043C\u0438\u0442\u0430.' },
+  freemium_limit_label: { en: '{used}/{limit}', ru: '{used}/{limit}' },
+  freemium_limit_reached: { en: 'Daily limit reached', ru: '\u0414\u043D\u0435\u0432\u043D\u043E\u0439 \u043B\u0438\u043C\u0438\u0442 \u0438\u0441\u0447\u0435\u0440\u043F\u0430\u043D' },
+  freemium_weekly_limit_reached: { en: 'Weekly limit reached', ru: '\u041D\u0435\u0434\u0435\u043B\u044C\u043D\u044B\u0439 \u043B\u0438\u043C\u0438\u0442 \u0438\u0441\u0447\u0435\u0440\u043F\u0430\u043D' },
+  freemium_upgrade_for_more: { en: 'Upgrade for unlimited', ru: '\u041E\u0431\u043D\u043E\u0432\u0438\u0442\u0435 \u0434\u043B\u044F \u0431\u0435\u0437\u043B\u0438\u043C\u0438\u0442\u0430' },
+
   // ---- Streak Share Card ----
   streak_days_label: { en: 'days of tracking', ru: '\u0434\u043D\u0435\u0439 \u0442\u0440\u0435\u043A\u0438\u043D\u0433\u0430' },
   streak_congrats_title: { en: 'Amazing streak!', ru: '\u041D\u0435\u0432\u0435\u0440\u043E\u044F\u0442\u043D\u0430\u044F \u0441\u0435\u0440\u0438\u044F!' },
@@ -1028,6 +1043,8 @@ const translations: Record<string, Record<Lang, string>> = {
   scan_limit_upgrade: { en: 'Upgrade to Premium for unlimited scans', ru: 'Перейдите на Premium для безлимитного сканирования' },
   scan_upgrade_btn: { en: 'Upgrade to Premium', ru: 'Перейти на Premium' },
   scan_limit_reached: { en: 'Daily scan limit reached', ru: 'Достигнут дневной лимит сканирования' },
+  scan_no_scans_left: { en: 'No scans left today', ru: 'Сканирования на сегодня исчерпаны' },
+  scan_scans_remaining: { en: '{n}/{limit} scans left today', ru: '{n}/{limit} сканирований осталось' },
   scan_error_default: { en: 'Could not analyze food', ru: 'Не удалось распознать еду' },
   scan_error_title: { en: 'Recognition Error', ru: 'Ошибка распознавания' },
   scan_try_again: { en: 'Try Again', ru: 'Попробовать снова' },
@@ -1272,7 +1289,7 @@ const translations: Record<string, Record<Lang, string>> = {
   mp_days_nav: { en: 'Days', ru: 'Дни' },
   mp_history_title: { en: 'Plan History', ru: 'История планов' },
   mp_no_saved: { en: 'No saved plans', ru: 'Нет сохранённых планов' },
-  mp_history_desc: { en: 'Your previous meal plans', ru: 'Ваши предыдущие планы питания' },
+  mp_history_desc: { en: 'Your previous meal plans', ru: 'Ваши пред��дущие планы питания' },
   mp_go_back: { en: 'Go back', ru: 'Назад' },
 
   // ---- Workout Plan — extended ----
@@ -1607,7 +1624,7 @@ const translations: Record<string, Record<Lang, string>> = {
   hn_calories_consumed: { en: 'Calories consumed', ru: 'Потреб��ено калорий' },
   hn_premium_expires: { en: 'Premium expires in {n} day(s)', ru: 'Подписка истекает через {n} дн.' },
   hn_premium_tap_renew: { en: 'Tap to renew and keep unlimited access', ru: 'Нажмите для продления безлимитного доступа' },
-  hn_scans_left: { en: '{n}/5 free scans left today', ru: '{n}/5 бесплатных сканирований сегодня' },
+  hn_scans_left: { en: '{n}/{limit} free scans left today', ru: '{n}/{limit} бесплатных сканирований сегодня' },
   hn_scan_limit_reached: { en: 'Daily scan limit reached', ru: 'Дневной лимит сканирований' },
   hn_upgrade_premium: { en: 'Upgrade to Premium for unlimited access', ru: 'Перейдите на Premium для безлимитного доступа' },
   hn_go_premium: { en: 'Go Premium', ru: 'Перейти на Premium' },
@@ -1836,6 +1853,10 @@ const translations: Record<string, Record<Lang, string>> = {
   up_workouts_row: { en: 'Workouts', ru: 'Тренировки' },
   up_ai_coach_row: { en: 'AI Coach', ru: 'AI Коуч' },
   up_insights_row: { en: 'Insights', ru: 'Инсайты' },
+  up_food_estimate_row: { en: 'AI Estimate', ru: 'AI Оценка' },
+  up_activity_log_row: { en: 'Activity Log', ru: 'Лог активности' },
+  up_per_day: { en: 'day', ru: 'день' },
+  up_per_week: { en: 'week', ru: 'нед' },
   up_unlimited: { en: 'Unlimited', ru: 'Безлимит' },
   up_basic: { en: 'Basic', ru: 'Базовые' },
   up_advanced: { en: 'Advanced', ru: 'Продвинутые' },

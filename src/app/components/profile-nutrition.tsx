@@ -623,7 +623,7 @@ export function ProfileNutritionPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => { hapticFeedback('medium'); navigate('/upgrade'); }}
+            onClick={() => { hapticFeedback('medium'); navigate('/upgrade?plan=60'); }}
             className="w-full p-4 rounded-[20px] bg-gradient-to-br from-[#6c5ce7] to-[#a29bfe] relative overflow-hidden"
             style={{ boxShadow: '0 8px 32px rgba(108,92,231,0.3)' }}
           >
@@ -720,7 +720,7 @@ export function ProfileNutritionPage() {
 
         {/* ======== Subscription ======== */}
         <button
-          onClick={() => { hapticFeedback('light'); navigate('/upgrade'); }}
+          onClick={() => { hapticFeedback('light'); navigate('/upgrade?plan=60'); }}
           className="w-full p-4 rounded-2xl flex items-center justify-between"
           style={{ background: 'var(--glass-bg-card)', border: '1px solid var(--glass-border)' }}
         >

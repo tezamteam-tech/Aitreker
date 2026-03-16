@@ -10,6 +10,7 @@
 // =============================================
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Flame,
@@ -37,6 +38,7 @@ import { VoiceInput } from './voice-input';
 import { SwipeableBottomSheet } from './ui/swipeable-bottom-sheet';
 import { CameraCapture } from './camera-capture';
 import { PhotoSourcePicker } from './photo-source-picker';
+import { toast } from 'sonner';
 
 // Type icons
 const TYPE_ICONS: Record<string, React.ElementType> = {
@@ -105,6 +107,7 @@ export function ActivityLogger({
 }: ActivityLoggerProps) {
   const { t } = useTranslation();
   const lang = getUserLang();
+  const navigate = useNavigate();
 
   // Data
   const [activityEntries, setActivityEntries] = useState<ActivityEntry[]>([]);
@@ -215,12 +218,23 @@ export function ActivityLogger({
       setPhotoPreview(null);
     } catch (err: any) {
       console.error('[ActivityLogger] Analyze error:', err);
-      setError(t('ab_error'));
+      // Check for limit reached
+      if (err?.code === 'LIMIT_REACHED' || err?.status === 429 || (err?.message && err.message.includes('limit'))) {
+        setError(t('freemium_limit_reached'));
+        toast.error(t('freemium_limit_reached'), {
+          action: {
+            label: t('scan_upgrade_btn'),
+            onClick: () => navigate('/upgrade?plan=60'),
+          },
+        });
+      } else {
+        setError(t('ab_error'));
+      }
       hapticError();
     } finally {
       setAnalyzing(false);
     }
-  }, [inputMode, textInput, voiceBase64, voiceMime, voiceTranscript, photoPreview, analyzing, lang, profile, combinedBurned, onBurnUpdate, t]);
+  }, [inputMode, textInput, voiceBase64, voiceMime, voiceTranscript, photoPreview, analyzing, lang, profile, combinedBurned, onBurnUpdate, t, navigate]);
 
   // Delete entry
   const handleDelete = useCallback(async (id: string) => {

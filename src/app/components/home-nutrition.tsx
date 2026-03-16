@@ -41,6 +41,8 @@ import { calculateCalories, type CalorieResult } from './calorie-calculator';
 import { StreakShareCard } from './streak-share-card';
 import { SmartBurnCard } from './smart-burn-card';
 import { ActivityLogger } from './activity-logger';
+import { useFreemium } from './use-freemium';
+import { FreemiumLimitBadge } from './premium-gate';
 
 interface NutritionData {
   caloriesConsumed: number;
@@ -67,9 +69,10 @@ interface WorkoutPlanItem {
 }
 
 export function HomeNutritionPage() {
-  const { user, subscriptionActive, subscriptionDaysLeft } = useAuth();
+  const { user, subscriptionActive, subscriptionDaysLeft, isTrial, trialDaysLeft, trialExpired } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { usage, hasAccess } = useFreemium();
 
   // Calorie target from profile (loaded from API or localStorage cache)
   const [calorieTarget, setCalorieTarget] = useState<number>(2000);
@@ -77,6 +80,7 @@ export function HomeNutritionPage() {
   const [maintenanceCalories, setMaintenanceCalories] = useState<number>(0);
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [scansRemaining, setScansRemaining] = useState<number | null>(null);
+  const [scansLimit, setScansLimit] = useState<number>(3);
   
   // Weight tracking state
   const [latestWeight, setLatestWeight] = useState<{ weight: number; date: string } | null>(null);
@@ -253,6 +257,9 @@ export function HomeNutritionPage() {
       if (usage.scans.remaining !== null) {
         setScansRemaining(usage.scans.remaining);
       }
+      if (usage.scans.limit !== null) {
+        setScansLimit(usage.scans.limit);
+      }
     }).catch(() => {});
   }, [user, subscriptionActive]);
 
@@ -312,13 +319,62 @@ export function HomeNutritionPage() {
 
       <div className="px-4 space-y-4">
         
-        {/* Subscription expiry warning for premium users (≤3 days left) */}
-        {subscriptionActive && subscriptionDaysLeft > 0 && subscriptionDaysLeft <= 3 && (
+        {/* Trial banner — active trial countdown */}
+        {subscriptionActive && isTrial && trialDaysLeft > 0 && (
           <motion.button
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
-            onClick={() => { hapticFeedback('medium'); navigate('/upgrade'); }}
-            className="w-full flex items-center gap-3 p-3.5 rounded-2xl bg-gradient-to-r from-[#e17055]/15 to-[#ff6b6b]/10 border border-[#e17055]/20"
+            onClick={() => { hapticFeedback('medium'); navigate('/upgrade?plan=60'); }}
+            className="w-full flex items-center gap-3 p-3.5 rounded-2xl border border-[#6c5ce7]/20"
+            style={{ background: 'linear-gradient(135deg, rgba(108,92,231,0.12), rgba(162,155,254,0.06))' }}
+          >
+            <div className="w-10 h-10 rounded-xl bg-[#6c5ce7]/20 flex items-center justify-center flex-shrink-0">
+              <Sparkles className="w-5 h-5 text-[#a29bfe]" />
+            </div>
+            <div className="flex-1 text-left">
+              <p className="text-foreground" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
+                {t('trial_banner_title', { n: trialDaysLeft })}
+              </p>
+              <p className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
+                {t('trial_banner_desc')}
+              </p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-[#a29bfe]" />
+          </motion.button>
+        )}
+
+        {/* Trial expired banner */}
+        {trialExpired && !subscriptionActive && (
+          <motion.button
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            onClick={() => { hapticFeedback('medium'); navigate('/upgrade?plan=60'); }}
+            className="w-full flex items-center gap-3 p-3.5 rounded-2xl border border-[#ff6b6b]/20"
+            style={{ background: 'linear-gradient(135deg, rgba(255,107,107,0.10), rgba(225,112,85,0.05))' }}
+          >
+            <div className="w-10 h-10 rounded-xl bg-[#ff6b6b]/15 flex items-center justify-center flex-shrink-0">
+              <AlertCircle className="w-5 h-5 text-[#ff6b6b]" />
+            </div>
+            <div className="flex-1 text-left">
+              <p className="text-foreground" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
+                {t('trial_expired_banner_title')}
+              </p>
+              <p className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
+                {t('trial_expired_banner_desc')}
+              </p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-[#ff6b6b]" />
+          </motion.button>
+        )}
+
+        {/* Subscription expiry warning for paid premium users (≤3 days left, non-trial) */}
+        {subscriptionActive && !isTrial && subscriptionDaysLeft > 0 && subscriptionDaysLeft <= 3 && (
+          <motion.button
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            onClick={() => { hapticFeedback('medium'); navigate('/upgrade?plan=30'); }}
+            className="w-full flex items-center gap-3 p-3.5 rounded-2xl border border-[#e17055]/20"
+            style={{ background: 'linear-gradient(135deg, rgba(225,112,85,0.12), rgba(255,107,107,0.06))' }}
           >
             <div className="w-10 h-10 rounded-xl bg-[#e17055]/20 flex items-center justify-center flex-shrink-0">
               <AlertCircle className="w-5 h-5 text-[#e17055]" />
@@ -335,13 +391,14 @@ export function HomeNutritionPage() {
           </motion.button>
         )}
 
-        {/* Premium upgrade banner for free users */}
-        {!subscriptionActive && scansRemaining !== null && (
+        {/* Free user (never had trial or non-trial expired) — show scans remaining */}
+        {!subscriptionActive && !trialExpired && scansRemaining !== null && (
           <motion.button
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
-            onClick={() => { hapticFeedback('medium'); navigate('/upgrade'); }}
-            className="w-full flex items-center gap-3 p-3.5 rounded-2xl bg-gradient-to-r from-[#6c5ce7]/15 to-[#a29bfe]/10 border border-[#6c5ce7]/20"
+            onClick={() => { hapticFeedback('medium'); navigate('/upgrade?plan=60'); }}
+            className="w-full flex items-center gap-3 p-3.5 rounded-2xl border border-[#6c5ce7]/20"
+            style={{ background: 'linear-gradient(135deg, rgba(108,92,231,0.10), rgba(162,155,254,0.05))' }}
           >
             <div className="w-10 h-10 rounded-xl bg-[#6c5ce7]/20 flex items-center justify-center flex-shrink-0">
               <Crown className="w-5 h-5 text-[#a29bfe]" />
@@ -349,7 +406,7 @@ export function HomeNutritionPage() {
             <div className="flex-1 text-left">
               <p className="text-foreground" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
                 {scansRemaining > 0
-                  ? t('hn_scans_left', { n: scansRemaining })
+                  ? t('hn_scans_left', { n: scansRemaining, limit: scansLimit })
                   : t('hn_scan_limit_reached')}
               </p>
               <p className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
@@ -479,25 +536,31 @@ export function HomeNutritionPage() {
           <motion.button
             whileTap={{ scale: 0.95 }}
             onClick={handleScanFood}
-            className="flex flex-col items-center gap-2 p-3.5 rounded-2xl bg-gradient-to-br from-[#6c5ce7] to-[#a29bfe] shadow-lg"
+            className="flex flex-col items-center gap-2 p-3.5 rounded-2xl bg-gradient-to-br from-[#6c5ce7] to-[#a29bfe] shadow-lg relative"
           >
             <div className="w-11 h-11 rounded-2xl bg-white/20 flex items-center justify-center">
               <Camera className="w-5.5 h-5.5 text-white" />
             </div>
             <span className="text-white text-[0.6875rem] font-medium leading-tight text-center">{t('hn_qa_scan')}</span>
+            {!hasAccess && usage.scans.limit !== null && (
+              <FreemiumLimitBadge used={usage.scans.used} limit={usage.scans.limit} className="absolute top-1.5 right-1.5 !bg-white/20 !text-white/90 !border-white/30" />
+            )}
           </motion.button>
 
           {/* AI Coach */}
           <motion.button
             whileTap={{ scale: 0.95 }}
             onClick={() => { hapticFeedback('medium'); navigate('/nutrition-coach'); }}
-            className="flex flex-col items-center gap-2 p-3.5 rounded-2xl border"
+            className="flex flex-col items-center gap-2 p-3.5 rounded-2xl border relative"
             style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border-subtle)' }}
           >
             <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#00b894] to-[#00cec9] flex items-center justify-center">
               <Salad className="w-5.5 h-5.5 text-white" />
             </div>
             <span className="text-foreground text-[0.6875rem] font-medium leading-tight text-center">{t('hn_qa_coach')}</span>
+            {!hasAccess && usage.coachMessages.limit !== null && (
+              <FreemiumLimitBadge used={usage.coachMessages.used} limit={usage.coachMessages.limit} className="absolute top-1.5 right-1.5" />
+            )}
           </motion.button>
 
           {/* Weight */}
@@ -527,9 +590,11 @@ export function HomeNutritionPage() {
               <Utensils className="w-5.5 h-5.5 text-white" />
             </div>
             <span className="text-foreground text-[0.6875rem] font-medium leading-tight text-center">{t('hn_qa_meals')}</span>
-            {todayMeals.length > 0 && (
+            {!hasAccess && usage.mealPlans.limit !== null ? (
+              <FreemiumLimitBadge used={usage.mealPlans.used} limit={usage.mealPlans.limit} className="absolute top-1.5 right-1.5" />
+            ) : todayMeals.length > 0 ? (
               <span className="absolute top-2 right-2 w-5 h-5 rounded-full bg-[#fd79a8] text-white text-[0.625rem] font-bold flex items-center justify-center">{todayMeals.length}</span>
-            )}
+            ) : null}
           </motion.button>
 
           {/* Workout */}
@@ -543,9 +608,11 @@ export function HomeNutritionPage() {
               <Dumbbell className="w-5.5 h-5.5 text-white" />
             </div>
             <span className="text-foreground text-[0.6875rem] font-medium leading-tight text-center">{t('hn_qa_workout')}</span>
-            {todayWorkouts.length > 0 && (
+            {!hasAccess && usage.workoutPlans.limit !== null ? (
+              <FreemiumLimitBadge used={usage.workoutPlans.used} limit={usage.workoutPlans.limit} className="absolute top-1.5 right-1.5" />
+            ) : todayWorkouts.length > 0 ? (
               <span className="absolute top-2 right-2 w-5 h-5 rounded-full bg-[#00cec9] text-white text-[0.625rem] font-bold flex items-center justify-center">{todayWorkouts.length}</span>
-            )}
+            ) : null}
           </motion.button>
 
           {/* Analytics */}

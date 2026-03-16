@@ -28,6 +28,8 @@ import { useTranslation } from './i18n';
 import { VoiceInput } from './voice-input';
 import { PremiumGate } from './premium-gate';
 import { PageHeader } from './page-header';
+import { useFreemium } from './use-freemium';
+import { toast } from 'sonner';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -48,6 +50,7 @@ export function CoachChatPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { t, lang } = useTranslation();
+  const { usage, refresh: refreshUsage, canUse, limitLabel, hasAccess } = useFreemium();
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -107,11 +110,23 @@ export function CoachChatPage() {
       hapticSuccess();
     } catch (err: any) {
       console.error('[Coach Chat] Send error:', err);
-      setError(t('coach_chat_error'));
+      // Check for limit reached
+      if (err?.code === 'LIMIT_REACHED' || err?.status === 429 || (err?.message && err.message.includes('limit'))) {
+        setError(t('freemium_limit_reached'));
+        toast.error(t('freemium_limit_reached'), {
+          action: {
+            label: t('scan_upgrade_btn'),
+            onClick: () => navigate('/upgrade?plan=60'),
+          },
+        });
+      } else {
+        setError(t('coach_chat_error'));
+      }
+      refreshUsage();
     } finally {
       setSending(false);
     }
-  }, [input, sending, conversationId, t]);
+  }, [input, sending, conversationId, t, refreshUsage, navigate]);
 
   // Handle keyboard submit
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -350,6 +365,23 @@ export function CoachChatPage() {
 
       {/* Input area */}
       <div className="relative z-10 px-4 shrink-0" style={{ paddingBottom: 'max(1rem, calc(var(--safe-area-bottom, 0px) + 0.5rem))' }}>
+        {/* Freemium limit indicator */}
+        {!hasAccess && usage.coachMessages.limit !== null && (
+          <div className="flex items-center justify-center gap-1.5 mb-1.5">
+            <span className={`text-[0.6875rem] font-medium ${
+              (usage.coachMessages.remaining ?? 0) <= 0
+                ? 'text-red-400'
+                : (usage.coachMessages.remaining ?? 0) <= 1
+                ? 'text-amber-400'
+                : 'text-muted-foreground/60'
+            }`}>
+              {(usage.coachMessages.remaining ?? 0) <= 0
+                ? t('freemium_limit_reached')
+                : `${limitLabel(usage.coachMessages)} ${t('coach_chat_messages_today')}`
+              }
+            </span>
+          </div>
+        )}
         <div className="flex items-end gap-2 bg-ui-button border border-ui-button rounded-2xl px-3 py-2">
           <VoiceInput
             onTranscript={(text) => {

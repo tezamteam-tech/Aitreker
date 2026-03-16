@@ -6,6 +6,9 @@
 // subscription. Used for AI-powered features:
 // Coach Chat, Plan Builder, Strategic Goals,
 // Journal Insights.
+//
+// Trial-aware: Shows different messaging for
+// active trial vs expired trial vs never-had.
 // =============================================
 
 import React from 'react';
@@ -21,6 +24,8 @@ import {
   Gift,
   Lock,
   Salad,
+  Clock,
+  AlertTriangle,
 } from 'lucide-react';
 import { GlassCard } from './glass-card';
 import { useAuth } from './auth-context';
@@ -70,14 +75,27 @@ const FEATURE_TITLE_KEYS: Record<PremiumFeature, string> = {
  * Wraps AI-powered pages. If subscription is inactive,
  * shows a premium upsell instead of the page content.
  * Admins and dev-mode users bypass the gate.
+ *
+ * Trial-aware: during trial, lets user through (limits enforced per-endpoint).
+ * After trial expires, shows upsell with trial-expired messaging.
  */
 export function PremiumGate({ feature, children }: PremiumGateProps) {
-  const { subscriptionActive, isAdmin, isDevMode } = useAuth();
+  const { subscriptionActive, isAdmin, isDevMode, isTrial, trialDaysLeft, trialExpired } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
 
   // Bypass for admins and dev mode
-  if (subscriptionActive || isAdmin || isDevMode) {
+  if (isAdmin || isDevMode) {
+    return <>{children}</>;
+  }
+
+  // Active subscription (paid) — full access
+  if (subscriptionActive && !isTrial) {
+    return <>{children}</>;
+  }
+
+  // Active trial — let through (limits enforced server-side per endpoint)
+  if (subscriptionActive && isTrial) {
     return <>{children}</>;
   }
 
@@ -94,6 +112,9 @@ export function PremiumGate({ feature, children }: PremiumGateProps) {
     { key: 'premium_feat_nutrition', icon: Salad },
   ];
 
+  // Determine trial-specific vs generic messaging
+  const isTrialExpiredState = trialExpired;
+
   return (
     <div className="min-h-screen px-5 pb-28" style={{ paddingTop: '6px' }}>
       <div className="max-w-md mx-auto">
@@ -106,8 +127,15 @@ export function PremiumGate({ feature, children }: PremiumGateProps) {
             className={`w-20 h-20 mx-auto mb-5 rounded-3xl bg-gradient-to-br ${colors.from}/20 ${colors.to}/10 flex items-center justify-center border border-white/[0.08] relative`}
           >
             <Icon className={`w-9 h-9 ${colors.accent}`} />
-            <div className="absolute -top-1.5 -right-1.5 w-7 h-7 rounded-full bg-gradient-to-br from-amber-400 to-amber-500 flex items-center justify-center shadow-lg">
-              <Lock className="w-3.5 h-3.5 text-white" />
+            <div className={`absolute -top-1.5 -right-1.5 w-7 h-7 rounded-full flex items-center justify-center shadow-lg ${
+              isTrialExpiredState
+                ? 'bg-gradient-to-br from-red-400 to-red-500'
+                : 'bg-gradient-to-br from-amber-400 to-amber-500'
+            }`}>
+              {isTrialExpiredState
+                ? <AlertTriangle className="w-3.5 h-3.5 text-white" />
+                : <Lock className="w-3.5 h-3.5 text-white" />
+              }
             </div>
           </motion.div>
 
@@ -115,36 +143,51 @@ export function PremiumGate({ feature, children }: PremiumGateProps) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-white mb-2"
+            className="text-foreground mb-2"
             style={{ fontSize: '1.5rem', fontWeight: 700 }}
           >
-            {t(titleKey)}
+            {isTrialExpiredState
+              ? t('trial_gate_title')
+              : t(titleKey)
+            }
           </motion.h1>
 
           <motion.p
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="text-white/50 leading-relaxed"
+            className="text-muted-foreground leading-relaxed"
             style={{ fontSize: '0.9375rem' }}
           >
-            {t(descKey)}
+            {isTrialExpiredState
+              ? t('trial_gate_desc', { feature: t(titleKey) })
+              : t(descKey)
+            }
           </motion.p>
         </div>
 
-        {/* Premium badge */}
+        {/* Trial-expired or Premium badge */}
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35 }}
           className="flex items-center justify-center gap-2 mb-6"
         >
-          <div className="px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500/20 to-amber-400/10 border border-amber-500/30 flex items-center gap-2">
-            <Crown className="w-4 h-4 text-amber-400" />
-            <span className="text-amber-400" style={{ fontSize: '0.8125rem', fontWeight: 700, letterSpacing: '0.05em' }}>
-              PREMIUM
-            </span>
-          </div>
+          {isTrialExpiredState ? (
+            <div className="px-4 py-1.5 rounded-full bg-gradient-to-r from-red-500/20 to-red-400/10 border border-red-500/30 flex items-center gap-2">
+              <Clock className="w-4 h-4 text-red-400" />
+              <span className="text-red-400" style={{ fontSize: '0.8125rem', fontWeight: 700, letterSpacing: '0.05em' }}>
+                {t('trial_gate_title')}
+              </span>
+            </div>
+          ) : (
+            <div className="px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500/20 to-amber-400/10 border border-amber-500/30 flex items-center gap-2">
+              <Crown className="w-4 h-4 text-amber-400" />
+              <span className="text-amber-400" style={{ fontSize: '0.8125rem', fontWeight: 700, letterSpacing: '0.05em' }}>
+                PREMIUM
+              </span>
+            </div>
+          )}
         </motion.div>
 
         {/* Features list */}
@@ -157,7 +200,7 @@ export function PremiumGate({ feature, children }: PremiumGateProps) {
           <GlassCard className="p-5">
             <div className="flex items-center gap-2 mb-4">
               <Sparkles className="w-4 h-4 text-[#a29bfe]" />
-              <span className="text-white/70" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
+              <span className="text-foreground/70" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
                 {t('premium_features_title')}
               </span>
             </div>
@@ -174,7 +217,7 @@ export function PremiumGate({ feature, children }: PremiumGateProps) {
                     }`}>
                       <Check className={`w-3 h-3 ${isCurrentFeature ? 'text-[#a29bfe]' : 'text-[#a29bfe]/60'}`} />
                     </div>
-                    <span className={`${isCurrentFeature ? 'text-white' : 'text-white/60'}`} style={{ fontSize: '0.875rem', fontWeight: isCurrentFeature ? 600 : 400 }}>
+                    <span className={`${isCurrentFeature ? 'text-foreground' : 'text-foreground/60'}`} style={{ fontSize: '0.875rem', fontWeight: isCurrentFeature ? 600 : 400 }}>
                       {t(f.key)}
                     </span>
                   </div>
@@ -189,7 +232,7 @@ export function PremiumGate({ feature, children }: PremiumGateProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          onClick={() => { hapticFeedback('medium'); navigate('/wallet'); }}
+          onClick={() => { hapticFeedback('medium'); navigate('/upgrade?plan=60'); }}
           className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe] text-white font-semibold flex items-center justify-center gap-2.5 active:scale-[0.98] transition-transform shadow-lg"
           style={{ fontSize: '1rem', boxShadow: '0 4px 24px rgba(108, 92, 231, 0.4)' }}
         >
@@ -234,6 +277,37 @@ export function PremiumBadge({ className = '' }: { className?: string }) {
       <span className="text-amber-400" style={{ fontSize: '0.5625rem', fontWeight: 700, letterSpacing: '0.04em' }}>
         PRO
       </span>
+    </span>
+  );
+}
+
+/**
+ * Inline limit indicator — shows remaining uses for a feature.
+ * Shows nothing for premium/admin users.
+ */
+export function FreemiumLimitBadge({
+  used,
+  limit,
+  className = '',
+}: {
+  used: number;
+  limit: number | null;
+  className?: string;
+}) {
+  // No limit = premium
+  if (limit === null) return null;
+  const remaining = Math.max(0, limit - used);
+  const isExhausted = remaining <= 0;
+
+  return (
+    <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[0.5625rem] font-semibold ${
+      isExhausted
+        ? 'bg-red-500/15 text-red-400 border border-red-500/25'
+        : remaining <= 1
+        ? 'bg-amber-500/15 text-amber-400 border border-amber-500/25'
+        : 'bg-[#6c5ce7]/10 text-[#a29bfe] border border-[#6c5ce7]/20'
+    } ${className}`}>
+      {used}/{limit}
     </span>
   );
 }

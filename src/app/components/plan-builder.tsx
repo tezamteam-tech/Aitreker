@@ -16,6 +16,7 @@ import { api } from './api-client';
 import { hapticFeedback, hapticSuccess } from './telegram';
 import { useTranslation } from './i18n';
 import { PageHeader } from './page-header';
+import { toast } from 'sonner';
 import { VoiceInput } from './voice-input';
 import { PremiumGate } from './premium-gate';
 
@@ -160,7 +161,17 @@ export function PlanBuilderPage() {
     } catch (err: any) {
       clearInterval(si);
       console.error('[PlanBuilder] Error:', err);
-      setError(t('pb_error'));
+      if (err?.code === 'LIMIT_REACHED' || err?.status === 429 || (err?.message && err.message.includes('limit'))) {
+        setError(t('freemium_weekly_limit_reached'));
+        toast.error(t('freemium_weekly_limit_reached'), {
+          action: {
+            label: t('scan_upgrade_btn'),
+            onClick: () => navigate('/upgrade?plan=60'),
+          },
+        });
+      } else {
+        setError(t('pb_error'));
+      }
       setPhase('form');
     }
   }, [canGenerate, userText, timePerDay, preferredTime, schedule, durationDays, t]);
@@ -204,7 +215,17 @@ export function PlanBuilderPage() {
       hapticSuccess();
     } catch (err: any) {
       console.error('[PlanBuilder] Continue error:', err);
-      setError(t('pb_error'));
+      if (err?.code === 'LIMIT_REACHED' || err?.status === 429 || (err?.message && err.message.includes('limit'))) {
+        setError(t('freemium_weekly_limit_reached'));
+        toast.error(t('freemium_weekly_limit_reached'), {
+          action: {
+            label: t('scan_upgrade_btn'),
+            onClick: () => navigate('/upgrade?plan=60'),
+          },
+        });
+      } else {
+        setError(t('pb_error'));
+      }
     } finally {
       setIsSubmitting(false);
     }

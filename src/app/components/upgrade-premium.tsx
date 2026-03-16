@@ -9,7 +9,7 @@
 // =============================================
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Crown,
@@ -41,6 +41,7 @@ import { hapticFeedback, hapticSuccess, openTelegramLink } from './telegram';
 import { useTranslation } from './i18n';
 import { BOT_USERNAME } from './bot-config';
 import { PageHeader } from './page-header';
+import { useFreemium } from './use-freemium';
 
 // ---- Types ----
 type PlanId = '30' | '60' | '90';
@@ -48,8 +49,12 @@ type PlanId = '30' | '60' | '90';
 interface UsageData {
   is_premium: boolean;
   scans: { used: number; limit: number | null; remaining: number | null };
+  food_estimates: { used: number; limit: number | null; remaining: number | null };
   meal_plans: { used: number; limit: number | null; remaining: number | null };
-  workout_plans: { advanced: boolean };
+  workout_plans: { advanced: boolean; used: number; limit: number | null; remaining: number | null };
+  coach_messages: { used: number; limit: number | null; remaining: number | null };
+  activity_logs: { used: number; limit: number | null; remaining: number | null };
+  ai_analysis: { used: number; limit: number | null; remaining: number | null };
 }
 
 const PLANS: { id: PlanId; days: number; months: number; stars: number; save?: number; popular: boolean }[] = [
@@ -60,11 +65,17 @@ const PLANS: { id: PlanId; days: number; months: number; stars: number; save?: n
 
 export function UpgradePremiumPage() {
   const navigate = useNavigate();
-  const { user, subscriptionActive, refreshSubscription } = useAuth();
+  const { user, subscriptionActive, refreshSubscription, isTrial, trialDaysLeft, trialExpired } = useAuth();
   const { t, lang } = useTranslation();
+  const { usage, hasAccess } = useFreemium();
+  const [searchParams] = useSearchParams();
 
-  const [usage, setUsage] = useState<UsageData | null>(null);
-  const [selectedPlan, setSelectedPlan] = useState<PlanId>('60');
+  const [usageData, setUsageData] = useState<UsageData | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<PlanId>(() => {
+    const planFromUrl = searchParams.get('plan');
+    if (planFromUrl === '30' || planFromUrl === '60' || planFromUrl === '90') return planFromUrl;
+    return '60';
+  });
   const [loading, setLoading] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'pending' | 'success' | 'error'>('idle');
   const [usageLoading, setUsageLoading] = useState(true);
@@ -78,7 +89,7 @@ export function UpgradePremiumPage() {
     if (!user) return;
     setUsageLoading(true);
     api.getUsage()
-      .then(setUsage)
+      .then(setUsageData)
       .catch(err => console.error('[Upgrade] Usage load error:', err))
       .finally(() => setUsageLoading(false));
   }, [user]);
@@ -209,7 +220,7 @@ export function UpgradePremiumPage() {
         </div>
 
         {/* Current usage (for free users) */}
-        {usage && !usage.is_premium && (
+        {usageData && !usageData.is_premium && (
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
@@ -225,16 +236,16 @@ export function UpgradePremiumPage() {
                   icon={Camera}
                   color="#00cec9"
                   label={t('up_food_scans')}
-                  used={usage.scans.used}
-                  limit={usage.scans.limit}
+                  used={usageData.scans.used}
+                  limit={usageData.scans.limit}
                   lang={lang}
                 />
                 <UsageRow
                   icon={UtensilsCrossed}
                   color="#6c5ce7"
                   label={t('up_meal_plans_week')}
-                  used={usage.meal_plans.used}
-                  limit={usage.meal_plans.limit}
+                  used={usageData.meal_plans.used}
+                  limit={usageData.meal_plans.limit}
                   lang={lang}
                 />
                 <UsageRow
@@ -243,7 +254,7 @@ export function UpgradePremiumPage() {
                   label={t('up_advanced_workouts')}
                   used={0}
                   limit={0}
-                  locked={!usage.workout_plans.advanced}
+                  locked={!usageData.workout_plans.advanced}
                   lang={lang}
                 />
               </div>
@@ -280,32 +291,44 @@ export function UpgradePremiumPage() {
             <div className="space-y-2">
               <ComparisonRow
                 label={t('up_food_scans_row')}
-                free="5/day"
+                free={`3/${t('up_per_day')}`}
+                premium={t('up_unlimited')}
+                premiumHighlight
+              />
+              <ComparisonRow
+                label={t('up_food_estimate_row')}
+                free={`5/${t('up_per_day')}`}
+                premium={t('up_unlimited')}
+                premiumHighlight
+              />
+              <ComparisonRow
+                label={t('up_ai_coach_row')}
+                free={`3/${t('up_per_day')}`}
+                premium={t('up_unlimited')}
+                premiumHighlight
+              />
+              <ComparisonRow
+                label={t('up_activity_log_row')}
+                free={`2/${t('up_per_day')}`}
                 premium={t('up_unlimited')}
                 premiumHighlight
               />
               <ComparisonRow
                 label={t('up_meal_plans_row')}
-                free="1/week"
+                free={`1/${t('up_per_week')}`}
                 premium={t('up_unlimited')}
                 premiumHighlight
               />
               <ComparisonRow
                 label={t('up_workouts_row')}
-                free={t('up_basic')}
+                free={<X className="w-3.5 h-3.5 text-ui-tertiary" />}
                 premium={t('up_advanced')}
                 premiumHighlight
               />
               <ComparisonRow
-                label={t('up_ai_coach_row')}
-                free={<X className="w-3.5 h-3.5 text-ui-tertiary" />}
-                premium={<Check className="w-3.5 h-3.5 text-[#00cec9]" />}
-                premiumHighlight
-              />
-              <ComparisonRow
                 label={t('up_insights_row')}
-                free={<X className="w-3.5 h-3.5 text-ui-tertiary" />}
-                premium={<Check className="w-3.5 h-3.5 text-[#00cec9]" />}
+                free={`1/${t('up_per_week')}`}
+                premium={t('up_unlimited')}
                 premiumHighlight
               />
             </div>

@@ -36,6 +36,8 @@ import {
 import { useTranslation } from './i18n';
 import { PageHeader } from './page-header';
 import { CameraCapture } from './camera-capture';
+import { useFreemium } from './use-freemium';
+import { toast } from 'sonner';
 
 // ---- Types ----
 type ScanStep = 'capture' | 'analyzing' | 'result' | 'error';
@@ -70,6 +72,7 @@ export function ScanFoodPage() {
   const navigate = useNavigate();
   const { user, subscriptionActive, isAdmin, isDevMode } = useAuth();
   const { t, lang } = useTranslation();
+  const { usage, hasAccess, canUse, limitLabel, refresh: refreshUsage } = useFreemium();
 
   const [step, setStep] = useState<ScanStep>('capture');
   const [imageData, setImageData] = useState<string | null>(null);
@@ -78,7 +81,7 @@ export function ScanFoodPage() {
   const [isAdding, setIsAdding] = useState(false);
   const [limitReached, setLimitReached] = useState(false);
   const [scansUsed, setScansUsed] = useState(0);
-  const [scansLimit, setScansLimit] = useState(5);
+  const [scansLimit, setScansLimit] = useState(3);
   const [addedSuccess, setAddedSuccess] = useState(false);
   const [selectedMeal, setSelectedMeal] = useState<MealType>(() => {
     const hour = new Date().getHours();
@@ -148,6 +151,20 @@ export function ScanFoodPage() {
   // ---- Analyze photo ----
   const analyzePhoto = useCallback(async () => {
     if (!imageData) return;
+
+    // Proactive limit check before attempting
+    if (!hasAccess && !canUse(usage.scans)) {
+      hapticError();
+      toast.error(t('scan_limit_reached'), {
+        description: t('scan_limit_upgrade'),
+        action: {
+          label: t('scan_upgrade_btn'),
+          onClick: () => navigate('/upgrade?plan=60'),
+        },
+      });
+      return;
+    }
+
     hapticFeedback('medium');
     setStep('analyzing');
     setLimitReached(false);
@@ -159,22 +176,31 @@ export function ScanFoodPage() {
       setResult(response);
       setStep('result');
       hapticSuccess();
+      refreshUsage();
     } catch (err: any) {
       console.error('[ScanFood] Analysis error:', err);
 
       // Check if limit reached (429)
       if (err?.code === 'LIMIT_REACHED' || err?.status === 429 || (err?.message && err.message.includes('limit'))) {
         setLimitReached(true);
-        setScansUsed(err?.used || 5);
-        setScansLimit(err?.limit || 5);
+        setScansUsed(err?.used || usage.scans.used || 3);
+        setScansLimit(err?.limit || usage.scans.limit || 3);
         setErrorMessage(t('scan_limit_reached'));
+        toast.error(t('scan_limit_reached'), {
+          description: t('scan_limit_upgrade'),
+          action: {
+            label: t('scan_upgrade_btn'),
+            onClick: () => navigate('/upgrade?plan=60'),
+          },
+        });
       } else {
         setErrorMessage(err?.message || t('scan_error_default'));
       }
       setStep('error');
       hapticError();
+      refreshUsage();
     }
-  }, [imageData, lang, t]);
+  }, [imageData, lang, t, hasAccess, canUse, usage.scans, refreshUsage, navigate]);
 
   // ---- Add to diary ----
   const addToDiary = useCallback(async () => {
@@ -284,6 +310,52 @@ export function ScanFoodPage() {
                   >
                     {t('scan_desc')}
                   </p>
+
+                  {/* Proactive limit indicator for free users */}
+                  {!hasAccess && usage.scans.limit !== null && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl mb-6 border"
+                      style={{
+                        background: (usage.scans.remaining ?? 0) <= 0
+                          ? 'rgba(255,107,107,0.08)'
+                          : 'rgba(108,92,231,0.06)',
+                        borderColor: (usage.scans.remaining ?? 0) <= 0
+                          ? 'rgba(255,107,107,0.15)'
+                          : 'rgba(108,92,231,0.12)',
+                      }}
+                    >
+                      <Camera className={`w-4 h-4 flex-shrink-0 ${
+                        (usage.scans.remaining ?? 0) <= 0 ? 'text-red-400' : 'text-[#a29bfe]'
+                      }`} />
+                      <span className={`text-[0.8125rem] font-medium ${
+                        (usage.scans.remaining ?? 0) <= 0
+                          ? 'text-red-400'
+                          : (usage.scans.remaining ?? 0) <= 1
+                          ? 'text-amber-400'
+                          : 'text-muted-foreground'
+                      }`}>
+                        {(usage.scans.remaining ?? 0) <= 0
+                          ? t('scan_no_scans_left')
+                          : t('scan_scans_remaining', { n: usage.scans.remaining, limit: usage.scans.limit })
+                        }
+                      </span>
+                      {(usage.scans.remaining ?? 0) <= 0 && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            hapticFeedback('medium');
+                            navigate('/upgrade?plan=60');
+                          }}
+                          className="ml-auto text-[#a29bfe] flex-shrink-0"
+                          style={{ fontSize: '0.75rem', fontWeight: 700 }}
+                        >
+                          {t('scan_upgrade_btn')}
+                        </button>
+                      )}
+                    </motion.div>
+                  )}
 
                   <div className="w-full space-y-3 max-w-[320px]">
                     <motion.button
@@ -628,7 +700,7 @@ export function ScanFoodPage() {
                   <div className="w-full max-w-[320px] space-y-3">
                     <motion.button
                       whileTap={{ scale: 0.97 }}
-                      onClick={() => { hapticFeedback('medium'); navigate('/upgrade'); }}
+                      onClick={() => { hapticFeedback('medium'); navigate('/upgrade?plan=60'); }}
                       className="w-full h-14 rounded-2xl bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe] flex items-center justify-center gap-2.5 shadow-lg"
                       style={{ boxShadow: '0 8px 32px rgba(108,92,231,0.3)' }}
                     >

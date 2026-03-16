@@ -7,6 +7,7 @@
 // =============================================
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Send,
@@ -30,6 +31,8 @@ import { useTranslation } from './i18n';
 import { VoiceInput } from './voice-input';
 import { PremiumGate } from './premium-gate';
 import { PremiumBadge } from './premium-gate';
+import { PageHeader } from './page-header';
+import { toast } from 'sonner';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -48,6 +51,7 @@ interface ConversationSummary {
 
 export function NutritionCoachPage() {
   const { t, lang } = useTranslation();
+  const navigate = useNavigate();
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -106,7 +110,18 @@ export function NutritionCoachPage() {
       hapticSuccess();
     } catch (err: any) {
       console.error('[NutriCoach] Send error:', err);
-      setError(t('nutri_coach_error'));
+      // Check for limit reached
+      if (err?.code === 'LIMIT_REACHED' || err?.status === 429 || (err?.message && err.message.includes('limit'))) {
+        setError(t('freemium_limit_reached'));
+        toast.error(t('freemium_limit_reached'), {
+          action: {
+            label: t('scan_upgrade_btn'),
+            onClick: () => navigate('/upgrade?plan=60'),
+          },
+        });
+      } else {
+        setError(t('nutri_coach_error'));
+      }
     } finally {
       setSending(false);
     }
