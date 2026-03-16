@@ -11366,19 +11366,19 @@ app.get(`${PREFIX}/admin/users`, async (c) => {
     const paginated = filtered.slice(offset, offset + limit);
 
     // Fetch user profiles (height/weight) for paginated users
+    // IMPORTANT: kv.mget uses SQL IN() which returns only found rows in arbitrary order,
+    // NOT matching input key order. This caused profile data to be mixed up between users.
+    // Fix: fetch each profile individually with correct key→user mapping.
     const profileMap: Record<string, any> = {};
-    for (let i = 0; i < paginated.length; i += batchSize) {
-      const batch = paginated.slice(i, i + batchSize);
-      const profileKeys = batch.map((u: any) => `become:user_profile:${u.telegramId}`);
+    const profilePromises = paginated.map(async (u: any) => {
       try {
-        const profiles = await kv.mget(profileKeys);
-        profiles.forEach((p: any, idx: number) => {
-          if (p && batch[idx]) {
-            profileMap[batch[idx].id] = p;
-          }
-        });
+        const prof = await kv.get(`become:user_profile:${u.telegramId}`);
+        if (prof) {
+          profileMap[u.id] = prof;
+        }
       } catch (_) { /* non-critical */ }
-    }
+    });
+    await Promise.all(profilePromises);
 
     // Fetch payment totals for paginated users
     const paymentTotals: Record<string, number> = {};
