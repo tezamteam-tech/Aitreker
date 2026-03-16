@@ -134,10 +134,10 @@ function GlassTabBar({ keyboardVisible }: { keyboardVisible: boolean }) {
           <div
             className="mx-3 mb-2 rounded-[22px] border border-[var(--glass-border)] overflow-hidden"
             style={{
-              background: 'var(--glass-tab-bg, rgba(28, 28, 30, 0.75))',
+              background: 'var(--glass-tab-bg)',
               backdropFilter: 'blur(40px) saturate(180%)',
               WebkitBackdropFilter: 'blur(40px) saturate(180%)',
-              boxShadow: '0 -2px 20px rgba(0,0,0,0.15), inset 0 0.5px 0 rgba(255,255,255,0.05)',
+              boxShadow: 'var(--glass-tab-shadow)',
             }}
           >
             <div className="flex items-center justify-around py-1.5 px-1">

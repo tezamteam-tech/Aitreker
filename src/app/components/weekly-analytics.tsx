@@ -205,16 +205,16 @@ export function WeeklyAnalyticsPage() {
     const consumed = payload.find((p: any) => p.dataKey === 'consumed')?.value || 0;
     const burned = payload.find((p: any) => p.dataKey === 'burned')?.value || 0;
     return (
-      <div className="rounded-xl p-3 border border-white/10" style={{ background: 'rgba(20,20,30,0.95)', backdropFilter: 'blur(12px)' }}>
-        <p className="text-white/60 mb-1" style={{ fontSize: '0.6875rem' }}>{label}</p>
+      <div className="rounded-xl p-3 border" style={{ background: 'var(--chart-tooltip-bg)', borderColor: 'var(--chart-tooltip-border)', backdropFilter: 'blur(12px)' }}>
+        <p style={{ color: 'var(--chart-tooltip-sub)', fontSize: '0.6875rem', marginBottom: '4px' }}>{label}</p>
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-[#fd79a8]" />
-            <span className="text-foreground" style={{ fontSize: '0.75rem' }}>{t('wa_consumed')}: {consumed} {t('unit_kcal')}</span>
+            <span style={{ color: 'var(--chart-tooltip-text)', fontSize: '0.75rem' }}>{t('wa_consumed')}: {consumed} {t('unit_kcal')}</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-[#00cec9]" />
-            <span className="text-foreground" style={{ fontSize: '0.75rem' }}>{t('wa_burned')}: {burned} {t('unit_kcal')}</span>
+            <span style={{ color: 'var(--chart-tooltip-text)', fontSize: '0.75rem' }}>{t('wa_burned')}: {burned} {t('unit_kcal')}</span>
           </div>
         </div>
       </div>
@@ -268,9 +268,9 @@ export function WeeklyAnalyticsPage() {
               <div style={{ width: '100%', height: 220 }}>
                 <ResponsiveContainer>
                   <BarChart data={weeklyChartData} barCategoryGap="20%">
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                    <XAxis dataKey="name" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fill: 'rgba(255,255,255,0.2)', fontSize: 9 }} axisLine={false} tickLine={false} width={35} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
+                    <XAxis dataKey="name" tick={{ fill: 'var(--chart-axis-tick)', fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: 'var(--chart-axis-tick-secondary)', fontSize: 9 }} axisLine={false} tickLine={false} width={35} />
                     <Tooltip content={<CustomTooltip />} />
                     <ReferenceLine
                       y={weeklySummary?.calorie_target || 2000}
@@ -336,9 +336,9 @@ export function WeeklyAnalyticsPage() {
               <div style={{ width: '100%', height: 220 }}>
                 <ResponsiveContainer>
                   <ComposedChart data={trendChartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                    <XAxis dataKey="name" tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 8 }} axisLine={false} tickLine={false} angle={-25} textAnchor="end" height={40} />
-                    <YAxis tick={{ fill: 'rgba(255,255,255,0.2)', fontSize: 9 }} axisLine={false} tickLine={false} width={35} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
+                    <XAxis dataKey="name" tick={{ fill: 'var(--chart-axis-tick)', fontSize: 8 }} axisLine={false} tickLine={false} angle={-25} textAnchor="end" height={40} />
+                    <YAxis tick={{ fill: 'var(--chart-axis-tick-secondary)', fontSize: 9 }} axisLine={false} tickLine={false} width={35} />
                     <Tooltip content={<CustomTooltip />} />
                     <ReferenceLine
                       y={extSummary.calorie_target}
@@ -371,7 +371,7 @@ export function WeeklyAnalyticsPage() {
 
               {/* Burn Breakdown */}
               {(extSummary.total_smartburn > 0 || extSummary.total_workout > 0) && (
-                <div className="mt-3 pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                <div className="mt-3 pt-3" style={{ borderTop: '1px solid var(--glass-border-subtle)' }}>
                   <p className="text-ui-tertiary mb-2" style={{ fontSize: '0.6875rem' }}>{t('ea_burned_breakdown')}</p>
                   <div className="flex gap-3">
                     <div className="flex-1 p-2.5 rounded-xl bg-[#00cec9]/6 border border-[#00cec9]/12 text-center">
@@ -387,7 +387,7 @@ export function WeeklyAnalyticsPage() {
               )}
 
               {/* Net total */}
-              <div className="flex items-center justify-between mt-3 p-3 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+              <div className="flex items-center justify-between mt-3 p-3 rounded-xl" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
                 <span className="text-ui-secondary" style={{ fontSize: '0.75rem' }}>{t('ea_net_total')}</span>
                 <span style={{
                   fontSize: '1rem', fontWeight: 800,
@@ -409,7 +409,7 @@ export function WeeklyAnalyticsPage() {
                     <GlassCard key={w.week} className="!p-3">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-white/50" style={{ fontSize: '0.625rem' }}>{w.label}</p>
+                          <p className="text-muted-foreground" style={{ fontSize: '0.625rem' }}>{w.label}</p>
                           <div className="flex items-center gap-3 mt-1">
                             <span className="text-[#fd79a8]" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
                               {w.avg_consumed} <span className="text-ui-tertiary" style={{ fontSize: '0.5rem' }}>{t('unit_kcal')}/d</span>
@@ -506,7 +506,7 @@ function TrendCard({ icon: Icon, label, value, change, unit, color, t }: {
     <GlassCard className="!p-3">
       <div className="flex items-center gap-2 mb-2">
         <Icon className="w-3.5 h-3.5" style={{ color }} />
-        <span className="text-white/30" style={{ fontSize: '0.625rem' }}>{label}</span>
+        <span className="text-muted-foreground" style={{ fontSize: '0.625rem' }}>{label}</span>
       </div>
       <p style={{ fontSize: '1.25rem', fontWeight: 800, color }}>{value}</p>
       <p className="text-ui-tertiary mt-0.5" style={{ fontSize: '0.5rem' }}>{unit}</p>
@@ -539,8 +539,8 @@ function ChartLegend({ t }: { t: (k: string) => string }) {
 
 function StatPill({ label, value, color }: { label: string; value: string; color: string }) {
   return (
-    <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.05]">
-      <span className="text-white/35" style={{ fontSize: '0.625rem' }}>{label}</span>
+    <div className="flex items-center justify-between p-2.5 rounded-xl" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
+      <span className="text-ui-tertiary" style={{ fontSize: '0.625rem' }}>{label}</span>
       <span style={{ fontSize: '0.8125rem', fontWeight: 600, color }}>{value}</span>
     </div>
   );
@@ -627,21 +627,23 @@ function DailyBreakdown({ days, selectedDay, setSelectedDay, weeklySummary, t }:
                   hapticFeedback('light');
                   setSelectedDay(isSelected ? null : d);
                 }}
-                className={`w-full p-3 rounded-xl text-left transition-all ${
-                  isSelected ? 'bg-white/[0.06] border border-white/[0.1]' : 'bg-white/[0.02] border border-white/[0.05]'
-                }`}
+                className={`w-full p-3 rounded-xl text-left transition-all`}
+                style={{
+                  background: isSelected ? 'var(--glass-bg-card)' : 'var(--glass-bg-row)',
+                  border: `1px solid ${isSelected ? 'var(--glass-border)' : 'var(--glass-border-subtle)'}`,
+                }}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="text-center w-10">
-                      <p className="text-white/30" style={{ fontSize: '0.5625rem' }}>{d.day}</p>
+                      <p className="text-muted-foreground" style={{ fontSize: '0.5625rem' }}>{d.day}</p>
                       <p className={`${isToday ? 'text-[#a29bfe]' : 'text-foreground'}`} style={{ fontSize: '0.875rem', fontWeight: 700 }}>
                         {d.date.slice(8)}
                       </p>
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-white" style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+                        <span className="text-foreground" style={{ fontSize: '0.875rem', fontWeight: 600 }}>
                           {d.consumed > 0 ? d.consumed.toLocaleString() : '\u2014'}
                         </span>
                         {d.consumed > 0 && (
@@ -690,7 +692,7 @@ function DailyBreakdown({ days, selectedDay, setSelectedDay, weeklySummary, t }:
                       {d.burned > 0 && (
                         <div className="flex items-center gap-3 p-2.5 rounded-lg bg-[#00cec9]/6 border border-[#00cec9]/12">
                           <Dumbbell className="w-4 h-4 text-[#00cec9]" />
-                          <span className="text-white/50" style={{ fontSize: '0.6875rem' }}>
+                          <span className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
                             {t('wa_burn_detail', { count: d.burned_count, cal: d.burned, min: d.burned_duration })}
                           </span>
                         </div>
