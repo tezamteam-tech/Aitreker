@@ -200,9 +200,10 @@ export function MealPlanPage() {
     if (!user) return;
     setLoadingPlans(true);
     api.getMealPlans().then((res) => {
-      if (res.plans && res.plans.length > 0) {
+      const plans = res?.plans || (Array.isArray(res) ? res : []);
+      if (plans.length > 0) {
         // Load the most recent full plan
-        const latest = res.plans[0];
+        const latest = plans[0];
         api.getMealPlan(latest.id).then((full) => {
           setCurrentPlan(full);
           setViewState('viewing');
@@ -298,8 +299,9 @@ export function MealPlanPage() {
     try {
       const res = await api.getMealPlans();
       // Load full data for each
+      const plansList = res?.plans || (Array.isArray(res) ? res : []);
       const full: SavedPlan[] = [];
-      for (const p of res.plans.slice(0, 10)) {
+      for (const p of plansList.slice(0, 10)) {
         try {
           const f = await api.getMealPlan(p.id);
           full.push(f);
@@ -1096,10 +1098,7 @@ function MealCard({
   const Icon = config.icon;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-    >
+    <div>
       <GlassCard className="!p-0 overflow-hidden">
         {/* Meal header — tappable */}
         <button
@@ -1136,54 +1135,44 @@ function MealCard({
           </div>
         </button>
 
-        {/* Items */}
-        <AnimatePresence>
-          {expanded && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.25 }}
-              className="overflow-hidden"
-            >
-              <div className="px-3 pb-3 space-y-1.5">
-                {items.map((item, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center justify-between p-3 rounded-xl"
-                    style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}
-                  >
-                    <div className="flex-1 min-w-0 mr-3">
-                      <p className="text-foreground truncate" style={{ fontSize: '0.875rem', fontWeight: 500 }}>
-                        {item.food_name}
-                      </p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
-                          {item.quantity}{item.unit}
-                        </span>
-                        <span className="text-ui-tertiary">·</span>
-                        <span className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
-                          P:{item.protein}g
-                        </span>
-                        <span className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
-                          C:{item.carbs}g
-                        </span>
-                        <span className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
-                          F:{item.fat}g
-                        </span>
-                      </div>
-                    </div>
-                    <p className="text-foreground flex-shrink-0" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
-                      {item.calories}
-                    </p>
+        {/* Items — no height animation to avoid scroll glitches */}
+        {expanded && (
+          <div className="px-3 pb-3 space-y-1.5">
+            {items.map((item, idx) => (
+              <div
+                key={idx}
+                className="flex items-center justify-between p-3 rounded-xl"
+                style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}
+              >
+                <div className="flex-1 min-w-0 mr-3">
+                  <p className="text-foreground truncate" style={{ fontSize: '0.875rem', fontWeight: 500 }}>
+                    {item.food_name}
+                  </p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
+                      {item.quantity}{item.unit}
+                    </span>
+                    <span className="text-ui-tertiary">·</span>
+                    <span className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
+                      P:{item.protein}g
+                    </span>
+                    <span className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
+                      C:{item.carbs}g
+                    </span>
+                    <span className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>
+                      F:{item.fat}g
+                    </span>
                   </div>
-                ))}
+                </div>
+                <p className="text-foreground flex-shrink-0" style={{ fontSize: '0.9375rem', fontWeight: 600 }}>
+                  {item.calories}
+                </p>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            ))}
+          </div>
+        )}
       </GlassCard>
-    </motion.div>
+    </div>
   );
 }
 

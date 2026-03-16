@@ -10033,10 +10033,10 @@ app.get(`${PREFIX}/meal-plans`, async (c) => {
     const auth = await resolveUser(c);
     if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
     const plansIndex: string[] = (await kv.get(`become:mealplans:${auth.userId}`)) || [];
-    if (plansIndex.length === 0) return c.json([]);
+    if (plansIndex.length === 0) return c.json({ plans: [] });
     const keys = plansIndex.map((id: string) => `become:mealplan:${auth.userId}:${id}`);
     const plans = await kv.mget(keys);
-    return c.json(plans.filter((p: any) => p && p.id));
+    return c.json({ plans: plans.filter((p: any) => p && p.id) });
   } catch (err) {
     console.log("GET /meal-plans error:", err);
     return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
@@ -13316,31 +13316,43 @@ Return ONLY JSON.`;
 
     console.log(`[Activity] Calling GPT for user=${auth.userId}, input_type=${image_base64 ? "photo" : (voice_base64 ? "voice" : "text")}, text_len=${activityDescription.length}, model=${image_base64 ? "gpt-4o" : "gpt-4o-mini"}`);
 
-    const gptRes = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: { "Authorization": `Bearer ${openaiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: image_base64 ? "gpt-4o" : "gpt-4o-mini",
-        messages,
-        max_tokens: 800,
-      }),
-    });
+    // Use gpt-4o-mini for all activity analysis (reliable, fast, cheaper)
+    // gpt-4o for vision still works but gpt-4o-mini with vision is sufficient for smartwatch screenshots
+    const modelToUse = image_base64 ? "gpt-4o" : "gpt-4o-mini";
+    
+    let gptRes: Response;
+    try {
+      gptRes = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${openaiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: modelToUse,
+          messages,
+          max_tokens: 1200,
+          response_format: { type: "json_object" },
+        }),
+      });
+    } catch (fetchErr) {
+      console.log(`[Activity] GPT fetch error: ${fetchErr}`);
+      return c.json({ message: `Network error calling AI: ${fetchErr}`, code: "NETWORK_ERROR", status: 502 }, 502);
+    }
 
     if (!gptRes.ok) {
       const errText = await gptRes.text();
       console.log(`[Activity] GPT error: ${gptRes.status} ${errText}`);
-      return c.json({ message: "AI analysis failed", code: "AI_ERROR", status: 502 }, 502);
+      return c.json({ message: `AI analysis failed (${gptRes.status}): ${errText.slice(0, 200)}`, code: "AI_ERROR", status: 502 }, 502);
     }
 
     const gptData = await gptRes.json();
     const content = gptData.choices?.[0]?.message?.content || "";
+    console.log(`[Activity] GPT response length: ${content.length}, model: ${modelToUse}`);
     let parsed: any;
     try {
       const jsonStr = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
       parsed = JSON.parse(jsonStr);
-    } catch {
-      console.log("[Activity] Failed to parse GPT response:", content);
-      return c.json({ message: "Could not parse AI response", code: "PARSE_ERROR", status: 502 }, 502);
+    } catch (parseErr) {
+      console.log("[Activity] Failed to parse GPT response:", content.slice(0, 500));
+      return c.json({ message: `Could not parse AI response: ${String(parseErr).slice(0, 100)}`, code: "PARSE_ERROR", status: 502 }, 502);
     }
 
     const activities = (parsed.activities || []).map((a: any) => ({

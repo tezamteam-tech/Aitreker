@@ -228,7 +228,9 @@ export function ActivityLogger({
           },
         });
       } else {
-        setError(t('ab_error'));
+        const msg = err?.message || t('ab_error');
+        setError(msg);
+        toast.error(msg, { duration: 5000 });
       }
       hapticError();
     } finally {
@@ -668,6 +670,8 @@ export function ActivityLogger({
         onClose={() => setShowPhotoPicker(false)}
         onPickCamera={() => { setShowPhotoPicker(false); setShowCamera(true); }}
         onPickGallery={(dataUrl) => { setPhotoPreview(dataUrl); setShowPhotoPicker(false); }}
+        maxWidth={800}
+        quality={0.7}
       />
 
       {/* Camera */}
