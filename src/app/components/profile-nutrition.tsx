@@ -28,6 +28,7 @@ import {
   Sparkles,
   Heart,
   Shield,
+  Globe,
 } from 'lucide-react';
 import { GlassCard } from './glass-card';
 import { useAuth } from './auth-context';
@@ -35,6 +36,7 @@ import { hapticFeedback, hapticSuccess, openTelegramLink } from './telegram';
 import { useTranslation } from './i18n';
 import { PageHeader } from './page-header';
 import { api, getUserLang } from './api-client';
+import { setUserLang } from './api-client';
 import { calculateCalories } from './calorie-calculator';
 import { AiCalorieAdvisor } from './ai-calorie-advisor';
 import { SwipeableBottomSheet } from './ui/swipeable-bottom-sheet';
@@ -101,7 +103,7 @@ function getBodyFatCategory(bf: number, gender: string): { key: string; color: s
 }
 
 export function ProfileNutritionPage() {
-  const { user, logout, subscriptionActive, subscriptionDaysLeft, isAdmin } = useAuth();
+  const { user, logout, subscriptionActive, subscriptionDaysLeft, isAdmin, updateUser } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
 
@@ -657,6 +659,52 @@ export function ProfileNutritionPage() {
             <ChevronRight className="w-4 h-4 text-muted-foreground/40" />
           </button>
         )}
+
+        {/* ======== Language Switcher ======== */}
+        <div
+          className="w-full p-4 rounded-2xl"
+          style={{ background: 'var(--glass-bg-card)', border: '1px solid var(--glass-border)' }}
+        >
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(116,185,255,0.1)' }}>
+              <Globe className="w-4.5 h-4.5 text-[#74b9ff]" />
+            </div>
+            <span className="text-foreground text-[0.9375rem] font-medium">{t('profile_language')}</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {([
+              { code: 'en', flag: '\uD83C\uDDFA\uD83C\uDDF8', label: 'English' },
+              { code: 'ru', flag: '\uD83C\uDDF7\uD83C\uDDFA', label: '\u0420\u0443\u0441\u0441\u043A\u0438\u0439' },
+            ] as const).map((lang) => {
+              const isActive = (user?.language || getUserLang()) === lang.code;
+              return (
+                <button
+                  key={lang.code}
+                  onClick={() => {
+                    hapticFeedback('light');
+                    updateUser({ language: lang.code });
+                    setUserLang(lang.code);
+                  }}
+                  className={`h-12 rounded-xl border flex items-center justify-center gap-2.5 transition-all ${
+                    isActive
+                      ? 'bg-[#6c5ce7]/15 border-[#6c5ce7]/40'
+                      : 'border-[var(--glass-border)]'
+                  }`}
+                  style={{
+                    background: isActive ? undefined : 'var(--glass-bg-row)',
+                    ...(isActive ? { boxShadow: '0 4px 20px rgba(108,92,231,0.15)' } : {}),
+                  }}
+                >
+                  <span style={{ fontSize: '1.125rem' }}>{lang.flag}</span>
+                  <span className={`text-sm font-medium ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>
+                    {lang.label}
+                  </span>
+                  {isActive && <Check className="w-3.5 h-3.5 text-[#6c5ce7]" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
         {/* ======== Notifications ======== */}
         <button
