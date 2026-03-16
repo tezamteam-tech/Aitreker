@@ -208,7 +208,7 @@ export function OnboardingNutritionPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden">
+    <div className="flex flex-col relative" style={{ minHeight: '100%' }}>
       {/* Background orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-32 -left-32 w-64 h-64 rounded-full bg-[#6c5ce7]/20 blur-[100px]" />
@@ -216,7 +216,7 @@ export function OnboardingNutritionPage() {
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-72 h-72 rounded-full bg-[#00cec9]/8 blur-[150px]" />
       </div>
 
-      <div className="relative z-10 flex-1 flex flex-col px-6 pb-8" style={{ paddingTop: '6px' }}>
+      <div className="relative z-10 flex-1 flex flex-col px-6 pb-4 pt-2">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -15 }}

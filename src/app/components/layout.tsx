@@ -226,7 +226,13 @@ function AuthGate({ children }: { children: ReactNode }) {
     if (!isAuthenticated || !user || hasRedirectedRef.current) return;
 
     // If user has completed nutrition onboarding, redirect from root to home
-    if (location.pathname === '/' && user.selectedGoal) {
+    // Check both server-side selectedGoal AND localStorage flags (for fast-path users
+    // where selectedGoal may be null but onboarding was already completed)
+    const onboarded = user.selectedGoal ||
+      localStorage.getItem('nutrition_onboarded') === 'true' ||
+      localStorage.getItem('proper_onboarded') === 'true';
+
+    if (location.pathname === '/' && onboarded) {
       hasRedirectedRef.current = true;
       navigate('/home', { replace: true });
       return;
@@ -244,7 +250,7 @@ function AuthGate({ children }: { children: ReactNode }) {
         navigate('/coach', { replace: true });
       } else if (startParam === 'scan') {
         navigate('/calories/scan', { replace: true });
-      } else if (user.selectedGoal) {
+      } else if (onboarded) {
         navigate('/home', { replace: true });
       }
     }
@@ -357,7 +363,7 @@ function AuthGate({ children }: { children: ReactNode }) {
   }
 
   // ---- Authenticated: render children ----
-  return <>{children}</>;
+  return <div className="flex-1 flex flex-col overflow-hidden">{children}</div>;
 }
 
 // ---- LayoutInner ----
@@ -381,6 +387,10 @@ function LayoutInner() {
       const handleResize = () => {
         const heightDiff = window.innerHeight - vv.height;
         setKeyboardVisible(heightDiff > 150);
+        // Update CSS variable for keyboard-aware layouts
+        document.documentElement.style.setProperty('--kb-height', `${Math.max(0, heightDiff)}px`);
+        document.documentElement.style.setProperty('--visual-viewport-height', `${vv.height}px`);
+        document.documentElement.style.setProperty('--kb-open', heightDiff > 150 ? '1' : '0');
       };
       vv.addEventListener('resize', handleResize);
       return () => vv.removeEventListener('resize', handleResize);
@@ -439,17 +449,27 @@ function LayoutInner() {
 
   return (
     <div
-      className="min-h-screen flex flex-col relative overflow-y-auto overflow-x-hidden"
-      style={{
-        paddingTop: 'var(--safe-area-top, 0px)',
-        WebkitOverflowScrolling: 'touch',
-      }}
+      className="fixed inset-0 flex flex-col overflow-hidden"
     >
       {/* Pattern background — z-[-1], must be first for glass backdrop-filter to work */}
       <PatternBackground />
 
+      {/* Safe area spacer at top — pushes content below TG header */}
+      <div className="shrink-0" style={{ height: 'var(--safe-area-top, 56px)' }} />
+
       <AuthGate>
-        <Outlet />
+        {/* Scrollable content area */}
+        <div
+          className="flex-1 overflow-y-auto overflow-x-hidden relative"
+          style={{
+            WebkitOverflowScrolling: 'touch',
+            overscrollBehavior: 'contain',
+          }}
+        >
+          <Outlet />
+        </div>
+
+        {/* Tab bar — outside scroll container, always at bottom */}
         <GlassTabBar keyboardVisible={keyboardVisible} />
       </AuthGate>
     </div>

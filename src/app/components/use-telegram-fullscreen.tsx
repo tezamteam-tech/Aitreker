@@ -98,19 +98,20 @@ function applyCssSwipePrevention(): void {
     html.style.overscrollBehavior = 'none';
     body.style.overscrollBehavior = 'none';
 
-    // Make html/body non-scrollable — all scrolling happens inside
-    // the React scroll container (.overflow-y-auto in AppLayout).
+    // Make html/body non-scrollable — the layout uses fixed positioning
+    // with its own overflow-y-auto scroll container inside.
     html.style.overflow = 'hidden';
     body.style.overflow = 'hidden';
     html.style.height = '100%';
     body.style.height = '100%';
 
-    // The #root container should also be protected
+    // The #root container should fill viewport but NOT block overflow —
+    // the inner fixed layout handles scrolling via overflow-y-auto.
     const root = document.getElementById('root');
     if (root) {
       root.style.overscrollBehavior = 'none';
       root.style.height = '100%';
-      root.style.overflow = 'hidden';
+      // Do NOT set overflow:hidden on #root — let the fixed layout manage it
     }
   } catch {}
 }
