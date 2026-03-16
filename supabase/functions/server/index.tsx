@@ -704,6 +704,10 @@ app.post(`${PREFIX}/auth/telegram`, async (c) => {
       user.lastName = tgUser.last_name || null;
       user.username = tgUser.username || null;
       user.photoUrl = tgUser.photo_url || null;
+      // Always sync language from Telegram client on re-auth
+      if (tgUser.language_code) {
+        user.language = tgUser.language_code;
+      }
       user.updatedAt = now;
       // Ensure xp field exists
       if (user.xp === undefined) user.xp = 0;

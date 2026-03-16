@@ -79,8 +79,41 @@ class ApiClientError extends Error {
 }
 
 // ---- User language for content localization ----
-// Initialize from browser lang so pre-auth UI renders correctly
-let _userLang: string = (typeof navigator !== 'undefined' && navigator.language?.startsWith('ru')) ? 'ru' : 'en';
+// Initialize from Telegram client language first, then fallback to browser lang.
+// This ensures pre-auth UI renders in the correct language immediately.
+function detectInitialLang(): string {
+  // 1. Try Telegram WebApp initDataUnsafe
+  try {
+    const tgUser = (window as any)?.Telegram?.WebApp?.initDataUnsafe?.user;
+    if (tgUser?.language_code) {
+      return tgUser.language_code.startsWith('ru') ? 'ru' : 'en';
+    }
+  } catch {}
+  // 2. Try parsing tgWebAppData from URL hash (Telegram passes launch params there)
+  try {
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash?.slice(1);
+      if (hash) {
+        const params = new URLSearchParams(hash);
+        const tgData = params.get('tgWebAppData');
+        if (tgData) {
+          const dataParams = new URLSearchParams(tgData);
+          const userStr = dataParams.get('user');
+          if (userStr) {
+            const user = JSON.parse(decodeURIComponent(userStr));
+            if (user?.language_code) {
+              return user.language_code.startsWith('ru') ? 'ru' : 'en';
+            }
+          }
+        }
+      }
+    }
+  } catch {}
+  // 3. Fallback to browser language
+  return (typeof navigator !== 'undefined' && navigator.language?.startsWith('ru')) ? 'ru' : 'en';
+}
+
+let _userLang: string = detectInitialLang();
 let _langListeners: Set<() => void> = new Set();
 
 export function setUserLang(lang: string): void {

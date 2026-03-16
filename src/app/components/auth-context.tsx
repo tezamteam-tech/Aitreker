@@ -500,13 +500,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     let hasInstantUser = false;
 
+    // Detect current Telegram client language (source of truth for language)
+    const tgUser = getTelegramUser();
+    const tgLangCode = tgUser?.language_code || '';
+
     // Strategy 1: Restore cached user (with 24h TTL)
     const cached = getCachedUser();
     if (cached) {
       console.log('[Auth] Strategy 1: Restored cached user:', cached.id);
+      // If Telegram client language changed since last cache, update it
+      if (tgLangCode && cached.language !== tgLangCode) {
+        console.log(`[Auth] Language changed: cached=${cached.language}, tg=${tgLangCode}`);
+        cached.language = tgLangCode;
+      }
       setUser(cached);
       setIsCachedSession(true);
-      setUserLang(cached.language || 'en');
+      setUserLang(tgLangCode || cached.language || 'en');
       hasInstantUser = true;
       // Restore cached subscription status
       const cachedSub = getCachedSub();
