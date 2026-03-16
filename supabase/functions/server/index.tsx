@@ -733,7 +733,8 @@ app.post(`${PREFIX}/auth/telegram`, async (c) => {
     } else {
       userId = generateId("user");
       const referralCode = generateId("ref").replace("ref_", "").slice(0, 10);
-      const subExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+      const TRIAL_DAYS = 7;
+      const subExpiresAt = new Date(Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000).toISOString();
 
       // Resolve referrer from startParam (e.g. startapp=ref_XXXXXX)
       let referredBy: string | null = null;
@@ -764,6 +765,7 @@ app.post(`${PREFIX}/auth/telegram`, async (c) => {
         weighInDay: 1,
         activeProgramId: null,
         subscriptionExpiresAt: subExpiresAt,
+        trialEndsAt: subExpiresAt,
         referralCode,
         referralCount: 0,
         referredBy,
@@ -4841,7 +4843,8 @@ async function handleStartCommand(msg: TgMessage): Promise<void> {
     const newUserId = generateId("user");
     const now = new Date().toISOString();
     const referralCode = generateId("ref").replace("ref_", "").slice(0, 10);
-    const subExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    const TRIAL_DAYS = 7;
+    const subExpiresAt = new Date(Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000).toISOString();
 
     const newUser: any = {
       id: newUserId,
@@ -4859,6 +4862,7 @@ async function handleStartCommand(msg: TgMessage): Promise<void> {
       utcOffset: 0,
       activeProgramId: null,
       subscriptionExpiresAt: subExpiresAt,
+      trialEndsAt: subExpiresAt,
       referralCode,
       referralCount: 0,
       referredBy: null,
@@ -4998,7 +5002,8 @@ async function handleContactMessage(msg: TgMessage): Promise<void> {
     const userId = generateId("user");
     const now = new Date().toISOString();
     const referralCode = generateId("ref").replace("ref_", "").slice(0, 10);
-    const subExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    const TRIAL_DAYS = 7;
+    const subExpiresAt = new Date(Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000).toISOString();
     const newUser: any = {
       id: userId,
       telegramId: from.id,
@@ -5015,6 +5020,7 @@ async function handleContactMessage(msg: TgMessage): Promise<void> {
       utcOffset: 0,
       activeProgramId: null,
       subscriptionExpiresAt: subExpiresAt,
+      trialEndsAt: subExpiresAt,
       referralCode,
       referralCount: 0,
       referredBy: null,
@@ -8632,6 +8638,22 @@ app.post(`${PREFIX}/ai/coach/chat`, async (c) => {
       return c.json({ message: "message is required", code: "BAD_REQUEST", status: 400 }, 400);
     }
 
+    // Freemium limit: free users get limited coach messages per day
+    const premiumCoach = await isPremiumUser(auth.userId);
+    if (!premiumCoach) {
+      const coachCount = await getDailyCoachCount(auth.userId);
+      if (coachCount >= FREE_COACH_MESSAGES_PER_DAY) {
+        return c.json({
+          message: "Daily AI Coach limit reached. Upgrade to Premium for unlimited coaching.",
+          code: "LIMIT_REACHED",
+          status: 429,
+          limit: FREE_COACH_MESSAGES_PER_DAY,
+          used: coachCount,
+        }, 429);
+      }
+      await incrementDailyCoachCount(auth.userId);
+    }
+
     // Rate limiting
     const rateLimitKey = `become:rate:coach:${auth.userId}`;
     const rateData = await kv.get(rateLimitKey);
@@ -9103,9 +9125,13 @@ app.post(`${PREFIX}/tasks/:id/send-reminder`, async (c) => {
 // FREEMIUM LIMITS & NUTRITION AI ENDPOINTS
 // =============================================
 
-const FREE_SCAN_LIMIT_PER_DAY = 5;
+const FREE_SCAN_LIMIT_PER_DAY = 3;
+const FREE_FOOD_ESTIMATE_LIMIT_PER_DAY = 5;
 const FREE_MEAL_PLAN_LIMIT_PER_WEEK = 1;
+const FREE_WORKOUT_PLAN_LIMIT_PER_WEEK = 0; // Premium only
 const FREE_AI_ANALYSIS_LIMIT_PER_WEEK = 1;
+const FREE_COACH_MESSAGES_PER_DAY = 3;
+const FREE_ACTIVITY_LOG_PER_DAY = 2;
 
 async function isPremiumUser(userId: string): Promise<boolean> {
   const user = await kv.get(`become:user:${userId}`);
@@ -9117,6 +9143,56 @@ async function isPremiumUser(userId: string): Promise<boolean> {
 async function getDailyScanCount(userId: string): Promise<number> {
   const today = new Date().toISOString().slice(0, 10);
   return (await kv.get(`become:usage:scan:${userId}:${today}`)) || 0;
+}
+
+async function getDailyCoachCount(userId: string): Promise<number> {
+  const today = new Date().toISOString().slice(0, 10);
+  return (await kv.get(`become:usage:coach:${userId}:${today}`)) || 0;
+}
+
+async function incrementDailyCoachCount(userId: string): Promise<number> {
+  const today = new Date().toISOString().slice(0, 10);
+  const key = `become:usage:coach:${userId}:${today}`;
+  const next = ((await kv.get(key)) || 0) + 1;
+  await kv.set(key, next);
+  return next;
+}
+
+async function getDailyFoodEstimateCount(userId: string): Promise<number> {
+  const today = new Date().toISOString().slice(0, 10);
+  return (await kv.get(`become:usage:food_est:${userId}:${today}`)) || 0;
+}
+
+async function incrementDailyFoodEstimateCount(userId: string): Promise<number> {
+  const today = new Date().toISOString().slice(0, 10);
+  const key = `become:usage:food_est:${userId}:${today}`;
+  const next = ((await kv.get(key)) || 0) + 1;
+  await kv.set(key, next);
+  return next;
+}
+
+async function getDailyActivityLogCount(userId: string): Promise<number> {
+  const today = new Date().toISOString().slice(0, 10);
+  return (await kv.get(`become:usage:activity:${userId}:${today}`)) || 0;
+}
+
+async function incrementDailyActivityLogCount(userId: string): Promise<number> {
+  const today = new Date().toISOString().slice(0, 10);
+  const key = `become:usage:activity:${userId}:${today}`;
+  const next = ((await kv.get(key)) || 0) + 1;
+  await kv.set(key, next);
+  return next;
+}
+
+async function getWeeklyWorkoutPlanCount(userId: string): Promise<number> {
+  return (await kv.get(`become:usage:workout:${userId}:${getISOWeek()}`)) || 0;
+}
+
+async function incrementWeeklyWorkoutPlanCount(userId: string): Promise<number> {
+  const key = `become:usage:workout:${userId}:${getISOWeek()}`;
+  const next = ((await kv.get(key)) || 0) + 1;
+  await kv.set(key, next);
+  return next;
 }
 
 async function incrementDailyScanCount(userId: string): Promise<number> {
@@ -9166,13 +9242,24 @@ app.get(`${PREFIX}/subscription/usage`, async (c) => {
     const scanCount = await getDailyScanCount(auth.userId);
     const mealPlanCount = await getWeeklyMealPlanCount(auth.userId);
     const aiAnalysisCount = await getWeeklyAiAnalysisCount(auth.userId);
+    const coachCount = await getDailyCoachCount(auth.userId);
+    const foodEstCount = await getDailyFoodEstimateCount(auth.userId);
+    const activityLogCount = await getDailyActivityLogCount(auth.userId);
+    const workoutPlanCount = await getWeeklyWorkoutPlanCount(auth.userId);
+
+    const mkLimit = (used: number, limit: number) => ({
+      used, limit: premium ? null : limit, remaining: premium ? null : Math.max(0, limit - used),
+    });
 
     return c.json({
       is_premium: premium,
-      scans: { used: scanCount, limit: premium ? null : FREE_SCAN_LIMIT_PER_DAY, remaining: premium ? null : Math.max(0, FREE_SCAN_LIMIT_PER_DAY - scanCount) },
-      meal_plans: { used: mealPlanCount, limit: premium ? null : FREE_MEAL_PLAN_LIMIT_PER_WEEK, remaining: premium ? null : Math.max(0, FREE_MEAL_PLAN_LIMIT_PER_WEEK - mealPlanCount) },
-      ai_analysis: { used: aiAnalysisCount, limit: premium ? null : FREE_AI_ANALYSIS_LIMIT_PER_WEEK, remaining: premium ? null : Math.max(0, FREE_AI_ANALYSIS_LIMIT_PER_WEEK - aiAnalysisCount) },
-      workout_plans: { advanced: premium },
+      scans: mkLimit(scanCount, FREE_SCAN_LIMIT_PER_DAY),
+      food_estimates: mkLimit(foodEstCount, FREE_FOOD_ESTIMATE_LIMIT_PER_DAY),
+      meal_plans: mkLimit(mealPlanCount, FREE_MEAL_PLAN_LIMIT_PER_WEEK),
+      workout_plans: { ...mkLimit(workoutPlanCount, FREE_WORKOUT_PLAN_LIMIT_PER_WEEK), advanced: premium },
+      ai_analysis: mkLimit(aiAnalysisCount, FREE_AI_ANALYSIS_LIMIT_PER_WEEK),
+      coach_messages: mkLimit(coachCount, FREE_COACH_MESSAGES_PER_DAY),
+      activity_logs: mkLimit(activityLogCount, FREE_ACTIVITY_LOG_PER_DAY),
     });
   } catch (err) {
     console.log("GET /subscription/usage error:", err);
@@ -9190,6 +9277,16 @@ app.post(`${PREFIX}/food/estimate`, async (c) => {
     const { food_name, language } = await c.req.json();
     if (!food_name || typeof food_name !== "string" || food_name.trim().length === 0) {
       return c.json({ message: "food_name is required", code: "INVALID_INPUT", status: 400 }, 400);
+    }
+
+    // Freemium limit: free users get limited food estimates per day
+    const premiumEst = await isPremiumUser(auth.userId);
+    if (!premiumEst) {
+      const estCount = await getDailyFoodEstimateCount(auth.userId);
+      if (estCount >= FREE_FOOD_ESTIMATE_LIMIT_PER_DAY) {
+        return c.json({ message: "Daily food estimate limit reached. Upgrade to Premium for unlimited.", code: "LIMIT_REACHED", status: 429, limit: FREE_FOOD_ESTIMATE_LIMIT_PER_DAY, used: estCount }, 429);
+      }
+      await incrementDailyFoodEstimateCount(auth.userId);
     }
 
     const lang = language === "ru" ? "ru" : "en";
@@ -9986,6 +10083,21 @@ app.post(`${PREFIX}/workout-plans/generate`, async (c) => {
     const auth = await resolveUser(c);
     if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
 
+    // Freemium: workout plan generation is Premium-only (free users get 0/week)
+    const premiumWorkout = await isPremiumUser(auth.userId);
+    if (!premiumWorkout) {
+      const wpCount = await getWeeklyWorkoutPlanCount(auth.userId);
+      if (wpCount >= FREE_WORKOUT_PLAN_LIMIT_PER_WEEK) {
+        return c.json({
+          message: "Workout plan generation is a Premium feature. Upgrade to create workout plans.",
+          code: "PREMIUM_REQUIRED",
+          status: 429,
+          limit: FREE_WORKOUT_PLAN_LIMIT_PER_WEEK,
+          used: wpCount,
+        }, 429);
+      }
+    }
+
     const body = await c.req.json();
     const {
       plan_length, workout_type, goal, gender, activity_level,
@@ -10478,13 +10590,26 @@ app.get(`${PREFIX}/subscription/status`, async (c) => {
     if (!user) return c.json({ message: "User not found", code: "NOT_FOUND", status: 404 }, 404);
 
     const expiresAt = user.subscriptionExpiresAt || null;
-    const isActive = expiresAt ? new Date(expiresAt).getTime() > Date.now() : false;
-    const daysLeft = expiresAt ? Math.max(0, Math.ceil((new Date(expiresAt).getTime() - Date.now()) / (24 * 60 * 60 * 1000))) : 0;
+    const now = Date.now();
+    const expiresMs = expiresAt ? new Date(expiresAt).getTime() : 0;
+    const isActive = expiresMs > now;
+    const daysLeft = expiresAt ? Math.max(0, Math.ceil((expiresMs - now) / (24 * 60 * 60 * 1000))) : 0;
+
+    // Determine if user is still on initial trial (never paid/earned premium)
+    // Trial users have trialEndsAt set; if their subscription hasn't been extended beyond trial, they're on trial.
+    const trialEndsAt = user.trialEndsAt || null;
+    const isTrial = !!trialEndsAt && isActive && expiresAt === trialEndsAt;
+    const trialDaysLeft = trialEndsAt && isTrial ? Math.max(0, Math.ceil((new Date(trialEndsAt).getTime() - now) / (24 * 60 * 60 * 1000))) : 0;
+    // Trial expired = user had a trial but it's over and they haven't paid
+    const trialExpired = !!trialEndsAt && !isActive && new Date(trialEndsAt).getTime() <= now;
 
     return c.json({
       isActive,
       expiresAt,
       daysLeft,
+      isTrial,
+      trialDaysLeft,
+      trialExpired,
       isAdmin: isAdminUser(auth.telegramId),
     });
   } catch (err) {
@@ -13075,6 +13200,22 @@ app.post(`${PREFIX}/activity/log`, async (c) => {
   try {
     const auth = await resolveUser(c);
     if (!auth) return c.json({ message: "Unauthorized", code: "UNAUTHORIZED", status: 401 }, 401);
+
+    // Freemium limit: free users get limited activity logs per day
+    const premiumActivity = await isPremiumUser(auth.userId);
+    if (!premiumActivity) {
+      const actCount = await getDailyActivityLogCount(auth.userId);
+      if (actCount >= FREE_ACTIVITY_LOG_PER_DAY) {
+        return c.json({
+          message: "Daily activity log limit reached. Upgrade to Premium for unlimited logging.",
+          code: "LIMIT_REACHED",
+          status: 429,
+          limit: FREE_ACTIVITY_LOG_PER_DAY,
+          used: actCount,
+        }, 429);
+      }
+      await incrementDailyActivityLogCount(auth.userId);
+    }
 
     const body = await c.req.json();
     const { text, voice_base64, voice_mime, image_base64, image_mime, language, gender, age, weight, activity_level } = body;

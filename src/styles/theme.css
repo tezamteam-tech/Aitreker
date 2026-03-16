@@ -288,8 +288,23 @@
 
 /* ── Base styles ── */
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
+  /*
+   * iOS WebKit fix: Do NOT apply border-color or outline-color to *
+   * because iOS Retina can render sub-pixel hairlines even with border-width: 0.
+   * Combined with backdrop-filter, this creates visible "ghost" rectangles.
+   * Instead, set border-color only where borders are explicitly used.
+   */
+  *,
+  ::before,
+  ::after {
+    border-color: transparent;
+    outline: none;
+  }
+
+  /* Restore focus-visible outline for accessibility */
+  *:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
   }
 
   html {
