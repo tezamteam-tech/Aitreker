@@ -31,6 +31,8 @@ import {
   sendPhoto,
   sendVideo,
   sendMediaGroup,
+  sendVoice,
+  generateTTS,
   createInvoiceLink,
   answerPreCheckoutQuery,
   sendInvoice,
@@ -40,7 +42,7 @@ import {
   type TgPreCheckoutQuery,
   type InlineKeyboardButton,
 } from "./telegram-bot.tsx";
-import { detectLang, type Lang } from "./i18n.tsx";
+import { detectLang, getUserLang, type Lang } from "./i18n.tsx";
 import {
   notifyDayComplete,
   notifyStreakMilestone,
@@ -8218,6 +8220,12 @@ app.get(`${PREFIX}/cron/trigger`, async (c) => {
       results.eveningNudge = await r4.json();
     } catch (err) { results.eveningNudge = { error: String(err) }; }
 
+    // Voice morning coach: AI-powered personalized voice messages (30 min after text morning)
+    try {
+      const r5 = await fetch(`${baseUrl}/cron/voice-morning-coach`, { headers: { Authorization: authHeader } });
+      results.voiceMorningCoach = await r5.json();
+    } catch (err) { results.voiceMorningCoach = { error: String(err) }; }
+
     console.log("[Cron] Results:", JSON.stringify(results));
     return c.json({ success: true, timestamp: new Date().toISOString(), results });
   } catch (err) {
@@ -11632,6 +11640,154 @@ app.post(`${PREFIX}/admin/broadcast`, async (c) => {
   }
 });
 
+// ---- POST /admin/send-voice ----
+// Send a voice message to a single user (TTS from text)
+app.post(`${PREFIX}/admin/send-voice`, async (c) => {
+  try {
+    const admin = await requireAdmin(c);
+    if (!admin) return c.json({ message: "Forbidden: admin only", code: "FORBIDDEN", status: 403 }, 403);
+
+    const { userId, text, voice, speed } = await c.req.json();
+    if (!userId || !text) {
+      return c.json({ message: "userId and text required", code: "BAD_REQUEST", status: 400 }, 400);
+    }
+
+    // Get user
+    const user = await kv.get(`become:user:${userId}`);
+    if (!user || !user.telegramId) {
+      return c.json({ message: "User not found or no telegramId", code: "NOT_FOUND", status: 404 }, 404);
+    }
+
+    // Check if user has voice coach enabled
+    const prefs = await kv.get(`become:notif_prefs:${userId}`);
+    const voiceEnabled = prefs?.voiceCoach !== false; // default true
+    if (!voiceEnabled) {
+      return c.json({ message: "User has disabled voice messages", code: "VOICE_DISABLED", status: 200 });
+    }
+
+    // Generate TTS
+    const audioData = await generateTTS(text, voice || "nova", speed || 1.0);
+
+    // Send voice + text caption
+    const chatId = Number(user.telegramId);
+    await sendVoice(chatId, audioData, text);
+
+    console.log(`[Admin] Voice sent to user ${userId} (tg:${chatId}), ${audioData.byteLength} bytes`);
+    return c.json({ success: true });
+  } catch (err) {
+    console.log("POST /admin/send-voice error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- POST /admin/voice-broadcast ----
+// Generate TTS from text and broadcast as voice message to all users
+app.post(`${PREFIX}/admin/voice-broadcast`, async (c) => {
+  try {
+    const admin = await requireAdmin(c);
+    if (!admin) return c.json({ message: "Forbidden: admin only", code: "FORBIDDEN", status: 403 }, 403);
+
+    const { text, audience, voice, speed, buttonText, buttonUrl } = await c.req.json();
+    if (!text) {
+      return c.json({ message: "Text required for voice broadcast", code: "BAD_REQUEST", status: 400 }, 400);
+    }
+
+    // Generate TTS once, send to all
+    console.log(`[Admin] Generating TTS for voice broadcast: "${text.substring(0, 80)}..."`);
+    const audioData = await generateTTS(text, voice || "nova", speed || 1.0);
+    console.log(`[Admin] TTS generated: ${audioData.byteLength} bytes`);
+
+    // Build inline keyboard if button provided
+    const inlineKeyboard = (buttonText && buttonUrl) ? {
+      inline_keyboard: [[{ text: buttonText, url: buttonUrl }]]
+    } : undefined;
+
+    // Get all users (same logic as text broadcast)
+    const allMappings = await kv.getByPrefix("become:user:tg:");
+    const userIds: string[] = [];
+    for (const mapping of allMappings) {
+      if (typeof mapping === "string") userIds.push(mapping);
+    }
+
+    // Fetch all users
+    const users: any[] = [];
+    const batchSize = 20;
+    for (let i = 0; i < userIds.length; i += batchSize) {
+      const batch = userIds.slice(i, i + batchSize);
+      const keys = batch.map((id) => `become:user:${id}`);
+      const results = await kv.mget(keys);
+      for (const u of results) {
+        if (u && u.telegramId) users.push(u);
+      }
+    }
+
+    // Filter audience
+    let targets = users;
+    if (audience === "subscribers") {
+      targets = users.filter((u) => u.subscriptionExpiresAt && new Date(u.subscriptionExpiresAt).getTime() > Date.now());
+    } else if (audience === "non_subscribers") {
+      targets = users.filter((u) => !u.subscriptionExpiresAt || new Date(u.subscriptionExpiresAt).getTime() <= Date.now());
+    }
+
+    console.log(`[Admin] Voice broadcast to ${targets.length} targets (audience: ${audience})`);
+
+    let sent = 0;
+    let failed = 0;
+    const errors: string[] = [];
+
+    // Fetch notification prefs in batches to filter out users who disabled voice
+    for (const user of targets) {
+      try {
+        const chatId = Number(user.telegramId);
+
+        // Check voice pref
+        const prefs = await kv.get(`become:notif_prefs:${user.id || user.userId}`);
+        if (prefs && prefs.voiceCoach === false) {
+          console.log(`[Admin] Skipping voice for user ${user.id} — voice coach disabled`);
+          continue;
+        }
+
+        // Send voice message with text as caption
+        await sendVoice(chatId, audioData, text, {
+          reply_markup: inlineKeyboard,
+        });
+
+        sent++;
+
+        // Rate limit: ~25 per second
+        if (sent % 20 === 0) {
+          await new Promise((r) => setTimeout(r, 1500));
+        }
+      } catch (err) {
+        failed++;
+        errors.push(`${user.telegramId}: ${err}`);
+        console.log(`[Admin] Voice broadcast failed for ${user.telegramId}:`, err);
+      }
+    }
+
+    // Log broadcast
+    const broadcastId = generateId("vbc");
+    await kv.set(`become:broadcast:${broadcastId}`, {
+      id: broadcastId,
+      type: "voice",
+      adminId: admin.userId,
+      audience,
+      text: text.substring(0, 200),
+      voice: voice || "nova",
+      targetCount: targets.length,
+      sent,
+      failed,
+      createdAt: new Date().toISOString(),
+    });
+
+    console.log(`[Admin] Voice broadcast ${broadcastId} complete: sent=${sent}, failed=${failed}`);
+    return c.json({ success: true, broadcastId, sent, failed, total: targets.length, errors: errors.slice(0, 10) });
+  } catch (err) {
+    console.log("POST /admin/voice-broadcast error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
 // ---- GET /admin/stats ----
 app.get(`${PREFIX}/admin/stats`, async (c) => {
   try {
@@ -11681,6 +11837,103 @@ app.get(`${PREFIX}/admin/stats`, async (c) => {
     });
   } catch (err) {
     console.log("GET /admin/stats error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ---- GET /admin/ab-analytics ----
+// A/B testing analytics: voice vs text notification effectiveness
+app.get(`${PREFIX}/admin/ab-analytics`, async (c) => {
+  try {
+    const admin = await requireAdmin(c);
+    if (!admin) return c.json({ message: "Forbidden: admin only", code: "FORBIDDEN", status: 403 }, 403);
+
+    const allMappings = await kv.getByPrefix("become:user:tg:");
+    const userIds: string[] = [];
+    for (const mapping of allMappings) {
+      if (typeof mapping === "string") userIds.push(mapping);
+    }
+
+    const users: any[] = [];
+    const batchSize = 20;
+    for (let i = 0; i < userIds.length; i += batchSize) {
+      const batch = userIds.slice(i, i + batchSize);
+      const keys = batch.map((id) => `become:user:${id}`);
+      const results = await kv.mget(keys);
+      for (const u of results) if (u) users.push(u);
+    }
+
+    // Collect A/B data for last 7 days
+    const now = new Date();
+    const stats: Record<string, { voiceUsers: Set<string>; textUsers: Set<string>; bothUsers: Set<string>; voiceActive: number; textActive: number; bothActive: number }> = {};
+
+    for (let d = 0; d < 7; d++) {
+      const dateStr = new Date(now.getTime() - d * 86400000).toISOString().slice(0, 10);
+      stats[dateStr] = { voiceUsers: new Set(), textUsers: new Set(), bothUsers: new Set(), voiceActive: 0, textActive: 0, bothActive: 0 };
+    }
+
+    // Check each user's prefs and activity
+    const voiceGroupUsers: string[] = [];
+    const textGroupUsers: string[] = [];
+    const bothGroupUsers: string[] = [];
+
+    for (const user of users) {
+      if (!user.id) continue;
+      const prefs = await getNotificationPrefs(user.id);
+
+      // Determine effective group
+      let group = prefs.abGroup || '';
+      if (!group) {
+        // Auto-assign: if voiceCoach enabled → voice, otherwise text
+        group = prefs.voiceCoach ? 'voice' : 'text';
+      }
+
+      if (group === 'voice') voiceGroupUsers.push(user.id);
+      else if (group === 'both') bothGroupUsers.push(user.id);
+      else textGroupUsers.push(user.id);
+
+      // Check activity for each day
+      for (let d = 0; d < 7; d++) {
+        const dateStr = new Date(now.getTime() - d * 86400000).toISOString().slice(0, 10);
+        const dayStats = stats[dateStr];
+
+        // Check if user was active (logged food or exercise)
+        const foodIdx = await kv.get(`become:food_idx:${user.id}:${dateStr}`);
+        const exIdx = await kv.get(`become:exercise_log_idx:${user.id}:${dateStr}`);
+        const wasActive = (foodIdx && foodIdx.length > 0) || (exIdx && exIdx.length > 0);
+
+        if (group === 'voice') {
+          dayStats.voiceUsers.add(user.id);
+          if (wasActive) dayStats.voiceActive++;
+        } else if (group === 'both') {
+          dayStats.bothUsers.add(user.id);
+          if (wasActive) dayStats.bothActive++;
+        } else {
+          dayStats.textUsers.add(user.id);
+          if (wasActive) dayStats.textActive++;
+        }
+      }
+    }
+
+    // Build response
+    const dailyStats = Object.entries(stats).map(([date, s]) => ({
+      date,
+      voice: { total: s.voiceUsers.size, active: s.voiceActive, rate: s.voiceUsers.size > 0 ? Math.round((s.voiceActive / s.voiceUsers.size) * 100) : 0 },
+      text: { total: s.textUsers.size, active: s.textActive, rate: s.textUsers.size > 0 ? Math.round((s.textActive / s.textUsers.size) * 100) : 0 },
+      both: { total: s.bothUsers.size, active: s.bothActive, rate: s.bothUsers.size > 0 ? Math.round((s.bothActive / s.bothUsers.size) * 100) : 0 },
+    })).sort((a, b) => b.date.localeCompare(a.date));
+
+    return c.json({
+      success: true,
+      summary: {
+        voiceGroupSize: voiceGroupUsers.length,
+        textGroupSize: textGroupUsers.length,
+        bothGroupSize: bothGroupUsers.length,
+      },
+      daily: dailyStats,
+    });
+  } catch (err) {
+    console.log("GET /admin/ab-analytics error:", err);
     return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
   }
 });
@@ -13852,7 +14105,15 @@ app.get(`${PREFIX}/cron/nutrition-morning`, async (c) => {
         });
 
         // Mark as sent for today
-        await kv.set(userDedupKey, { sentAt: now.toISOString() });
+        await kv.set(userDedupKey, { sentAt: now.toISOString(), type: 'text' });
+
+        // A/B tracking: log text notification delivery
+        const abLogKey = `become:ab_notif:${user.id}:${today}`;
+        const existingAb = await kv.get(abLogKey);
+        if (!existingAb) {
+          const prefs2 = await getNotificationPrefs(user.id);
+          await kv.set(abLogKey, { type: 'text', sentAt: now.toISOString(), abGroup: prefs2.abGroup || 'text' });
+        }
         sent++;
       } catch (ue) {
         const errMsg = `[NutritionMorning] Error for user ${user.id}: ${ue}`;
@@ -14311,6 +14572,330 @@ app.get(`${PREFIX}/analytics/extended`, async (c) => {
     return c.json({ daily: dailyData, weeks: weeklyBuckets, trends, summary });
   } catch (err) {
     console.log("GET /analytics/extended error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ============================================================
+// FEATURE: Voice Preview (Admin) — generate TTS and return as base64
+// ============================================================
+
+app.post(`${PREFIX}/admin/preview-voice`, async (c) => {
+  try {
+    const admin = await requireAdmin(c);
+    if (!admin) return c.json({ message: "Forbidden", code: "FORBIDDEN", status: 403 }, 403);
+
+    const { text, voice, speed } = await c.req.json();
+    if (!text) return c.json({ message: "Text required", code: "BAD_REQUEST", status: 400 }, 400);
+
+    const audioData = await generateTTS(text.substring(0, 500), voice || "nova", speed || 1.0);
+    const base64 = btoa(String.fromCharCode(...audioData));
+    console.log(`[Admin] Voice preview generated: ${audioData.byteLength} bytes, voice=${voice || "nova"}`);
+
+    return c.json({ success: true, audio: base64, format: "opus", byteLength: audioData.byteLength });
+  } catch (err) {
+    console.log("POST /admin/preview-voice error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ============================================================
+// FEATURE: AI Coach Personalized Morning Voice Cron
+// ============================================================
+
+app.get(`${PREFIX}/cron/voice-morning-coach`, async (c) => {
+  try {
+    const now = new Date();
+    const today = now.toISOString().slice(0, 10);
+    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+    const utcMin = `${String(now.getUTCHours()).padStart(2, "0")}:${String(now.getUTCMinutes()).padStart(2, "0")}`;
+    const globalDedupKey = `become:cron:voice_morning:${utcMin}`;
+    const alreadyRan = await kv.get(globalDedupKey);
+    if (alreadyRan) return c.json({ success: true, sent: 0, skipped: "already_ran_this_minute" });
+    await kv.set(globalDedupKey, { ts: now.toISOString() });
+
+    const users = await kv.getByPrefix("become:user:");
+    let sent = 0, checked = 0;
+    const errors: string[] = [];
+
+    for (const user of (users || [])) {
+      if (!user.telegramId || !user.id) continue;
+      checked++;
+
+      try {
+        const prefs = await getNotificationPrefs(user.id);
+        if (!prefs.enabled || !prefs.voiceCoach || !prefs.dailyReminder) continue;
+
+        // Voice cron fires 30 min after text morning
+        const preferredTime = user.dailyReminderTime || "09:00";
+        const [prefH, prefM] = preferredTime.split(":").map(Number);
+        if (isNaN(prefH) || isNaN(prefM)) continue;
+
+        const voiceMinutes = prefH * 60 + prefM + 30;
+        const userOffset = user.utcOffset || 0;
+        const voiceMinutesUTC = ((voiceMinutes - userOffset) % 1440 + 1440) % 1440;
+        const currentMinutesUTC = now.getUTCHours() * 60 + now.getUTCMinutes();
+
+        const diff = Math.abs(currentMinutesUTC - voiceMinutesUTC);
+        const wrappedDiff = Math.min(diff, 1440 - diff);
+        if (wrappedDiff > 7) continue;
+
+        const userDedupKey = `become:cron:voice_morning:${user.id}:${today}`;
+        const alreadySent = await kv.get(userDedupKey);
+        if (alreadySent) continue;
+
+        const firstName = user.firstName || user.first_name || "Friend";
+        const lang = await getUserLang(user.id, kv);
+        const calorieTarget = user.daily_calorie_target || 0;
+
+        // Yesterday's food
+        let yesterdayCalories = 0, yesterdayMeals = 0;
+        try {
+          const foodIdx: string[] = (await kv.get(`become:food_idx:${user.id}:${yesterday}`)) || [];
+          yesterdayMeals = foodIdx.length;
+          for (const fid of foodIdx.slice(0, 20)) {
+            const entry = await kv.get(`become:food:${user.id}:${fid}`);
+            if (entry?.calories) yesterdayCalories += entry.calories;
+          }
+        } catch { /* ignore */ }
+
+        // Nutrition streak
+        let nutritionStreak = 0;
+        try {
+          for (let i = 1; i <= 30; i++) {
+            const dStr = new Date(now.getTime() - i * 86400000).toISOString().slice(0, 10);
+            const dayFood: string[] = (await kv.get(`become:food_idx:${user.id}:${dStr}`)) || [];
+            if (dayFood.length > 0) nutritionStreak++; else break;
+          }
+        } catch { /* ignore */ }
+
+        // Yesterday's workouts
+        let yesterdayWorkouts = 0, yesterdayBurned = 0;
+        try {
+          const exIdx: string[] = (await kv.get(`become:exercise_log_idx:${user.id}:${yesterday}`)) || [];
+          yesterdayWorkouts = exIdx.length;
+          for (const eid of exIdx.slice(0, 10)) {
+            const entry = await kv.get(`become:exercise_log:${user.id}:${eid}`);
+            if (entry?.calories_burned) yesterdayBurned += entry.calories_burned;
+          }
+        } catch { /* ignore */ }
+
+        // Today's meal plan summary
+        let todayMealPlan = "";
+        try {
+          const mealPlanIndex: string[] = (await kv.get(`become:meal_plans_index:${user.id}`)) || [];
+          if (mealPlanIndex.length > 0) {
+            const latestPlan = await kv.get(`become:meal_plans:${user.id}:${mealPlanIndex[0]}`);
+            if (latestPlan?.meal_data?.days) {
+              const daysSince = Math.max(1, Math.ceil((now.getTime() - new Date(latestPlan.created_at || now).getTime()) / 86400000));
+              const dayNum = Math.min(daysSince, latestPlan.meal_data.days.length);
+              const todayDay = latestPlan.meal_data.days.find((d: any) => d.day === dayNum) || latestPlan.meal_data.days[0];
+              if (todayDay?.meals) {
+                todayMealPlan = todayDay.meals.map((m: any) => `${m.name || m.meal_type}: ${m.calories || "?"}cal`).join(", ");
+              }
+            }
+          }
+        } catch { /* ignore */ }
+
+        // Today's workout
+        let todayWorkout = "";
+        try {
+          const workoutIndex: string[] = (await kv.get(`become:workout_plans_index:${user.id}`)) || [];
+          if (workoutIndex.length > 0) {
+            const latestPlan = await kv.get(`become:workout_plans:${user.id}:${workoutIndex[0]}`);
+            if (latestPlan?.workout_data?.days) {
+              const daysSince = Math.max(1, Math.ceil((now.getTime() - new Date(latestPlan.created_at || now).getTime()) / 86400000) + 1);
+              const dayNum = Math.min(daysSince, latestPlan.workout_data.days.length);
+              const todayDay = latestPlan.workout_data.days.find((d: any) => d.day === dayNum) || latestPlan.workout_data.days[0];
+              if (todayDay) todayWorkout = `${todayDay.name || "Workout"} (~${todayDay.duration_min || 30}min)`;
+            }
+          }
+        } catch { /* ignore */ }
+
+        // Latest weight
+        let latestWeight = "";
+        try {
+          const m = await kv.get(`become:measurements:${user.id}`);
+          if (m?.entries?.length > 0) latestWeight = `${m.entries[m.entries.length - 1].weight}kg`;
+        } catch { /* ignore */ }
+
+        // Generate AI coach message
+        const openaiKey = Deno.env.get("OPENAI_API_KEY");
+        if (!openaiKey) { console.log("[VoiceMorning] No OPENAI_API_KEY"); break; }
+
+        const isRu = lang === "ru";
+        const systemPrompt = isRu
+          ? `Ты — персональный AI-коуч по питанию и фитнесу "Proper Food AI". Говори тепло, мотивирующе, по-дружески. Создай КОРОТКОЕ утреннее голосовое сообщение (3-5 предложений, максимум 400 символов). Если пропустили трекинг — мягко "поругай" с юмором. Если делают хорошо — похвали. Используй конкретные данные. Без эмодзи/markdown — текст будет озвучен. Обращайся на "ты".`
+          : `You are "Proper Food AI" personal coach. Create a SHORT morning voice message (3-5 sentences, max 400 chars). If they skipped tracking — gently nag with humor. If doing well — praise. Use specific data. No emojis/markdown — text will be spoken. Use first name.`;
+
+        const userContext = [
+          `Name: ${firstName}`,
+          calorieTarget > 0 ? `Calorie target: ${calorieTarget}` : null,
+          yesterdayMeals > 0 ? `Yesterday: ${yesterdayMeals} meals, ${yesterdayCalories} cal` : `Yesterday: NO meals logged!`,
+          yesterdayWorkouts > 0 ? `Yesterday workouts: ${yesterdayWorkouts}, burned ${yesterdayBurned} cal` : `Yesterday: no workouts`,
+          calorieTarget > 0 && yesterdayCalories > 0
+            ? (yesterdayCalories > calorieTarget ? `OVER target by ${yesterdayCalories - calorieTarget}` : `Under target by ${calorieTarget - yesterdayCalories}`)
+            : null,
+          nutritionStreak > 0 ? `Streak: ${nutritionStreak} days` : `Streak: broken`,
+          todayMealPlan ? `Today meals: ${todayMealPlan}` : null,
+          todayWorkout ? `Today workout: ${todayWorkout}` : null,
+          latestWeight ? `Weight: ${latestWeight}` : null,
+        ].filter(Boolean).join("\n");
+
+        const aiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${openaiKey}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "gpt-4o-mini",
+            messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userContext }],
+            max_tokens: 300, temperature: 0.9,
+          }),
+        });
+
+        if (!aiRes.ok) { console.log(`[VoiceMorning] GPT error for ${user.id}: ${aiRes.status}`); continue; }
+
+        const aiData = await aiRes.json();
+        const coachMessage = aiData.choices?.[0]?.message?.content?.trim();
+        if (!coachMessage) { console.log(`[VoiceMorning] Empty AI response for ${user.id}`); continue; }
+
+        console.log(`[VoiceMorning] AI msg for ${user.id}: "${coachMessage.substring(0, 80)}..."`);
+
+        const userVoice = prefs.voiceType || "nova";
+        const audioData = await generateTTS(coachMessage, userVoice, 1.0);
+        const chatId = Number(user.telegramId);
+        const miniAppUrl = Deno.env.get("PROPERFOOD_MINIAPP_URL") || Deno.env.get("BECOME_MINIAPP_URL") || "";
+        const inlineKeyboard = miniAppUrl
+          ? { inline_keyboard: [[{ text: isRu ? "\u{1F37D} \u041E\u0442\u043A\u0440\u044B\u0442\u044C" : "\u{1F37D} Open App", web_app: { url: miniAppUrl } }]] }
+          : undefined;
+
+        await sendVoice(chatId, audioData, undefined, { reply_markup: inlineKeyboard });
+        await kv.set(userDedupKey, { sentAt: now.toISOString(), msgLen: coachMessage.length, voice: userVoice, type: 'voice' });
+
+        // A/B tracking: log delivery event
+        const abLogKey = `become:ab_notif:${user.id}:${today}`;
+        await kv.set(abLogKey, { type: 'voice', voice: userVoice, sentAt: now.toISOString(), abGroup: prefs.abGroup || 'voice' });
+        sent++;
+
+        if (sent % 5 === 0) await new Promise(r => setTimeout(r, 2000));
+      } catch (ue) {
+        errors.push(`${user.id}: ${ue}`);
+        console.log(`[VoiceMorning] Error for ${user.id}: ${ue}`);
+      }
+    }
+
+    console.log(`[Cron] Voice morning at ${utcMin} — checked ${checked}, sent ${sent}`);
+    return c.json({ success: true, sent, checked, utcMinute: utcMin, errors: errors.length > 0 ? errors : undefined });
+  } catch (err) {
+    console.log("GET /cron/voice-morning-coach error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ============================================================
+// FEATURE: AI Coach "Nag" — on-demand personalized message
+// ============================================================
+
+app.post(`${PREFIX}/admin/ai-nag`, async (c) => {
+  try {
+    const admin = await requireAdmin(c);
+    if (!admin) return c.json({ message: "Forbidden", code: "FORBIDDEN", status: 403 }, 403);
+
+    const { userId, sendVoice: shouldSendVoice, sendText: shouldSendText, voice, speed } = await c.req.json();
+    if (!userId) return c.json({ message: "userId required", code: "BAD_REQUEST", status: 400 }, 400);
+
+    const user = await kv.get(`become:user:${userId}`);
+    if (!user || !user.telegramId) return c.json({ message: "User not found", code: "NOT_FOUND", status: 404 }, 404);
+
+    const now = new Date();
+    const firstName = user.firstName || user.first_name || "Friend";
+    const lang = await getUserLang(userId, kv);
+    const isRu = lang === "ru";
+    const calorieTarget = user.daily_calorie_target || 0;
+
+    // Last 3 days food
+    const trackingDays: Array<{ date: string; meals: number; calories: number }> = [];
+    for (let i = 0; i < 3; i++) {
+      const dStr = new Date(now.getTime() - i * 86400000).toISOString().slice(0, 10);
+      const foodIdx: string[] = (await kv.get(`become:food_idx:${userId}:${dStr}`)) || [];
+      let cal = 0;
+      for (const fid of foodIdx.slice(0, 20)) {
+        const entry = await kv.get(`become:food:${userId}:${fid}`);
+        if (entry?.calories) cal += entry.calories;
+      }
+      trackingDays.push({ date: dStr, meals: foodIdx.length, calories: cal });
+    }
+
+    // Last 3 days workouts
+    const workoutDays: Array<{ date: string; workouts: number; burned: number }> = [];
+    for (let i = 0; i < 3; i++) {
+      const dStr = new Date(now.getTime() - i * 86400000).toISOString().slice(0, 10);
+      const exIdx: string[] = (await kv.get(`become:exercise_log_idx:${userId}:${dStr}`)) || [];
+      let burned = 0;
+      for (const eid of exIdx.slice(0, 10)) {
+        const entry = await kv.get(`become:exercise_log:${userId}:${eid}`);
+        if (entry?.calories_burned) burned += entry.calories_burned;
+      }
+      workoutDays.push({ date: dStr, workouts: exIdx.length, burned });
+    }
+
+    let nutritionStreak = 0;
+    for (let i = 1; i <= 30; i++) {
+      const dStr = new Date(now.getTime() - i * 86400000).toISOString().slice(0, 10);
+      const dayFood: string[] = (await kv.get(`become:food_idx:${userId}:${dStr}`)) || [];
+      if (dayFood.length > 0) nutritionStreak++; else break;
+    }
+
+    const openaiKey = Deno.env.get("OPENAI_API_KEY");
+    if (!openaiKey) return c.json({ message: "OPENAI_API_KEY not set", code: "CONFIG_ERROR", status: 500 }, 500);
+
+    const systemPrompt = isRu
+      ? `Ты — строгий но заботливый AI-коуч. Сгенерируй персонализированный "нагоняй" — мотивирующее сообщение для пользователя. Будь конкретным. Если пропускали — укажи прямо. Если хорошо — хвали, но ставь задачи. 4-6 предложений, макс 500 символов. Без эмодзи/форматирования — для голосового. На "ты".`
+      : `You are a strict but caring AI coach. Generate a personalized "nag" that pushes the user to action. Be specific with data. If they skipped — call it out. If doing well — praise but challenge. 4-6 sentences, max 500 chars. No emojis/formatting — for voice. Use first name.`;
+
+    const userContext = [
+      `User: ${firstName}`, `Calorie target: ${calorieTarget || "not set"}`, `Streak: ${nutritionStreak} days`,
+      `Last 3 days food:`, ...trackingDays.map(d => `  ${d.date}: ${d.meals} meals, ${d.calories} cal`),
+      `Last 3 days workouts:`, ...workoutDays.map(d => `  ${d.date}: ${d.workouts} sessions, ${d.burned} cal burned`),
+    ].join("\n");
+
+    const aiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${openaiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userContext }],
+        max_tokens: 350, temperature: 0.85,
+      }),
+    });
+
+    if (!aiRes.ok) {
+      const errText = await aiRes.text();
+      return c.json({ message: `GPT error: ${aiRes.status} ${errText}`, code: "AI_ERROR", status: 500 }, 500);
+    }
+
+    const aiData = await aiRes.json();
+    const nagMessage = aiData.choices?.[0]?.message?.content?.trim();
+    if (!nagMessage) return c.json({ message: "Empty AI response", code: "AI_ERROR", status: 500 }, 500);
+
+    const chatId = Number(user.telegramId);
+    let voiceSent = false, textSent = false;
+
+    if (shouldSendVoice !== false) {
+      const audioData = await generateTTS(nagMessage, voice || "nova", speed || 1.0);
+      await sendVoice(chatId, audioData, undefined);
+      voiceSent = true;
+    }
+
+    if (shouldSendText) {
+      await sendMessage(chatId, `\u{1F3AF} <b>${isRu ? "\u0422\u0432\u043E\u0439 \u043A\u043E\u0443\u0447 \u0433\u043E\u0432\u043E\u0440\u0438\u0442" : "Your coach says"}:</b>\n\n${nagMessage}`, {});
+      textSent = true;
+    }
+
+    console.log(`[Admin] AI nag for ${userId}: voice=${voiceSent}, text=${textSent}`);
+    return c.json({ success: true, message: nagMessage, voiceSent, textSent });
+  } catch (err) {
+    console.log("POST /admin/ai-nag error:", err);
     return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
   }
 });

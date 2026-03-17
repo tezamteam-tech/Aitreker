@@ -40,6 +40,9 @@ import {
   ArrowUpDown,
   Link,
   Trophy,
+  Mic,
+  MessageSquare,
+  Play,
 } from 'lucide-react';
 import { GlassCard } from './glass-card';
 import { useBottomSheetLifecycle } from './bottom-sheet-context';
@@ -48,7 +51,7 @@ import type { AdminUser } from './api-client';
 import { hapticFeedback, hapticSuccess } from './telegram';
 import { useTranslation } from './i18n';
 
-type Tab = 'stats' | 'users' | 'broadcast' | 'social';
+type Tab = 'stats' | 'users' | 'broadcast' | 'social' | 'ab';
 
 export function AdminPage() {
   const navigate = useNavigate();
@@ -75,6 +78,7 @@ export function AdminPage() {
             { id: 'users' as Tab, icon: Users, label: t('adm_tab_users') },
             { id: 'broadcast' as Tab, icon: Megaphone, label: t('adm_tab_broadcast') },
             { id: 'social' as Tab, icon: Star, label: t('adm_tab_social') },
+            { id: 'ab' as Tab, icon: BarChart3, label: 'A/B' },
           ]).map(tab => (
             <button
               key={tab.id}
@@ -99,6 +103,7 @@ export function AdminPage() {
         {activeTab === 'users' && <UsersSection />}
         {activeTab === 'broadcast' && <BroadcastSection />}
         {activeTab === 'social' && <SocialTasksSection />}
+        {activeTab === 'ab' && <AbTestingSection />}
       </div>
     </div>
   );
@@ -204,6 +209,221 @@ function StatsSection() {
   );
 }
 
+// ---- A/B Testing Analytics Section ----
+function AbTestingSection() {
+  const { t } = useTranslation();
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.adminGetAbAnalytics()
+      .then(setData)
+      .catch(err => console.error('[Admin] A/B analytics error:', err))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-6 h-6 text-[#a29bfe] animate-spin" />
+      </div>
+    );
+  }
+
+  if (!data) return null;
+
+  const { summary, daily } = data;
+
+  return (
+    <div className="space-y-4">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          { label: 'Voice', value: summary.voiceGroupSize, color: '#f27059', icon: Mic },
+          { label: 'Text', value: summary.textGroupSize, color: '#a29bfe', icon: MessageSquare },
+          { label: 'Both', value: summary.bothGroupSize, color: '#00cec9', icon: Users },
+        ].map((card, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.05 }}
+          >
+            <GlassCard className="p-3 text-center">
+              <card.icon className="w-4 h-4 mx-auto mb-1" style={{ color: card.color }} />
+              <span className="text-foreground block" style={{ fontSize: '1.25rem', fontWeight: 700 }}>{card.value}</span>
+              <span className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>{card.label}</span>
+            </GlassCard>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Daily Engagement Table */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
+        <GlassCard className="p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <BarChart3 className="w-4 h-4 text-[#a29bfe]" />
+            <span className="text-foreground/60" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>
+              7-Day Engagement: Voice vs Text
+            </span>
+          </div>
+
+          {/* Header */}
+          <div className="grid grid-cols-4 gap-1 mb-2 px-1">
+            <span className="text-ui-text-tertiary" style={{ fontSize: '0.625rem', fontWeight: 600 }}>Date</span>
+            <span className="text-rose-400 text-center" style={{ fontSize: '0.625rem', fontWeight: 600 }}>Voice</span>
+            <span className="text-[#a29bfe] text-center" style={{ fontSize: '0.625rem', fontWeight: 600 }}>Text</span>
+            <span className="text-cyan-400 text-center" style={{ fontSize: '0.625rem', fontWeight: 600 }}>Both</span>
+          </div>
+
+          {/* Rows */}
+          <div className="space-y-1">
+            {(daily || []).map((day: any) => (
+              <div key={day.date} className="grid grid-cols-4 gap-1 px-1 py-1.5 rounded-lg hover:bg-ui-button/50 transition-colors">
+                <span className="text-foreground/70" style={{ fontSize: '0.6875rem' }}>
+                  {day.date.slice(5)}
+                </span>
+                <div className="text-center">
+                  <span className="text-rose-400" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
+                    {day.voice.rate}%
+                  </span>
+                  <span className="text-ui-text-tertiary block" style={{ fontSize: '0.5625rem' }}>
+                    {day.voice.active}/{day.voice.total}
+                  </span>
+                </div>
+                <div className="text-center">
+                  <span className="text-[#a29bfe]" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
+                    {day.text.rate}%
+                  </span>
+                  <span className="text-ui-text-tertiary block" style={{ fontSize: '0.5625rem' }}>
+                    {day.text.active}/{day.text.total}
+                  </span>
+                </div>
+                <div className="text-center">
+                  <span className="text-cyan-400" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
+                    {day.both.rate}%
+                  </span>
+                  <span className="text-ui-text-tertiary block" style={{ fontSize: '0.5625rem' }}>
+                    {day.both.active}/{day.both.total}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Average */}
+          {daily && daily.length > 0 && (() => {
+            const avgVoice = daily.reduce((s: number, d: any) => s + d.voice.rate, 0) / daily.length;
+            const avgText = daily.reduce((s: number, d: any) => s + d.text.rate, 0) / daily.length;
+            const avgBoth = daily.reduce((s: number, d: any) => s + d.both.rate, 0) / daily.length;
+            const winner = avgVoice > avgText ? (avgVoice > avgBoth ? 'Voice' : 'Both') : (avgText > avgBoth ? 'Text' : 'Both');
+            return (
+              <div className="mt-3 pt-3 border-t border-[var(--glass-border-subtle)]">
+                <div className="grid grid-cols-4 gap-1 px-1">
+                  <span className="text-foreground/80" style={{ fontSize: '0.6875rem', fontWeight: 600 }}>AVG</span>
+                  <span className="text-rose-400 text-center" style={{ fontSize: '0.75rem', fontWeight: 700 }}>{avgVoice.toFixed(0)}%</span>
+                  <span className="text-[#a29bfe] text-center" style={{ fontSize: '0.75rem', fontWeight: 700 }}>{avgText.toFixed(0)}%</span>
+                  <span className="text-cyan-400 text-center" style={{ fontSize: '0.75rem', fontWeight: 700 }}>{avgBoth.toFixed(0)}%</span>
+                </div>
+                <div className="text-center mt-2">
+                  <span className="px-3 py-1 rounded-full text-foreground/80" style={{
+                    fontSize: '0.6875rem', fontWeight: 600,
+                    background: winner === 'Voice' ? 'rgba(242,112,89,0.15)' : winner === 'Text' ? 'rgba(162,155,254,0.15)' : 'rgba(0,206,201,0.15)',
+                    border: `1px solid ${winner === 'Voice' ? 'rgba(242,112,89,0.3)' : winner === 'Text' ? 'rgba(162,155,254,0.3)' : 'rgba(0,206,201,0.3)'}`,
+                  }}>
+                    Winner: {winner} ({Math.max(avgVoice, avgText, avgBoth).toFixed(0)}% engagement)
+                  </span>
+                </div>
+              </div>
+            );
+          })()}
+        </GlassCard>
+      </motion.div>
+
+      {/* Info */}
+      <div className="rounded-xl bg-[var(--glass-bg-row)] p-3">
+        <p className="text-ui-tertiary" style={{ fontSize: '0.6875rem', lineHeight: 1.5 }}>
+          A/B groups are auto-assigned based on Voice Coach setting. Users with Voice Coach ON = "voice" group, OFF = "text" group. Engagement = logged food or exercise that day.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ---- AI Nag Button Component ----
+function AiNagButton({ userId, userName }: { userId: string; userName: string }) {
+  const { t } = useTranslation();
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<{ message: string; voiceSent: boolean } | null>(null);
+  const [error, setError] = useState('');
+
+  const handleNag = async (mode: 'voice' | 'text' | 'both') => {
+    setLoading(true);
+    setResult(null);
+    setError('');
+    hapticFeedback('medium');
+    try {
+      const res = await api.adminAiNag({
+        userId,
+        sendVoice: mode === 'voice' || mode === 'both',
+        sendText: mode === 'text' || mode === 'both',
+      });
+      if (res.success) {
+        hapticSuccess();
+        setResult(res);
+      } else {
+        setError('Failed');
+      }
+    } catch (err: any) {
+      setError(err?.message || String(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex gap-2">
+        <button
+          onClick={() => handleNag('voice')}
+          disabled={loading}
+          className="flex-1 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center gap-1.5 disabled:opacity-50"
+          style={{ fontSize: '0.75rem', fontWeight: 600 }}
+        >
+          {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Mic className="w-3.5 h-3.5" />}
+          {t('adm_ai_nag_voice')}
+        </button>
+        <button
+          onClick={() => handleNag('both')}
+          disabled={loading}
+          className="flex-1 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center gap-1.5 disabled:opacity-50"
+          style={{ fontSize: '0.75rem', fontWeight: 600 }}
+        >
+          {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MessageSquare className="w-3.5 h-3.5" />}
+          {t('adm_ai_nag_both')}
+        </button>
+      </div>
+      {result && (
+        <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+          <div className="text-emerald-400 mb-1" style={{ fontSize: '0.6875rem', fontWeight: 600 }}>
+            {t('adm_ai_nag_sent')} ({result.voiceSent ? '🎤+📝' : '📝'})
+          </div>
+          <div className="text-foreground/70 italic" style={{ fontSize: '0.75rem' }}>
+            "{result.message}"
+          </div>
+        </div>
+      )}
+      {error && (
+        <div className="text-red-400" style={{ fontSize: '0.75rem' }}>{error}</div>
+      )}
+    </div>
+  );
+}
+
 // ---- Users Section ----
 function UsersSection() {
   const { t } = useTranslation();
@@ -230,6 +450,7 @@ function UsersSection() {
   // Credit wallet removed — only subscription management is available
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleteStatus, setDeleteStatus] = useState<string | null>(null);
+  const [voiceSending, setVoiceSending] = useState(false);
 
   const fetchUsers = useCallback(async (p: number = 1, s: string = search, f: string = filter, st: string = sort) => {
     setLoading(true);
@@ -316,6 +537,30 @@ function UsersSection() {
       setNotifError(err?.message || String(err));
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const handleSendVoiceToUser = async (userId: string) => {
+    if (!notifText.trim()) return;
+    setVoiceSending(true);
+    setNotifStatus(null);
+    setNotifError('');
+    try {
+      const res = await api.adminSendVoice({ userId, text: notifText.trim() });
+      if (res.success) {
+        hapticSuccess();
+        setNotifStatus('sent');
+        setNotifText('');
+      } else {
+        setNotifStatus('error');
+        setNotifError(res.error || 'Unknown error');
+      }
+    } catch (err: any) {
+      console.error('[Admin] Voice send error:', err);
+      setNotifStatus('error');
+      setNotifError(err?.message || String(err));
+    } finally {
+      setVoiceSending(false);
     }
   };
 
@@ -696,15 +941,26 @@ function UsersSection() {
                       style={{ fontSize: '0.8125rem' }}
                     />
                   </div>
-                  <button
-                    onClick={() => handleSendNotification(selectedUser.id)}
-                    disabled={actionLoading || !notifText.trim()}
-                    className="w-full py-2.5 rounded-xl bg-[#6c5ce7] text-white flex items-center justify-center gap-1.5 disabled:opacity-50"
-                    style={{ fontSize: '0.8125rem', fontWeight: 600 }}
-                  >
-                    {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                    {t('adm_send')}
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleSendNotification(selectedUser.id)}
+                      disabled={actionLoading || !notifText.trim()}
+                      className="flex-1 py-2.5 rounded-xl bg-[#6c5ce7] text-white flex items-center justify-center gap-1.5 disabled:opacity-50"
+                      style={{ fontSize: '0.8125rem', fontWeight: 600 }}
+                    >
+                      {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                      {t('adm_send')}
+                    </button>
+                    <button
+                      onClick={() => handleSendVoiceToUser(selectedUser.id)}
+                      disabled={voiceSending || !notifText.trim()}
+                      className="flex-1 py-2.5 rounded-xl bg-rose-500 text-white flex items-center justify-center gap-1.5 disabled:opacity-50"
+                      style={{ fontSize: '0.8125rem', fontWeight: 600 }}
+                    >
+                      {voiceSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mic className="w-4 h-4" />}
+                      {t('adm_send_voice_user')}
+                    </button>
+                  </div>
 
                   {/* Notification Status */}
                   {notifStatus && (
@@ -714,6 +970,17 @@ function UsersSection() {
                     </div>
                   )}
                 </div>
+              </div>
+
+              {/* ---- Section: AI Coach Nag ---- */}
+              <div className="mb-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <Star className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="text-muted-foreground" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
+                    {t('adm_ai_coach_section')}
+                  </span>
+                </div>
+                <AiNagButton userId={selectedUser.id} userName={selectedUser.displayName || 'User'} />
               </div>
 
               {/* ---- Section: Delete User ---- */}
@@ -792,6 +1059,7 @@ function InfoRow({ label, value, color }: { label: string; value: string; color?
 // ---- Broadcast Section ----
 function BroadcastSection() {
   const { t } = useTranslation();
+  const [broadcastMode, setBroadcastMode] = useState<'text' | 'voice'>('text');
   const [text, setText] = useState('');
   const [audience, setAudience] = useState<'all' | 'subscribers' | 'non_subscribers'>('all');
   const [mediaType, setMediaType] = useState<'none' | 'photo' | 'photos' | 'video'>('none');
@@ -803,6 +1071,12 @@ function BroadcastSection() {
   const [buttonUrl, setButtonUrl] = useState('');
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // Voice-specific
+  const [voiceType, setVoiceType] = useState<'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer'>('nova');
+  const [voiceSpeed, setVoiceSpeed] = useState(1.0);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewAudioUrl, setPreviewAudioUrl] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   const addMediaUrl = () => {
     if (mediaUrls.length < 10) {
@@ -821,6 +1095,31 @@ function BroadcastSection() {
   };
 
   const handleSend = async () => {
+    if (broadcastMode === 'voice') {
+      if (!text.trim()) return;
+      hapticFeedback('medium');
+      setSending(true);
+      setResult(null);
+      try {
+        const res = await api.adminVoiceBroadcast({
+          text: text.trim(),
+          audience,
+          voice: voiceType,
+          speed: voiceSpeed,
+          buttonText: buttonText.trim() || undefined,
+          buttonUrl: buttonUrl.trim() || undefined,
+        });
+        hapticSuccess();
+        setResult(res);
+      } catch (err: any) {
+        console.error('[Admin] Voice broadcast error:', err);
+        setResult({ success: false, error: err.message });
+      } finally {
+        setSending(false);
+      }
+      return;
+    }
+
     if (!text.trim() && mediaUrls.every(u => !u.trim())) return;
 
     hapticFeedback('medium');
@@ -870,6 +1169,39 @@ function BroadcastSection() {
 
   return (
     <div className="space-y-4">
+      {/* Broadcast Mode Switcher */}
+      <GlassCard className="p-4">
+        <div className="text-muted-foreground mb-2" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
+          {t('adm_broadcast_mode')}
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => { hapticFeedback('light'); setBroadcastMode('text'); }}
+            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl transition-all flex-1 justify-center ${
+              broadcastMode === 'text'
+                ? 'bg-[#6c5ce7]/20 text-[#a29bfe] border border-[#6c5ce7]/30'
+                : 'bg-ui-button text-muted-foreground border border-transparent'
+            }`}
+            style={{ fontSize: '0.8125rem', fontWeight: 600 }}
+          >
+            <MessageSquare className="w-4 h-4" />
+            {t('adm_text_mode')}
+          </button>
+          <button
+            onClick={() => { hapticFeedback('light'); setBroadcastMode('voice'); }}
+            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl transition-all flex-1 justify-center ${
+              broadcastMode === 'voice'
+                ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                : 'bg-ui-button text-muted-foreground border border-transparent'
+            }`}
+            style={{ fontSize: '0.8125rem', fontWeight: 600 }}
+          >
+            <Mic className="w-4 h-4" />
+            {t('adm_voice_mode')}
+          </button>
+        </div>
+      </GlassCard>
+
       {/* Audience Selector */}
       <GlassCard className="p-4">
         <div className="text-muted-foreground mb-2" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
@@ -898,13 +1230,51 @@ function BroadcastSection() {
         </div>
       </GlassCard>
 
-      {/* Message Text with Rich Editor */}
+      {/* Voice Settings (voice mode only) */}
+      {broadcastMode === 'voice' && (
+        <GlassCard className="p-4">
+          <div className="text-muted-foreground mb-2" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
+            {t('adm_voice_select')}
+          </div>
+          <div className="flex gap-1.5 flex-wrap mb-3">
+            {(['nova', 'alloy', 'echo', 'fable', 'onyx', 'shimmer'] as const).map(v => (
+              <button
+                key={v}
+                onClick={() => { hapticFeedback('light'); setVoiceType(v); }}
+                className={`px-3 py-1.5 rounded-lg transition-all capitalize ${
+                  voiceType === v
+                    ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                    : 'bg-ui-button text-muted-foreground border border-transparent'
+                }`}
+                style={{ fontSize: '0.75rem' }}
+              >
+                {v}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-muted-foreground" style={{ fontSize: '0.75rem' }}>{t('adm_voice_speed')}</span>
+            <input
+              type="range"
+              min="0.5"
+              max="2.0"
+              step="0.1"
+              value={voiceSpeed}
+              onChange={(e) => setVoiceSpeed(parseFloat(e.target.value))}
+              className="flex-1 accent-rose-400"
+            />
+            <span className="text-rose-400 font-mono" style={{ fontSize: '0.8125rem', minWidth: '2rem' }}>{voiceSpeed.toFixed(1)}x</span>
+          </div>
+        </GlassCard>
+      )}
+
+      {/* Message Text */}
       <GlassCard className="p-4">
         <div className="text-muted-foreground mb-2" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
-          {t('adm_message_text')}
+          {broadcastMode === 'voice' ? t('adm_voice_broadcast') : t('adm_message_text')}
         </div>
-        {/* Formatting Toolbar */}
-        <div className="flex items-center gap-1 mb-2 flex-wrap">
+        {/* Formatting Toolbar (text mode only) */}
+        {broadcastMode === 'text' && (<div className="flex items-center gap-1 mb-2 flex-wrap">
           {[
             { icon: Bold, tag: 'b', label: 'Bold' },
             { icon: Italic, tag: 'i', label: 'Italic' },
@@ -956,18 +1326,71 @@ function BroadcastSection() {
               {emoji}
             </button>
           ))}
-        </div>
+        </div>)}
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder={t('adm_broadcast_placeholder')}
+          placeholder={broadcastMode === 'voice' ? t('adm_voice_text_placeholder') : t('adm_broadcast_placeholder')}
           className="w-full h-32 bg-ui-button rounded-xl p-3 text-foreground outline-none resize-none border focus:border-[#6c5ce7]/30"
           style={{ fontSize: '0.875rem', borderColor: 'var(--glass-border)' }}
         />
+        {broadcastMode === 'voice' && text.trim() && (
+          <div className="mt-2 p-2 rounded-lg bg-rose-500/10 border border-rose-500/20">
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-1.5 text-rose-400" style={{ fontSize: '0.6875rem', fontWeight: 600 }}>
+                <Mic className="w-3 h-3" />
+                Text → Voice via OpenAI TTS
+              </div>
+              <button
+                onClick={async () => {
+                  hapticFeedback('medium');
+                  setPreviewLoading(true);
+                  try {
+                    const res = await api.adminPreviewVoice({ text: text.trim(), voice: voiceType, speed: voiceSpeed });
+                    if (res.success && res.audio) {
+                      // Convert base64 to blob URL
+                      const binary = atob(res.audio);
+                      const bytes = new Uint8Array(binary.length);
+                      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+                      const blob = new Blob([bytes], { type: 'audio/ogg' });
+                      const url = URL.createObjectURL(blob);
+                      if (previewAudioUrl) URL.revokeObjectURL(previewAudioUrl);
+                      setPreviewAudioUrl(url);
+                      hapticSuccess();
+                    }
+                  } catch (err) {
+                    console.error('[Admin] Preview voice error:', err);
+                  } finally {
+                    setPreviewLoading(false);
+                  }
+                }}
+                disabled={previewLoading}
+                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 transition-colors disabled:opacity-50"
+                style={{ fontSize: '0.6875rem', fontWeight: 600 }}
+              >
+                {previewLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3" />}
+                {t('adm_voice_preview')}
+              </button>
+            </div>
+            <div className="text-foreground/60" style={{ fontSize: '0.75rem' }}>
+              {text.length} chars · Voice: {voiceType} · Speed: {voiceSpeed}x
+            </div>
+            {previewAudioUrl && (
+              <audio
+                ref={audioRef}
+                src={previewAudioUrl}
+                controls
+                autoPlay
+                className="w-full mt-2"
+                style={{ height: '2rem' }}
+              />
+            )}
+          </div>
+        )}
       </GlassCard>
 
-      {/* Media */}
-      <GlassCard className="p-4">
+      {/* Media (text mode only) */}
+      {broadcastMode === 'text' && (<GlassCard className="p-4">
         <div className="text-muted-foreground mb-2" style={{ fontSize: '0.75rem', fontWeight: 600 }}>
           {t('adm_media')}
         </div>
@@ -1049,7 +1472,7 @@ function BroadcastSection() {
             )}
           </div>
         )}
-      </GlassCard>
+      </GlassCard>)}
 
       {/* Inline Button */}
       <GlassCard className="p-4">
@@ -1135,16 +1558,23 @@ function BroadcastSection() {
       {/* Send Button */}
       <button
         onClick={handleSend}
-        disabled={sending || (!text.trim() && mediaUrls.every(u => !u.trim()))}
-        className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe] text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-40 active:scale-[0.98] transition-transform"
+        disabled={sending || (broadcastMode === 'voice' ? !text.trim() : (!text.trim() && mediaUrls.every(u => !u.trim())))}
+        className={`w-full py-3.5 rounded-2xl text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-40 active:scale-[0.98] transition-transform ${
+          broadcastMode === 'voice'
+            ? 'bg-gradient-to-r from-rose-500 to-rose-400'
+            : 'bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe]'
+        }`}
         style={{ fontSize: '0.9375rem' }}
       >
         {sending ? (
-          <Loader2 className="w-5 h-5 animate-spin" />
+          <>
+            <Loader2 className="w-5 h-5 animate-spin" />
+            {broadcastMode === 'voice' && <span style={{ fontSize: '0.8125rem' }}>{t('adm_voice_sending')}</span>}
+          </>
         ) : (
           <>
-            <Send className="w-4 h-4" />
-            {t('adm_send_broadcast')}
+            {broadcastMode === 'voice' ? <Mic className="w-4 h-4" /> : <Send className="w-4 h-4" />}
+            {broadcastMode === 'voice' ? t('adm_send_voice_all') : t('adm_send_broadcast')}
           </>
         )}
       </button>

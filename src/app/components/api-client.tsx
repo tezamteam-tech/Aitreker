@@ -1573,6 +1573,64 @@ export const api = {
     return request('POST', '/admin/broadcast', params);
   },
 
+  async adminVoiceBroadcast(params: {
+    text: string;
+    audience: 'all' | 'subscribers' | 'non_subscribers';
+    voice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer';
+    speed?: number;
+    buttonText?: string;
+    buttonUrl?: string;
+  }): Promise<{
+    success: boolean;
+    broadcastId: string;
+    sent: number;
+    failed: number;
+    total: number;
+    errors: string[];
+  }> {
+    return request('POST', '/admin/voice-broadcast', params);
+  },
+
+  async adminSendVoice(params: {
+    userId: string;
+    text: string;
+    voice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer';
+    speed?: number;
+  }): Promise<{ success: boolean; error?: string }> {
+    return request('POST', '/admin/send-voice', params);
+  },
+
+  async adminPreviewVoice(params: {
+    text: string;
+    voice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer';
+    speed?: number;
+  }): Promise<{ success: boolean; audio: string; format: string; byteLength: number }> {
+    return request('POST', '/admin/preview-voice', params);
+  },
+
+  async adminAiNag(params: {
+    userId: string;
+    sendVoice?: boolean;
+    sendText?: boolean;
+    voice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer';
+    speed?: number;
+  }): Promise<{ success: boolean; message: string; voiceSent: boolean; textSent: boolean }> {
+    return request('POST', '/admin/ai-nag', params);
+  },
+
+  async adminGetAbAnalytics(): Promise<{
+    success: boolean;
+    summary: { voiceGroupSize: number; textGroupSize: number; bothGroupSize: number };
+    daily: Array<{
+      date: string;
+      voice: { total: number; active: number; rate: number };
+      text: { total: number; active: number; rate: number };
+      both: { total: number; active: number; rate: number };
+    }>;
+  }> {
+    return request('GET', '/admin/ab-analytics');
+  },
+
   async adminGetStats(): Promise<{
     totalUsers: number;
     activeSubscribers: number;
@@ -1689,6 +1747,9 @@ export interface NotificationPrefs {
   dailyReminder: boolean;
   eveningDigest: boolean;
   coachTips: boolean;
+  voiceCoach: boolean;
+  voiceType: string;
+  abGroup: string;
 }
 
 export interface FocusSession {

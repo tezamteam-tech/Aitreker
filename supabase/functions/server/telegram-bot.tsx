@@ -748,6 +748,102 @@ export async function sendMediaGroup(
 }
 
 /**
+ * Send a voice message using a file URL or Buffer.
+ * For Telegram sendVoice, the voice must be in OGG format encoded with OPUS (or let Telegram convert).
+ * We use multipart/form-data to send the voice as a file upload.
+ */
+export async function sendVoice(
+  chatId: number,
+  voiceData: Uint8Array,
+  caption?: string,
+  options?: {
+    reply_markup?: InlineKeyboardMarkup;
+    parse_mode?: "HTML" | "Markdown" | "MarkdownV2";
+    duration?: number;
+  }
+): Promise<any> {
+  const token = getBotToken();
+  const url = `${BOT_API}${token}/sendVoice`;
+
+  const formData = new FormData();
+  formData.append("chat_id", String(chatId));
+  
+  // Upload voice as .ogg file
+  const blob = new Blob([voiceData], { type: "audio/ogg" });
+  formData.append("voice", blob, "voice.ogg");
+  
+  if (caption) {
+    formData.append("caption", caption);
+    formData.append("parse_mode", options?.parse_mode || "HTML");
+  }
+  if (options?.duration) {
+    formData.append("duration", String(options.duration));
+  }
+  if (options?.reply_markup) {
+    formData.append("reply_markup", JSON.stringify(options.reply_markup));
+  }
+
+  console.log(`[TG Bot] sendVoice to chat ${chatId}`);
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const res = await fetch(url, { method: "POST", body: formData });
+    const data = await res.json();
+
+    if (data.ok) return data.result;
+
+    if (data.error_code === 429 && attempt < 2) {
+      const retryAfter = data.parameters?.retry_after || 2;
+      console.log(`[TG Bot] Rate limited (429) in sendVoice, retry after ${retryAfter}s`);
+      await new Promise(r => setTimeout(r, retryAfter * 1000));
+      continue;
+    }
+
+    console.log(`[TG Bot] sendVoice error:`, JSON.stringify(data));
+    throw new Error(`Telegram API error in sendVoice: ${data.description || "Unknown"}`);
+  }
+}
+
+/**
+ * Generate speech from text using OpenAI TTS API.
+ * Returns raw audio bytes (mp3 format).
+ */
+export async function generateTTS(
+  text: string,
+  voice: "alloy" | "echo" | "fable" | "onyx" | "nova" | "shimmer" = "nova",
+  speed: number = 1.0
+): Promise<Uint8Array> {
+  const apiKey = Deno.env.get("OPENAI_API_KEY");
+  if (!apiKey) throw new Error("OPENAI_API_KEY not set");
+
+  console.log(`[TTS] Generating speech: ${text.substring(0, 80)}... (voice=${voice}, speed=${speed})`);
+
+  const res = await fetch("https://api.openai.com/v1/audio/speech", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "tts-1",
+      input: text,
+      voice,
+      speed,
+      response_format: "opus", // OGG/Opus — perfect for Telegram voice messages
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    console.log(`[TTS] OpenAI TTS error: ${res.status} ${err}`);
+    throw new Error(`OpenAI TTS error: ${res.status} - ${err}`);
+  }
+
+  const arrayBuffer = await res.arrayBuffer();
+  console.log(`[TTS] Generated ${arrayBuffer.byteLength} bytes of audio`);
+  return new Uint8Array(arrayBuffer);
+}
+
+/**
  * Create an invoice link for Telegram Stars payment
  */
 export async function createInvoiceLink(params: {

@@ -16,6 +16,7 @@ import {
   Globe,
   Moon,
   Scale,
+  Mic,
 } from 'lucide-react';
 import { GlassCard } from './glass-card';
 import { api, type NotificationPrefs } from './api-client';
@@ -161,11 +162,10 @@ export function NotificationSettingsSection() {
     }
   }, [isExpanded]);
 
-  const updatePref = async (key: keyof NotificationPrefs, value: boolean) => {
+  const updatePref = async (key: keyof NotificationPrefs, value: boolean | string) => {
     if (!prefs) return;
 
-    const newPrefs = { ...prefs, [key]: value };
-    // If master switch is off, all sub-prefs are effectively disabled
+    const newPrefs = { ...prefs, [key]: value } as NotificationPrefs;
     if (key === 'enabled' && !value) {
       // Keep sub-pref values but master is off
     }
@@ -173,11 +173,10 @@ export function NotificationSettingsSection() {
     setIsSaving(true);
 
     try {
-      const updated = await api.updateNotificationPrefs({ [key]: value });
+      const updated = await api.updateNotificationPrefs({ [key]: value } as any);
       setPrefs(updated);
     } catch (err: any) {
       console.error('[NotifSettings] Failed to update pref:', err);
-      // Revert on error
       setPrefs(prefs);
     } finally {
       setIsSaving(false);
@@ -384,6 +383,57 @@ export function NotificationSettingsSection() {
                     disabled={!prefs.enabled}
                     onToggle={() => updatePref('eveningDigest', !prefs.eveningDigest)}
                   />
+                  <ToggleRow
+                    icon={Mic}
+                    label={t('notif_voice_coach')}
+                    description={t('notif_voice_coach_desc')}
+                    color="text-rose-400"
+                    enabled={prefs.voiceCoach}
+                    disabled={!prefs.enabled}
+                    onToggle={() => updatePref('voiceCoach', !prefs.voiceCoach)}
+                  />
+
+                  {/* Voice Type Selector — only shown when voiceCoach is on */}
+                  {prefs.voiceCoach && prefs.enabled && (
+                    <div className="px-1 pb-2">
+                      <div className="text-ui-text-tertiary mb-2" style={{ fontSize: '0.6875rem', fontWeight: 600 }}>
+                        {t('notif_voice_type')}
+                      </div>
+                      <div className="grid grid-cols-3 gap-1.5">
+                        {(['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'] as const).map(voice => {
+                          const voiceLabels: Record<string, { emoji: string; desc: string }> = {
+                            alloy: { emoji: '🤖', desc: 'Neutral' },
+                            echo: { emoji: '🎙️', desc: 'Deep' },
+                            fable: { emoji: '📖', desc: 'Warm' },
+                            onyx: { emoji: '🎤', desc: 'Rich' },
+                            nova: { emoji: '✨', desc: 'Bright' },
+                            shimmer: { emoji: '🌊', desc: 'Soft' },
+                          };
+                          const { emoji, desc } = voiceLabels[voice];
+                          const isActive = (prefs.voiceType || 'nova') === voice;
+                          return (
+                            <button
+                              key={voice}
+                              onClick={() => {
+                                hapticFeedback('light');
+                                updatePref('voiceType' as any, voice as any);
+                              }}
+                              className={`py-2 rounded-lg text-center transition-all ${
+                                isActive
+                                  ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                                  : 'bg-ui-button text-ui-text-tertiary border border-transparent'
+                              }`}
+                              style={{ fontSize: '0.6875rem', fontWeight: isActive ? 600 : 400 }}
+                            >
+                              <div>{emoji}</div>
+                              <div className="capitalize">{voice}</div>
+                              <div className="text-ui-text-tertiary" style={{ fontSize: '0.5625rem' }}>{desc}</div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -503,13 +553,13 @@ export function NotificationSettingsPage() {
     })();
   }, []);
 
-  const updatePref = async (key: keyof NotificationPrefs, value: boolean) => {
+  const updatePref = async (key: keyof NotificationPrefs, value: boolean | string) => {
     if (!prefs) return;
     const prev = { ...prefs };
-    setPrefs({ ...prefs, [key]: value });
+    setPrefs({ ...prefs, [key]: value } as NotificationPrefs);
     setIsSaving(true);
     try {
-      const updated = await api.updateNotificationPrefs({ [key]: value });
+      const updated = await api.updateNotificationPrefs({ [key]: value } as any);
       setPrefs(updated);
     } catch (err: any) {
       console.error('[NotifSettingsPage] Failed to update pref:', err);
@@ -730,6 +780,66 @@ export function NotificationSettingsPage() {
                       disabled={!prefs.enabled}
                       onToggle={() => updatePref('eveningDigest', !prefs.eveningDigest)}
                     />
+                    <div className="h-px bg-[var(--ui-separator)] mx-2" />
+
+                    {/* Voice Coach toggle */}
+                    <ToggleRow
+                      icon={Mic}
+                      label={t('notif_voice_coach')}
+                      description={t('notif_voice_coach_desc')}
+                      color="text-rose-400"
+                      enabled={prefs.voiceCoach}
+                      disabled={!prefs.enabled}
+                      onToggle={() => updatePref('voiceCoach', !prefs.voiceCoach)}
+                    />
+
+                    {/* Voice Type Selector (full page) */}
+                    {prefs.voiceCoach && prefs.enabled && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="ml-11 pb-2 pt-1"
+                      >
+                        <div className="text-ui-text-tertiary mb-2" style={{ fontSize: '0.6875rem', fontWeight: 600 }}>
+                          {t('notif_voice_type')}
+                        </div>
+                        <div className="grid grid-cols-3 gap-1.5">
+                          {(['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'] as const).map(voice => {
+                            const voiceLabels: Record<string, { emoji: string; desc: string }> = {
+                              alloy: { emoji: '🤖', desc: 'Neutral' },
+                              echo: { emoji: '🎙️', desc: 'Deep' },
+                              fable: { emoji: '📖', desc: 'Warm' },
+                              onyx: { emoji: '🎤', desc: 'Rich' },
+                              nova: { emoji: '✨', desc: 'Bright' },
+                              shimmer: { emoji: '🌊', desc: 'Soft' },
+                            };
+                            const { emoji, desc } = voiceLabels[voice];
+                            const isActive = (prefs.voiceType || 'nova') === voice;
+                            return (
+                              <button
+                                key={voice}
+                                onClick={() => {
+                                  hapticFeedback('light');
+                                  updatePref('voiceType' as any, voice as any);
+                                }}
+                                className={`py-2 rounded-lg text-center transition-all ${
+                                  isActive
+                                    ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                                    : 'bg-ui-button text-ui-text-tertiary border border-transparent'
+                                }`}
+                                style={{ fontSize: '0.6875rem', fontWeight: isActive ? 600 : 400 }}
+                              >
+                                <div>{emoji}</div>
+                                <div className="capitalize">{voice}</div>
+                                <div className="text-ui-text-tertiary" style={{ fontSize: '0.5625rem' }}>{desc}</div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </motion.div>
+                    )}
                   </div>
                 )}
               </GlassCard>

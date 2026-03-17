@@ -34,6 +34,9 @@ export interface NotificationPrefs {
   dailyReminder: boolean; // morning reminder
   eveningDigest: boolean; // evening summary with calories/macros
   coachTips: boolean; // periodic coach tips
+  voiceCoach: boolean; // voice messages from AI coach
+  voiceType: string; // TTS voice: alloy|echo|fable|onyx|nova|shimmer
+  abGroup: string; // A/B test group: 'voice' | 'text' | 'both' | ''
 }
 
 const DEFAULT_PREFS: NotificationPrefs = {
@@ -44,6 +47,9 @@ const DEFAULT_PREFS: NotificationPrefs = {
   dailyReminder: true,
   eveningDigest: true,
   coachTips: true,
+  voiceCoach: true,
+  voiceType: 'nova',
+  abGroup: '',
 };
 
 export async function getNotificationPrefs(userId: string): Promise<NotificationPrefs> {
@@ -904,7 +910,7 @@ export async function notifyEveningSummary(
     actItems.push(`\u{1F372} ${mealsLogged} ${lang === "ru" ? (mealsLogged === 1 ? "приём пищи" : "приёмов пищи") : (mealsLogged === 1 ? "meal" : "meals")}`);
   }
   if (workoutsCompleted > 0) {
-    actItems.push(`\u{1F3CB}\u{FE0F} ${workoutsCompleted} ${lang === "ru" ? (workoutsCompleted === 1 ? "тренировка" : "тренировок") : (workoutsCompleted === 1 ? "workout" : "workouts")}`);
+    actItems.push(`\u{1F3CB}\u{FE0F} ${workoutsCompleted} ${lang === "ru" ? (workoutsCompleted === 1 ? "т��енировка" : "тренировок") : (workoutsCompleted === 1 ? "workout" : "workouts")}`);
   }
   if (actItems.length > 0) {
     lines.push(actItems.join("  \u2022  "));
