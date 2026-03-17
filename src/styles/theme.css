@@ -10,6 +10,39 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ── iOS input zoom fix & global scroll/touch hardening ── */
+html,
+body {
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: default;
+  touch-action: manipulation;
+  overscroll-behavior: contain;
+}
+
+html {
+  touch-action: pan-x pan-y;
+  scroll-behavior: smooth;
+  height: 100%;
+  width: 100%;
+}
+
+/* Force 16px min on inputs to prevent iOS auto-zoom */
+input, select, textarea {
+  font-size: 16px !important;
+}
+
+/* Hide scrollbars globally */
+html, body, * {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  display: none;
+}
+
 /* ── Light Theme ── */
 :root {
   --font-size: 16px;

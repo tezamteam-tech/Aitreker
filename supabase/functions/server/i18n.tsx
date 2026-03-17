@@ -608,6 +608,14 @@ const translations: Record<string, Record<Lang, string>> = {
     en: "Calories, macros & activity at end of day",
     ru: "Калории, макросы и активность в конце дня",
   },
+  notif_evening_nudge: {
+    en: "🍽 You haven't logged your meals today! Open the app and track your progress!",
+    ru: "🍽 Вы не забыли внести то что съели за день? Заходите в приложение и отмечайте свой прогресс!",
+  },
+  btn_open: {
+    en: "📱 Open",
+    ru: "📱 Открыть",
+  },
   day_mon: { en: "Mon", ru: "Пн" },
   day_tue: { en: "Tue", ru: "Вт" },
   day_wed: { en: "Wed", ru: "Ср" },

@@ -146,6 +146,17 @@ function bootstrapSafeArea(): void {
 export function init(debug: boolean): void {
   console.log('[ProperFood] Initialization started');
 
+  // 0. Fix iOS input zoom: ensure viewport has maximum-scale=1, user-scalable=no
+  try {
+    let vpMeta = document.querySelector('meta[name="viewport"]') as HTMLMetaElement | null;
+    if (!vpMeta) {
+      vpMeta = document.createElement('meta');
+      vpMeta.name = 'viewport';
+      document.head.appendChild(vpMeta);
+    }
+    vpMeta.content = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no';
+  } catch {}
+
   // 1. Initialize TMA.js SDK (synchronous — handles postEvent bridge, signals, etc.)
   try {
     _sdkCleanup = initSDK();

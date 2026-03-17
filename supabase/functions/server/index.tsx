@@ -57,6 +57,7 @@ import {
   notifyMorningWorkout,
   notifyNutritionMorning,
   notifyEveningSummary,
+  notifyEveningNudge,
   getNotificationPrefs,
   setNotificationPrefs,
   computeStreak,
@@ -457,6 +458,10 @@ async function resolveUser(c: any): Promise<{ userId: string; telegramId: string
         kv.set(`become:session:${token}`, session).catch(() => {});
       }
     }
+
+    // Track last activity for evening nudge (fire-and-forget, per-day key)
+    const todayStr = new Date().toISOString().slice(0, 10);
+    kv.set(`become:last_active:${session.userId}:${todayStr}`, { ts: Date.now() }).catch(() => {});
 
     return { userId: session.userId, telegramId: session.telegramId };
   } catch (err) {
@@ -8207,6 +8212,12 @@ app.get(`${PREFIX}/cron/trigger`, async (c) => {
       results.eveningSummary = await r3.json();
     } catch (err) { results.eveningSummary = { error: String(err) }; }
 
+    // Evening nudge: remind inactive users at 18:05 to log their meals
+    try {
+      const r4 = await fetch(`${baseUrl}/cron/evening-nudge`, { headers: { Authorization: authHeader } });
+      results.eveningNudge = await r4.json();
+    } catch (err) { results.eveningNudge = { error: String(err) }; }
+
     console.log("[Cron] Results:", JSON.stringify(results));
     return c.json({ success: true, timestamp: new Date().toISOString(), results });
   } catch (err) {
@@ -14011,6 +14022,81 @@ app.get(`${PREFIX}/cron/evening-summary`, async (c) => {
     return c.json({ success: true, sent, checked, utcMinute: utcMin, errors: errors.length > 0 ? errors : undefined });
   } catch (err) {
     console.log("GET /cron/evening-summary error:", err);
+    return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
+  }
+});
+
+// ============================================================
+// CRON: Evening Nudge (18:05 user-local-time)
+// Sends a reminder if user hasn't opened the app today.
+// ============================================================
+
+app.get(`${PREFIX}/cron/evening-nudge`, async (c) => {
+  try {
+    const now = new Date();
+    const today = now.toISOString().slice(0, 10);
+
+    // Global dedup
+    const utcMin = `${String(now.getUTCHours()).padStart(2, "0")}:${String(now.getUTCMinutes()).padStart(2, "0")}`;
+    const globalDedupKey = `become:cron:evening_nudge:${utcMin}`;
+    const alreadyRan = await kv.get(globalDedupKey);
+    if (alreadyRan) {
+      return c.json({ success: true, sent: 0, skipped: "already_ran_this_minute" });
+    }
+    await kv.set(globalDedupKey, { ts: now.toISOString() });
+
+    const users = await kv.getByPrefix("become:user:");
+    let sent = 0;
+    let checked = 0;
+    const errors: string[] = [];
+
+    for (const user of (users || [])) {
+      if (!user.telegramId || !user.id) continue;
+      checked++;
+
+      try {
+        const prefs = await getNotificationPrefs(user.id);
+        if (!prefs.enabled || !prefs.eveningDigest) continue;
+
+        // Target time: 18:05 in user's local timezone
+        const userOffset = user.utcOffset || 0; // offset in minutes
+        const targetLocalMinutes = 18 * 60 + 5; // 18:05
+        const targetUTCMinutes = targetLocalMinutes - userOffset;
+        const normalizedTargetUTC = ((targetUTCMinutes % 1440) + 1440) % 1440;
+        const currentMinutesUTC = now.getUTCHours() * 60 + now.getUTCMinutes();
+
+        const diff = Math.abs(currentMinutesUTC - normalizedTargetUTC);
+        const wrappedDiff = Math.min(diff, 1440 - diff);
+        if (wrappedDiff > 7) continue; // ±7 min window
+
+        // Per-user dedup: only one nudge per day
+        const userDedupKey = `become:cron:evening_nudge:${user.id}:${today}`;
+        const alreadySent = await kv.get(userDedupKey);
+        if (alreadySent) continue;
+
+        // Check if user was active today (opened app / made any API call)
+        const lastActive = await kv.get(`become:last_active:${user.id}:${today}`);
+        if (lastActive) continue; // User was active today — skip nudge
+
+        // Also skip if user already has food entries today (they used the app)
+        const foodIdx: string[] = (await kv.get(`become:food_idx:${user.id}:${today}`)) || [];
+        if (foodIdx.length > 0) continue;
+
+        const firstName = user.firstName || user.first_name || "Friend";
+        await notifyEveningNudge(user.id, Number(user.telegramId), firstName);
+        await kv.set(userDedupKey, { sentAt: now.toISOString() });
+        sent++;
+      } catch (ue) {
+        const errMsg = `[EveningNudge] Error for user ${user.id}: ${ue}`;
+        console.log(errMsg);
+        errors.push(errMsg);
+      }
+    }
+
+    console.log(`[Cron] Evening nudge at ${utcMin} UTC — checked ${checked} users, sent ${sent}`);
+    return c.json({ success: true, sent, checked, utcMinute: utcMin, errors: errors.length > 0 ? errors : undefined });
+  } catch (err) {
+    console.log("GET /cron/evening-nudge error:", err);
     return c.json({ message: `Error: ${err}`, code: "INTERNAL_ERROR", status: 500 }, 500);
   }
 });

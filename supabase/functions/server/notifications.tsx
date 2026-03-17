@@ -932,3 +932,29 @@ export async function notifyEveningSummary(
   console.log(`[Notifications] Evening summary for user ${userId} (${firstName}): ${caloriesConsumed}/${calorieTarget} cal, P=${protein} F=${fat} C=${carbs}, burned=${caloriesBurned}, meals=${mealsLogged}, lang=${lang}`);
   await safeSend(telegramId, lines.join("\n"), keyboard);
 }
+
+/**
+ * Evening Nudge — sent at ~18:05 user-local-time if the user has NOT
+ * interacted with the app today (no `last_active` key for today).
+ * Encourages them to log their meals before the day ends.
+ * Gated by eveningDigest pref (reuses same toggle).
+ */
+export async function notifyEveningNudge(
+  userId: string,
+  telegramId: number,
+  firstName: string,
+): Promise<void> {
+  const lang = await getUserLang(userId, kv);
+  const text = [
+    `👋 <b>${firstName}</b>,`,
+    ``,
+    t("notif_evening_nudge", lang),
+  ].join("\n");
+
+  const keyboard: InlineKeyboardButton[][] = [];
+  const btn = appButton(t("btn_open", lang));
+  if (btn.length) keyboard.push(btn);
+
+  console.log(`[Notifications] Evening nudge for inactive user ${userId} (${firstName}), lang=${lang}`);
+  await safeSend(telegramId, text, keyboard);
+}
