@@ -1,0 +1,1 @@
+const n="ProperFoodAI_bot";function e(t){const o=`https://t.me/${n}/app`;return t?`${o}?startapp=${encodeURIComponent(t)}`:o}function s(t){return`https://t.me/${n}?start=${encodeURIComponent(t)}`}const r=`@${n}`;export{r as B,e as a,s as b,n as c};
