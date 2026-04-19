@@ -1,12 +1,10 @@
 // =============================================
 // Proper Food AI — Unified Goals Hub (/goals)
 // =============================================
-// Shows ALL goals in one place:
 //   0. Overview card with total progress
 //   1. Active program (from plan-builder)
-//   2. Strategic goals (AI strategy engine) + inline due tasks
-//   3. Personal goals (simple goals & tasks)
-//   4. Completed programs history
+//   2. Personal goals & tasks
+//   3. Completed programs history
 // =============================================
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
@@ -21,10 +19,8 @@ import {
   Loader2,
   X,
   Calendar,
-  Sparkles,
   Rocket,
   Flame,
-  Check,
   Clock,
   Trophy,
   Zap,
@@ -37,9 +33,8 @@ import {
 import { GlassCard } from './glass-card';
 import { useBottomSheetLifecycle } from './bottom-sheet-context';
 import { api } from './api-client';
-import type { UserGoal, UserTask, StrategicGoal, StrategicTask } from './api-client';
+import type { UserGoal, UserTask } from './api-client';
 import { hapticFeedback, hapticSuccess } from './telegram';
-import { SwipeableTask, XpBurst } from './swipeable-task';
 import { playXpCoinSound } from './xp-sound';
 import { useTranslation } from './i18n';
 import { PageHeader } from './page-header';
@@ -66,18 +61,6 @@ export function GoalsListPage() {
     return allGoals.filter(g => g.status === statusFilter);
   }, [allGoals, statusFilter]);
 
-  // Strategic goals
-  const [strategicGoals, setStrategicGoals] = useState<StrategicGoal[]>([]);
-
-  // Strategic due tasks (inline swipe-to-complete)
-  const [sgDueTasks, setSgDueTasks] = useState<Record<string, StrategicTask[]>>({});
-  const [sgCompletingId, setSgCompletingId] = useState<string | null>(null);
-  const [sgCompletedIds, setSgCompletedIds] = useState<Set<string>>(new Set());
-  const [sgXpBurstId, setSgXpBurstId] = useState<string | null>(null);
-  const [sgXpAmount, setSgXpAmount] = useState(5);
-  const [sgToast, setSgToast] = useState<string | null>(null);
-  const sgToastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   // Active program
   const [activeProgram, setActiveProgram] = useState<any>(null);
   const [programProgress, setProgramProgress] = useState({ doneDays: 0, totalDays: 7, currentDay: 1, streak: 0 });
@@ -92,7 +75,7 @@ export function GoalsListPage() {
   const [showAddMenu, setShowAddMenu] = useState(false);
   const addMenuRef = useRef<HTMLDivElement>(null);
 
-  // User tasks (standalone, not tied to strategic goals)
+  // User tasks (standalone)
   const [userTasks, setUserTasks] = useState<UserTask[]>([]);
   const [showCreateTask, setShowCreateTask] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
@@ -134,31 +117,13 @@ export function GoalsListPage() {
     setLoading(true);
     Promise.all([
       api.getGoals().catch(() => ({ goals: [] })),
-      api.getStrategicGoals('active').catch(() => ({ goals: [] })),
       api.getActiveProgram().catch(() => null),
       api.getProgressSummary().catch(() => null),
       api.getProgramHistory().catch(() => ({ programs: [], activeProgramId: '' })),
       api.getTasks().catch(() => ({ tasks: [] })),
-    ]).then(([goalsRes, sgRes, prog, summary, histRes, tasksRes]) => {
+    ]).then(([goalsRes, prog, summary, histRes, tasksRes]) => {
       setUserTasks((tasksRes as any).tasks || []);
       setAllGoals(goalsRes.goals);
-
-      const sGoals = sgRes.goals;
-      setStrategicGoals(sGoals);
-
-      // Load due tasks for strategic goals with dueSoon > 0
-      const goalsWithDue = sGoals.filter((g: StrategicGoal) => g.dueSoon > 0);
-      goalsWithDue.forEach((g: StrategicGoal) => {
-        api.getStrategicGoal(g.id)
-          .then(r => {
-            const today = new Date().toISOString().slice(0, 10);
-            const due = r.tasks.filter((t: StrategicTask) => t.nextDueDate && t.nextDueDate <= today);
-            if (due.length > 0) {
-              setSgDueTasks(prev => ({ ...prev, [g.id]: due }));
-            }
-          })
-          .catch(() => {});
-      });
 
       setActiveProgram(prog);
       if (summary) {
@@ -326,35 +291,6 @@ export function GoalsListPage() {
     }
   };
 
-  // Strategic task completion (same as dashboard)
-  const handleSgTaskComplete = async (taskId: string, goalId: string) => {
-    if (sgCompletingId || sgCompletedIds.has(taskId)) return;
-    setSgCompletingId(taskId);
-    hapticFeedback('medium');
-    try {
-      const updated = await api.completeStrategicTask(taskId);
-      const xp = (updated as any).xpAwarded || 5;
-      hapticSuccess();
-      setSgCompletedIds(prev => new Set(prev).add(taskId));
-      setSgDueTasks(prev => {
-        const goalTasks = prev[goalId] || [];
-        return { ...prev, [goalId]: goalTasks.map(t => t.id === taskId ? { ...t, completedCount: updated.completedCount, nextDueDate: updated.nextDueDate } : t) };
-      });
-      setStrategicGoals(prev => prev.map(g => g.id === goalId ? { ...g, totalCompleted: g.totalCompleted + 1, dueSoon: Math.max(0, g.dueSoon - 1) } : g));
-      setSgXpAmount(xp);
-      setSgXpBurstId(taskId);
-      setTimeout(() => setSgXpBurstId(null), 2000);
-      if (sgToastTimer.current) clearTimeout(sgToastTimer.current);
-      setSgToast(`${t('sg_task_completed')}  +${xp} XP`);
-      sgToastTimer.current = setTimeout(() => setSgToast(null), 2500);
-      playXpCoinSound();
-    } catch (err) {
-      console.error('[Goals] Strategic task complete error:', err);
-    } finally {
-      setSgCompletingId(null);
-    }
-  };
-
   // Close add menu on outside click
   useEffect(() => {
     if (!showAddMenu) return;
@@ -370,14 +306,13 @@ export function GoalsListPage() {
   // Computed overview stats
   const pendingTasks = userTasks.filter(ut => ut.status === 'todo').length;
   const doneTasks = userTasks.filter(ut => ut.status === 'done').length;
-  const totalActive = (activeProgram ? 1 : 0) + strategicGoals.length + allGoals.filter(g => g.status === 'active').length + pendingTasks;
-  const totalDueSg = strategicGoals.reduce((s, g) => s + g.dueSoon, 0) + pendingTasks;
+  const totalActive = (activeProgram ? 1 : 0) + allGoals.filter(g => g.status === 'active').length + pendingTasks;
+  const totalDueTasks = pendingTasks;
   const totalCompletedCount = completedPrograms.length + allGoals.filter(g => g.status === 'done').length + doneTasks;
 
   // Overall progress across all goal types
   const overallProgressParts: { done: number; total: number }[] = [];
   if (activeProgram) overallProgressParts.push({ done: programProgress.doneDays, total: programProgress.totalDays });
-  strategicGoals.forEach(sg => { if (sg.taskCount > 0) overallProgressParts.push({ done: sg.totalCompleted, total: sg.taskCount }); });
   allGoals.forEach(g => { if (g.taskCount > 0) overallProgressParts.push({ done: g.tasksDone, total: g.taskCount }); });
   if (userTasks.length > 0) overallProgressParts.push({ done: doneTasks, total: userTasks.length });
   const overallDone = overallProgressParts.reduce((s, p) => s + p.done, 0);
@@ -439,15 +374,6 @@ export function GoalsListPage() {
                       <Target className="w-4 h-4 text-[#00cec9]" />
                     </div>
                     <p className="text-foreground text-left" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{t('goals_create_simple')}</p>
-                  </button>
-                  <button
-                    onClick={() => { hapticFeedback('medium'); setShowAddMenu(false); navigate('/strategic-goal/create'); }}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[var(--ui-button-bg)] active:bg-[var(--ui-button-active)] transition-colors"
-                  >
-                    <div className="w-8 h-8 rounded-lg bg-[#6c5ce7]/15 flex items-center justify-center">
-                      <Sparkles className="w-4 h-4 text-[#a29bfe]" />
-                    </div>
-                    <p className="text-foreground text-left flex items-center gap-2" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{t('goals_create_strategic')} <PremiumBadge /></p>
                   </button>
                   <button
                     onClick={() => { hapticFeedback('medium'); setShowAddMenu(false); navigate('/plan-builder'); }}
@@ -531,7 +457,7 @@ export function GoalsListPage() {
                   <div className="rounded-xl p-2.5 text-center" style={{ background: 'var(--glass-bg-row)', border: '1px solid var(--glass-border-subtle)' }}>
                     <div className="flex items-center justify-center gap-1 mb-1">
                       <Clock className="w-3 h-3 text-[#e17055]" />
-                      <span className={`${totalDueSg > 0 ? 'text-[#e17055]' : 'text-foreground'}`} style={{ fontSize: '1.125rem', fontWeight: 800 }}>{totalDueSg}</span>
+                      <span className={`${totalDueTasks > 0 ? 'text-[#e17055]' : 'text-foreground'}`} style={{ fontSize: '1.125rem', fontWeight: 800 }}>{totalDueTasks}</span>
                     </div>
                     <p className="text-ui-tertiary" style={{ fontSize: '0.5625rem', fontWeight: 600 }}>{t('goals_overview_due')}</p>
                   </div>
@@ -768,177 +694,7 @@ export function GoalsListPage() {
               )}
             </motion.div>
 
-            {/* ===== 2. STRATEGIC GOALS with inline due tasks ===== */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.07 }}>
-              <div className="flex items-center justify-between mb-2.5 px-1">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-3.5 h-3.5 text-[#a29bfe]" />
-                  <p className="text-[#a29bfe]/70" style={{ fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.06em' }}>
-                    {t('goals_strategic')}
-                  </p>
-                  {strategicGoals.length > 0 && (
-                    <span className="px-1.5 py-0.5 rounded-md bg-[#6c5ce7]/10 text-[#a29bfe]/60" style={{ fontSize: '0.625rem', fontWeight: 600 }}>
-                      {strategicGoals.length}
-                    </span>
-                  )}
-                </div>
-                <button
-                  onClick={() => { hapticFeedback('light'); navigate('/strategic-goal/create'); }}
-                  className="text-[#a29bfe]/50 flex items-center gap-1"
-                  style={{ fontSize: '0.75rem', fontWeight: 600 }}
-                >
-                  + {t('sg_new_goal')}
-                </button>
-              </div>
-
-              {strategicGoals.length > 0 ? (
-                <div className={isCompactCards() ? 'space-y-1.5' : 'space-y-2'}>
-                  {strategicGoals.map((sg, idx) => {
-                    const pct = sg.taskCount > 0 ? Math.round((sg.totalCompleted / sg.taskCount) * 100) : 0;
-                    const weeksElapsed = Math.max(1, Math.round((Date.now() - new Date(sg.createdAt).getTime()) / (7 * 86400000)));
-                    const hasDue = sg.dueSoon > 0;
-                    const dueTasks = sgDueTasks[sg.id] || [];
-                    const compact = isCompactCards();
-
-                    return (
-                      <motion.div
-                        key={sg.id}
-                        initial={{ opacity: 0, x: -8 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.09 + idx * 0.04 }}
-                      >
-                        <GlassCard
-                          variant={hasDue ? 'accent' : 'interactive'}
-                          padding={compact ? 'sm' : 'md'}
-                          className="relative overflow-hidden"
-                          onClick={() => { hapticFeedback('light'); navigate(`/strategic-goal/${sg.id}`); }}
-                        >
-                          {hasDue && !compact && (
-                            <div className="absolute top-0 right-0 w-20 h-20 rounded-full bg-[#e17055]/5 blur-[30px] pointer-events-none" />
-                          )}
-                          <div className={compact ? 'flex items-center gap-3' : 'flex items-start gap-3'}>
-                            <div className={compact ? 'w-8 h-8 rounded-lg bg-gradient-to-br from-[#6c5ce7]/20 to-[#a29bfe]/20 flex items-center justify-center shrink-0' : 'w-10 h-10 rounded-xl bg-gradient-to-br from-[#6c5ce7]/20 to-[#a29bfe]/20 flex items-center justify-center shrink-0 mt-0.5'}>
-                              <Sparkles className={`${compact ? 'w-4 h-4' : 'w-5 h-5'} text-[#a29bfe]`} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-0.5">
-                                <p className="text-foreground truncate flex-1" style={{ fontSize: compact ? '0.875rem' : '0.9375rem', fontWeight: 600 }}>
-                                  {sg.title}
-                                </p>
-                                {hasDue && (
-                                  <span className="shrink-0 px-2 py-0.5 rounded-full bg-[#e17055]/15 text-[#e17055]" style={{ fontSize: '0.625rem', fontWeight: 700 }}>
-                                    {sg.dueSoon} {t('gl_due')}
-                                  </span>
-                                )}
-                              </div>
-                              <div className="flex items-center gap-2 text-ui-tertiary" style={{ fontSize: '0.75rem' }}>
-                                <span>{t('sg_progress_label', { done: sg.totalCompleted, total: sg.taskCount })}</span>
-                                {!compact && <span className="text-ui-tertiary">&middot;</span>}
-                                {!compact && <span>{t('sg_week_n', { n: weeksElapsed, total: sg.timelineWeeks })}</span>}
-                              </div>
-                              {!compact && sg.taskCount > 0 && (
-                                <div className="mt-2 h-1.5 rounded-full bg-ui-progress overflow-hidden">
-                                  <motion.div
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${pct}%` }}
-                                    transition={{ duration: 0.6, delay: 0.3 + idx * 0.1 }}
-                                    className="h-full rounded-full bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe]"
-                                  />
-                                </div>
-                              )}
-                            </div>
-                            <ChevronRight className="w-4 h-4 text-ui-tertiary shrink-0 mt-1.5" />
-                          </div>
-
-                          {/* Inline due tasks — swipe-to-complete */}
-                          {dueTasks.length > 0 && (
-                            <div className="mt-3 pt-2.5 border-t border-[var(--glass-border-subtle)]" onClick={(e) => e.stopPropagation()}>
-                              <p className="text-[#e17055]/70 mb-2" style={{ fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.06em' }}>
-                                {t('sg_due_tasks_today').toUpperCase()}
-                              </p>
-                              <div className="space-y-1.5">
-                                {dueTasks.slice(0, 3).map(task => {
-                                  const isDone = sgCompletedIds.has(task.id);
-                                  const isCompleting = sgCompletingId === task.id;
-                                  return (
-                                    <SwipeableTask
-                                      key={task.id}
-                                      taskId={task.id}
-                                      isDone={isDone}
-                                      isCompleting={isCompleting}
-                                      onComplete={() => handleSgTaskComplete(task.id, sg.id)}
-                                      xpAmount={sgXpAmount}
-                                      compact
-                                    >
-                                      <div className="flex items-center gap-2.5 py-1.5 px-1 bg-[#0a0a0f]/60 rounded-xl relative">
-                                        <motion.button
-                                          whileTap={{ scale: 0.85 }}
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleSgTaskComplete(task.id, sg.id);
-                                          }}
-                                          disabled={isDone || isCompleting}
-                                          className={`w-6 h-6 rounded-md shrink-0 flex items-center justify-center border transition-all ${
-                                            isDone
-                                              ? 'bg-emerald-500/20 border-emerald-500/40'
-                                              : 'border-[#a29bfe]/30 bg-[#6c5ce7]/10 active:bg-[#6c5ce7]/25'
-                                          }`}
-                                        >
-                                          {isCompleting ? (
-                                            <Loader2 className="w-3 h-3 text-[#a29bfe] animate-spin" />
-                                          ) : isDone ? (
-                                            <Check className="w-3 h-3 text-emerald-400" />
-                                          ) : (
-                                            <Check className="w-3 h-3 text-[#a29bfe]/40" />
-                                          )}
-                                        </motion.button>
-                                        <p className={`flex-1 min-w-0 truncate ${isDone ? 'text-ui-tertiary line-through' : 'text-muted-foreground'}`}
-                                          style={{ fontSize: '0.8125rem' }}>
-                                          {task.title}
-                                        </p>
-                                        <span className="text-ui-tertiary shrink-0 pr-1" style={{ fontSize: '0.5625rem' }}>
-                                          {task.frequency === 'weekly' ? t('sg_weekly') : t('sg_monthly')}
-                                        </span>
-                                        <XpBurst show={sgXpBurstId === task.id} amount={sgXpAmount} />
-                                      </div>
-                                    </SwipeableTask>
-                                  );
-                                })}
-                                {dueTasks.length > 3 && (
-                                  <p className="text-ui-tertiary pl-8" style={{ fontSize: '0.6875rem' }}>
-                                    +{dueTasks.length - 3} more...
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                        </GlassCard>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <GlassCard
-                  variant="interactive"
-                  padding="md"
-                  className="flex items-center gap-3 relative overflow-hidden"
-                  onClick={() => { hapticFeedback('medium'); navigate('/strategic-goal/create'); }}
-                >
-                  <div className="absolute top-0 right-0 w-20 h-20 rounded-full bg-[#6c5ce7]/5 blur-[30px] pointer-events-none" />
-                  <div className="absolute top-2.5 right-2.5"><PremiumBadge /></div>
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#6c5ce7]/20 to-[#00cec9]/20 flex items-center justify-center shrink-0">
-                    <Sparkles className="w-4 h-4 text-[#a29bfe]" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-foreground" style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{t('sg_title')}</p>
-                    <p className="text-muted-foreground" style={{ fontSize: '0.6875rem' }}>{t('sg_empty_desc')}</p>
-                  </div>
-                  <ChevronRight className="w-3.5 h-3.5 text-ui-tertiary shrink-0" />
-                </GlassCard>
-              )}
-            </motion.div>
-
-            {/* ===== 3. PERSONAL GOALS ===== */}
+            {/* ===== 2. PERSONAL GOALS ===== */}
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
               <div className="flex items-center justify-between mb-2.5 px-1">
                 <div className="flex items-center gap-2">
@@ -1076,7 +832,7 @@ export function GoalsListPage() {
               </AnimatePresence>
             </motion.div>
 
-            {/* ===== 4. COMPLETED PROGRAMS HISTORY ===== */}
+            {/* ===== 3. COMPLETED PROGRAMS HISTORY ===== */}
             {completedPrograms.length > 0 && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.13 }}>
                 <div className="flex items-center justify-between mb-2.5 px-1">
@@ -1407,27 +1163,6 @@ export function GoalsListPage() {
           >
             <CircleCheck className="text-emerald-400" style={{ width: 18, height: 18 }} />
             <span className="text-emerald-300 whitespace-nowrap" style={{ fontSize: '0.875rem', fontWeight: 600 }}>{taskToast}</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Strategic task completion toast */}
-      <AnimatePresence>
-        {sgToast && (
-          <motion.div
-            initial={{ opacity: 0, y: 50, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-28 left-1/2 -translate-x-1/2 z-50 px-5 py-2.5 rounded-2xl bg-liquid-glass-toast border border-emerald-500/25 flex items-center gap-2.5 shadow-2xl"
-            style={{ boxShadow: '0 8px 32px rgba(16, 185, 129, 0.15)' }}
-          >
-            <motion.div
-              animate={{ scale: [1, 1.3, 1], rotate: [0, 10, -10, 0] }}
-              transition={{ duration: 0.5 }}
-            >
-              <CheckCircle2 className="text-emerald-400" style={{ width: 18, height: 18 }} />
-            </motion.div>
-            <span className="text-emerald-300 whitespace-nowrap" style={{ fontSize: '0.875rem', fontWeight: 600 }}>{sgToast}</span>
           </motion.div>
         )}
       </AnimatePresence>

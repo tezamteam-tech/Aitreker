@@ -571,7 +571,7 @@ Do not include any text outside the JSON object.\\\`
 
 // ---- POST /food/entries ----
 // Receives: { food_name, calories, protein, carbs, fat, meal_type?, image_base64? }
-// Stores in kv_store as become:food_entries:{userId}:{date}:{entryId}
+// Stores in kv_store as pf:food_entries:{userId}:{date}:{entryId}
 // Optionally uploads image to Supabase Storage
 
 async function handleAddFoodEntry(req: Request, userId: string, kv: any): Promise<Response> {
@@ -603,7 +603,7 @@ async function handleAddFoodEntry(req: Request, userId: string, kv: any): Promis
   };
 
   // Store in KV
-  const key = \\\`become:food_entries:\\\${userId}:\\\${dateStr}:\\\${entryId}\\\`;
+  const key = \\\`pf:food_entries:\\\${userId}:\\\${dateStr}:\\\${entryId}\\\`;
   await kv.set(key, JSON.stringify(entry));
 
   return new Response(JSON.stringify(entry));
@@ -616,7 +616,7 @@ async function handleGetFoodEntries(req: Request, userId: string, kv: any): Prom
   const url = new URL(req.url);
   const date = url.searchParams.get("date") || new Date().toISOString().split("T")[0];
 
-  const prefix = \\\`become:food_entries:\\\${userId}:\\\${date}:\\\`;
+  const prefix = \\\`pf:food_entries:\\\${userId}:\\\${date}:\\\`;
   const keys = await kv.list({ prefix });
   
   const entries = [];
@@ -643,7 +643,7 @@ async function handleGetFoodEntries(req: Request, userId: string, kv: any): Prom
 // ---- DELETE /food/entries/:id ----
 async function handleDeleteFoodEntry(entryId: string, userId: string, kv: any): Promise<Response> {
   // Search for the entry across dates
-  const prefix = \\\`become:food_entries:\\\${userId}:\\\`;
+  const prefix = \\\`pf:food_entries:\\\${userId}:\\\`;
   const keys = await kv.list({ prefix });
   
   for (const key of keys) {
@@ -838,11 +838,11 @@ Return JSON only. No markdown, no explanation. The exact format:
   };
 
   // Save to KV
-  const planKey = \\\`become:meal_plans:\\\${userId}:\\\${planId}\\\`;
+  const planKey = \\\`pf:meal_plans:\\\${userId}:\\\${planId}\\\`;
   await kv.set(planKey, JSON.stringify(plan));
 
   // Also maintain an index of plan IDs for listing
-  const indexKey = \\\`become:meal_plans_index:\\\${userId}\\\`;
+  const indexKey = \\\`pf:meal_plans_index:\\\${userId}\\\`;
   const existingIndex = await kv.get(indexKey);
   const planIds: string[] = existingIndex ? JSON.parse(existingIndex) : [];
   planIds.unshift(planId); // newest first
@@ -860,13 +860,13 @@ Return JSON only. No markdown, no explanation. The exact format:
 // Returns list of user's saved plans (preview only, no full plan_data)
 
 async function handleGetMealPlans(userId: string, kv: any): Promise<Response> {
-  const indexKey = \\\`become:meal_plans_index:\\\${userId}\\\`;
+  const indexKey = \\\`pf:meal_plans_index:\\\${userId}\\\`;
   const existingIndex = await kv.get(indexKey);
   const planIds: string[] = existingIndex ? JSON.parse(existingIndex) : [];
 
   const plans = [];
   for (const planId of planIds) {
-    const planKey = \\\`become:meal_plans:\\\${userId}:\\\${planId}\\\`;
+    const planKey = \\\`pf:meal_plans:\\\${userId}:\\\${planId}\\\`;
     const raw = await kv.get(planKey);
     if (raw) {
       const plan = JSON.parse(raw);
@@ -886,7 +886,7 @@ async function handleGetMealPlans(userId: string, kv: any): Promise<Response> {
 // Returns full plan with all data
 
 async function handleGetMealPlan(planId: string, userId: string, kv: any): Promise<Response> {
-  const planKey = \\\`become:meal_plans:\\\${userId}:\\\${planId}\\\`;
+  const planKey = \\\`pf:meal_plans:\\\${userId}:\\\${planId}\\\`;
   const raw = await kv.get(planKey);
 
   if (!raw) {
@@ -908,11 +908,11 @@ async function handleGetMealPlan(planId: string, userId: string, kv: any): Promi
 
 // ---- DELETE /meal-plans/:id ----
 async function handleDeleteMealPlan(planId: string, userId: string, kv: any): Promise<Response> {
-  const planKey = \\\`become:meal_plans:\\\${userId}:\\\${planId}\\\`;
+  const planKey = \\\`pf:meal_plans:\\\${userId}:\\\${planId}\\\`;
   await kv.delete(planKey);
 
   // Remove from index
-  const indexKey = \\\`become:meal_plans_index:\\\${userId}\\\`;
+  const indexKey = \\\`pf:meal_plans_index:\\\${userId}\\\`;
   const existingIndex = await kv.get(indexKey);
   if (existingIndex) {
     const planIds: string[] = JSON.parse(existingIndex);
@@ -942,8 +942,8 @@ async function handleDeleteMealPlan(planId: string, userId: string, kv: any): Pr
 // Required: OPENAI_API_KEY secret
 //
 // KV Storage:
-//   become:workout_plans:{userId}:{planId}  — full plan data
-//   become:workout_plans_index:{userId}     — array of plan IDs
+//   pf:workout_plans:{userId}:{planId}  — full plan data
+//   pf:workout_plans_index:{userId}     — array of plan IDs
 //
 // Routes:
 //   POST   /workout-plans/generate — AI generation
@@ -1122,10 +1122,10 @@ Return JSON only. No markdown. Exact format:
     created_at: now,
   };
 
-  const planKey = \\\`become:workout_plans:\\\${userId}:\\\${planId}\\\`;
+  const planKey = \\\`pf:workout_plans:\\\${userId}:\\\${planId}\\\`;
   await kv.set(planKey, JSON.stringify(plan));
 
-  const indexKey = \\\`become:workout_plans_index:\\\${userId}\\\`;
+  const indexKey = \\\`pf:workout_plans_index:\\\${userId}\\\`;
   const existingIndex = await kv.get(indexKey);
   const planIds: string[] = existingIndex ? JSON.parse(existingIndex) : [];
   planIds.unshift(planId);
@@ -1142,13 +1142,13 @@ Return JSON only. No markdown. Exact format:
 
 // ---- GET /workout-plans ----
 async function handleGetWorkoutPlans(userId: string, kv: any): Promise<Response> {
-  const indexKey = \\\`become:workout_plans_index:\\\${userId}\\\`;
+  const indexKey = \\\`pf:workout_plans_index:\\\${userId}\\\`;
   const existingIndex = await kv.get(indexKey);
   const planIds: string[] = existingIndex ? JSON.parse(existingIndex) : [];
 
   const plans = [];
   for (const planId of planIds) {
-    const raw = await kv.get(\\\`become:workout_plans:\\\${userId}:\\\${planId}\\\`);
+    const raw = await kv.get(\\\`pf:workout_plans:\\\${userId}:\\\${planId}\\\`);
     if (raw) {
       const plan = JSON.parse(raw);
       plans.push({
@@ -1166,7 +1166,7 @@ async function handleGetWorkoutPlans(userId: string, kv: any): Promise<Response>
 
 // ---- GET /workout-plans/:id ----
 async function handleGetWorkoutPlan(planId: string, userId: string, kv: any): Promise<Response> {
-  const raw = await kv.get(\\\`become:workout_plans:\\\${userId}:\\\${planId}\\\`);
+  const raw = await kv.get(\\\`pf:workout_plans:\\\${userId}:\\\${planId}\\\`);
   if (!raw) {
     return new Response(JSON.stringify({ message: "Plan not found", code: "NOT_FOUND", status: 404 }), { status: 404 });
   }
@@ -1182,8 +1182,8 @@ async function handleGetWorkoutPlan(planId: string, userId: string, kv: any): Pr
 
 // ---- DELETE /workout-plans/:id ----
 async function handleDeleteWorkoutPlan(planId: string, userId: string, kv: any): Promise<Response> {
-  await kv.delete(\\\`become:workout_plans:\\\${userId}:\\\${planId}\\\`);
-  const indexKey = \\\`become:workout_plans_index:\\\${userId}\\\`;
+  await kv.delete(\\\`pf:workout_plans:\\\${userId}:\\\${planId}\\\`);
+  const indexKey = \\\`pf:workout_plans_index:\\\${userId}\\\`;
   const existingIndex = await kv.get(indexKey);
   if (existingIndex) {
     const planIds: string[] = JSON.parse(existingIndex);

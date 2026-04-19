@@ -7,7 +7,7 @@
 // top referrers leaderboard, referral sorting.
 // =============================================
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -51,7 +51,12 @@ import type { AdminUser } from './api-client';
 import { hapticFeedback, hapticSuccess } from './telegram';
 import { useTranslation } from './i18n';
 
-type Tab = 'stats' | 'users' | 'broadcast' | 'social' | 'ab';
+const AdminNotificationsSection = lazy(async () => {
+  const m = await import('./admin-notifications-templates');
+  return { default: m.AdminNotificationsSection };
+});
+
+type Tab = 'stats' | 'users' | 'broadcast' | 'social' | 'ab' | 'notif';
 
 export function AdminPage() {
   const navigate = useNavigate();
@@ -78,6 +83,7 @@ export function AdminPage() {
             { id: 'users' as Tab, icon: Users, label: t('adm_tab_users') },
             { id: 'broadcast' as Tab, icon: Megaphone, label: t('adm_tab_broadcast') },
             { id: 'social' as Tab, icon: Star, label: t('adm_tab_social') },
+            { id: 'notif' as Tab, icon: Bell, label: t('adm_tab_notif') },
             { id: 'ab' as Tab, icon: BarChart3, label: 'A/B' },
           ]).map(tab => (
             <button
@@ -103,6 +109,17 @@ export function AdminPage() {
         {activeTab === 'users' && <UsersSection />}
         {activeTab === 'broadcast' && <BroadcastSection />}
         {activeTab === 'social' && <SocialTasksSection />}
+        {activeTab === 'notif' && (
+          <Suspense
+            fallback={
+              <div className="flex justify-center py-16">
+                <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+              </div>
+            }
+          >
+            <AdminNotificationsSection />
+          </Suspense>
+        )}
         {activeTab === 'ab' && <AbTestingSection />}
       </div>
     </div>
@@ -937,8 +954,8 @@ function UsersSection() {
                       value={notifText}
                       onChange={(e) => setNotifText(e.target.value)}
                       placeholder={t('adm_notif_placeholder_en')}
-                      className="w-full h-20 bg-ui-button rounded-lg p-2.5 text-foreground outline-none resize-none border focus:border-[#6c5ce7]/30" style={{ borderColor: 'var(--glass-border)' }}
-                      style={{ fontSize: '0.8125rem' }}
+                      className="w-full h-20 bg-ui-button rounded-lg p-2.5 text-foreground outline-none resize-none border focus:border-[#6c5ce7]/30"
+                      style={{ borderColor: 'var(--glass-border)', fontSize: '0.8125rem' }}
                     />
                   </div>
                   <div className="flex gap-2">
@@ -1021,8 +1038,8 @@ function UsersSection() {
                         </button>
                         <button
                           onClick={() => setDeleteConfirm(false)}
-                          className="py-1 px-2 rounded bg-ui-button border text-muted-foreground flex items-center justify-center gap-1.5" style={{ borderColor: 'var(--glass-border)' }}
-                          style={{ fontSize: '0.8125rem', fontWeight: 600 }}
+                          className="py-1 px-2 rounded bg-ui-button border text-muted-foreground flex items-center justify-center gap-1.5"
+                          style={{ borderColor: 'var(--glass-border)', fontSize: '0.8125rem', fontWeight: 600 }}
                         >
                           {t('adm_cancel')}
                         </button>
@@ -1532,8 +1549,8 @@ function BroadcastSection() {
           {preview && (
             <div className="space-y-2">
               <div
-                className="p-3 rounded-xl text-foreground/80" style={{ background: 'var(--glass-bg-row)' }}
-                style={{ fontSize: '0.875rem', lineHeight: 1.5 }}
+                className="p-3 rounded-xl text-foreground/80"
+                style={{ background: 'var(--glass-bg-row)', fontSize: '0.875rem', lineHeight: 1.5 }}
                 dangerouslySetInnerHTML={{ __html: text }}
               />
               {mediaUrls.some(u => u.trim()) && mediaType !== 'none' && (

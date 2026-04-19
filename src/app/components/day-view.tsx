@@ -32,11 +32,8 @@ import { GlassCard } from './glass-card';
 import { useBottomSheetLifecycle } from './bottom-sheet-context';
 import { useAuth } from './auth-context';
 import { api } from './api-client';
-import type { StrategicTask } from './api-client';
 import type { ProgramDay, Task, Progress, ProgressMeta, CoachResponse } from './types';
 import { hapticFeedback, hapticSuccess } from './telegram';
-import { SwipeableTask, XpBurst } from './swipeable-task';
-import { playXpCoinSound } from './xp-sound';
 import { useTranslation } from './i18n';
 import { PageHeader } from './page-header';
 import { VoiceInput } from './voice-input';
@@ -131,12 +128,6 @@ export function DayViewPage() {
   const [reminderInput, setReminderInput] = useState('');
   const [savingReminder, setSavingReminder] = useState(false);
 
-  // ---- Strategic tasks due today ----
-  const [sgTasks, setSgTasks] = useState<(StrategicTask & { goalTitle: string })[]>([]);
-  const [sgCompletingId, setSgCompletingId] = useState<string | null>(null);
-  const [sgCompletedIds, setSgCompletedIds] = useState<Set<string>>(new Set());
-  const [sgXpBurstId, setSgXpBurstId] = useState<string | null>(null);
-
   // ---- Photo proof state ----
   const [proofPhotos, setProofPhotos] = useState<Record<string, string>>({}); // taskId → signedUrl
   const [uploadingTask, setUploadingTask] = useState<string | null>(null); // taskId being uploaded
@@ -221,51 +212,6 @@ export function DayViewPage() {
       }).catch(() => { /* proofs may not exist yet */ });
     });
   }, [dayNum]);
-
-  // ---- Load strategic tasks due today ----
-  useEffect(() => {
-    api.getStrategicGoals('active')
-      .then(async (res) => {
-        const goalsWithDue = res.goals.filter(g => g.dueSoon > 0);
-        if (goalsWithDue.length === 0) return;
-        const today = new Date().toISOString().slice(0, 10);
-        const allDueTasks: (StrategicTask & { goalTitle: string })[] = [];
-        await Promise.all(goalsWithDue.map(async (g) => {
-          try {
-            const r = await api.getStrategicGoal(g.id);
-            const due = r.tasks.filter(t => t.nextDueDate && t.nextDueDate <= today);
-            due.forEach(t => allDueTasks.push({ ...t, goalTitle: g.title }));
-          } catch {}
-        }));
-        if (allDueTasks.length > 0) setSgTasks(allDueTasks);
-      })
-      .catch(() => {});
-  }, []);
-
-  const handleSgComplete = async (taskId: string) => {
-    if (sgCompletingId || sgCompletedIds.has(taskId)) return;
-    setSgCompletingId(taskId);
-    hapticFeedback('medium');
-    try {
-      const result = await api.completeStrategicTask(taskId);
-      const xp = (result as any).xpAwarded || 5;
-      hapticSuccess();
-      setSgCompletedIds(prev => new Set(prev).add(taskId));
-      // Update user XP locally
-      if (user) updateUser({ xp: (user.xp || 0) + xp });
-      setTotalXp(prev => prev + xp);
-      // Show XP burst
-      setSgXpBurstId(taskId);
-      setTimeout(() => setSgXpBurstId(null), 2000);
-      // Play XP coin sound
-      playXpCoinSound();
-      showToast(`\u2705 ${t('dv_task_completed', { xp })}`);
-    } catch (err) {
-      console.error('[DayView] Strategic task complete error:', err);
-    } finally {
-      setSgCompletingId(null);
-    }
-  };
 
   // ---- Toast helper ----
   const showToast = useCallback((msg: string) => {
@@ -875,92 +821,6 @@ export function DayViewPage() {
             );
           })}
         </div>
-
-        {/* Strategic tasks due today — swipe to complete */}
-        {sgTasks.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25 }}
-            className="mb-8"
-          >
-            <div className="flex items-center justify-between mb-2.5 px-1">
-              <h3 className="text-[#a29bfe]/60" style={{ fontSize: '0.8125rem', fontWeight: 600, letterSpacing: '0.05em' }}>
-                {t('sg_dayview_title')}
-              </h3>
-              <span className="text-ui-tertiary" style={{ fontSize: '0.6875rem' }}>{t('sg_dayview_subtitle')}</span>
-            </div>
-            <div className="space-y-2.5">
-              {sgTasks.map((task, i) => {
-                const isDone = sgCompletedIds.has(task.id);
-                const isCompleting = sgCompletingId === task.id;
-                return (
-                  <motion.div
-                    key={task.id}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.28 + i * 0.04 }}
-                  >
-                    <SwipeableTask
-                      taskId={task.id}
-                      isDone={isDone}
-                      isCompleting={isCompleting}
-                      onComplete={() => handleSgComplete(task.id)}
-                      xpAmount={5}
-                    >
-                      <GlassCard
-                        variant="interactive"
-                        padding="sm"
-                      >
-                        <div className="flex items-center gap-3 relative">
-                          <motion.button
-                            whileTap={{ scale: 0.85 }}
-                            onClick={() => handleSgComplete(task.id)}
-                            disabled={isDone || !!isCompleting}
-                            className={`w-7 h-7 rounded-lg shrink-0 flex items-center justify-center border-2 transition-all ${
-                              isDone
-                                ? 'bg-emerald-500 border-emerald-500'
-                                : 'border-[#a29bfe]/30 bg-transparent active:bg-[#6c5ce7]/20'
-                            }`}
-                          >
-                            {isCompleting ? (
-                              <Loader2 className="w-3.5 h-3.5 text-[#a29bfe] animate-spin" />
-                            ) : isDone ? (
-                              <Check className="w-4 h-4 text-white" />
-                            ) : null}
-                          </motion.button>
-                          <div className="flex-1 min-w-0">
-                            <p className={`truncate ${isDone ? 'line-through text-muted-foreground' : 'text-foreground'}`}
-                              style={{ fontSize: '0.9375rem', fontWeight: 500 }}>
-                              {task.title}
-                            </p>
-                            <p className="text-[#a29bfe]/40 truncate" style={{ fontSize: '0.6875rem' }}>
-                              {t('sg_from_goal', { name: task.goalTitle })} &middot; {task.frequency === 'weekly' ? t('sg_weekly') : t('sg_monthly')}
-                            </p>
-                          </div>
-                          {/* XP burst */}
-                          <XpBurst show={sgXpBurstId === task.id} amount={5} />
-                        </div>
-                      </GlassCard>
-                    </SwipeableTask>
-                  </motion.div>
-                );
-              })}
-            </div>
-            {/* Swipe hint (shown only if there are uncompleted tasks) */}
-            {sgTasks.some(t => !sgCompletedIds.has(t.id)) && (
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.6 }}
-                className="text-center text-ui-tertiary mt-2"
-                style={{ fontSize: '0.6875rem' }}
-              >
-                {t('dv_swipe_hint')}
-              </motion.p>
-            )}
-          </motion.div>
-        )}
 
         {/* Action buttons */}
         {!isAlreadyDone && (

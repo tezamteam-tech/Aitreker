@@ -78,15 +78,24 @@ class ApiClientError extends Error {
   }
 }
 
+/** Align with server `detectLang`: UI supports en | ru; CIS locales use Russian copy. */
+export function normalizeUiLang(code?: string | null): 'en' | 'ru' {
+  if (!code) return 'en';
+  const c = String(code).toLowerCase();
+  if (c.startsWith('ru')) return 'ru';
+  if (c === 'be' || c === 'uk' || c === 'kk' || c === 'ky') return 'ru';
+  return 'en';
+}
+
 // ---- User language for content localization ----
 // Initialize from Telegram client language first, then fallback to browser lang.
 // This ensures pre-auth UI renders in the correct language immediately.
-function detectInitialLang(): string {
+function detectInitialLang(): 'en' | 'ru' {
   // 1. Try Telegram WebApp initDataUnsafe
   try {
     const tgUser = (window as any)?.Telegram?.WebApp?.initDataUnsafe?.user;
     if (tgUser?.language_code) {
-      return tgUser.language_code.startsWith('ru') ? 'ru' : 'en';
+      return normalizeUiLang(tgUser.language_code);
     }
   } catch {}
   // 2. Try parsing tgWebAppData from URL hash (Telegram passes launch params there)
@@ -102,7 +111,7 @@ function detectInitialLang(): string {
           if (userStr) {
             const user = JSON.parse(decodeURIComponent(userStr));
             if (user?.language_code) {
-              return user.language_code.startsWith('ru') ? 'ru' : 'en';
+              return normalizeUiLang(user.language_code);
             }
           }
         }
@@ -110,21 +119,21 @@ function detectInitialLang(): string {
     }
   } catch {}
   // 3. Fallback to browser language
-  return (typeof navigator !== 'undefined' && navigator.language?.startsWith('ru')) ? 'ru' : 'en';
+  return normalizeUiLang(typeof navigator !== 'undefined' ? navigator.language : 'en');
 }
 
-let _userLang: string = detectInitialLang();
+let _userLang: 'en' | 'ru' = detectInitialLang();
 let _langListeners: Set<() => void> = new Set();
 
 export function setUserLang(lang: string): void {
-  const next = lang || 'en';
+  const next = normalizeUiLang(lang || 'en');
   if (next === _userLang) return;
   _userLang = next;
   // Notify subscribers (useSyncExternalStore in useTranslation)
   _langListeners.forEach((fn) => fn());
 }
 
-export function getUserLang(): string {
+export function getUserLang(): 'en' | 'ru' {
   return _userLang;
 }
 
@@ -159,7 +168,9 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   }
 
   const url = `${API_BASE}${path}`;
-  console.log(`[API] ${method} ${url}`);
+  if (import.meta.env.DEV) {
+    console.log(`[API] ${method} ${url}`);
+  }
 
   const res = await fetch(url, {
     method,
@@ -171,6 +182,43 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
     const err = await res.json().catch(() => ({
       message: res.statusText,
       code: 'UNKNOWN',
+      status: res.status,
+    }));
+    console.error(`[API] Error ${res.status}:`, err);
+    throw new ApiClientError(err as ApiError);
+  }
+
+  return res.json();
+}
+
+/** Multipart upload (no JSON body) — e.g. admin media */
+async function requestFormData<T>(path: string, formData: FormData): Promise<T> {
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${publicAnonKey}`,
+  };
+  const token = getToken();
+  if (token) {
+    headers["X-Proper-Token"] = token;
+  }
+  if (!token) {
+    throw new ApiClientError({
+      message: "Not authenticated",
+      code: "NO_TOKEN",
+      status: 401,
+    });
+  }
+
+  const url = `${API_BASE}${path}`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers,
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({
+      message: res.statusText,
+      code: "UNKNOWN",
       status: res.status,
     }));
     console.error(`[API] Error ${res.status}:`, err);
@@ -649,65 +697,6 @@ export const api = {
 
   async sendTaskReminder(taskId: string): Promise<{ success: boolean; sentAt: string }> {
     return request('POST', `/tasks/${taskId}/send-reminder`);
-  },
-
-  // ---- Strategic Goal Engine ----
-
-  async strategicGoalInitiate(goalText: string, category?: string, imagePaths?: { visionImagePath?: string; selfieImagePath?: string }): Promise<StrategicInitiateResponse> {
-    return request('POST', '/strategic-goals/initiate', { goalText, category, ...imagePaths });
-  },
-
-  async strategicGoalGeneratePlan(draftId: string, answers: Record<string, string>): Promise<StrategicPlanResponse> {
-    return request('POST', '/strategic-goals/generate-plan', { draftId, answers });
-  },
-
-  async strategicGoalActivate(draftId: string): Promise<{ goal: StrategicGoal; tasks: StrategicTask[] }> {
-    return request('POST', '/strategic-goals/activate', { draftId });
-  },
-
-  async getStrategicGoals(status?: string): Promise<{ goals: StrategicGoal[] }> {
-    const q = status ? `?status=${status}` : '';
-    return request('GET', `/strategic-goals${q}`);
-  },
-
-  async getStrategicGoal(id: string): Promise<{ goal: StrategicGoal; tasks: StrategicTask[] }> {
-    return request('GET', `/strategic-goals/${id}`);
-  },
-
-  async updateStrategicGoal(id: string, data: { status?: string; title?: string }): Promise<StrategicGoal> {
-    return request('PATCH', `/strategic-goals/${id}`, data);
-  },
-
-  async completeStrategicTask(taskId: string): Promise<StrategicTask> {
-    return request('POST', `/strategic-tasks/${taskId}/complete`);
-  },
-
-  async requestStrategicReview(goalId: string): Promise<{ review: StrategicReview }> {
-    return request('POST', `/strategic-goals/${goalId}/ai-review`);
-  },
-
-  async getStrategicReviews(goalId: string): Promise<{ reviews: StrategicReview[] }> {
-    return request('GET', `/strategic-goals/${goalId}/reviews`);
-  },
-
-  async reorderStrategicTasks(goalId: string, taskIds: string[]): Promise<{ success: boolean }> {
-    return request('POST', '/strategic-tasks/reorder', { goalId, taskIds });
-  },
-
-  async analyzeGoalImage(imageBase64: string, mode: 'vision' | 'selfie'): Promise<ImageAnalysisResponse> {
-    return request('POST', '/strategic-goals/analyze-image', { imageBase64, mode });
-  },
-
-  async getGoalVisionImage(goalId: string): Promise<{ url: string | null }> {
-    return request('GET', `/strategic-goals/${goalId}/vision-image`);
-  },
-
-  async selfieCheckin(goalId: string, imageBase64: string): Promise<SelfieCheckinResponse> {
-    return request('POST', `/strategic-goals/${goalId}/selfie-checkin`, { imageBase64 });
-  },
-
-  async getGoalSelfies(goalId: string): Promise<{ selfies: SelfieRecord[] }> {
-    return request('GET', `/strategic-goals/${goalId}/selfies`);
   },
 
   // ---- AI Coach Chat ----
@@ -1555,6 +1544,16 @@ export const api = {
     return request('POST', '/admin/subscription', { userId, action, days });
   },
 
+  async adminUploadMedia(formData: FormData): Promise<{
+    success: boolean;
+    url: string;
+    fileName: string;
+    size: number;
+    type: string;
+  }> {
+    return requestFormData("/admin/upload-media", formData);
+  },
+
   async adminBroadcast(params: {
     text: string;
     audience: 'all' | 'subscribers' | 'non_subscribers';
@@ -1629,6 +1628,37 @@ export const api = {
     }>;
   }> {
     return request('GET', '/admin/ab-analytics');
+  },
+
+  async adminGetNotificationTemplates(): Promise<{
+    success: boolean;
+    registry: Array<{
+      id: string;
+      category: string;
+      titleEn: string;
+      titleRu: string;
+      hintEn: string;
+      hintRu: string;
+    }>;
+    overrides: Record<string, {
+      imageUrl?: string;
+      mediaKind?: "photo" | "animation" | "video";
+      useCustomCaption?: boolean;
+      captionRu?: string;
+      captionEn?: string;
+    }>;
+  }> {
+    return request('GET', '/admin/notification-templates');
+  },
+
+  async adminPutNotificationTemplates(overrides: Record<string, {
+    imageUrl?: string;
+    mediaKind?: "photo" | "animation" | "video";
+    useCustomCaption?: boolean;
+    captionRu?: string;
+    captionEn?: string;
+  }>): Promise<{ success: boolean; overrides: typeof overrides }> {
+    return request('PUT', '/admin/notification-templates', { overrides });
   },
 
   async adminGetStats(): Promise<{
@@ -1750,6 +1780,7 @@ export interface NotificationPrefs {
   voiceCoach: boolean;
   voiceType: string;
   abGroup: string;
+  mealPhotoReminders: boolean;
 }
 
 export interface FocusSession {
@@ -1825,111 +1856,6 @@ export interface UserTask {
   completedAt: string | null;
   createdAt: string;
   updatedAt: string;
-}
-
-export interface StrategicInitiateResponse {
-  draftId: string;
-  coachIntro: string;
-  questions: Array<{ id: string; text: string; type: string; options?: string[] }>;
-}
-
-export interface StrategicPlanResponse {
-  draftId: string;
-  plan: {
-    strategySummary: string;
-    timelineWeeks: number;
-    phases: Array<{ title: string; description: string; weekStart: number; weekEnd: number }>;
-    tasks: Array<{ title: string; description: string; frequency: string; firstDueDate: string }>;
-  };
-}
-
-export interface StrategicGoal {
-  id: string;
-  userId: string;
-  title: string;
-  category: string;
-  timelineWeeks: number;
-  structuredDataJson: {
-    strategySummary: string;
-    phases: Array<{ title: string; description: string; weekStart: number; weekEnd: number }>;
-    answers?: Record<string, string>;
-    coachIntro?: string;
-  };
-  status: 'draft' | 'active' | 'completed' | 'archived';
-  taskCount: number;
-  totalCompleted: number;
-  dueSoon: number;
-  visionImagePath?: string;
-  selfieImagePath?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface StrategicTask {
-  id: string;
-  userId: string;
-  goalId: string;
-  title: string;
-  description: string;
-  frequency: 'weekly' | 'monthly';
-  nextDueDate: string;
-  autoGenerated: boolean;
-  completedCount: number;
-  lastCompletedAt?: string;
-  sortOrder?: number;
-  createdAt: string;
-}
-
-export interface ImageAnalysisResponse {
-  analysis: string;
-  suggestedGoals: string[];
-  followUpQuestion: string;
-  mode: 'vision' | 'selfie';
-  imagePath: string | null;
-  imageSignedUrl: string | null;
-}
-
-export interface SelfieCheckinAnalysis {
-  progressSummary: string;
-  score: number;
-  positiveChanges: string[];
-  areasToFocus: string[];
-  motivationalMessage: string;
-  recommendation: string;
-}
-
-export interface SelfieRecord {
-  id: string;
-  userId: string;
-  goalId: string;
-  imagePath: string;
-  imageUrl: string | null;
-  analysis: SelfieCheckinAnalysis;
-  hasOriginalComparison: boolean;
-  daysSinceStart: number;
-  createdAt: string;
-}
-
-export interface SelfieCheckinResponse {
-  selfie: SelfieRecord;
-  newSelfieUrl: string | null;
-  originalUrl: string | null;
-  analysis: SelfieCheckinAnalysis;
-}
-
-export interface StrategicReview {
-  id: string;
-  userId: string;
-  goalId: string;
-  overallScore: number;
-  scoreLabel: string;
-  summary: string;
-  wins: string[];
-  concerns: string[];
-  recommendations: string[];
-  motivationalMessage: string;
-  adjustments: string[];
-  createdAt: string;
 }
 
 export interface CoachChatResponse {

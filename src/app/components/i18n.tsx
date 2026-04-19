@@ -15,7 +15,7 @@ export type Lang = 'en' | 'ru';
 const translations: Record<string, Record<Lang, string>> = {
   // ---- Common ----
   app_name: { en: 'Proper Food', ru: 'Proper Food' },
-  become: { en: 'Proper Food', ru: 'Proper Food' }, // legacy alias
+  pf: { en: 'Proper Food', ru: 'Proper Food' }, // legacy alias
   loading: { en: 'Loading...', ru: '\u0417\u0430\u0433\u0440\u0443\u0437\u043A\u0430...' },
   saving: { en: 'Saving...', ru: '\u0421\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u0438\u0435...' },
   saved: { en: 'Saved', ru: '\u0421\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u043E' },
@@ -359,6 +359,8 @@ const translations: Record<string, Record<Lang, string>> = {
   notif_daily_desc: { en: 'Meal plan, workout & calorie target', ru: '\u041F\u043B\u0430\u043D \u043F\u0438\u0442\u0430\u043D\u0438\u044F, \u0442\u0440\u0435\u043D\u0438\u0440\u043E\u0432\u043A\u0430 \u0438 \u043D\u043E\u0440\u043C\u0430 \u043A\u0430\u043B\u043E\u0440\u0438\u0439' },
   notif_evening: { en: 'Evening Summary', ru: '\u0412\u0435\u0447\u0435\u0440\u043D\u0438\u0439 \u0438\u0442\u043E\u0433' },
   notif_evening_desc: { en: 'Calories, macros & activity wrap-up', ru: '\u041A\u0430\u043B\u043E\u0440\u0438\u0438, \u043C\u0430\u043A\u0440\u043E\u0441\u044B \u0438 \u0430\u043A\u0442\u0438\u0432\u043D\u043E\u0441\u0442\u044C \u0437\u0430 \u0434\u0435\u043D\u044C' },
+  notif_meal_photo: { en: 'Meal photo nudges', ru: '\u041D\u0430\u043F\u043E\u043C\u0438\u043D\u0430\u043D\u0438\u044F \u0441\u0434\u0435\u043B\u0430\u0442\u044C \u0444\u043E\u0442\u043E \u0435\u0434\u044B' },
+  notif_meal_photo_desc: { en: '8:00 & 18:00 — send meal pics to the bot for AI calories', ru: '8:00 \u0438 18:00 — \u043F\u0440\u0438\u0448\u043B\u0438\u0442\u0435 \u0444\u043E\u0442\u043E \u0435\u0434\u044B \u0432 \u0431\u043E\u0442 \u0434\u043B\u044F \u043E\u0446\u0435\u043D\u043A\u0438 \u043A\u0430\u043B\u043E\u0440\u0438\u0439' },
   notif_weigh_day: { en: 'Weigh-in Day', ru: '\u0414\u0435\u043D\u044C \u0432\u0437\u0432\u0435\u0448\u0438\u0432\u0430\u043D\u0438\u044F' },
   notif_weigh_day_desc: { en: 'Weekly weight check reminder', ru: '\u0415\u0436\u0435\u043D\u0435\u0434\u0435\u043B\u044C\u043D\u043E\u0435 \u043D\u0430\u043F\u043E\u043C\u0438\u043D\u0430\u043D\u0438\u0435 \u0432\u0437\u0432\u0435\u0441\u0438\u0442\u044C\u0441\u044F' },
   day_mon: { en: 'Mon', ru: '\u041F\u043D' },
@@ -1909,6 +1911,26 @@ const translations: Record<string, Record<Lang, string>> = {
   adm_tab_users: { en: 'Users', ru: 'Пользователи' },
   adm_tab_broadcast: { en: 'Broadcast', ru: 'Рассылка' },
   adm_tab_social: { en: 'Social', ru: 'Соцсети' },
+  adm_tab_notif: { en: 'Notifications', ru: 'Уведомления' },
+  adm_notif_load_err: { en: 'Failed to load templates', ru: 'Не удалось загрузить шаблоны' },
+  adm_notif_save: { en: 'Save', ru: 'Сохранить' },
+  adm_notif_image_url: { en: 'Media URL (HTTPS)', ru: 'URL медиа (HTTPS)' },
+  adm_notif_upload: { en: 'Upload file', ru: 'Загрузить файл' },
+  adm_notif_upload_hint: {
+    en: 'JPG, PNG, WebP, GIF, MP4, WebM, MOV — up to 20 MB',
+    ru: 'JPG, PNG, WebP, GIF, MP4, WebM, MOV — до 20 МБ',
+  },
+  adm_notif_media_kind: { en: 'Telegram send mode', ru: 'Режим отправки в Telegram' },
+  adm_notif_kind_photo: { en: 'Photo (jpg, png, webp)', ru: 'Фото (jpg, png, webp)' },
+  adm_notif_kind_animation: { en: 'Animation (GIF)', ru: 'Анимация (GIF)' },
+  adm_notif_kind_video: { en: 'Video (mp4, webm…)', ru: 'Видео (mp4, webm…)' },
+  adm_notif_custom_caption: { en: 'Custom caption (HTML)', ru: 'Свой текст (HTML)' },
+  adm_notif_caption_ru: { en: 'Caption RU', ru: 'Текст RU' },
+  adm_notif_caption_en: { en: 'Caption EN', ru: 'Текст EN' },
+  adm_notif_placeholder_hint: {
+    en: 'Placeholders: {name}, {firstName}, {n}, {title}, etc. — match template.',
+    ru: 'Плейсхолдеры: {name}, {firstName}, {n}, {title} и др. — см. шаблон.',
+  },
   adm_social_title: { en: 'Social Tasks', ru: 'Задания соцсетей' },
   adm_social_desc: { en: 'Users subscribe and earn bonus days', ru: 'Пользователи подписываются и получают бонусные дни' },
   adm_social_add: { en: 'Add', ru: 'Добавить' },

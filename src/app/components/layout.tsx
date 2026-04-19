@@ -92,7 +92,6 @@ const HIDE_TAB_BAR_PATHS = [
   '/measurements',
   '/analytics',
   '/goals',
-  '/strategic-goal/create',
   '/bonuses',
   '/wallet',
   '/referrals',
@@ -115,7 +114,6 @@ function GlassTabBar({ keyboardVisible }: { keyboardVisible: boolean }) {
     HIDE_TAB_BAR_PATHS.includes(currentPath) ||
     currentPath.startsWith('/challenges/') ||
     currentPath.startsWith('/goals/') ||
-    currentPath.startsWith('/strategic-goal/') ||
     currentPath.startsWith('/day/');
 
   return (

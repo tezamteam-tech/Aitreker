@@ -17,6 +17,7 @@ import {
   Moon,
   Scale,
   Mic,
+  Camera,
 } from 'lucide-react';
 import { GlassCard } from './glass-card';
 import { api, type NotificationPrefs } from './api-client';
@@ -382,6 +383,15 @@ export function NotificationSettingsSection() {
                     enabled={prefs.eveningDigest}
                     disabled={!prefs.enabled}
                     onToggle={() => updatePref('eveningDigest', !prefs.eveningDigest)}
+                  />
+                  <ToggleRow
+                    icon={Camera}
+                    label={t('notif_meal_photo')}
+                    description={t('notif_meal_photo_desc')}
+                    color="text-amber-400"
+                    enabled={prefs.mealPhotoReminders ?? true}
+                    disabled={!prefs.enabled}
+                    onToggle={() => updatePref('mealPhotoReminders', !(prefs.mealPhotoReminders ?? true))}
                   />
                   <ToggleRow
                     icon={Mic}
@@ -779,6 +789,17 @@ export function NotificationSettingsPage() {
                       enabled={prefs.eveningDigest}
                       disabled={!prefs.enabled}
                       onToggle={() => updatePref('eveningDigest', !prefs.eveningDigest)}
+                    />
+                    <div className="h-px bg-[var(--ui-separator)] mx-2" />
+
+                    <ToggleRow
+                      icon={Camera}
+                      label={t('notif_meal_photo')}
+                      description={t('notif_meal_photo_desc')}
+                      color="text-amber-400"
+                      enabled={prefs.mealPhotoReminders ?? true}
+                      disabled={!prefs.enabled}
+                      onToggle={() => updatePref('mealPhotoReminders', !(prefs.mealPhotoReminders ?? true))}
                     />
                     <div className="h-px bg-[var(--ui-separator)] mx-2" />
 

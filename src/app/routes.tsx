@@ -29,8 +29,6 @@ const WeightTrackingPage = React.lazy(() => import('./components/weight-tracking
 const MeasurementsTrackingPage = React.lazy(() => import('./components/measurements-tracking').then(m => ({ default: m.MeasurementsTrackingPage })));
 const GoalsListPage = React.lazy(() => import('./components/goals-list').then(m => ({ default: m.GoalsListPage })));
 const GoalDetailPage = React.lazy(() => import('./components/goal-detail').then(m => ({ default: m.GoalDetailPage })));
-const StrategicGoalCreatePage = React.lazy(() => import('./components/strategic-goal-create').then(m => ({ default: m.StrategicGoalCreatePage })));
-const StrategicGoalDetailPage = React.lazy(() => import('./components/strategic-goal-detail').then(m => ({ default: m.StrategicGoalDetailPage })));
 const BonusesPage = React.lazy(() => import('./components/bonuses').then(m => ({ default: m.BonusesPage })));
 const AdminPage = React.lazy(() => import('./components/admin').then(m => ({ default: m.AdminPage })));
 const WalletPage = React.lazy(() => import('./components/wallet').then(m => ({ default: m.WalletPage })));
@@ -126,8 +124,6 @@ export const router = createBrowserRouter([
       { path: 'analytics', Component: lazy(WeeklyAnalyticsPage) },
       { path: 'goals', Component: lazy(GoalsListPage) },
       { path: 'goals/:id', Component: lazy(GoalDetailPage) },
-      { path: 'strategic-goal/create', Component: lazy(StrategicGoalCreatePage) },
-      { path: 'strategic-goal/:id', Component: lazy(StrategicGoalDetailPage) },
       { path: 'bonuses', Component: lazy(BonusesPage) },
       { path: 'wallet', Component: lazy(WalletPage) },
       { path: 'upgrade', Component: lazy(UpgradePremiumPage) },

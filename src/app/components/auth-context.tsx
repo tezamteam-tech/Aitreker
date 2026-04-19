@@ -25,6 +25,7 @@ import {
   getDeviceToken,
   clearDeviceToken,
   setUserLang,
+  normalizeUiLang,
 } from './api-client';
 import {
   getInitData,
@@ -116,7 +117,7 @@ function buildFastPathUser(): User | null {
       lastName: tgUser.last_name || null,
       username: tgUser.username || null,
       photoUrl: tgUser.photo_url || null,
-      language: tgUser.language_code || 'en',
+      language: normalizeUiLang(tgUser.language_code || 'en'),
       tone: 'supportive',
       selectedGoal: null,
       xp: 0,

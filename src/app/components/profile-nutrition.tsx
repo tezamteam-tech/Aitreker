@@ -35,8 +35,7 @@ import { useAuth } from './auth-context';
 import { hapticFeedback, hapticSuccess, openTelegramLink } from './telegram';
 import { useTranslation } from './i18n';
 import { PageHeader } from './page-header';
-import { api, getUserLang } from './api-client';
-import { setUserLang } from './api-client';
+import { api, getUserLang, setUserLang, normalizeUiLang } from './api-client';
 import { calculateCalories } from './calorie-calculator';
 import { AiCalorieAdvisor } from './ai-calorie-advisor';
 import { SwipeableBottomSheet } from './ui/swipeable-bottom-sheet';
@@ -676,7 +675,7 @@ export function ProfileNutritionPage() {
               { code: 'en', flag: '\uD83C\uDDFA\uD83C\uDDF8', label: 'English' },
               { code: 'ru', flag: '\uD83C\uDDF7\uD83C\uDDFA', label: '\u0420\u0443\u0441\u0441\u043A\u0438\u0439' },
             ] as const).map((lang) => {
-              const isActive = (user?.language || getUserLang()) === lang.code;
+              const isActive = normalizeUiLang(user?.language || getUserLang()) === lang.code;
               return (
                 <button
                   key={lang.code}
