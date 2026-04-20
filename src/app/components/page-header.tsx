@@ -28,7 +28,7 @@ interface PageHeaderProps {
  */
 export function PageHeader({ title, subtitle, actions, mb = 'mb-3' }: PageHeaderProps) {
   return (
-    <div className={mb} style={{ paddingTop: '6px' }}>
+    <div className={mb}>
       {/* Row 1: Centered title — fits between TG Close/Back and ... */}
       <motion.div
         initial={{ opacity: 0, y: -6 }}
@@ -37,7 +37,7 @@ export function PageHeader({ title, subtitle, actions, mb = 'mb-3' }: PageHeader
         style={{ padding: '0 4.5rem' }}
       >
         <h1
-          className="text-foreground/90 truncate"
+          className="pt-[52px] text-foreground/90 truncate"
           style={{ fontSize: '0.9375rem', fontWeight: 600, lineHeight: 1.3 }}
         >
           {title}

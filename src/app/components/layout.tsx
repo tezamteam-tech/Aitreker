@@ -9,7 +9,7 @@
 //   - Back button handling (Telegram system back)
 // =============================================
 
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import React, { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useAuth, AuthProvider } from './auth-context';
 import { useNavigate, useLocation, Outlet } from 'react-router';
 import { motion, AnimatePresence } from 'motion/react';
@@ -448,7 +448,7 @@ function LayoutInner() {
 
   return (
     <div
-      className="fixed inset-0 flex flex-col overflow-hidden pt-16"
+      className="fixed inset-0 flex flex-col overflow-hidden"
     >
       {/* Pattern background — z-[-1], must be first for glass backdrop-filter to work */}
       <PatternBackground />
