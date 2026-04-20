@@ -1057,6 +1057,10 @@ const translations: Record<string, Record<Lang, string>> = {
   scan_add_manually: { en: 'Add manually', ru: 'Добавить вручную' },
 
   // ---- Onboarding Nutrition ----
+  obn_entry_title: { en: 'Quick start', ru: 'Быстрый старт' },
+  obn_entry_desc: { en: 'Complete onboarding for accurate goals or skip and start using the app right away.', ru: 'Пройдите анбординг для точных целей или пропустите и начните пользоваться сразу.' },
+  obn_entry_start: { en: 'Start onboarding', ru: 'Пройти анбординг' },
+  obn_entry_skip: { en: 'Skip', ru: 'Пропустить' },
   obn_gender_title: { en: 'Your gender', ru: 'Ваш пол' },
   obn_gender_desc: { en: 'For accurate calorie and metabolism calculation', ru: 'Для точного расчёта калори�� и метаболизма' },
   obn_male: { en: 'Male', ru: 'Мужской' },

@@ -28,7 +28,7 @@ import {
   hapticSelection,
   expandApp,
 } from './telegram';
-import { api } from './api-client';
+import { api, setUserLang } from './api-client';
 import { calculateCalories } from './calorie-calculator';
 import { useTranslation } from './i18n';
 
@@ -50,6 +50,7 @@ interface OnboardingData {
 const TOTAL_STEPS = 6;
 
 export function OnboardingNutritionPage() {
+  const [showEntry, setShowEntry] = useState(true);
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1); // 1 = forward, -1 = back
   const [data, setData] = useState<OnboardingData>({
@@ -67,6 +68,14 @@ export function OnboardingNutritionPage() {
   const navigate = useNavigate();
 
   useEffect(() => { expandApp(); }, []);
+
+  const handleSkip = useCallback(() => {
+    hapticFeedback('medium');
+    localStorage.setItem('nutrition_onboarded', 'true');
+    localStorage.setItem('proper_onboarded', 'true');
+    localStorage.setItem('become_onboarded', 'true'); // backward compat
+    navigate('/home', { replace: true });
+  }, [navigate]);
 
   const canProceed = useCallback((): boolean => {
     switch (step) {
@@ -206,6 +215,104 @@ export function OnboardingNutritionPage() {
     center: { x: 0, opacity: 1 },
     exit: (d: number) => ({ x: d > 0 ? -120 : 120, opacity: 0 }),
   };
+
+  if (showEntry) {
+    return (
+      <div className="min-h-screen flex flex-col relative overflow-hidden">
+        {/* Background orbs */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-32 -left-32 w-64 h-64 rounded-full bg-[#6c5ce7]/20 blur-[100px]" />
+          <div className="absolute -bottom-32 -right-32 w-80 h-80 rounded-full bg-[#a29bfe]/15 blur-[120px]" />
+          <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-72 h-72 rounded-full bg-[#00cec9]/8 blur-[150px]" />
+        </div>
+
+        <div className="relative z-10 flex-1 flex flex-col px-6 pb-8 pt-2">
+          <div className="flex items-center justify-between mb-10">
+            <div className="flex items-center gap-2.5">
+              <div
+                className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#6c5ce7] to-[#a29bfe] flex items-center justify-center shadow-lg"
+                style={{ boxShadow: '0 6px 26px rgba(108,92,231,0.35)' }}
+              >
+                <Zap className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-foreground/80 tracking-widest" style={{ fontSize: '0.8125rem', fontWeight: 600, letterSpacing: '0.18em' }}>
+                PROPER FOOD
+              </span>
+            </div>
+
+            {/* Language toggle */}
+            <div
+              className="flex items-center p-1 rounded-2xl"
+              style={{ background: 'var(--glass-bg-card)', border: '1px solid var(--glass-border-subtle)' }}
+            >
+              {(['ru', 'en'] as const).map((code) => {
+                const isActive = lang === code;
+                return (
+                  <button
+                    key={code}
+                    onClick={() => { hapticSelection(); setUserLang(code); }}
+                    className={`h-9 px-3 rounded-xl transition-all ${
+                      isActive ? 'bg-[#6c5ce7]/20 text-foreground' : 'text-muted-foreground'
+                    }`}
+                    style={isActive ? { boxShadow: '0 4px 18px rgba(108,92,231,0.18)' } : undefined}
+                  >
+                    <span style={{ fontSize: '0.8125rem', fontWeight: 700, letterSpacing: '0.06em' }}>
+                      {code.toUpperCase()}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="flex-1 flex flex-col justify-center">
+            <div className="w-full max-w-[520px] mx-auto">
+              <motion.h1
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-foreground mb-3"
+                style={{ fontSize: '1.75rem', fontWeight: 800, lineHeight: 1.15 }}
+              >
+                {t('obn_entry_title')}
+              </motion.h1>
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.05 }}
+                className="text-muted-foreground mb-8"
+                style={{ fontSize: '0.95rem', lineHeight: 1.55 }}
+              >
+                {t('obn_entry_desc')}
+              </motion.p>
+
+              <div className="space-y-3">
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => { hapticFeedback('medium'); setShowEntry(false); }}
+                  className="w-full h-14 rounded-2xl bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe] text-white flex items-center justify-center gap-2.5 shadow-lg"
+                  style={{ fontSize: '1.0625rem', fontWeight: 650, boxShadow: '0 8px 32px rgba(108,92,231,0.3)' }}
+                >
+                  <Sparkles className="w-5 h-5" />
+                  {t('obn_entry_start')}
+                </motion.button>
+
+                <motion.button
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleSkip}
+                  className="w-full h-14 rounded-2xl flex items-center justify-center"
+                  style={{ background: 'var(--glass-bg-card)', border: '1px solid var(--glass-border-subtle)' }}
+                >
+                  <span className="text-foreground/80" style={{ fontSize: '1.0625rem', fontWeight: 650 }}>
+                    {t('obn_entry_skip')}
+                  </span>
+                </motion.button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col relative" style={{ minHeight: '100%' }}>

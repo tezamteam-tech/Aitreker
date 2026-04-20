@@ -34,7 +34,7 @@ import { api } from './api-client';
 import { hapticFeedback, hapticSuccess } from './telegram';
 import { useTranslation } from './i18n';
 import { PageHeader } from './page-header';
-import { buildBotLink } from './bot-config';
+import { buildStartLink } from './bot-config';
 
 // ---- Types ----
 interface InvitedUser {
@@ -87,7 +87,7 @@ export function ReferralsPage() {
   // Build referral link
   const referralCode = data?.referral_code || user?.referralCode || '';
   const referralLink = referralCode
-    ? buildBotLink(`ref_${referralCode}`)
+    ? buildStartLink(`ref_${referralCode}`)
     : '';
 
   // Load referral data

@@ -276,7 +276,7 @@ export function ScanFoodPage() {
       <PageHeader title={t('scan_title')} />
 
       {/* Content area */}
-      <div className="relative z-10 flex-1 flex flex-col px-4 pb-6">
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-start px-4 pb-4 min-h-0">
         <AnimatePresence mode="wait">
 
           {/* ========== CAPTURE STEP ========== */}
@@ -286,7 +286,7 @@ export function ScanFoodPage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="flex-1 flex flex-col"
+              className="flex-1 w-full flex flex-col min-h-0"
             >
               {!imageData ? (
                 <div className="flex-1 flex flex-col items-center justify-center">
@@ -383,12 +383,13 @@ export function ScanFoodPage() {
                   </div>
                 </div>
               ) : (
-                <div className="flex flex-col">
-                  <div className="relative rounded-2xl overflow-hidden border border-[var(--glass-border)] mb-4 flex-shrink-0">
+                <div className="flex-1 w-full flex flex-col min-h-0">
+                  <div className="w-full max-w-[420px] mx-auto">
+                    <div className="relative w-full rounded-2xl overflow-hidden border border-[var(--glass-border)] flex-shrink-0 aspect-square max-h-[42vh]">
                     <img
                       src={imageData}
                       alt="Captured food"
-                      className="w-full aspect-[4/3] object-cover"
+                      className="w-full h-full object-cover"
                     />
                     <motion.button
                       whileTap={{ scale: 0.9 }}
@@ -398,8 +399,9 @@ export function ScanFoodPage() {
                       <X className="w-4 h-4 text-white" />
                     </motion.button>
                   </div>
+                  </div>
 
-                  <div className="space-y-3">
+                  <div className="w-full space-y-3 mt-6">
                     <motion.button
                       whileTap={{ scale: 0.97 }}
                       onClick={analyzePhoto}
@@ -486,12 +488,12 @@ export function ScanFoodPage() {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
-              className="flex-1 flex flex-col"
+              className="flex-1 flex flex-col min-h-0"
             >
               {/* Food image + name */}
-              <div className="relative rounded-2xl overflow-hidden border border-[var(--glass-border)] mb-4 flex-shrink-0">
+              <div className="relative rounded-2xl overflow-hidden border border-[var(--glass-border)] mb-3 flex-shrink-0 h-[26vh] max-h-[260px] min-h-[160px]">
                 {imageData && (
-                  <img src={imageData} alt={result.food_name} className="w-full aspect-[16/10] object-cover" />
+                  <img src={imageData} alt={result.food_name} className="w-full h-full object-cover" />
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
                 <div className="absolute bottom-3 left-3 right-3">
@@ -510,8 +512,8 @@ export function ScanFoodPage() {
               </div>
 
               {/* Nutrition card */}
-              <GlassCard className="p-5 mb-4">
-                <div className="flex items-center justify-center mb-4">
+              <GlassCard className="p-4 mb-3">
+                <div className="flex items-center justify-center mb-3">
                   <div className="flex items-center gap-3">
                     <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#fd79a8]/20 to-[#e17055]/20 flex items-center justify-center">
                       <Flame className="w-7 h-7 text-[#fd79a8]" />
@@ -535,7 +537,7 @@ export function ScanFoodPage() {
               </GlassCard>
 
               {/* Meal type selector */}
-              <div className="mb-4">
+              <div className="mb-3">
                 <p className="text-muted-foreground mb-2" style={{ fontSize: '0.8125rem', fontWeight: 500 }}>
                   {t('scan_meal_type')}
                 </p>
@@ -602,10 +604,8 @@ export function ScanFoodPage() {
                 </div>
               </div>
 
-              <div className="flex-1" />
-
               {/* Action buttons */}
-              <div className="space-y-3">
+              <div className="space-y-3 mt-auto">
                 <AnimatePresence mode="wait">
                   {addedSuccess ? (
                     <motion.div

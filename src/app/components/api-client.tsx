@@ -91,6 +91,11 @@ export function normalizeUiLang(code?: string | null): 'en' | 'ru' {
 // Initialize from Telegram client language first, then fallback to browser lang.
 // This ensures pre-auth UI renders in the correct language immediately.
 function detectInitialLang(): 'en' | 'ru' {
+  // 0. Explicit user override stored locally (pre-auth)
+  try {
+    const stored = typeof window !== 'undefined' ? localStorage.getItem('proper_ui_lang') : null;
+    if (stored) return normalizeUiLang(stored);
+  } catch {}
   // 1. Try Telegram WebApp initDataUnsafe
   try {
     const tgUser = (window as any)?.Telegram?.WebApp?.initDataUnsafe?.user;
@@ -129,6 +134,9 @@ export function setUserLang(lang: string): void {
   const next = normalizeUiLang(lang || 'en');
   if (next === _userLang) return;
   _userLang = next;
+  try {
+    localStorage.setItem('proper_ui_lang', next);
+  } catch {}
   // Notify subscribers (useSyncExternalStore in useTranslation)
   _langListeners.forEach((fn) => fn());
 }

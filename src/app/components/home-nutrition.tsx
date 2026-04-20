@@ -530,20 +530,27 @@ export function HomeNutritionPage() {
           </div>
         </GlassCard>
 
-        {/* ===== Quick Actions Grid (2×3 compact tiles) ===== */}
-        <div className="grid grid-cols-3 gap-2.5">
-          {/* Scan Food — primary action, gradient */}
+        {/* ===== Quick Actions Grid ===== */}
+        <div className="grid grid-cols-2 gap-2.5">
+          {/* Scan Food — primary action, big tile */}
           <motion.button
-            whileTap={{ scale: 0.95 }}
+            whileTap={{ scale: 0.97 }}
             onClick={handleScanFood}
-            className="flex flex-col items-center gap-2 p-3.5 rounded-2xl bg-gradient-to-br from-[#6c5ce7] to-[#a29bfe] shadow-lg relative"
+            className="col-span-2 flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-br from-[#6c5ce7] to-[#a29bfe] shadow-lg relative min-h-[96px]"
           >
-            <div className="w-11 h-11 rounded-2xl bg-white/20 flex items-center justify-center">
-              <Camera className="w-5.5 h-5.5 text-white" />
+            <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
+              <Camera className="w-7 h-7 text-white" />
             </div>
-            <span className="text-white text-[0.6875rem] font-medium leading-tight text-center">{t('hn_qa_scan')}</span>
+            <div className="flex-1 min-w-0">
+              <div className="text-white text-sm font-semibold leading-tight">
+                {t('hn_qa_scan')}
+              </div>
+              <div className="text-white/80 text-xs leading-tight mt-1">
+                Сфотографируй блюдо — посчитаем КБЖУ
+              </div>
+            </div>
             {!hasAccess && usage.scans.limit !== null && (
-              <FreemiumLimitBadge used={usage.scans.used} limit={usage.scans.limit} className="absolute top-1.5 right-1.5 !bg-white/20 !text-white/90 !border-white/30" />
+              <FreemiumLimitBadge used={usage.scans.used} limit={usage.scans.limit} className="absolute top-2 right-2 !bg-white/20 !text-white/90 !border-white/30" />
             )}
           </motion.button>
 
@@ -560,22 +567,6 @@ export function HomeNutritionPage() {
             <span className="text-foreground text-[0.6875rem] font-medium leading-tight text-center">{t('hn_qa_coach')}</span>
             {!hasAccess && usage.coachMessages.limit !== null && (
               <FreemiumLimitBadge used={usage.coachMessages.used} limit={usage.coachMessages.limit} className="absolute top-1.5 right-1.5" />
-            )}
-          </motion.button>
-
-          {/* Weight */}
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            onClick={() => { hapticFeedback('medium'); navigate('/weight'); }}
-            className="flex flex-col items-center gap-2 p-3.5 rounded-2xl relative"
-            style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border-subtle)' }}
-          >
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#74b9ff] to-[#0984e3] flex items-center justify-center">
-              <Scale className="w-5.5 h-5.5 text-white" />
-            </div>
-            <span className="text-foreground text-[0.6875rem] font-medium leading-tight text-center">{t('hn_qa_weight')}</span>
-            {latestWeight && (
-              <span className="text-[0.5625rem] text-muted-foreground/60 -mt-1">{latestWeight.weight}{t('unit_kg')}</span>
             )}
           </motion.button>
 
