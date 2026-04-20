@@ -289,7 +289,10 @@ export function ReferralsPage() {
               </div>
 
               {/* Referral link */}
-              <div className="p-3 rounded-xl bg-ui-button border border-[var(--glass-border)]" style={{ border: '1px solid var(--glass-border)' }}>
+              <div
+                className="p-3 rounded-xl bg-ui-button border border-[var(--glass-border)] mb-3"
+                style={{ border: '1px solid var(--glass-border)' }}
+              >
                 <p className="text-ui-icon-primary break-all font-mono" style={{ fontSize: '0.75rem', lineHeight: 1.6 }}>
                   {referralLink || t('ref_loading')}
                 </p>
