@@ -372,8 +372,6 @@ function LayoutInner() {
   const navigate = useNavigate();
   const location = useLocation();
   const [keyboardVisible, setKeyboardVisible] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [topBarTransparent, setTopBarTransparent] = useState(false);
 
   // Telegram fullscreen, swipe protection, safe areas
   useTelegramFullscreen();
@@ -448,20 +446,6 @@ function LayoutInner() {
     listenSafeAreaChanges();
   }, []);
 
-  // Make top safe-area bar transparent when user scrolls content
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-
-    const update = () => {
-      setTopBarTransparent(el.scrollTop > 0);
-    };
-
-    update();
-    el.addEventListener('scroll', update, { passive: true });
-    return () => el.removeEventListener('scroll', update as EventListener);
-  }, [location.pathname]);
-
   return (
     <div
       className="fixed inset-0 flex flex-col overflow-hidden"
@@ -469,19 +453,9 @@ function LayoutInner() {
       {/* Pattern background — z-[-1], must be first for glass backdrop-filter to work */}
       <PatternBackground />
 
-      {/* Safe area spacer at top — pushes content below TG header */}
-      <div
-        className="shrink-0"
-        style={{
-          height: 'var(--safe-area-top, 0px)',
-          backgroundColor: topBarTransparent ? 'rgba(245, 245, 247, 0)' : 'rgb(245, 245, 247)',
-        }}
-      />
-
       <AuthGate>
         {/* Scrollable content area */}
         <div
-          ref={scrollRef}
           className={`flex-1 overflow-x-hidden relative ${
             location.pathname === '/calories/scan' ? 'overflow-hidden' : 'overflow-y-auto'
           }`}
