@@ -448,7 +448,7 @@ function LayoutInner() {
 
   return (
     <div
-      className="fixed inset-0 flex flex-col overflow-hidden"
+      className="fixed inset-0 flex flex-col overflow-hidden pt-16"
     >
       {/* Pattern background — z-[-1], must be first for glass backdrop-filter to work */}
       <PatternBackground />
