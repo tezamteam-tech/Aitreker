@@ -51,6 +51,18 @@ interface FoodEntry {
   protein: number;
   carbs: number;
   fats: number;
+  // Extended (optional)
+  fiber_g?: number;
+  sugar_g?: number;
+  added_sugar_g?: number;
+  sodium_mg?: number;
+  iron_mg?: number;
+  calcium_mg?: number;
+  vitamin_d_mcg?: number;
+  magnesium_mg?: number;
+  glycemic_index?: number;
+  nova_group?: 1 | 2 | 3 | 4;
+  nutrient_density?: number;
   mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
   time: string;
 }
@@ -174,6 +186,17 @@ export function CaloriesPage() {
         protein: entry.protein,
         carbs: entry.carbs,
         fat: entry.fats,
+        fiber_g: entry.fiber_g,
+        sugar_g: entry.sugar_g,
+        added_sugar_g: entry.added_sugar_g,
+        sodium_mg: entry.sodium_mg,
+        iron_mg: entry.iron_mg,
+        calcium_mg: entry.calcium_mg,
+        vitamin_d_mcg: entry.vitamin_d_mcg,
+        magnesium_mg: entry.magnesium_mg,
+        glycemic_index: entry.glycemic_index,
+        nova_group: entry.nova_group,
+        nutrient_density: entry.nutrient_density,
         meal_type: entry.mealType,
       }).then((saved) => {
         hapticSuccess();
@@ -184,6 +207,17 @@ export function CaloriesPage() {
           protein: saved.protein,
           carbs: saved.carbs,
           fats: saved.fat,
+          fiber_g: saved.fiber_g,
+          sugar_g: saved.sugar_g,
+          added_sugar_g: saved.added_sugar_g,
+          sodium_mg: saved.sodium_mg,
+          iron_mg: saved.iron_mg,
+          calcium_mg: saved.calcium_mg,
+          vitamin_d_mcg: saved.vitamin_d_mcg,
+          magnesium_mg: saved.magnesium_mg,
+          glycemic_index: saved.glycemic_index,
+          nova_group: saved.nova_group,
+          nutrient_density: saved.nutrient_density,
           mealType: (saved.meal_type || 'snack') as MealType,
           time: saved.created_at
             ? new Date(saved.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -617,13 +651,25 @@ function AddFoodSheet({
   onAdd: (entry: Omit<FoodEntry, 'id'>) => void;
   onClose: () => void;
 }) {
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
   const { usage, hasAccess, canUse, limitLabel, refresh: refreshUsage } = useFreemium();
   const [name, setName] = useState('');
   const [calories, setCalories] = useState('');
   const [protein, setProtein] = useState('');
   const [carbs, setCarbs] = useState('');
   const [fats, setFats] = useState('');
+  const [fiber, setFiber] = useState('');
+  const [sugar, setSugar] = useState('');
+  const [addedSugar, setAddedSugar] = useState('');
+  const [sodium, setSodium] = useState('');
+  const [iron, setIron] = useState('');
+  const [calcium, setCalcium] = useState('');
+  const [vitaminD, setVitaminD] = useState('');
+  const [magnesium, setMagnesium] = useState('');
+  const [glycemicIndex, setGlycemicIndex] = useState('');
+  const [novaGroup, setNovaGroup] = useState('');
+  const [nutrientDensity, setNutrientDensity] = useState('');
+  const [showMore, setShowMore] = useState(false);
   const [mealType, setMealType] = useState<MealType>(() => {
     const h = new Date().getHours();
     if (h < 11) return 'breakfast';
@@ -663,6 +709,17 @@ function AddFoodSheet({
       setProtein(String(result.protein));
       setCarbs(String(result.carbs));
       setFats(String(result.fat));
+      if (result.fiber_g != null) setFiber(String(result.fiber_g));
+      if (result.sugar_g != null) setSugar(String(result.sugar_g));
+      if (result.added_sugar_g != null) setAddedSugar(String(result.added_sugar_g));
+      if (result.sodium_mg != null) setSodium(String(result.sodium_mg));
+      if (result.iron_mg != null) setIron(String(result.iron_mg));
+      if (result.calcium_mg != null) setCalcium(String(result.calcium_mg));
+      if (result.vitamin_d_mcg != null) setVitaminD(String(result.vitamin_d_mcg));
+      if (result.magnesium_mg != null) setMagnesium(String(result.magnesium_mg));
+      if (result.glycemic_index != null) setGlycemicIndex(String(result.glycemic_index));
+      if (result.nova_group != null) setNovaGroup(String(result.nova_group));
+      if (result.nutrient_density != null) setNutrientDensity(String(result.nutrient_density));
       if (result.portion) setAiPortion(result.portion);
       if (result.food_name && result.food_name !== name.trim()) {
         setName(result.food_name);
@@ -694,6 +751,17 @@ function AddFoodSheet({
       protein: Number(protein) || 0,
       carbs: Number(carbs) || 0,
       fats: Number(fats) || 0,
+      fiber_g: Number(fiber) || 0,
+      sugar_g: Number(sugar) || 0,
+      added_sugar_g: Number(addedSugar) || 0,
+      sodium_mg: Number(sodium) || 0,
+      iron_mg: Number(iron) || 0,
+      calcium_mg: Number(calcium) || 0,
+      vitamin_d_mcg: Number(vitaminD) || 0,
+      magnesium_mg: Number(magnesium) || 0,
+      glycemic_index: Number(glycemicIndex) || 0,
+      nova_group: ((n: number) => (n === 1 || n === 2 || n === 3 || n === 4 ? (n as 1 | 2 | 3 | 4) : undefined))(Number(novaGroup)),
+      nutrient_density: Number(nutrientDensity) || 0,
       mealType,
       time,
     });
@@ -864,6 +932,48 @@ function AddFoodSheet({
                 type="number"
                 suffix="g"
               />
+            </div>
+
+            {/* More nutrients */}
+            <div className="mt-1">
+              <button
+                onClick={() => setShowMore((v) => !v)}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-xl border"
+                style={{ background: 'var(--glass-bg-card)', borderColor: 'var(--glass-border-subtle)' }}
+              >
+                <span className="text-xs font-semibold text-foreground">
+                  {lang === 'ru' ? 'Доп. нутриенты' : 'More nutrients'}
+                </span>
+                <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${showMore ? 'rotate-180' : ''}`} />
+              </button>
+
+              <AnimatePresence>
+                {showMore && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="grid grid-cols-3 gap-2 mt-2">
+                      <SheetInput label={lang === 'ru' ? 'Клетчатка' : 'Fiber'} placeholder="0" value={fiber} onChange={setFiber} type="number" suffix="g" />
+                      <SheetInput label={lang === 'ru' ? 'Сахар' : 'Sugar'} placeholder="0" value={sugar} onChange={setSugar} type="number" suffix="g" />
+                      <SheetInput label={lang === 'ru' ? 'Сахар+' : 'Added'} placeholder="0" value={addedSugar} onChange={setAddedSugar} type="number" suffix="g" />
+                      <SheetInput label={lang === 'ru' ? 'Натрий' : 'Sodium'} placeholder="0" value={sodium} onChange={setSodium} type="number" suffix={lang === 'ru' ? 'мг' : 'mg'} />
+                      <SheetInput label={lang === 'ru' ? 'Железо' : 'Iron'} placeholder="0" value={iron} onChange={setIron} type="number" suffix={lang === 'ru' ? 'мг' : 'mg'} />
+                      <SheetInput label={lang === 'ru' ? 'Кальций' : 'Calcium'} placeholder="0" value={calcium} onChange={setCalcium} type="number" suffix={lang === 'ru' ? 'мг' : 'mg'} />
+                      <SheetInput label={lang === 'ru' ? 'Vit D' : 'Vit D'} placeholder="0" value={vitaminD} onChange={setVitaminD} type="number" suffix={lang === 'ru' ? 'мкг' : 'mcg'} />
+                      <SheetInput label={lang === 'ru' ? 'Магний' : 'Magnesium'} placeholder="0" value={magnesium} onChange={setMagnesium} type="number" suffix={lang === 'ru' ? 'мг' : 'mg'} />
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2 mt-2">
+                      <SheetInput label={lang === 'ru' ? 'ГИ' : 'GI'} placeholder="0" value={glycemicIndex} onChange={setGlycemicIndex} type="number" suffix="" />
+                      <SheetInput label={lang === 'ru' ? 'NOVA' : 'NOVA'} placeholder="1-4" value={novaGroup} onChange={setNovaGroup} type="number" suffix="" />
+                      <SheetInput label={lang === 'ru' ? 'Плотность' : 'Density'} placeholder="0-100" value={nutrientDensity} onChange={setNutrientDensity} type="number" suffix="" />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
 
