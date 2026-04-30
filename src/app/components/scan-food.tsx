@@ -49,6 +49,18 @@ interface FoodResult {
   protein: number;
   carbs: number;
   fat: number;
+  fiber_g?: number;
+  sugar_g?: number;
+  added_sugar_g?: number;
+  water_ml?: number;
+  sodium_mg?: number;
+  iron_mg?: number;
+  calcium_mg?: number;
+  vitamin_d_mcg?: number;
+  magnesium_mg?: number;
+  glycemic_index?: number;
+  nova_group?: 1 | 2 | 3 | 4;
+  nutrient_density?: number;
 }
 
 // ---- Meal type config ----
@@ -215,6 +227,18 @@ export function ScanFoodPage() {
         protein: result.protein,
         carbs: result.carbs,
         fat: result.fat,
+        fiber_g: result.fiber_g,
+        sugar_g: result.sugar_g,
+        added_sugar_g: result.added_sugar_g,
+        water_ml: result.water_ml,
+        sodium_mg: result.sodium_mg,
+        iron_mg: result.iron_mg,
+        calcium_mg: result.calcium_mg,
+        vitamin_d_mcg: result.vitamin_d_mcg,
+        magnesium_mg: result.magnesium_mg,
+        glycemic_index: result.glycemic_index,
+        nova_group: result.nova_group,
+        nutrient_density: result.nutrient_density,
         meal_type: selectedMeal,
         image_base64: imageData?.split(',')[1],
       });
@@ -534,6 +558,15 @@ export function ScanFoodPage() {
                   <MacroCard label={t('scan_carbs')} value={result.carbs} unit={t('unit_g')} color="#00cec9" />
                   <MacroCard label={t('scan_fat')} value={result.fat} unit={t('unit_g')} color="#e17055" />
                 </div>
+
+                {/* Extended nutrients (if present) */}
+                {(result.fiber_g != null || result.added_sugar_g != null || result.sodium_mg != null) && (
+                  <div className="mt-3 pt-3 grid grid-cols-3 gap-2" style={{ borderTop: '1px solid var(--glass-border-subtle)' }}>
+                    <MiniPill label={t('hn_fiber') || 'Клетчатка'} value={result.fiber_g} unit={t('unit_g')} color="#00b894" />
+                    <MiniPill label={t('hn_added_sugar') || 'Сахар+'} value={result.added_sugar_g} unit={t('unit_g')} color="#fdcb6e" />
+                    <MiniPill label={t('hn_sodium') || 'Натрий'} value={result.sodium_mg} unit={t('unit_mg') || 'mg'} color="#74b9ff" />
+                  </div>
+                )}
               </GlassCard>
 
               {/* Meal type selector */}
@@ -806,5 +839,32 @@ function MacroCard({
         {label}
       </p>
     </motion.div>
+  );
+}
+
+function MiniPill({
+  label,
+  value,
+  unit,
+  color,
+}: {
+  label: string;
+  value: number | undefined;
+  unit: string;
+  color: string;
+}) {
+  const v = typeof value === 'number' && Number.isFinite(value) ? Math.round(value) : null;
+  return (
+    <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl border"
+      style={{ background: 'var(--glass-bg-card)', borderColor: 'var(--glass-border-subtle)' }}
+    >
+      <div className="flex items-center gap-2 min-w-0">
+        <div className="w-2 h-2 rounded-full shrink-0" style={{ background: color }} />
+        <span className="text-[0.6875rem] text-muted-foreground truncate">{label}</span>
+      </div>
+      <span className="text-[0.75rem] font-semibold text-foreground">
+        {v == null ? '—' : `${v}${unit}`}
+      </span>
+    </div>
   );
 }

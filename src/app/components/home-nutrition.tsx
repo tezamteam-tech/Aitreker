@@ -30,6 +30,7 @@ import {
   Activity,
   Gift,
   Sparkles,
+  Droplet,
 } from 'lucide-react';
 import { GlassCard } from './glass-card';
 import { useAuth } from './auth-context';
@@ -43,6 +44,7 @@ import { SmartBurnCard } from './smart-burn-card';
 import { ActivityLogger } from './activity-logger';
 import { useFreemium } from './use-freemium';
 import { FreemiumLimitBadge } from './premium-gate';
+import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 
 interface NutritionData {
   caloriesConsumed: number;
@@ -50,6 +52,15 @@ interface NutritionData {
   protein: number;
   carbs: number;
   fats: number;
+  fiber_g: number;
+  sugar_g: number;
+  added_sugar_g: number;
+  water_ml: number;
+  sodium_mg: number;
+  iron_mg: number;
+  calcium_mg: number;
+  vitamin_d_mcg: number;
+  magnesium_mg: number;
 }
 
 interface MealPlanItem {
@@ -71,7 +82,7 @@ interface WorkoutPlanItem {
 export function HomeNutritionPage() {
   const { user, subscriptionActive, subscriptionDaysLeft, isTrial, trialDaysLeft, trialExpired } = useAuth();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
   const { usage, hasAccess } = useFreemium();
 
   // Calorie target from profile (loaded from API or localStorage cache)
@@ -101,7 +112,20 @@ export function HomeNutritionPage() {
     protein: 0,
     carbs: 0,
     fats: 0,
+    fiber_g: 0,
+    sugar_g: 0,
+    added_sugar_g: 0,
+    water_ml: 0,
+    sodium_mg: 0,
+    iron_mg: 0,
+    calcium_mg: 0,
+    vitamin_d_mcg: 0,
+    magnesium_mg: 0,
   });
+
+  // Water tracker (server-side)
+  const [waterMl, setWaterMl] = useState(0);
+  const waterGoalMl = 2000;
 
   const [todayMeals, setTodayMeals] = useState<MealPlanItem[]>([]);
 
@@ -182,7 +206,7 @@ export function HomeNutritionPage() {
     const today = new Date().toISOString().slice(0, 10);
     api.getFoodEntries(today).then((data) => {
       const entries = data.entries || [];
-      const totals = data.totals || { calories: 0, protein: 0, carbs: 0, fat: 0 };
+      const totals = data.totals || { calories: 0, protein: 0, carbs: 0, fat: 0, fiber_g: 0, sugar_g: 0, added_sugar_g: 0, water_ml: 0, sodium_mg: 0, iron_mg: 0, calcium_mg: 0, vitamin_d_mcg: 0, magnesium_mg: 0 };
 
       // Update nutrition data with real totals
       setNutritionData((prev) => ({
@@ -191,6 +215,15 @@ export function HomeNutritionPage() {
         protein: totals.protein,
         carbs: totals.carbs,
         fats: totals.fat,
+        fiber_g: totals.fiber_g || 0,
+        sugar_g: totals.sugar_g || 0,
+        added_sugar_g: totals.added_sugar_g || 0,
+        water_ml: totals.water_ml || 0,
+        sodium_mg: totals.sodium_mg || 0,
+        iron_mg: totals.iron_mg || 0,
+        calcium_mg: totals.calcium_mg || 0,
+        vitamin_d_mcg: totals.vitamin_d_mcg || 0,
+        magnesium_mg: totals.magnesium_mg || 0,
       }));
 
       // Map food entries to today's meals display
@@ -208,6 +241,39 @@ export function HomeNutritionPage() {
       console.warn('[HomeNutrition] Failed to load food entries:', err);
     });
   }, [user]);
+
+  // Load today's water
+  useEffect(() => {
+    if (!user) return;
+    const today = new Date().toISOString().slice(0, 10);
+    api.getWater(today)
+      .then((d) => setWaterMl(Number(d.total_ml) || 0))
+      .catch((err) => console.warn('[HomeNutrition] Failed to load water:', err));
+  }, [user]);
+
+  const addWater = async (amount: number) => {
+    try {
+      hapticFeedback('light');
+      const today = new Date().toISOString().slice(0, 10);
+      const d = await api.logWater(amount, today);
+      setWaterMl(Number(d.total_ml) || 0);
+    } catch (err) {
+      console.warn('[HomeNutrition] Water log failed:', err);
+    }
+  };
+
+  const macroPie = (() => {
+    const p = Math.max(0, Number(nutritionData.protein) || 0) * 4;
+    const c = Math.max(0, Number(nutritionData.carbs) || 0) * 4;
+    const f = Math.max(0, Number(nutritionData.fats) || 0) * 9;
+    const total = p + c + f;
+    if (total <= 0) return null;
+    return [
+      { name: lang === 'ru' ? 'Белки' : 'Protein', value: p, color: '#6c5ce7' },
+      { name: lang === 'ru' ? 'Углеводы' : 'Carbs', value: c, color: '#fdcb6e' },
+      { name: lang === 'ru' ? 'Жиры' : 'Fats', value: f, color: '#fd79a8' },
+    ];
+  })();
 
   // Load today's workout from active workout plan
   useEffect(() => {
@@ -528,6 +594,113 @@ export function HomeNutritionPage() {
               </div>
             ))}
           </div>
+
+          {/* Critical nutrients row */}
+          <div className="grid grid-cols-3 gap-2 pt-2.5">
+            <div className="flex items-center justify-center gap-1">
+              <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#00b894' }} />
+              <span className="text-[0.6875rem] text-muted-foreground">{lang === 'ru' ? 'Клетчатка' : 'Fiber'}</span>
+              <span className="text-[0.8125rem] font-semibold text-foreground">{nutritionData.fiber_g}{t('unit_g')}</span>
+            </div>
+            <div className="flex items-center justify-center gap-1">
+              <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#fdcb6e' }} />
+              <span className="text-[0.6875rem] text-muted-foreground">{lang === 'ru' ? 'Сахар+' : 'Added sugar'}</span>
+              <span className="text-[0.8125rem] font-semibold text-foreground">{nutritionData.added_sugar_g}{t('unit_g')}</span>
+            </div>
+            <div className="flex items-center justify-center gap-1">
+              <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#74b9ff' }} />
+              <span className="text-[0.6875rem] text-muted-foreground">{lang === 'ru' ? 'Натрий' : 'Sodium'}</span>
+              <span className="text-[0.8125rem] font-semibold text-foreground">{nutritionData.sodium_mg}{lang === 'ru' ? 'мг' : 'mg'}</span>
+            </div>
+          </div>
+        </GlassCard>
+
+        {/* Water tracker */}
+        <GlassCard className="px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#74b9ff]/25 to-[#00cec9]/20 flex items-center justify-center">
+                <Droplet className="w-5 h-5 text-[#74b9ff]" />
+              </div>
+              <div>
+                <div className="text-sm font-semibold text-foreground">{lang === 'ru' ? 'Вода' : 'Water'}</div>
+                <div className="text-xs text-muted-foreground">{waterMl} / {waterGoalMl} {lang === 'ru' ? 'мл' : 'ml'}</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <motion.button whileTap={{ scale: 0.96 }} onClick={() => addWater(250)} className="h-9 px-3 rounded-xl bg-ui-button border border-[var(--glass-border)] text-sm font-semibold">
+                +250
+              </motion.button>
+              <motion.button whileTap={{ scale: 0.96 }} onClick={() => addWater(500)} className="h-9 px-3 rounded-xl bg-ui-button border border-[var(--glass-border)] text-sm font-semibold">
+                +500
+              </motion.button>
+            </div>
+          </div>
+          <div className="mt-3 h-2 rounded-full overflow-hidden" style={{ background: 'rgba(116,185,255,0.12)' }}>
+            <div
+              className="h-full rounded-full"
+              style={{
+                width: `${Math.min(100, Math.round((waterMl / waterGoalMl) * 100))}%`,
+                background: 'linear-gradient(90deg, #74b9ff, #00cec9)',
+              }}
+            />
+          </div>
+        </GlassCard>
+
+        {/* Macro ratio pie + trends shortcut */}
+        <GlassCard className="px-4 py-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 rounded-2xl bg-[#6c5ce7]/10 flex items-center justify-center">
+                <BarChart3 className="w-5 h-5 text-[#6c5ce7]" />
+              </div>
+              <div>
+                <div className="text-sm font-semibold text-foreground">{lang === 'ru' ? 'Баланс нутриентов' : 'Nutrient balance'}</div>
+                <div className="text-xs text-muted-foreground">{lang === 'ru' ? 'Доли по калориям' : 'Share by calories'}</div>
+              </div>
+            </div>
+            <motion.button
+              whileTap={{ scale: 0.96 }}
+              onClick={() => { hapticFeedback('light'); navigate('/analytics'); }}
+              className="h-9 px-3 rounded-xl bg-ui-button border border-[var(--glass-border)] text-sm font-semibold flex items-center gap-1.5"
+            >
+              {lang === 'ru' ? 'Тренды' : 'Trends'}
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </motion.button>
+          </div>
+
+          {macroPie ? (
+            <div className="flex items-center gap-3">
+              <div className="w-[110px] h-[110px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={macroPie} dataKey="value" innerRadius={34} outerRadius={50} paddingAngle={2}>
+                      {macroPie.map((e) => (
+                        <Cell key={e.name} fill={e.color} />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex-1 space-y-1.5">
+                {macroPie.map((e) => {
+                  const total = macroPie.reduce((s, x) => s + x.value, 0);
+                  const pct = total > 0 ? Math.round((e.value / total) * 100) : 0;
+                  return (
+                    <div key={e.name} className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-2 h-2 rounded-full" style={{ background: e.color }} />
+                        <span className="text-xs text-muted-foreground truncate">{e.name}</span>
+                      </div>
+                      <span className="text-xs font-semibold text-foreground tabular-nums">{pct}%</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="text-xs text-muted-foreground">{lang === 'ru' ? 'Добавьте еду, чтобы увидеть баланс.' : 'Log food to see balance.'}</div>
+          )}
         </GlassCard>
 
         {/* ===== Quick Actions Grid ===== */}

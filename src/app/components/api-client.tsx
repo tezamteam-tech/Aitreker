@@ -895,6 +895,18 @@ export const api = {
     protein: number;
     carbs: number;
     fat: number;
+    fiber_g?: number;
+    sugar_g?: number;
+    added_sugar_g?: number;
+    water_ml?: number;
+    sodium_mg?: number;
+    iron_mg?: number;
+    calcium_mg?: number;
+    vitamin_d_mcg?: number;
+    magnesium_mg?: number;
+    glycemic_index?: number;
+    nova_group?: 1 | 2 | 3 | 4;
+    nutrient_density?: number;
     portion: string;
   }> {
     return request('POST', '/food/estimate', { food_name: foodName, language: getUserLang() });
@@ -907,6 +919,18 @@ export const api = {
     protein: number;
     carbs: number;
     fat: number;
+    fiber_g?: number;
+    sugar_g?: number;
+    added_sugar_g?: number;
+    water_ml?: number;
+    sodium_mg?: number;
+    iron_mg?: number;
+    calcium_mg?: number;
+    vitamin_d_mcg?: number;
+    magnesium_mg?: number;
+    glycemic_index?: number;
+    nova_group?: 1 | 2 | 3 | 4;
+    nutrient_density?: number;
   }> {
     return request('POST', '/food/scan', { imageBase64, mimeType, language: language || getUserLang() });
   },
@@ -918,6 +942,18 @@ export const api = {
     protein: number;
     carbs: number;
     fat: number;
+    fiber_g?: number;
+    sugar_g?: number;
+    added_sugar_g?: number;
+    water_ml?: number;
+    sodium_mg?: number;
+    iron_mg?: number;
+    calcium_mg?: number;
+    vitamin_d_mcg?: number;
+    magnesium_mg?: number;
+    glycemic_index?: number;
+    nova_group?: 1 | 2 | 3 | 4;
+    nutrient_density?: number;
     meal_type?: string;
     image_base64?: string;
   }): Promise<{
@@ -927,6 +963,18 @@ export const api = {
     protein: number;
     carbs: number;
     fat: number;
+    fiber_g?: number;
+    sugar_g?: number;
+    added_sugar_g?: number;
+    water_ml?: number;
+    sodium_mg?: number;
+    iron_mg?: number;
+    calcium_mg?: number;
+    vitamin_d_mcg?: number;
+    magnesium_mg?: number;
+    glycemic_index?: number;
+    nova_group?: 1 | 2 | 3 | 4;
+    nutrient_density?: number;
     image_url: string | null;
     meal_type: string;
     created_at: string;
@@ -943,6 +991,15 @@ export const api = {
       protein: number;
       carbs: number;
       fat: number;
+      fiber_g?: number;
+      sugar_g?: number;
+      added_sugar_g?: number;
+      water_ml?: number;
+      sodium_mg?: number;
+      iron_mg?: number;
+      calcium_mg?: number;
+      vitamin_d_mcg?: number;
+      magnesium_mg?: number;
       image_url: string | null;
       meal_type: string;
       created_at: string;
@@ -952,6 +1009,15 @@ export const api = {
       protein: number;
       carbs: number;
       fat: number;
+      fiber_g: number;
+      sugar_g: number;
+      added_sugar_g: number;
+      water_ml: number;
+      sodium_mg: number;
+      iron_mg: number;
+      calcium_mg: number;
+      vitamin_d_mcg: number;
+      magnesium_mg: number;
     };
   }> {
     const q = date ? `?date=${date}` : '';
@@ -961,6 +1027,16 @@ export const api = {
   /** Delete a food entry */
   async deleteFoodEntry(entryId: string): Promise<{ success: boolean }> {
     return request('DELETE', `/food/entries/${entryId}`);
+  },
+
+  // ---- Water tracking ----
+  async getWater(date?: string): Promise<{ date: string; total_ml: number }> {
+    const q = date ? `?date=${date}` : '';
+    return request('GET', `/water${q}`);
+  },
+
+  async logWater(amount_ml: number, date?: string): Promise<{ date: string; total_ml: number }> {
+    return request('POST', '/water/log', { amount_ml, date });
   },
 
   // ---- Meal Plan Generation ----

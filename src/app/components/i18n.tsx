@@ -84,7 +84,7 @@ const translations: Record<string, Record<Lang, string>> = {
   },
   auth_no_initdata_step3: {
     en: 'Tap «Open» button',
-    ru: 'Нажмите кнопку «Открыть��',
+    ru: 'Нажмите кнопку «Открыть',
   },
   auth_open_from_bot: { en: 'Open @ProperFoodAI_bot', ru: 'Открыть @ProperFoodAI_bot' },
   // Kept for debug/dev — not shown to users
@@ -776,7 +776,7 @@ const translations: Record<string, Record<Lang, string>> = {
   goal_tasks_count: { en: '{done}/{total} tasks', ru: '{done}/{total} \u0437\u0430\u0434\u0430\u0447' },
   goal_no_tasks: { en: 'No tasks yet', ru: 'Задач пока нет' },
   // Unified goals hub
-  goals_my_path: { en: 'MY PATH', ru: 'МОЙ П��ТЬ' },
+  goals_my_path: { en: 'MY PATH', ru: 'МОЙ ПУТЬ' },
   goals_my_path_desc: { en: 'Active development program', ru: 'Активная программа развития' },
   goals_day_n: { en: 'Day {n} of {total}', ru: 'День {n} из {total}' },
   goals_completed_badge: { en: 'Completed', ru: 'Завершена' },
@@ -1043,7 +1043,7 @@ const translations: Record<string, Record<Lang, string>> = {
   scan_add_diary: { en: 'Add to diary', ru: 'Добавить в дневник' },
   scan_added: { en: 'Added to diary!', ru: 'Добавлено!' },
   scan_another: { en: 'Scan another', ru: 'Сканировать другое' },
-  scan_limit_title: { en: 'Scan Limit Reached', ru: 'Лимит сканирован��й' },
+  scan_limit_title: { en: 'Scan Limit Reached', ru: 'Лимит сканирований' },
   scan_limit_desc: { en: "You've used {used}/{limit} free scans today", ru: 'Использовано {used}/{limit} бесплатных сканирований сегодня' },
   scan_limit_upgrade: { en: 'Upgrade to Premium for unlimited scans', ru: 'Перейдите на Premium для безлимитного сканирования' },
   scan_upgrade_btn: { en: 'Upgrade to Premium', ru: 'Перейти на Premium' },
@@ -1062,7 +1062,7 @@ const translations: Record<string, Record<Lang, string>> = {
   obn_entry_start: { en: 'Start onboarding', ru: 'Пройти анбординг' },
   obn_entry_skip: { en: 'Skip', ru: 'Пропустить' },
   obn_gender_title: { en: 'Your gender', ru: 'Ваш пол' },
-  obn_gender_desc: { en: 'For accurate calorie and metabolism calculation', ru: 'Для точного расчёта калори�� и метаболизма' },
+  obn_gender_desc: { en: 'For accurate calorie and metabolism calculation', ru: 'Для точного расчёта калорий и метаболизма' },
   obn_male: { en: 'Male', ru: 'Мужской' },
   obn_female: { en: 'Female', ru: 'Женский' },
   obn_age_title: { en: 'How old are you?', ru: 'Сколько вам лет?' },
@@ -1086,7 +1086,7 @@ const translations: Record<string, Record<Lang, string>> = {
   obn_activity_athlete: { en: 'Athlete', ru: 'Атлет' },
   obn_activity_athlete_desc: { en: 'Daily intense training', ru: 'Ежедневные интенсивные тренировки' },
   obn_goal_title: { en: 'Your goal', ru: 'Ваша цель' },
-  obn_goal_desc: { en: 'We will calculate optimal calorie intake', ru: 'Мы рассчитаем ��птимальное потребление калорий' },
+  obn_goal_desc: { en: 'We will calculate optimal calorie intake', ru: 'Мы рассчитаем оптимальное потребление калорий' },
   obn_goal_lose: { en: 'Lose weight', ru: 'Похудеть' },
   obn_goal_lose_desc: { en: 'Reduce weight and body fat', ru: 'Снизить вес и процент жира' },
   obn_goal_maintain: { en: 'Maintain weight', ru: 'Поддержать вес' },
@@ -1169,7 +1169,7 @@ const translations: Record<string, Record<Lang, string>> = {
   wp_rest: { en: 'Rest', ru: 'Отдых' },
   wp_day_n: { en: 'Day {n}', ru: 'День {n}' },
   wp_premium_required: { en: 'Premium required for AI workout plans', ru: 'Для AI-плана тренировок нужен Premium' },
-  wp_error: { en: 'Failed to generate workout plan', ru: 'Не удалось сгенерировать пл��н тренировок' },
+  wp_error: { en: 'Failed to generate workout plan', ru: 'Не удалось сгенерировать план тренировок' },
 
   // ---- Layout / Splash ----
   splash_syncing: { en: 'Syncing...', ru: 'Синхронизация...' },
@@ -1180,7 +1180,7 @@ const translations: Record<string, Record<Lang, string>> = {
   splash_loading: { en: 'Loading...', ru: 'Загрузка...' },
   splash_open_tg: { en: 'Open via Telegram', ru: 'Откройте через Telegram' },
   splash_open_tg_desc: { en: 'This app works inside the Telegram messenger. Open it from @ProperFoodAI_bot.', ru: 'Это приложение работает в Telegram. Откройте его из @ProperFoodAI_bot.' },
-  splash_open_tg_btn: { en: 'Open in Telegram', ru: '��ткрыть в Telegram' },
+  splash_open_tg_btn: { en: 'Open in Telegram', ru: 'Открыть в Telegram' },
   splash_retry_btn: { en: 'Retry authentication', ru: 'Повторить попытку' },
 
   // ---- Web Auth (Login via Bot) ----
@@ -1202,7 +1202,7 @@ const translations: Record<string, Record<Lang, string>> = {
 
   // ---- Day View inline ----
   dv_block_error: { en: 'Could not generate block', ru: 'Не удалось сгенерировать блок' },
-  dv_gen_error: { en: 'Generation error', ru: 'Ошибка ге��ерации' },
+  dv_gen_error: { en: 'Generation error', ru: 'Ошибка генерации' },
   dv_task_completed: { en: 'Task completed!  +{xp} XP', ru: 'Задача выполнена!  +{xp} XP' },
   dv_generating_block: { en: 'Generating next block...', ru: 'Генерирую следующий блок...' },
   dv_generating_block_desc: { en: 'Coach is creating new program days', ru: 'Коуч создаёт новые дни программы' },
@@ -1298,7 +1298,7 @@ const translations: Record<string, Record<Lang, string>> = {
   mp_days_nav: { en: 'Days', ru: 'Дни' },
   mp_history_title: { en: 'Plan History', ru: 'История планов' },
   mp_no_saved: { en: 'No saved plans', ru: 'Нет сохранённых планов' },
-  mp_history_desc: { en: 'Your previous meal plans', ru: 'Ваши пред��дущие планы питания' },
+  mp_history_desc: { en: 'Your previous meal plans', ru: 'Ваши предыдущие планы питания' },
   mp_go_back: { en: 'Go back', ru: 'Назад' },
 
   // ---- Workout Plan — extended ----
@@ -1306,7 +1306,7 @@ const translations: Record<string, Record<Lang, string>> = {
   wp_at_home: { en: 'At Home', ru: 'Дома' },
   wp_no_equip: { en: 'No equipment needed', ru: 'Без оборудования' },
   wp_at_gym: { en: 'At Gym', ru: 'В зале' },
-  wp_full_equip: { en: 'Full equipment', ru: 'Полное обо��удование' },
+  wp_full_equip: { en: 'Full equipment', ru: 'Полное оборудование' },
   wp_complete_onboarding: { en: 'Complete onboarding for a personalized workout plan.', ru: 'Пройдите онбординг для персонализированного плана тренировок.' },
   wp_plan_length: { en: 'Plan length', ru: 'Длительность плана' },
   wp_plan_7_label: { en: '1 Week', ru: '1 Неделя' },
@@ -1520,7 +1520,7 @@ const translations: Record<string, Record<Lang, string>> = {
   chd_insufficient_balance: { en: 'Insufficient balance', ru: 'Недостаточно средств на балансе' },
 
   // ---- Coach Chat — insight prefix ----
-  coach_insights_prefix: { en: "Here are my AI insights from the journal. Help me understand and create an action plan:\n\n", ru: 'Вот мои AI-инсайты из журнала. Помоги мне разобратьс�� и составить план действий:\n\n' },
+  coach_insights_prefix: { en: "Here are my AI insights from the journal. Help me understand and create an action plan:\n\n", ru: 'Вот мои AI-инсайты из журнала. Помоги мне разобраться и составить план действий:\n\n' },
 
   // ---- Onboarding — splash ----
   ob_splash_syncing: { en: 'Syncing your goals and tasks...', ru: 'Синхронизируем ваши цели и задачи...' },
@@ -1630,7 +1630,7 @@ const translations: Record<string, Record<Lang, string>> = {
   hn_this_week: { en: 'This Week', ru: 'За неделю' },
   hn_weight_progress: { en: 'Weight progress', ru: 'Динамика веса' },
   hn_today: { en: 'Today', ru: 'Сегодня' },
-  hn_calories_consumed: { en: 'Calories consumed', ru: 'Потреб��ено калорий' },
+  hn_calories_consumed: { en: 'Calories consumed', ru: 'Потреблено калорий' },
   hn_premium_expires: { en: 'Premium expires in {n} day(s)', ru: 'Подписка истекает через {n} дн.' },
   hn_premium_tap_renew: { en: 'Tap to renew and keep unlimited access', ru: 'Нажмите для продления безлимитного доступа' },
   hn_scans_left: { en: '{n}/{limit} free scans left today', ru: '{n}/{limit} бесплатных сканирований сегодня' },
@@ -1798,7 +1798,7 @@ const translations: Record<string, Record<Lang, string>> = {
   ai_advisor_upgrade_btn: { en: 'Upgrade to Premium', ru: 'Перейти на Premium' },
   ai_advisor_premium_unlimited: { en: 'Premium: unlimited analyses', ru: 'Premium: безлимитные анализы' },
   ai_advisor_current_macros: { en: 'Current macro targets', ru: 'Текущие цели по макросам' },
-  ai_advisor_no_macros: { en: 'Not set — use AI to calculate', ru: 'Не заданы — рассчитайте че��ез ИИ' },
+  ai_advisor_no_macros: { en: 'Not set — use AI to calculate', ru: 'Не заданы — рассчитайте через ИИ' },
   pn_apply: { en: 'Apply', ru: 'Применить' },
   pn_no_profile: { en: 'Complete onboarding to set up your profile', ru: 'Пройдите онбординг для настройки профиля' },
   pn_setup_profile: { en: 'Set Up Profile', ru: 'Настроить профиль' },
@@ -1938,7 +1938,7 @@ const translations: Record<string, Record<Lang, string>> = {
   adm_social_title: { en: 'Social Tasks', ru: 'Задания соцсетей' },
   adm_social_desc: { en: 'Users subscribe and earn bonus days', ru: 'Пользователи подписываются и получают бонусные дни' },
   adm_social_add: { en: 'Add', ru: 'Добавить' },
-  adm_social_empty: { en: 'No social tasks configured yet', ru: 'Заданий пока не��' },
+  adm_social_empty: { en: 'No social tasks configured yet', ru: 'Заданий пока нет' },
   adm_social_new: { en: 'New Social Task', ru: 'Новое задание' },
   adm_social_edit: { en: 'Edit Task', ru: 'Редактировать задание' },
   adm_social_platform: { en: 'Platform', ru: 'Платформа' },
@@ -2032,7 +2032,7 @@ const translations: Record<string, Record<Lang, string>> = {
   adm_broadcast_mode: { en: 'BROADCAST MODE', ru: 'РЕЖИМ РАССЫЛКИ' },
   adm_voice_preview: { en: 'Preview', ru: 'Прослушать' },
   adm_ai_coach_section: { en: 'AI COACH', ru: 'AI КОУЧ' },
-  adm_ai_nag_voice: { en: '🎤 AI Nag (Voice)', ru: '🎤 AI ��агоняй (Голос)' },
+  adm_ai_nag_voice: { en: '🎤 AI Nag (Voice)', ru: '🎤 AI Нагоняй (Голос)' },
   adm_ai_nag_both: { en: '📝+🎤 Nag (Both)', ru: '📝+🎤 Нагоняй (Оба)' },
   adm_ai_nag_sent: { en: 'AI Coach message sent!', ru: 'Сообщение от AI-коуча отправлено!' },
 
