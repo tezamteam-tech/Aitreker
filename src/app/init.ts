@@ -31,8 +31,8 @@ import {
 } from '@tma.js/sdk-react';
 import telegramAnalytics from '@telegram-apps/analytics';
 
-const TG_ANALYTICS_TOKEN = (import.meta as any).env?.VITE_TG_ANALYTICS_TOKEN as string | undefined;
-const TG_ANALYTICS_APP_NAME = (import.meta as any).env?.VITE_TG_ANALYTICS_APP_NAME as string | undefined;
+const TG_ANALYTICS_TOKEN = import.meta.env.VITE_TG_ANALYTICS_TOKEN as string | undefined;
+const TG_ANALYTICS_APP_NAME = import.meta.env.VITE_TG_ANALYTICS_APP_NAME as string | undefined;
 
 let _analyticsInitialized = false;
 
