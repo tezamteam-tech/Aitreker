@@ -31,34 +31,7 @@ import {
   closingBehavior,
   swipeBehavior,
 } from '@tma.js/sdk-react';
-import telegramAnalytics from '@telegram-apps/analytics';
-
-const TG_ANALYTICS_TOKEN = import.meta.env.VITE_TG_ANALYTICS_TOKEN as string | undefined;
-const TG_ANALYTICS_APP_NAME = import.meta.env.VITE_TG_ANALYTICS_APP_NAME as string | undefined;
-
-let _analyticsInitialized = false;
-let _analyticsInitPromise: Promise<void> | null = null;
-
-function initTelegramAnalytics(): void {
-  if (_analyticsInitialized) return;
-  if (!TG_ANALYTICS_TOKEN || !TG_ANALYTICS_APP_NAME) return;
-  if (_analyticsInitPromise) return;
-
-  // init() is async; run once, don't block app bootstrap
-  _analyticsInitPromise = telegramAnalytics
-    .init({
-      token: TG_ANALYTICS_TOKEN,
-      appName: TG_ANALYTICS_APP_NAME,
-      env: 'PROD',
-    })
-    .then(() => {
-      _analyticsInitialized = true;
-      console.log('[ProperFood] Telegram Analytics initialized');
-    })
-    .catch((err) => {
-      console.warn('[ProperFood] Telegram Analytics init failed:', err);
-    });
-}
+import { initTelegramAnalytics } from './analytics';
 
 // ---- SDK state ----
 let _sdkCleanup: VoidFunction | null = null;
