@@ -29,6 +29,28 @@ import {
   closingBehavior,
   swipeBehavior,
 } from '@tma.js/sdk-react';
+import telegramAnalytics from '@telegram-apps/analytics';
+
+const TG_ANALYTICS_TOKEN = (import.meta as any).env?.VITE_TG_ANALYTICS_TOKEN as string | undefined;
+const TG_ANALYTICS_APP_NAME = (import.meta as any).env?.VITE_TG_ANALYTICS_APP_NAME as string | undefined;
+
+let _analyticsInitialized = false;
+
+function initTelegramAnalytics(): void {
+  if (_analyticsInitialized) return;
+  if (!TG_ANALYTICS_TOKEN || !TG_ANALYTICS_APP_NAME) return;
+
+  try {
+    telegramAnalytics.init({
+      token: TG_ANALYTICS_TOKEN,
+      appName: TG_ANALYTICS_APP_NAME,
+    });
+    _analyticsInitialized = true;
+    console.log('[ProperFood] Telegram Analytics initialized');
+  } catch (err) {
+    console.warn('[ProperFood] Telegram Analytics init failed:', err);
+  }
+}
 
 // ---- SDK state ----
 let _sdkCleanup: VoidFunction | null = null;
@@ -156,6 +178,9 @@ export function init(debug: boolean): void {
     }
     vpMeta.content = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no';
   } catch {}
+
+  // 0.5 Initialize Telegram Mini Apps Analytics (if configured)
+  initTelegramAnalytics();
 
   // 1. Initialize TMA.js SDK (synchronous — handles postEvent bridge, signals, etc.)
   try {
