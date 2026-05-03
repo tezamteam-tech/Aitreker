@@ -160,9 +160,6 @@ export function init(debug: boolean): void {
     vpMeta.content = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no';
   } catch {}
 
-  // 0.5 Initialize Telegram Mini Apps Analytics (if configured)
-  initTelegramAnalytics();
-
   // 1. Initialize TMA.js SDK (synchronous — handles postEvent bridge, signals, etc.)
   try {
     _sdkCleanup = initSDK();
@@ -172,6 +169,9 @@ export function init(debug: boolean): void {
     console.warn('[ProperFood] @tma.js/sdk init failed (not in Telegram?):', err);
     _sdkInitialized = false;
   }
+
+  // 1.5 Telegram Mini Apps Analytics — after bridge init; uses WebApp and/or retrieveRawInitData (URL hash).
+  initTelegramAnalytics();
 
   // 2. Configure Telegram features via SDK singletons (if initialized)
   if (_sdkInitialized) {

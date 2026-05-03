@@ -1,4 +1,5 @@
 import telegramAnalytics from '@telegram-apps/analytics';
+import { retrieveRawInitData } from '@tma.js/sdk';
 
 let _analyticsInitPromise: Promise<void> | null = null;
 let _analyticsInitialized = false;
@@ -38,22 +39,39 @@ export function initTelegramAnalytics(): void {
 
   const token = import.meta.env.VITE_TG_ANALYTICS_TOKEN as string | undefined;
   const appName = import.meta.env.VITE_TG_ANALYTICS_APP_NAME as string | undefined;
-  if (!token || !appName) return;
+  if (!token || !appName) {
+    if (import.meta.env.DEV) {
+      console.info(
+        '[ProperFood] Telegram Analytics skipped: set VITE_TG_ANALYTICS_TOKEN and VITE_TG_ANALYTICS_APP_NAME in .env',
+      );
+    }
+    return;
+  }
 
-  // SDK expects Telegram WebApp context. In regular browsers it may throw internally.
-  // Enable analytics ONLY when we are inside Telegram WebApp.
+  // Same signals as auth: native WebApp and/or launch init from URL (#tgWebAppData / bridge).
+  // Do not require "Telegram" in User-Agent — Chrome DevTools + tgWebAppData hash is valid for dev.
   let wa: any = null;
   try {
     wa = (window as any)?.Telegram?.WebApp;
   } catch {}
 
-  const ua = (typeof navigator !== 'undefined' ? navigator.userAgent : '') || '';
-  const isTelegramUA = /telegram/i.test(ua);
+  let rawFromLaunch = '';
+  try {
+    rawFromLaunch = retrieveRawInitData() || '';
+  } catch {}
 
-  // Require a real WebApp object and initData/initDataUnsafe.
-  const hasInitData = !!(wa && (typeof wa.initData === 'string' ? wa.initData.length > 0 : false));
-  const hasInitDataUnsafe = !!(wa && wa.initDataUnsafe && typeof wa.initDataUnsafe === 'object');
-  if (!wa || (!hasInitData && !hasInitDataUnsafe) || !isTelegramUA) return;
+  const hasWebInitData = !!(wa && typeof wa.initData === 'string' && wa.initData.length > 0);
+  const hasWebInitDataUnsafe = !!(wa && wa.initDataUnsafe && typeof wa.initDataUnsafe === 'object');
+  const hasLaunchInitData = rawFromLaunch.length > 0;
+
+  if (!hasWebInitData && !hasWebInitDataUnsafe && !hasLaunchInitData) {
+    if (import.meta.env.DEV) {
+      console.info(
+        '[ProperFood] Telegram Analytics skipped: no initData (open as Mini App or use #tgWebAppData in URL for local test)',
+      );
+    }
+    return;
+  }
 
   // Run once, don't block render; SDK will send "app-init" automatically.
   try {
