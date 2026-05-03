@@ -16,6 +16,7 @@ import {
   Camera,
   Flame,
   ChevronRight,
+  ChevronDown,
   Utensils,
   Dumbbell,
   TrendingUp,
@@ -32,7 +33,10 @@ import {
   Sparkles,
   Droplet,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { GlassCard } from './glass-card';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
+import { cn } from './ui/utils';
 import { useAuth } from './auth-context';
 import { api } from './api-client';
 import { hapticFeedback } from './telegram';
@@ -79,6 +83,8 @@ interface WorkoutPlanItem {
   completed: boolean;
 }
 
+const waterStorageKey = (date: string) => `proper_water_ml_${date}`;
+
 export function HomeNutritionPage() {
   const { user, subscriptionActive, subscriptionDaysLeft, isTrial, trialDaysLeft, trialExpired } = useAuth();
   const navigate = useNavigate();
@@ -123,9 +129,10 @@ export function HomeNutritionPage() {
     magnesium_mg: 0,
   });
 
-  // Water tracker (server-side)
+  // Water tracker (server-side + local fallback when API fails)
   const [waterMl, setWaterMl] = useState(0);
   const waterGoalMl = 2000;
+  const [dayCardOpen, setDayCardOpen] = useState(false);
 
   const [todayMeals, setTodayMeals] = useState<MealPlanItem[]>([]);
 
@@ -247,18 +254,49 @@ export function HomeNutritionPage() {
     if (!user) return;
     const today = new Date().toISOString().slice(0, 10);
     api.getWater(today)
-      .then((d) => setWaterMl(Number(d.total_ml) || 0))
-      .catch((err) => console.warn('[HomeNutrition] Failed to load water:', err));
+      .then((d) => {
+        const server = Number(d.total_ml) || 0;
+        setWaterMl(server);
+        try {
+          if (server > 0) localStorage.setItem(waterStorageKey(today), String(server));
+        } catch {}
+      })
+      .catch((err) => {
+        console.warn('[HomeNutrition] Failed to load water:', err);
+        try {
+          setWaterMl(Number(localStorage.getItem(waterStorageKey(today))) || 0);
+        } catch {
+          setWaterMl(0);
+        }
+      });
   }, [user]);
 
   const addWater = async (amount: number) => {
+    const today = new Date().toISOString().slice(0, 10);
+    hapticFeedback('light');
+    const prev = waterMl;
+    const optimistic = prev + amount;
+    setWaterMl(optimistic);
     try {
-      hapticFeedback('light');
-      const today = new Date().toISOString().slice(0, 10);
+      localStorage.setItem(waterStorageKey(today), String(optimistic));
+    } catch {}
+
+    try {
       const d = await api.logWater(amount, today);
-      setWaterMl(Number(d.total_ml) || 0);
-    } catch (err) {
+      const serverTotal = Number((d as { total_ml?: number }).total_ml) || optimistic;
+      setWaterMl(serverTotal);
+      try {
+        localStorage.setItem(waterStorageKey(today), String(serverTotal));
+      } catch {}
+    } catch (err: unknown) {
       console.warn('[HomeNutrition] Water log failed:', err);
+      toast.error(lang === 'ru' ? 'Вода: не сохранилась на сервере' : 'Water not saved to server', {
+        description:
+          lang === 'ru'
+            ? 'Значение оставлено у вас на экране. Проверьте сеть или авторизацию.'
+            : 'Your tap is still shown here. Check connection or auth.',
+      });
+      // Keep optimistic UI + localStorage so taps never feel "dead"
     }
   };
 
@@ -483,250 +521,310 @@ export function HomeNutritionPage() {
           </motion.button>
         )}
 
-        {/* Daily Calorie Overview */}
-        <GlassCard className="px-4 py-4">
-          {/* Header: title + big number + percent badge */}
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl text-foreground font-bold tracking-tight">
-                {nutritionData.caloriesConsumed}
-              </span>
-              <span className="text-sm text-muted-foreground font-medium">
-                / {nutritionData.caloriesGoal} {t('hn_cal_unit')}
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#6c5ce7]/10">
-              <Flame className="w-3.5 h-3.5 text-[#fd79a8]" />
-              <span className="text-xs font-semibold text-foreground/70">{percentConsumed}%</span>
+        {/* Primary: scan food */}
+        <motion.button
+          whileTap={{ scale: 0.97 }}
+          onClick={handleScanFood}
+          className="w-full flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-br from-[#6c5ce7] to-[#a29bfe] shadow-lg relative min-h-[88px] touch-manipulation"
+        >
+          <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
+            <Camera className="w-6 h-6 text-white" />
+          </div>
+          <div className="flex-1 min-w-0 text-left">
+            <div className="text-white text-sm font-semibold leading-tight">{t('hn_qa_scan')}</div>
+            <div className="text-white/80 text-xs leading-tight mt-1">
+              {lang === 'ru' ? 'Сфотографируй блюдо — посчитаем КБЖУ' : 'Snap a meal — we estimate macros'}
             </div>
           </div>
-
-          {/* Progress Bar */}
-          <div className="relative h-2 rounded-full overflow-hidden mb-3" style={{ background: 'var(--glass-bg-row)' }}>
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${Math.min(percentConsumed, 100)}%` }}
-              transition={{ duration: 1, ease: 'easeOut' }}
-              className={`absolute inset-y-0 left-0 rounded-full ${
-                percentConsumed > 100
-                  ? 'bg-gradient-to-r from-[#ff6b6b] to-[#ee5a24]'
-                  : 'bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe]'
-              }`}
-            />
-          </div>
-
-          {/* Stats grid 2 rows */}
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2 mb-3">
-            <div className="flex items-center gap-1.5">
-              <Target className="w-3.5 h-3.5 text-[#6c5ce7] flex-shrink-0" />
-              <span className="text-xs text-muted-foreground">{t('hn_target')}</span>
-              <span className="text-sm font-semibold text-foreground ml-auto tabular-nums">{nutritionData.caloriesGoal}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Flame className="w-3.5 h-3.5 text-[#fd79a8] flex-shrink-0" />
-              <span className="text-xs text-muted-foreground">{t('hn_consumed')}</span>
-              <span className="text-sm font-semibold text-foreground ml-auto tabular-nums">{nutritionData.caloriesConsumed}</span>
-            </div>
-            <div className="flex items-center gap-1.5 col-span-2">
-              <TrendingUp className="w-3.5 h-3.5 text-[#00cec9] flex-shrink-0" />
-              <span className="text-xs text-muted-foreground">{t('hn_remaining')}</span>
-              <span className={`text-sm font-semibold ml-auto tabular-nums ${caloriesRemaining >= 0 ? 'text-[#00cec9]' : 'text-[#ff6b6b]'}`}>
-                {caloriesRemaining >= 0 ? caloriesRemaining : 0} {t('hn_cal_unit')}
-              </span>
-            </div>
-          </div>
-
-          {/* Weight forecast — compact inline */}
-          {(() => {
-            const totalExpenditure = (maintenanceCalories || bmr || 0) + burnedToday;
-            if (totalExpenditure <= 0) return null;
-            const deficit = totalExpenditure - nutritionData.caloriesConsumed;
-            const weightChangeG = Math.round((deficit / 7700) * 1000);
-            const isLoss = weightChangeG > 0;
-            const absGrams = Math.abs(weightChangeG);
-            const displayKg = absGrams >= 1000;
-            const displayValue = displayKg ? (absGrams / 1000).toFixed(1) : absGrams;
-            const displayUnit = displayKg ? t('hn_wc_kg') : t('hn_wc_g');
-
-            return (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2, duration: 0.3 }}
-                className="flex items-center justify-between py-2.5 px-3 rounded-xl mb-3"
-                style={{
-                  background: isLoss
-                    ? 'linear-gradient(135deg, rgba(0,206,201,0.06), rgba(108,92,231,0.03))'
-                    : 'linear-gradient(135deg, rgba(255,107,107,0.06), rgba(238,90,36,0.03))',
-                  border: `1px solid ${isLoss ? 'rgba(0,206,201,0.12)' : 'rgba(255,107,107,0.12)'}`,
-                }}
-              >
-                <div className="flex items-center gap-2">
-                  {isLoss
-                    ? <TrendingDown className="w-4 h-4 text-[#00cec9]" />
-                    : <TrendingUp className="w-4 h-4 text-[#ff6b6b]" />
-                  }
-                  <span className="text-xs text-muted-foreground">{t('hn_wc_title')}</span>
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <span className={`text-sm font-bold ${isLoss ? 'text-[#00cec9]' : 'text-[#ff6b6b]'}`}>
-                    {isLoss ? '−' : '+'}{displayValue} {displayUnit}
-                  </span>
-                  <span className="text-[0.625rem] text-muted-foreground/50">
-                    ({isLoss ? '−' : '+'}{Math.abs(deficit)} {t('hn_cal_unit')})
-                  </span>
-                </div>
-              </motion.div>
-            );
-          })()}
-
-          {/* Macros row */}
-          <div className="grid grid-cols-3 gap-2 pt-3" style={{ borderTop: '1px solid var(--glass-border-subtle)' }}>
-            {[
-              { label: t('hn_protein'), value: nutritionData.protein, color: '#6c5ce7' },
-              { label: t('hn_carbs'), value: nutritionData.carbs, color: '#fdcb6e' },
-              { label: t('hn_fats'), value: nutritionData.fats, color: '#fd79a8' },
-            ].map((macro) => (
-              <div key={macro.label} className="flex items-center justify-center gap-1">
-                <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: macro.color }} />
-                <span className="text-[0.6875rem] text-muted-foreground">{macro.label}</span>
-                <span className="text-[0.8125rem] font-semibold text-foreground">{macro.value}{t('unit_g')}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Critical nutrients row */}
-          <div className="grid grid-cols-3 gap-2 pt-2.5">
-            <div className="flex items-center justify-center gap-1">
-              <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#00b894' }} />
-              <span className="text-[0.6875rem] text-muted-foreground">{lang === 'ru' ? 'Клетчатка' : 'Fiber'}</span>
-              <span className="text-[0.8125rem] font-semibold text-foreground">{nutritionData.fiber_g}{t('unit_g')}</span>
-            </div>
-            <div className="flex items-center justify-center gap-1">
-              <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#fdcb6e' }} />
-              <span className="text-[0.6875rem] text-muted-foreground">{lang === 'ru' ? 'Сахар+' : 'Added sugar'}</span>
-              <span className="text-[0.8125rem] font-semibold text-foreground">{nutritionData.added_sugar_g}{t('unit_g')}</span>
-            </div>
-            <div className="flex items-center justify-center gap-1">
-              <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#74b9ff' }} />
-              <span className="text-[0.6875rem] text-muted-foreground">{lang === 'ru' ? 'Натрий' : 'Sodium'}</span>
-              <span className="text-[0.8125rem] font-semibold text-foreground">{nutritionData.sodium_mg}{lang === 'ru' ? 'мг' : 'mg'}</span>
-            </div>
-          </div>
-        </GlassCard>
-
-        {/* Water tracker */}
-        <GlassCard className="px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#74b9ff]/25 to-[#00cec9]/20 flex items-center justify-center">
-                <Droplet className="w-5 h-5 text-[#74b9ff]" />
-              </div>
-              <div>
-                <div className="text-sm font-semibold text-foreground">{lang === 'ru' ? 'Вода' : 'Water'}</div>
-                <div className="text-xs text-muted-foreground">{waterMl} / {waterGoalMl} {lang === 'ru' ? 'мл' : 'ml'}</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <motion.button whileTap={{ scale: 0.96 }} onClick={() => addWater(250)} className="h-9 px-3 rounded-xl bg-ui-button border border-[var(--glass-border)] text-sm font-semibold">
-                +250
-              </motion.button>
-              <motion.button whileTap={{ scale: 0.96 }} onClick={() => addWater(500)} className="h-9 px-3 rounded-xl bg-ui-button border border-[var(--glass-border)] text-sm font-semibold">
-                +500
-              </motion.button>
-            </div>
-          </div>
-          <div className="mt-3 h-2 rounded-full overflow-hidden" style={{ background: 'rgba(116,185,255,0.12)' }}>
-            <div
-              className="h-full rounded-full"
-              style={{
-                width: `${Math.min(100, Math.round((waterMl / waterGoalMl) * 100))}%`,
-                background: 'linear-gradient(90deg, #74b9ff, #00cec9)',
-              }}
-            />
-          </div>
-        </GlassCard>
-
-        {/* Macro ratio pie + trends shortcut */}
-        <GlassCard className="px-4 py-4">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-2xl bg-[#6c5ce7]/10 flex items-center justify-center">
-                <BarChart3 className="w-5 h-5 text-[#6c5ce7]" />
-              </div>
-              <div>
-                <div className="text-sm font-semibold text-foreground">{lang === 'ru' ? 'Баланс нутриентов' : 'Nutrient balance'}</div>
-                <div className="text-xs text-muted-foreground">{lang === 'ru' ? 'Доли по калориям' : 'Share by calories'}</div>
-              </div>
-            </div>
-            <motion.button
-              whileTap={{ scale: 0.96 }}
-              onClick={() => { hapticFeedback('light'); navigate('/analytics'); }}
-              className="h-9 px-3 rounded-xl bg-ui-button border border-[var(--glass-border)] text-sm font-semibold flex items-center gap-1.5"
-            >
-              {lang === 'ru' ? 'Тренды' : 'Trends'}
-              <ChevronRight className="w-4 h-4 text-muted-foreground" />
-            </motion.button>
-          </div>
-
-          {macroPie ? (
-            <div className="flex items-center gap-3">
-              <div className="w-[110px] h-[110px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={macroPie} dataKey="value" innerRadius={34} outerRadius={50} paddingAngle={2}>
-                      {macroPie.map((e) => (
-                        <Cell key={e.name} fill={e.color} />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="flex-1 space-y-1.5">
-                {macroPie.map((e) => {
-                  const total = macroPie.reduce((s, x) => s + x.value, 0);
-                  const pct = total > 0 ? Math.round((e.value / total) * 100) : 0;
-                  return (
-                    <div key={e.name} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <div className="w-2 h-2 rounded-full" style={{ background: e.color }} />
-                        <span className="text-xs text-muted-foreground truncate">{e.name}</span>
-                      </div>
-                      <span className="text-xs font-semibold text-foreground tabular-nums">{pct}%</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ) : (
-            <div className="text-xs text-muted-foreground">{lang === 'ru' ? 'Добавьте еду, чтобы увидеть баланс.' : 'Log food to see balance.'}</div>
+          {!hasAccess && usage.scans.limit !== null && (
+            <FreemiumLimitBadge used={usage.scans.used} limit={usage.scans.limit} className="absolute top-2 right-2 !bg-white/20 !text-white/90 !border-white/30" />
           )}
-        </GlassCard>
+        </motion.button>
 
-        {/* ===== Quick Actions Grid ===== */}
+        {/* Today: collapsed summary + water; expanded = details + nutrient pie */}
+        <Collapsible open={dayCardOpen} onOpenChange={setDayCardOpen}>
+          <GlassCard className="!p-4">
+            <CollapsibleTrigger asChild>
+              <button
+                type="button"
+                className="w-full flex items-start gap-2 rounded-xl text-left touch-manipulation outline-none focus-visible:ring-2 focus-visible:ring-[#6c5ce7]/40"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <span className="text-[0.6875rem] font-semibold uppercase tracking-wide text-muted-foreground">
+                      {lang === 'ru' ? 'Сегодня' : 'Today'}
+                    </span>
+                    <ChevronDown
+                      className={cn(
+                        'w-5 h-5 text-muted-foreground shrink-0 transition-transform duration-200',
+                        dayCardOpen && 'rotate-180',
+                      )}
+                    />
+                  </div>
+                  <div className="flex items-baseline justify-between gap-2 flex-wrap">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-2xl font-bold text-foreground tabular-nums tracking-tight">
+                        {nutritionData.caloriesConsumed}
+                      </span>
+                      <span className="text-sm text-muted-foreground font-medium">
+                        / {nutritionData.caloriesGoal} {t('hn_cal_unit')}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#6c5ce7]/10">
+                      <Flame className="w-3.5 h-3.5 text-[#fd79a8]" />
+                      <span className="text-xs font-semibold text-foreground/70">{percentConsumed}%</span>
+                    </div>
+                  </div>
+                  <div className="relative h-1.5 rounded-full overflow-hidden mt-2.5" style={{ background: 'var(--glass-bg-row)' }}>
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min(percentConsumed, 100)}%` }}
+                      transition={{ duration: 0.6, ease: 'easeOut' }}
+                      className={`absolute inset-y-0 left-0 rounded-full ${
+                        percentConsumed > 100
+                          ? 'bg-gradient-to-r from-[#ff6b6b] to-[#ee5a24]'
+                          : 'bg-gradient-to-r from-[#6c5ce7] to-[#a29bfe]'
+                      }`}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-xs text-muted-foreground">{t('hn_remaining')}</span>
+                    <span
+                      className={`text-xs font-semibold tabular-nums ${caloriesRemaining >= 0 ? 'text-[#00cec9]' : 'text-[#ff6b6b]'}`}
+                    >
+                      {caloriesRemaining >= 0 ? caloriesRemaining : 0} {t('hn_cal_unit')}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-2 text-[0.6875rem] text-muted-foreground">
+                    <span>
+                      <span className="text-[#6c5ce7] font-semibold">P</span> {nutritionData.protein}
+                      {t('unit_g')}
+                    </span>
+                    <span className="text-muted-foreground/40">·</span>
+                    <span>
+                      <span className="text-[#fdcb6e] font-semibold">C</span> {nutritionData.carbs}
+                      {t('unit_g')}
+                    </span>
+                    <span className="text-muted-foreground/40">·</span>
+                    <span>
+                      <span className="text-[#fd79a8] font-semibold">F</span> {nutritionData.fats}
+                      {t('unit_g')}
+                    </span>
+                  </div>
+                </div>
+              </button>
+            </CollapsibleTrigger>
+
+            <div className="mt-3 pt-3 border-t border-[var(--glass-border-subtle)] flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#74b9ff]/25 to-[#00cec9]/20 flex items-center justify-center shrink-0">
+                  <Droplet className="w-4 h-4 text-[#74b9ff]" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-xs font-semibold text-foreground">{lang === 'ru' ? 'Вода' : 'Water'}</div>
+                  <div className="text-[0.6875rem] text-muted-foreground tabular-nums">
+                    {waterMl} / {waterGoalMl} {lang === 'ru' ? 'мл' : 'ml'}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => void addWater(250)}
+                  className="h-9 min-w-[3.25rem] px-2.5 rounded-xl bg-ui-button border border-[var(--glass-border)] text-xs font-semibold active:scale-[0.96] transition-transform touch-manipulation"
+                >
+                  +250
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void addWater(500)}
+                  className="h-9 min-w-[3.25rem] px-2.5 rounded-xl bg-ui-button border border-[var(--glass-border)] text-xs font-semibold active:scale-[0.96] transition-transform touch-manipulation"
+                >
+                  +500
+                </button>
+              </div>
+            </div>
+            <div className="mt-2 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(116,185,255,0.12)' }}>
+              <div
+                className="h-full rounded-full transition-[width] duration-300"
+                style={{
+                  width: `${Math.min(100, Math.round((waterMl / waterGoalMl) * 100))}%`,
+                  background: 'linear-gradient(90deg, #74b9ff, #00cec9)',
+                }}
+              />
+            </div>
+
+            <CollapsibleContent>
+              <div className="pt-4 mt-3 border-t border-[var(--glass-border-subtle)] space-y-4">
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                  <div className="flex items-center gap-1.5">
+                    <Target className="w-3.5 h-3.5 text-[#6c5ce7] flex-shrink-0" />
+                    <span className="text-xs text-muted-foreground">{t('hn_target')}</span>
+                    <span className="text-sm font-semibold text-foreground ml-auto tabular-nums">{nutritionData.caloriesGoal}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Flame className="w-3.5 h-3.5 text-[#fd79a8] flex-shrink-0" />
+                    <span className="text-xs text-muted-foreground">{t('hn_consumed')}</span>
+                    <span className="text-sm font-semibold text-foreground ml-auto tabular-nums">{nutritionData.caloriesConsumed}</span>
+                  </div>
+                </div>
+
+                {(() => {
+                  const totalExpenditure = (maintenanceCalories || bmr || 0) + burnedToday;
+                  if (totalExpenditure <= 0) return null;
+                  const deficit = totalExpenditure - nutritionData.caloriesConsumed;
+                  const weightChangeG = Math.round((deficit / 7700) * 1000);
+                  const isLoss = weightChangeG > 0;
+                  const absGrams = Math.abs(weightChangeG);
+                  const displayKg = absGrams >= 1000;
+                  const displayValue = displayKg ? (absGrams / 1000).toFixed(1) : absGrams;
+                  const displayUnit = displayKg ? t('hn_wc_kg') : t('hn_wc_g');
+
+                  return (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.05, duration: 0.25 }}
+                      className="flex items-center justify-between py-2.5 px-3 rounded-xl"
+                      style={{
+                        background: isLoss
+                          ? 'linear-gradient(135deg, rgba(0,206,201,0.06), rgba(108,92,231,0.03))'
+                          : 'linear-gradient(135deg, rgba(255,107,107,0.06), rgba(238,90,36,0.03))',
+                        border: `1px solid ${isLoss ? 'rgba(0,206,201,0.12)' : 'rgba(255,107,107,0.12)'}`,
+                      }}
+                    >
+                      <div className="flex items-center gap-2">
+                        {isLoss ? (
+                          <TrendingDown className="w-4 h-4 text-[#00cec9]" />
+                        ) : (
+                          <TrendingUp className="w-4 h-4 text-[#ff6b6b]" />
+                        )}
+                        <span className="text-xs text-muted-foreground">{t('hn_wc_title')}</span>
+                      </div>
+                      <div className="flex items-baseline gap-2">
+                        <span className={`text-sm font-bold ${isLoss ? 'text-[#00cec9]' : 'text-[#ff6b6b]'}`}>
+                          {isLoss ? '−' : '+'}
+                          {displayValue} {displayUnit}
+                        </span>
+                        <span className="text-[0.625rem] text-muted-foreground/50">
+                          ({isLoss ? '−' : '+'}
+                          {Math.abs(deficit)} {t('hn_cal_unit')})
+                        </span>
+                      </div>
+                    </motion.div>
+                  );
+                })()}
+
+                <div className="grid grid-cols-3 gap-2 pt-1" style={{ borderTop: '1px solid var(--glass-border-subtle)' }}>
+                  {[
+                    { label: t('hn_protein'), value: nutritionData.protein, color: '#6c5ce7' },
+                    { label: t('hn_carbs'), value: nutritionData.carbs, color: '#fdcb6e' },
+                    { label: t('hn_fats'), value: nutritionData.fats, color: '#fd79a8' },
+                  ].map((macro) => (
+                    <div key={macro.label} className="flex flex-col items-center gap-0.5 text-center">
+                      <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: macro.color }} />
+                      <span className="text-[0.625rem] text-muted-foreground leading-tight">{macro.label}</span>
+                      <span className="text-xs font-semibold text-foreground tabular-nums">
+                        {macro.value}
+                        {t('unit_g')}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="flex flex-col items-center gap-0.5 text-center">
+                    <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#00b894' }} />
+                    <span className="text-[0.625rem] text-muted-foreground leading-tight">{lang === 'ru' ? 'Клетчатка' : 'Fiber'}</span>
+                    <span className="text-xs font-semibold text-foreground tabular-nums">
+                      {nutritionData.fiber_g}
+                      {t('unit_g')}
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-center gap-0.5 text-center">
+                    <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#fdcb6e' }} />
+                    <span className="text-[0.625rem] text-muted-foreground leading-tight">{lang === 'ru' ? 'Сахар+' : 'Added sugar'}</span>
+                    <span className="text-xs font-semibold text-foreground tabular-nums">
+                      {nutritionData.added_sugar_g}
+                      {t('unit_g')}
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-center gap-0.5 text-center">
+                    <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#74b9ff' }} />
+                    <span className="text-[0.625rem] text-muted-foreground leading-tight">{lang === 'ru' ? 'Натрий' : 'Sodium'}</span>
+                    <span className="text-xs font-semibold text-foreground tabular-nums">
+                      {nutritionData.sodium_mg}
+                      {lang === 'ru' ? 'мг' : 'mg'}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-9 h-9 rounded-xl bg-[#6c5ce7]/10 flex items-center justify-center">
+                        <BarChart3 className="w-4 h-4 text-[#6c5ce7]" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold text-foreground">{lang === 'ru' ? 'Баланс нутриентов' : 'Nutrient balance'}</div>
+                        <div className="text-[0.625rem] text-muted-foreground">{lang === 'ru' ? 'По калориям' : 'By calories'}</div>
+                      </div>
+                    </div>
+                    <motion.button
+                      type="button"
+                      whileTap={{ scale: 0.96 }}
+                      onClick={() => {
+                        hapticFeedback('light');
+                        navigate('/analytics');
+                      }}
+                      className="h-8 px-2.5 rounded-lg bg-ui-button border border-[var(--glass-border)] text-xs font-semibold flex items-center gap-1"
+                    >
+                      {lang === 'ru' ? 'Тренды' : 'Trends'}
+                      <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+                    </motion.button>
+                  </div>
+                  {macroPie ? (
+                    <div className="flex items-center gap-3">
+                      <div className="w-[100px] h-[100px] shrink-0">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie data={macroPie} dataKey="value" innerRadius={30} outerRadius={46} paddingAngle={2}>
+                              {macroPie.map((e) => (
+                                <Cell key={e.name} fill={e.color} />
+                              ))}
+                            </Pie>
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <div className="flex-1 space-y-1.5 min-w-0">
+                        {macroPie.map((e) => {
+                          const total = macroPie.reduce((s, x) => s + x.value, 0);
+                          const pct = total > 0 ? Math.round((e.value / total) * 100) : 0;
+                          return (
+                            <div key={e.name} className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <div className="w-2 h-2 rounded-full shrink-0" style={{ background: e.color }} />
+                                <span className="text-xs text-muted-foreground truncate">{e.name}</span>
+                              </div>
+                              <span className="text-xs font-semibold text-foreground tabular-nums shrink-0">{pct}%</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-xs text-muted-foreground">
+                      {lang === 'ru' ? 'Добавьте еду, чтобы увидеть баланс.' : 'Log food to see balance.'}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CollapsibleContent>
+          </GlassCard>
+        </Collapsible>
+
+        {/* Quick shortcuts — 2×2 (scan moved above) */}
         <div className="grid grid-cols-2 gap-2.5">
-          {/* Scan Food — primary action, big tile */}
-          <motion.button
-            whileTap={{ scale: 0.97 }}
-            onClick={handleScanFood}
-            className="col-span-2 flex items-center gap-4 p-5 rounded-2xl bg-gradient-to-br from-[#6c5ce7] to-[#a29bfe] shadow-lg relative min-h-[96px]"
-          >
-            <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
-              <Camera className="w-7 h-7 text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-white text-sm font-semibold leading-tight">
-                {t('hn_qa_scan')}
-              </div>
-              <div className="text-white/80 text-xs leading-tight mt-1">
-                Сфотографируй блюдо — посчитаем КБЖУ
-              </div>
-            </div>
-            {!hasAccess && usage.scans.limit !== null && (
-              <FreemiumLimitBadge used={usage.scans.used} limit={usage.scans.limit} className="absolute top-2 right-2 !bg-white/20 !text-white/90 !border-white/30" />
-            )}
-          </motion.button>
-
           {/* AI Coach */}
           <motion.button
             whileTap={{ scale: 0.95 }}
